@@ -1,0 +1,40 @@
+name: Update README Weather
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs every hour
+
+jobs:
+  update-weather:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Weather Script
+        id: weather-script
+        run: echo "WEATHER_DATA=$(node dist/index.js)" >> $GITHUB_ENV
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+
+      - name: Update README
+        run: node dist/updateReadme.js ${{ env.WEATHER_DATA }}
+        env:
+          GITHUB_EMAIL: ${{ secrets.GH_EMAIL }}
+          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
+
+      - name: Commit and push if changed
+        run: |
+          git config --global user.email "${{ secrets.GH_EMAIL }}"
+          git config --global user.name "${{ secrets.GH_USERNAME }}"
+          git diff
+          git commit -am "Update README weather info"
+          git push
