@@ -35,7 +35,7 @@ module.exports = {
     "node/no-unsupported-features/es-syntax": "off",
     "prefer-const": "error",
     "prefer-template": "error",
-    "template-curly-spacing": ["error", "always"],
+    "template-curly-spacing": ["error", "never"],
     "prettier/prettier": "error",
   },
 };

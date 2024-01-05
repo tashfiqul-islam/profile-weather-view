@@ -4,11 +4,11 @@
   "description": "A small javascript project to fetch the latest weather report of my current location",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint 'src/**/*.{js,ts}' --quiet",
+    "lint": "eslint 'src/**/*.{js,ts}'",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
+    "lint-and-fix": "npm run lint -- --fix && npm run format",
     "start": "node src/index.js"
-  },
+  },  
   "keywords": [],
   "author": "",
   "license": "ISC",

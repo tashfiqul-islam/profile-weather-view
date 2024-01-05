@@ -1,13 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Function to update the README file with new weather data
 function updateReadme(weatherData) {
-  const readmePath = path.join(__dirname, '..', 'README.md');
-  let readmeContent = fs.readFileSync(readmePath, 'utf8');
+  const readmePath = path.join(__dirname, "..", "README.md");
+  let readmeContent = fs.readFileSync(readmePath, "utf8");
 
   const [description, temperature, sunrise, sunset, humidity, icon] =
-    weatherData.split('|');
+    weatherData.split("|");
 
   // Construction of the updated weather data section
   const updatedWeatherData = `
@@ -23,7 +23,7 @@ function updateReadme(weatherData) {
   // Existing weather data section replacement in the README
   readmeContent = readmeContent.replace(
     /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
-    updatedWeatherData
+    updatedWeatherData,
   );
   fs.writeFileSync(readmePath, readmeContent);
 }
@@ -33,5 +33,5 @@ const weatherData = process.argv[2];
 if (weatherData) {
   updateReadme(weatherData);
 } else {
-  console.error('No weather data provided');
+  console.error("No weather data provided");
 }

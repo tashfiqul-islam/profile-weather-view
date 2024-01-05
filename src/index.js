@@ -1,11 +1,12 @@
-const axios = require('axios');
-const dotenv = require('dotenv');
+// eslint-disable-next-line node/no-unpublished-require
+const axios = require("axios");
+const dotenv = require("dotenv");
 dotenv.config();
 
 // Open Weather API Key and location data
 const API_KEY = process.env.OPENWEATHER_API_KEY;
-const LAT = '23.8759'; // Latitude for Uttara
-const LON = '90.3795'; // Longitude for Uttara
+const LAT = "23.8759"; // Latitude for Uttara
+const LON = "90.3795"; // Longitude for Uttara
 
 // Asynchronous function to fetch and log weather data
 async function fetchWeatherData() {
@@ -21,16 +22,16 @@ async function fetchWeatherData() {
     const roundedTemperature = Math.round(currentWeather.temp);
 
     // Format options to exclude seconds
-    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    const timeOptions = { hour: "2-digit", minute: "2-digit" };
 
     // Unix timestamp conversion to human-readable time
     const sunrise = new Date(currentWeather.sunrise * 1000).toLocaleTimeString(
-      'en-US',
-      timeOptions
+      "en-US",
+      timeOptions,
     );
     const sunset = new Date(currentWeather.sunset * 1000).toLocaleTimeString(
-      'en-US',
-      timeOptions
+      "en-US",
+      timeOptions,
     );
 
     // Extract the icon code
@@ -38,10 +39,10 @@ async function fetchWeatherData() {
 
     // Weather detail logs
     console.log(
-      `Current Weather: ${currentWeather.weather[0].main} | Temperature: ${roundedTemperature}°C | Sunrise: ${sunrise} | Sunset: ${sunset} | Humidity: ${currentWeather.humidity}% | Icon: ${iconCode}`
+      `Current Weather: ${currentWeather.weather[0].main} | Temperature: ${roundedTemperature}°C | Sunrise: ${sunrise} | Sunset: ${sunset} | Humidity: ${currentWeather.humidity}% | Icon: ${iconCode}`,
     );
   } catch (error) {
-    console.error('Error fetching weather data:', error);
+    console.error("Error fetching weather data:", error);
   }
 }
 
