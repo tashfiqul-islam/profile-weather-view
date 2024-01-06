@@ -19,7 +19,7 @@ function updateReadme(weatherData) {
   const [description, temperature, sunrise, sunset, humidity, icon] =
     weatherData.split('|');
 
-  // Construct updated weather data section for README
+  // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
   <td align="center">${description} <img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
   <td align="center">${temperature}°C</td>
