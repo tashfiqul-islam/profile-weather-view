@@ -1,6 +1,6 @@
 name: Update README Weather
 
-# Trigger the workflow every hour and also allow manual triggers
+# Triggers the workflow every hour and allows manual triggers
 on:
   schedule:
     - cron: '0 * * * *'  # Runs every hour
@@ -8,7 +8,7 @@ on:
 
 jobs:
   update-weather:
-    runs-on: ubuntu-latest  # Specification of the runner environment
+    runs-on: ubuntu-latest  # Specifies the runner environment
 
     steps:
       # Checkout the repository containing the weather view script
@@ -26,18 +26,18 @@ jobs:
           path: tashfiqul-islam
           token: ${{ secrets.PAT }}
 
-      # Setup Node.js environment
+      # Sets up Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Install dependencies for the weather script
+      # Installs dependencies for the weather script
       - name: Install dependencies
         run: npm install
         working-directory: ./git-profile-weather-view
 
-      # Execute the weather script and set the output as an environment variable
+      # Executes the weather script and sets the output as an environment variable
       - name: Run Weather Script
         run: |
           WEATHER_DATA=$(node src/index.js)
@@ -46,12 +46,12 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         working-directory: ./git-profile-weather-view
 
-      # Update the README with the new weather data
+      # Updates the README with the new weather data
       - name: Update README
         run: node src/updateReadme.js "${{ env.WEATHER_DATA }}"
         working-directory: ./git-profile-weather-view
 
-      # Import GPG key for commit signing
+      # Imports GPG key for commit signing, ensuring non-interactive mode
       - name: Import GPG Key
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --no-tty --pinentry-mode loopback
@@ -59,7 +59,11 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         shell: bash
 
-      # Configure Git with your user details and GPG signing
+      # List GPG keys for debugging - can be removed in final version
+      - name: List GPG Keys (Debugging)
+        run: gpg --list-secret-keys
+
+      # Configures Git with your user details and GPG signing
       - name: Configure Git
         run: |
           git config --global user.email "${{ secrets.GH_EMAIL }}"
@@ -68,7 +72,7 @@ jobs:
           git config --global commit.gpgsign true
         working-directory: ./tashfiqul-islam
 
-      # Commit and push changes if there are any changes to the README
+      # Commits and pushes changes if there are any changes to the README
       - name: Commit and push if changed
         run: |
           cd tashfiqul-islam
