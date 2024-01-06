@@ -26,8 +26,7 @@ function updateReadme(weatherData) {
   <td align="center">${sunrise}</td>
   <td align="center">${sunset}</td>
   <td align="center">${humidity}%</td>
-  <!-- End of Hourly Weather Update -->
-</tr>`;
+  <!-- End of Hourly Weather Update -->`;
 
   // Replace existing weather data section in README
   readmeContent = readmeContent.replace(
