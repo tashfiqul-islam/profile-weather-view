@@ -6,7 +6,13 @@ const path = require('path');
  * @param {string} weatherData - Weather data string in the format: description|temperature|sunrise|sunset|humidity|icon.
  */
 function updateReadme(weatherData) {
-  const readmePath = path.join(__dirname, '..', 'README.md');
+  const readmePath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'tashfiqul-islam',
+    'README.md'
+  );
   let readmeContent = fs.readFileSync(readmePath, 'utf8');
 
   const [description, temperature, sunrise, sunset, humidity, icon] =

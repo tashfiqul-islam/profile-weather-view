@@ -9,8 +9,18 @@ jobs:
   update-weather:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout git-profile-weather-view repository
         uses: actions/checkout@v4
+        with:
+          repository: tashfiqul-islam/git-profile-weather-view
+          path: git-profile-weather-view
+
+      - name: Checkout tashfiqul-islam/tashfiqul-islam repository
+        uses: actions/checkout@v4
+        with:
+          repository: tashfiqul-islam/tashfiqul-islam
+          path: tashfiqul-islam
+          token: ${{ secrets.PAT }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -19,21 +29,26 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./git-profile-weather-view
 
       - name: Run Weather Script
         id: weather-script
         run: echo "WEATHER_DATA=$(node src/index.js)" >> $GITHUB_ENV
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        working-directory: ./git-profile-weather-view
 
       - name: Update README
-        run: node src/updateReadme.js "${{ env.WEATHER_DATA }}"
+        run: node src/updateReadme.js ${{ env.WEATHER_DATA }}
+        working-directory: ./git-profile-weather-view
         env:
-          GITHUB_EMAIL: ${{ secrets.GH_EMAIL }}
-          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
+          WEATHER_DATA: ${{ steps.weather-script.outputs.weather-data }}
 
       - name: Commit and push if changed
         run: |
           git config --global user.email "${{ secrets.GH_EMAIL }}"
           git config --global user.name "${{ secrets.GH_USERNAME }}"
-          git diff --quiet || (git commit -am "update(hourly): Readme Weather info" && git push origin master)
+          cd ../tashfiqul-islam
+          git diff
+          git commit -am "Update README weather info"
+          git push origin master
