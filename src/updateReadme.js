@@ -13,6 +13,7 @@ function updateReadme(weatherData) {
     'tashfiqul-islam',
     'README.md'
   );
+
   let readmeContent = fs.readFileSync(readmePath, 'utf8');
 
   const [description, temperature, sunrise, sunset, humidity, icon] =
