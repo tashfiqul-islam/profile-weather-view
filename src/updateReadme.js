@@ -21,11 +21,11 @@ function updateReadme(weatherData) {
 
   // Construct updated weather data section for README
   const updatedWeatherData = `<!-- Hourly Weather Update -->
-  <td><b>${description}</b> <img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
-  <td><b>${temperature}°C</b></td>
-  <td><b>${sunrise}</b></td>
-  <td><b>${sunset}</b></td>
-  <td><b>${humidity}%</b></td>
+  <td align="center">${description} <img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
+  <td align="center">${temperature}°C</td>
+  <td align="center">${sunrise}</td>
+  <td align="center">${sunset}</td>
+  <td align="center">${humidity}%</td>
   <!-- End of Hourly Weather Update -->
 </tr>`;
 
