@@ -2,7 +2,7 @@ name: Update README Weather
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs every hour
+    - cron: '0 * * * *'  # Runs every hour
   workflow_dispatch:
 
 jobs:
@@ -32,18 +32,16 @@ jobs:
         working-directory: ./git-profile-weather-view
 
       - name: Run Weather Script
-      run: |
-        WEATHER_DATA=$(node src/index.js)
-        echo "WEATHER_DATA=$WEATHER_DATA" >> $GITHUB_ENV
-      env:
-        OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-      working-directory: ./git-profile-weather-view
+        run: |
+          WEATHER_DATA=$(node src/index.js)
+          echo "WEATHER_DATA=$WEATHER_DATA" >> $GITHUB_ENV
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        working-directory: ./git-profile-weather-view
 
       - name: Update README
         run: node src/updateReadme.js ${{ env.WEATHER_DATA }}
         working-directory: ./git-profile-weather-view
-        env:
-          WEATHER_DATA: ${{ steps.weather-script.outputs.weather-data }}
 
       - name: Commit and push if changed
         run: |
@@ -57,4 +55,3 @@ jobs:
           else
             echo "No changes to commit"
           fi
-
