@@ -54,7 +54,9 @@ jobs:
       # Import GPG key for commit signing
       - name: Import GPG Key
         run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --import
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --no-tty --pinentry-mode loopback
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         shell: bash
 
       # Configure Git with your user details and GPG signing
