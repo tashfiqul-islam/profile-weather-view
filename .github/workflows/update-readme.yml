@@ -1,5 +1,6 @@
 name: Update README Weather
 
+# Trigger the workflow every hour and also allow manual triggers
 on:
   schedule:
     - cron: '0 * * * *'  # Runs every hour
@@ -7,14 +8,17 @@ on:
 
 jobs:
   update-weather:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Specification of the runner environment
+
     steps:
+      # Checkout the repository containing the weather view script
       - name: Checkout git-profile-weather-view repository
         uses: actions/checkout@v4
         with:
           repository: tashfiqul-islam/git-profile-weather-view
           path: git-profile-weather-view
 
+      # Checkout your personal repository where the README will be updated
       - name: Checkout tashfiqul-islam/tashfiqul-islam repository
         uses: actions/checkout@v4
         with:
@@ -22,15 +26,18 @@ jobs:
           path: tashfiqul-islam
           token: ${{ secrets.PAT }}
 
+      # Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # Install dependencies for the weather script
       - name: Install dependencies
         run: npm install
         working-directory: ./git-profile-weather-view
 
+      # Execute the weather script and set the output as an environment variable
       - name: Run Weather Script
         run: |
           WEATHER_DATA=$(node src/index.js)
@@ -39,18 +46,33 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         working-directory: ./git-profile-weather-view
 
+      # Update the README with the new weather data
       - name: Update README
         run: node src/updateReadme.js "${{ env.WEATHER_DATA }}"
         working-directory: ./git-profile-weather-view
 
-      - name: Commit and push if changed
+      # Import GPG key for commit signing
+      - name: Import GPG Key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --import
+        shell: bash
+
+      # Configure Git with your user details and GPG signing
+      - name: Configure Git
         run: |
           git config --global user.email "${{ secrets.GH_EMAIL }}"
           git config --global user.name "${{ secrets.GH_USERNAME }}"
+          git config --global user.signingkey "${{ secrets.GPG_KEY_ID }}"
+          git config --global commit.gpgsign true
+        working-directory: ./tashfiqul-islam
+
+      # Commit and push changes if there are any changes to the README
+      - name: Commit and push if changed
+        run: |
           cd tashfiqul-islam
           git diff
           if [ -n "$(git diff --name-only)" ]; then
-            git commit -am "update(hourly): Latest Weather Info"
+            git commit -S -am "update(profile-weather-view): Hourly Weather Update"
             git push origin master
           else
             echo "No changes to commit"
