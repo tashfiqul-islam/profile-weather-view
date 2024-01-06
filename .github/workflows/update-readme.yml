@@ -59,10 +59,6 @@ jobs:
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --homedir ~/.gnupg --batch --import --no-tty --pinentry-mode loopback
         shell: bash
 
-      # List GPG keys to verify successful import (for debugging purposes)
-      - name: List GPG Keys (Debugging)
-        run: gpg --homedir ~/.gnupg --list-secret-keys
-
       # Configure Git with user details and specify GPG for commit signing
       - name: Configure Git
         run: |
