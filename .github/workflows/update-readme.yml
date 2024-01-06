@@ -40,7 +40,7 @@ jobs:
         working-directory: ./git-profile-weather-view
 
       - name: Update README
-        run: node src/updateReadme.js ${{ env.WEATHER_DATA }}
+        run: node src/updateReadme.js "${{ env.WEATHER_DATA }}"
         working-directory: ./git-profile-weather-view
 
       - name: Commit and push if changed
