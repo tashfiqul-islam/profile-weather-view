@@ -73,3 +73,15 @@ jobs:
           git config --global gpg.program $(which gpg)
           git config --global commit.gpgsign true
         working-directory: ./tashfiqul-islam
+      
+      # Commits and pushes changes if there are any changes to the README
+      - name: Commit and push if changed
+        run: |
+          cd tashfiqul-islam
+          git diff
+          if [ -n "$(git diff --name-only)" ]; then
+            git commit -S -am "update(profile-weather-view): Hourly Weather Update"
+            git push origin master
+          else
+            echo "No changes to commit"
+          fi
