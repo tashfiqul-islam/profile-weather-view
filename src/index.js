@@ -21,18 +21,23 @@ async function fetchWeatherData() {
     // Temperature round up to the nearest integer
     const roundedTemperature = Math.round(currentWeather.temp);
 
-    // Format options to exclude seconds
-    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    // Function to convert to Dhaka timezone
+    function convertToAstanaDhakaTime(utcDate) {
+      const astanaDhakaTimezone = 'Asia/Dhaka'; // Timezone for Astana/Dhaka
+      const timeOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: astanaDhakaTimezone,
+      };
+      return new Intl.DateTimeFormat('en-US', timeOptions).format(utcDate);
+    }
 
     // Unix timestamp conversion to human-readable time
-    const sunrise = new Date(currentWeather.sunrise * 1000).toLocaleTimeString(
-      'en-US',
-      timeOptions
-    );
-    const sunset = new Date(currentWeather.sunset * 1000).toLocaleTimeString(
-      'en-US',
-      timeOptions
-    );
+    const sunriseUtc = new Date(currentWeather.sunrise * 1000);
+    const sunsetUtc = new Date(currentWeather.sunset * 1000);
+
+    const sunrise = convertToAstanaDhakaTime(sunriseUtc);
+    const sunset = convertToAstanaDhakaTime(sunsetUtc);
 
     // Extract the icon code
     const iconCode = currentWeather.weather[0].icon;

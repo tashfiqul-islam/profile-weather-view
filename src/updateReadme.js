@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Function to update the README file with new weather data
+/**
+ * Updates the README file with the new weather data.
+ * @param {string} weatherData - Weather data string in the format: description|temperature|sunrise|sunset|humidity|icon.
+ */
 function updateReadme(weatherData) {
   const readmePath = path.join(__dirname, '..', 'README.md');
   let readmeContent = fs.readFileSync(readmePath, 'utf8');
@@ -9,7 +12,7 @@ function updateReadme(weatherData) {
   const [description, temperature, sunrise, sunset, humidity, icon] =
     weatherData.split('|');
 
-  // Construction of the updated weather data section
+  // Construct updated weather data section for README
   const updatedWeatherData = `
 <!-- Hourly Weather Update -->
         <td><b>${description}</b><img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
@@ -20,15 +23,16 @@ function updateReadme(weatherData) {
 <!-- End of Hourly Weather Update -->
 `;
 
-  // Existing weather data section replacement in the README
+  // Replace existing weather data section in README
   readmeContent = readmeContent.replace(
     /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
     updatedWeatherData
   );
+
   fs.writeFileSync(readmePath, readmeContent);
 }
 
-// updateReadme function with command line arguments
+// Run updateReadme function with command line arguments
 const weatherData = process.argv[2];
 if (weatherData) {
   updateReadme(weatherData);
