@@ -55,6 +55,7 @@ jobs:
       - name: Import GPG Key
         run: |
           mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --homedir ~/.gnupg --batch --import --no-tty --pinentry-mode loopback
         shell: bash
         env:
