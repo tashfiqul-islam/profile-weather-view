@@ -22,12 +22,12 @@ jobs:
 
       - name: Run Weather Script
         id: weather-script
-        run: echo "WEATHER_DATA=$(node dist/index.js)" >> $GITHUB_ENV
+        run: echo "WEATHER_DATA=$(node src/index.js)" >> $GITHUB_ENV
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
 
       - name: Update README
-        run: node dist/updateReadme.js ${{ env.WEATHER_DATA }}
+        run: node src/updateReadme.js ${{ env.WEATHER_DATA }}
         env:
           GITHUB_EMAIL: ${{ secrets.GH_EMAIL }}
           GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}

@@ -13,8 +13,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@types/node": "^20.10.6",
+    "@babel/eslint-parser": "7.23.3",
     "axios": "^1.6.4",
     "eslint": "^8.56.0",
     "eslint-config-node": "^4.1.0",
