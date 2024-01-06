@@ -43,9 +43,9 @@ async function fetchWeatherData() {
     const iconCode = currentWeather.weather[0].icon;
 
     // Weather detail logs
-    console.log(
-      `Current Weather: ${currentWeather.weather[0].main} | Temperature: ${roundedTemperature}°C | Sunrise: ${sunrise} | Sunset: ${sunset} | Humidity: ${currentWeather.humidity}% | Icon: ${iconCode}`
-    );
+console.log(
+  `${currentWeather.weather[0].main}|${roundedTemperature}°C|${sunrise}|${sunset}|${currentWeather.humidity}|${iconCode}`
+);
   } catch (error) {
     console.error('Error fetching weather data:', error);
   }

@@ -20,15 +20,16 @@ function updateReadme(weatherData) {
     weatherData.split('|');
 
   // Construct updated weather data section for README
-  const updatedWeatherData = `
-<!-- Hourly Weather Update -->
-        <td><b>${description}</b><img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
-        <td><b>${temperature}</b></td>
-        <td><b>${sunrise} AM</b></td>
-        <td><b>${sunset} PM</b></td>
-        <td><b>${humidity}%</b></td>
-<!-- End of Hourly Weather Update -->
-`;
+const updatedWeatherData = `<tr style="text-align:center">
+  <!-- Hourly Weather Update -->
+  <td><b>${description}</b><img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
+  <td><b>${temperature}°C</b></td>
+  <td><b>${sunrise}</b></td>
+  <td><b>${sunset}</b></td>
+  <td><b>${humidity}%</b></td>
+  <!-- End of Hourly Weather Update -->
+</tr>`;
+
 
   // Replace existing weather data section in README
   readmeContent = readmeContent.replace(
