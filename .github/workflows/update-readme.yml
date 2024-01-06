@@ -27,7 +27,7 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
 
       - name: Update README
-        run: node src/updateReadme.js ${{ env.WEATHER_DATA }}
+        run: node src/updateReadme.js "${{ env.WEATHER_DATA }}"
         env:
           GITHUB_EMAIL: ${{ secrets.GH_EMAIL }}
           GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
@@ -36,6 +36,4 @@ jobs:
         run: |
           git config --global user.email "${{ secrets.GH_EMAIL }}"
           git config --global user.name "${{ secrets.GH_USERNAME }}"
-          git diff
-          git commit -am "update(hourly): Readme Weather info"
-          git push origin master
+          git diff --quiet || (git commit -am "update(hourly): Readme Weather info" && git push origin master)
