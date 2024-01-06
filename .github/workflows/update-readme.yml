@@ -52,7 +52,7 @@ jobs:
           cd tashfiqul-islam
           git diff
           if [ -n "$(git diff --name-only)" ]; then
-            git commit -am "Update README weather info"
+            git commit -am "update(hourly): Latest Weather Info"
             git push origin master
           else
             echo "No changes to commit"
