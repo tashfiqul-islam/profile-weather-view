@@ -19,6 +19,13 @@ function updateReadme(weatherData) {
   const [description, temperature, sunrise, sunset, humidity, icon] =
     weatherData.split('|');
 
+  // Get current time in UTC-6
+  const currentTime = new Date();
+  currentTime.setHours(currentTime.getHours() - 6);
+  const lastRefreshTime = currentTime.toLocaleString('en-US', {
+    timeZone: 'UTC',
+  });
+
   // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
   <td align="center">${description} <img width="15" src="http://openweathermap.org/img/w/${icon}.png"></td>
@@ -26,11 +33,19 @@ function updateReadme(weatherData) {
   <td align="center">${sunrise}</td>
   <td align="center">${sunset}</td>
   <td align="center">${humidity}%</td>
-  <!-- End of Hourly Weather Update -->`;
+  <!-- End of Hourly Weather Update -->
+  </tr>
+  </table>
+  <div align="center">
+    <h6>
+      <em>Last refresh: ${lastRefreshTime}</em>
+    </h6>
+  </div>
+  <!-- End of Dhaka's weather table -->`;
 
   // Replace existing weather data section in README
   readmeContent = readmeContent.replace(
-    /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
+    /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Dhaka's weather table -->/,
     updatedWeatherData
   );
 
