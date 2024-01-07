@@ -21,7 +21,7 @@ function updateReadme(weatherData) {
 
   // Get current time in UTC+6
   const currentTime = new Date();
-  currentTime.setHours(currentTime.getHours() + 6);
+  currentTime.setHours(currentTime.getHours());
 
   // Custom formatting for the date and time
   const options = {
@@ -35,10 +35,7 @@ function updateReadme(weatherData) {
     hour12: true,
   };
 
-  const lastRefreshTime = `${currentTime.toLocaleString(
-    'en-US',
-    options
-  )} Local Time (UTC +6)`;
+  const lastRefreshTime = `${currentTime.toLocaleString('en-US', options)} UTC`;
 
   // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
