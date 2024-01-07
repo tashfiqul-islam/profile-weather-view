@@ -3,7 +3,7 @@ name: Update README Weather
 # Triggers the workflow every hour and allows for manual triggers
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
+    - cron: '0 */8 * * *'  # Runs every 8 hours
   workflow_dispatch:
 
 jobs:

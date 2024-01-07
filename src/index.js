@@ -8,6 +8,17 @@ const API_KEY = process.env.OPENWEATHER_API_KEY;
 const LAT = '23.8759'; // Latitude for Uttara
 const LON = '90.3795'; // Longitude for Uttara
 
+// Function to convert to Dhaka timezone
+function convertToAstanaDhakaTime(utcDate) {
+  const astanaDhakaTimezone = 'Asia/Dhaka'; // Timezone for Astana/Dhaka
+  const timeOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: astanaDhakaTimezone,
+  };
+  return new Intl.DateTimeFormat('en-US', timeOptions).format(utcDate);
+}
+
 // Asynchronous function to fetch and log weather data
 async function fetchWeatherData() {
   try {
@@ -20,17 +31,6 @@ async function fetchWeatherData() {
 
     // Temperature round up to the nearest integer
     const roundedTemperature = Math.round(currentWeather.temp);
-
-    // Function to convert to Dhaka timezone
-    function convertToAstanaDhakaTime(utcDate) {
-      const astanaDhakaTimezone = 'Asia/Dhaka'; // Timezone for Astana/Dhaka
-      const timeOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: astanaDhakaTimezone,
-      };
-      return new Intl.DateTimeFormat('en-US', timeOptions).format(utcDate);
-    }
 
     // Unix timestamp conversion to human-readable time
     const sunriseUtc = new Date(currentWeather.sunrise * 1000);
