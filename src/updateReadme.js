@@ -38,7 +38,7 @@ function updateReadme(weatherData) {
   const lastRefreshTime = `${currentTime.toLocaleString(
     'en-US',
     options
-  )} (UTC +6)`;
+  )} Local Time (UTC +6)`;
 
   // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
