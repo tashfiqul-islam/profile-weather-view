@@ -19,12 +19,27 @@ function updateReadme(weatherData) {
   const [description, temperature, sunrise, sunset, humidity, icon] =
     weatherData.split('|');
 
-  // Get current time in UTC-6
+  // Get current time in UTC+6
   const currentTime = new Date();
-  currentTime.setHours(currentTime.getHours() - 6);
-  const lastRefreshTime = currentTime.toLocaleString('en-US', {
-    timeZone: 'UTC',
-  });
+  currentTime.setHours(currentTime.getHours() + 6);
+
+  // Custom formatting for the date and time
+  const options = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  };
+
+  const formattedDate = currentTime.toLocaleDateString('en-US', options);
+  const formattedTime = currentTime.toLocaleTimeString('en-US', options);
+
+  // Combine date and time with custom formatting
+  const lastRefreshTime = `${formattedDate} | ${formattedTime} (UTC +6)`;
 
   // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
