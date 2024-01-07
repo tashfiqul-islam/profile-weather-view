@@ -35,11 +35,10 @@ function updateReadme(weatherData) {
     hour12: true,
   };
 
-  const formattedDate = currentTime.toLocaleDateString('en-US', options);
-  const formattedTime = currentTime.toLocaleTimeString('en-US', options);
-
-  // Combine date and time with custom formatting
-  const lastRefreshTime = `${formattedDate} | ${formattedTime} (UTC +6)`;
+  const lastRefreshTime = `${currentTime.toLocaleString(
+    'en-US',
+    options
+  )} (UTC +6)`;
 
   // Construct updated weather data section for gh-profile README.md
   const updatedWeatherData = `<!-- Hourly Weather Update -->
