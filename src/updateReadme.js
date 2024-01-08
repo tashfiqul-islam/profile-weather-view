@@ -70,3 +70,8 @@ if (weatherData) {
 } else {
   console.error('No weather data provided');
 }
+
+// Exporting the function
+module.exports = {
+  updateReadme,
+};

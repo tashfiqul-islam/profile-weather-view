@@ -52,3 +52,9 @@ async function fetchWeatherData() {
 }
 
 fetchWeatherData();
+
+// Exporting the functions
+module.exports = {
+  fetchWeatherData,
+  convertToAstanaDhakaTime,
+};
