@@ -103,15 +103,21 @@ jobs:
       # Step 12: Commit and push changes if the README file was updated
       - name: Commit and Push Changes
         run: |
-          export GPG_TTY=$(tty)  
-          cd tashfiqul-islam  
+          export GPG_TTY=$(tty)  # Set GPG_TTY for compatibility in non-interactive environments
+          cd tashfiqul-islam  # Navigate to the repository
+
+          # Check if there are changes to commit
           if [ -n "$(git status --porcelain)" ]; then 
             git add README.md  # Stage the updated README file
-            git -c gpg.program="gpg --batch --yes --pinentry-mode loopback" \
-              commit -S -am "chore(profile-weather-view): Hourly Weather Update"  # Commit changes with GPG signing
-            git push origin master  
+
+            # Commit changes with GPG signing
+            git -c gpg.program="$(which gpg)" commit -S -am "chore(profile-weather-view): Hourly Weather Update" \
+              --gpg-sign="${{ secrets.GPG_SIGN_KEY }}"
+
+            git push origin master 
           else
-            echo "No changes to commit" 
+            echo "No changes to commit"  
           fi
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}  # Provide the passphrase for GPG signing
+
