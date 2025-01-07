@@ -15,26 +15,27 @@ jobs:
       - name: Checkout Weather Script Repository
         uses: actions/checkout@v4  
         with:
-          repository: tashfiqul-islam/git-profile-weather-view  # Repository containing weather script
-          path: git-profile-weather-view  # Path to clone the repository into
+          repository: tashfiqul-islam/git-profile-weather-view 
+          path: git-profile-weather-view  
 
       # Step 2: Checkout the personal repository
       - name: Checkout Personal Repository
         uses: actions/checkout@v4
         with:
-          path: tashfiqul-islam  # Path to clone the personal repository
+          repository: tashfiqul-islam/tashfiqul-islam
+          path: tashfiqul-islam 
           token: ${{ secrets.PAT }}  # Personal Access Token for authentication
 
       # Step 3: Set up Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'  
+          node-version: '22'  
 
       # Step 4: Install dependencies for the weather script
       - name: Install Dependencies
-        run: npm ci  # Clean install for reproducible builds
-        working-directory: ./git-profile-weather-view  # Set working directory to the weather script
+        run: npm install
+        working-directory: ./git-profile-weather-view 
 
       # Step 5: Execute the weather script to fetch data
       - name: Run Weather Script
@@ -42,7 +43,7 @@ jobs:
           WEATHER_DATA=$(node src/index.js)  # Fetch weather data
           echo "WEATHER_DATA=$WEATHER_DATA" >> $GITHUB_ENV  # Export weather data as an environment variable
         env:
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}  # Secure API key for OpenWeatherMap
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}  # API key for OpenWeatherMap
         working-directory: ./git-profile-weather-view
 
       # Step 6: Update the README with the new weather data
@@ -55,7 +56,8 @@ jobs:
         run: |
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import --pinentry-mode loopback  # Import GPG key securely
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --homedir ~/.gnupg --batch --import --no-tty --pinentry-mode loopback
+        shell: bash
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}  # Use the passphrase stored in secrets
 
@@ -67,15 +69,16 @@ jobs:
           git config --global user.signingkey "${{ secrets.GPG_SIGN_KEY }}"  # Set GPG signing key
           git config --global gpg.program $(which gpg)  # Use the installed GPG program
           git config --global commit.gpgsign true  # Enable GPG signing for commits
+        working-directory: ./tashfiqul-islam
 
       # Step 9: Commit and push changes if the README has been updated
-      - name: Commit and Push Changes
+      - name: Commit and push if changed
         run: |
-          cd tashfiqul-islam  # Navigate to the personal repository directory
-          if [ -n "$(git status --porcelain)" ]; then  # Check for changes
-            git add README.md  # Stage the updated README file
-            git commit -S -m "chore: update weather data" --no-verify  # Commit with a conventional message
-            git push origin master  # Push changes to the repository
+          cd tashfiqul-islam
+          git diff
+          if [ -n "$(git diff --name-only)" ]; then
+            git commit -S -am "chore(profile-weather-view): Hourly Weather Update"
+            git push origin master
           else
-            echo "No changes to commit"  # Log if no changes are detected
+            echo "No changes to commit"
           fi
