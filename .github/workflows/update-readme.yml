@@ -76,7 +76,19 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      # Step 10: Configure Git for commit signing with GPG
+      # Step 10: Validate GPG_PRIVATE_KEY and GPG_SIGN_KEY
+      - name: Validate GPG Configuration
+        run: |
+          echo "Listing imported GPG keys:"
+          gpg --list-secret-keys  # Ensure the private key is successfully imported
+          echo "Testing GPG signing with the provided key:"
+          echo "test" | gpg --batch --yes --pinentry-mode loopback --sign
+          echo "Testing specific signing key:"
+          gpg --list-signatures "${{ secrets.GPG_SIGN_KEY }}"  # Validate the signing key
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      # Step 11: Configure Git for commit signing with GPG
       - name: Configure Git
         run: |
           git config --global user.email "${{ secrets.GH_EMAIL }}"  # Configure Git user email
@@ -86,7 +98,7 @@ jobs:
           git config --global commit.gpgsign true  # Enable GPG signing for all commits
         working-directory: ./tashfiqul-islam
 
-      # Step 11: Commit and push changes if the README file was updated
+      # Step 12: Commit and push changes if the README file was updated
       - name: Commit and Push Changes
         run: |
           export GPG_TTY=$(tty)  
