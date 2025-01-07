@@ -26,11 +26,12 @@ jobs:
           path: tashfiqul-islam 
           token: ${{ secrets.PAT }}  # Personal Access Token for authentication
 
-      # Step 3: Set up Node.js environment
+      # Step 3: Set up Node.js environment for running scripts
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'  
+          # Use the latest Long-Term Support (LTS) version for stability and compatibility
+          node-version: 'lts/*'
 
       # Step 4: Install dependencies for the weather script
       - name: Install Dependencies
@@ -72,13 +73,17 @@ jobs:
         working-directory: ./tashfiqul-islam
 
       # Step 9: Commit and push changes if the README has been updated
-      - name: Commit and push if changed
+      - name: Commit and Push Changes
         run: |
+          export GPG_TTY=$(tty)
+          echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --export-secret-keys > ~/.gnupg/private.key
           cd tashfiqul-islam
-          git diff
-          if [ -n "$(git diff --name-only)" ]; then
+          if [ -n "$(git status --porcelain)" ]; then
+            git add README.md
             git commit -S -am "chore(profile-weather-view): Hourly Weather Update"
             git push origin master
           else
             echo "No changes to commit"
           fi
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
