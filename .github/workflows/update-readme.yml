@@ -82,7 +82,9 @@ jobs:
           echo "Listing imported GPG keys:"
           gpg --list-secret-keys  # Ensure the private key is successfully imported
           echo "Testing GPG signing with the provided key:"
-          echo "test" | gpg --batch --yes --pinentry-mode loopback --sign
+          echo "test" | gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --sign > signed-message.asc
+          echo "Verifying signed message:"
+          gpg --verify signed-message.asc
           echo "Testing specific signing key:"
           gpg --list-signatures "${{ secrets.GPG_SIGN_KEY }}"  # Validate the signing key
         env:
