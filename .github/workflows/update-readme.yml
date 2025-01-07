@@ -1,10 +1,10 @@
 name: Readme Weather Update
 
-# Trigger the workflow on a schedule and allow manual triggers
+# Trigger the workflow every 8 hours and allow manual execution
 on:
   schedule:
-    - cron: '0 */8 * * *'  # Trigger every 8 hours
-  workflow_dispatch:  
+    - cron: '0 */8 * * *'  # Scheduled to run every 8 hours
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   update-readme-weather:
@@ -15,99 +15,88 @@ jobs:
       - name: Checkout Weather Script Repository
         uses: actions/checkout@v4  
         with:
-          repository: tashfiqul-islam/git-profile-weather-view 
+          repository: tashfiqul-islam/git-profile-weather-view  # Weather script repository
           path: git-profile-weather-view 
 
-      # Step 2: Checkout the personal repository for README updates
+      # Step 2: Checkout the personal repository for updating the README
       - name: Checkout Personal Repository
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4  
         with:
-          repository: tashfiqul-islam/tashfiqul-islam 
-          path: tashfiqul-islam  
-          token: ${{ secrets.PAT }}  # Secure Personal Access Token for authentication
+          repository: tashfiqul-islam/tashfiqul-islam  # Personal profile repository
+          path: tashfiqul-islam 
+          token: ${{ secrets.PAT }}  # Use Personal Access Token for authentication
 
-      # Step 3: Cache Node.js dependencies to optimize runtime
+      # Step 3: Cache Node.js dependencies to improve performance
       - name: Cache Node.js Dependencies
         uses: actions/cache@v4 
         with:
-          path: ~/.npm  
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}  
+          path: ~/.npm  # Cache location for Node.js dependencies
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }} 
           restore-keys: |
-            ${{ runner.os }}-node-  
+            ${{ runner.os }}-node-  # Use partial matches if an exact cache is unavailable
 
-      # Step 4: Set up Node.js environment
+      # Step 4: Set up the Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v4  
         with:
-          # Use the latest Long-Term Support (LTS) version
-          node-version: 'lts/*'
+          node-version: 'lts/*'  # Use the latest Long-Term Support (LTS) version
 
       # Step 5: Install dependencies for the weather script
       - name: Install Dependencies
         run: npm ci  
-        working-directory: ./git-profile-weather-view  
+        working-directory: ./git-profile-weather-view 
 
-      # Step 6: Execute the weather script to fetch data
+      # Step 6: Run the weather script to fetch data
       - name: Run Weather Script
         run: |
-          # Run the script and capture the output weather data
+          # Execute the weather script and capture the output
           WEATHER_DATA=$(node src/index.js)
           echo "WEATHER_DATA=$WEATHER_DATA" >> $GITHUB_ENV  # Export weather data as an environment variable
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}  # Secure OpenWeatherMap API key
         working-directory: ./git-profile-weather-view
 
-      # Step 7: Update the README file in the personal repository
+      # Step 7: Update the README file with new weather data
       - name: Update README
         run: |
-          # Pass the fetched weather data to the update script
+          # Pass fetched weather data to the update script
           node src/updateReadme.js "${{ env.WEATHER_DATA }}"
         working-directory: ./git-profile-weather-view
 
-      # Step 8: Import GPG key for commit signing
+      # Step 8: Import GPG key for signing commits
       - name: Import GPG Key
         run: |
-          # Create the .gnupg directory and set appropriate permissions
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg
-
-          # Decode and import the GPG private key for signing commits
+          mkdir -p ~/.gnupg  # Create the .gnupg directory
+          chmod 700 ~/.gnupg  # Set appropriate permissions
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --homedir ~/.gnupg --batch --import --no-tty --pinentry-mode loopback
-
-          # Ensure GPG is configured to use loopback mode for non-interactive environments
+          # Configure GPG for non-interactive mode
           echo "use-agent" >> ~/.gnupg/gpg.conf
           echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        shell: bash
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}  # Secure passphrase for the GPG key
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      # Step 9: Configure Git with user details and GPG settings
+      # Step 9: Configure Git with user details and GPG signing settings
       - name: Configure Git
         run: |
-          # Configure Git with the provided email, username, and GPG key for commit signing
-          git config --global user.email "${{ secrets.GH_EMAIL }}"
-          git config --global user.name "${{ secrets.GH_USERNAME }}"
-          git config --global user.signingkey "${{ secrets.GPG_SIGN_KEY }}"
-          git config --global gpg.program $(which gpg)  
-          git config --global commit.gpgsign true
+          git config --global user.email "${{ secrets.GH_EMAIL }}"  # Configure user email
+          git config --global user.name "${{ secrets.GH_USERNAME }}"  # Configure user name
+          git config --global user.signingkey "${{ secrets.GPG_SIGN_KEY }}"  # Set the GPG signing key
+          git config --global gpg.program $(which gpg)  # Use the installed GPG program
+          git config --global commit.gpgsign true  # Enable GPG signing for commits
         working-directory: ./tashfiqul-islam
 
-      # Step 10: Commit and push changes if the README has been updated
+      # Step 10: Commit and push changes if README has been updated
       - name: Commit and Push Changes
         run: |
-          # Set GPG_TTY for compatibility in non-interactive environments
-          export GPG_TTY=$(tty)
-
-          # Navigate to the personal repository
-          cd tashfiqul-islam
-
-          # Check if there are changes in the repository
-          if [ -n "$(git status --porcelain)" ]; then
+          export GPG_TTY=$(tty)  # Set GPG_TTY for compatibility in CI
+          cd tashfiqul-islam  # Navigate to the personal repository
+          if [ -n "$(git status --porcelain)" ]; then  # Check for changes
             git add README.md  # Stage the updated README file
-            git commit -S -am "chore(profile-weather-view): Hourly Weather Update" 
+            # Commit changes with GPG signing
+            git commit -S -am "chore(profile-weather-view): Hourly Weather Update"
             git push origin master  # Push changes to the master branch
           else
             echo "No changes to commit"  # Log if no changes are detected
           fi
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}  # Secure passphrase for signing
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}  # Passphrase for GPG signing
