@@ -1,0 +1,33 @@
+# 🚀 Bun Configuration for profile-weather-view
+
+# Reduce memory usage at the cost of performance (disabled for speed)
+smol = false
+
+# Set log level (debug, warn, error)
+logLevel = "warn"
+
+# Enable OpenWeather API key preload (Auto-load environment variables)
+preload = ["./src/utils/preload.ts"]
+
+# Ensure Node.js aliases to Bun for smooth execution
+[run]
+bun = true
+
+# ✅ TypeScript Loader
+[loader]
+".ts" = "ts"
+
+# ✅ Optimized Package Installation Behavior
+[install]
+optional = true
+dev = true
+peer = true
+production = false
+exact = false
+auto = "fallback"
+frozenLockfile = false
+saveTextLockfile = false
+esm = true
+
+# Registry (default to npm)
+registry = "https://registry.npmjs.org"

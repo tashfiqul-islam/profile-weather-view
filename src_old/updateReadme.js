@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * Updates the README file with the new weather data.
@@ -11,7 +11,7 @@ function updateReadme(weatherData) {
     '..',
     '..',
     'tashfiqul-islam',
-    'README.md'
+    'README.md',
   );
 
   let readmeContent = fs.readFileSync(readmePath, 'utf8');
@@ -25,14 +25,14 @@ function updateReadme(weatherData) {
 
   // Custom formatting for the date and time
   const options = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
     hour12: false,
+    minute: '2-digit',
+    month: 'long',
+    second: '2-digit',
+    weekday: 'long',
+    year: 'numeric',
   };
 
   const lastRefreshTime = `${currentTime.toLocaleString('en-US', options)} UTC`;
@@ -57,7 +57,7 @@ function updateReadme(weatherData) {
   // Replace existing weather data section in README
   readmeContent = readmeContent.replace(
     /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Dhaka's weather table -->/,
-    updatedWeatherData
+    updatedWeatherData,
   );
 
   fs.writeFileSync(readmePath, readmeContent);

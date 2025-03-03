@@ -1,21 +1,51 @@
-# Dependency directories
+# 🔹 Node Modules
 node_modules/
+bun.lockb
 
-# TypeScript compiled output
+# 🔹 Build Output
 dist/
 build/
+coverage/
 
-# Environment files
+# 🔹 TypeScript Config & Compiler Output
+tsconfig.json
+tsconfig.test.json
+
+# 🔹 Environment Files
 .env
+.env.local
+.env.development
+.env.production
+.env.test
 
-# IDE / Editor specific files
+# 🔹 Package Manager Files
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# 🔹 Bun Configurations
+bunfig.toml
+
+# 🔹 GitHub & CI/CD Stuff
+.github/
+.gitignore
+
+# 🔹 Logs & System Files
+logs/
+*.log
+.DS_Store
+Thumbs.db
+
+# 🔹 IDE / Editor Specific Files
 .vscode/
 .idea/
 
-# Logs
-logs/
-*.log
+# 🔹 README & Documentation
+README.md
+LICENSE
+CHANGELOG.md
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# 🔹 Test Coverage & Report Files
+.vitest/
+coverage/

@@ -1,0 +1,2 @@
+#!/bin/sh
+bun run format && bun run lint && bun run type-check && bun run test --run

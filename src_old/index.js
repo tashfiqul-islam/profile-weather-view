@@ -16,6 +16,7 @@ function convertToAstanaDhakaTime(utcDate) {
     minute: '2-digit',
     timeZone: astanaDhakaTimezone,
   };
+
   return new Intl.DateTimeFormat('en-US', timeOptions).format(utcDate);
 }
 
@@ -44,7 +45,7 @@ async function fetchWeatherData() {
 
     // Weather detail logs
     console.log(
-      `${currentWeather.weather[0].main}|${roundedTemperature}|${sunrise}|${sunset}|${currentWeather.humidity}|${iconCode}`
+      `${currentWeather.weather[0].main}|${roundedTemperature}|${sunrise}|${sunset}|${currentWeather.humidity}|${iconCode}`,
     );
   } catch (error) {
     console.error('Error fetching weather data:', error);
@@ -55,6 +56,6 @@ fetchWeatherData();
 
 // Exporting the functions
 module.exports = {
-  fetchWeatherData,
   convertToAstanaDhakaTime,
+  fetchWeatherData,
 };
