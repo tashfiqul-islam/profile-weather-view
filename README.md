@@ -1,173 +1,508 @@
-<!-- Banner Section -->
+# 🌦️ Profile Weather View
+
+<div align="center">
+
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/update-readme.yml?style=flat-square&logo=github&label=weather%20update)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/update-readme.yml)
+[![GitHub stars](https://img.shields.io/github/stars/tashfiqul-islam/profile-weather-view?style=flat-square&logo=github)](https://github.com/tashfiqul-islam/profile-weather-view/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/tashfiqul-islam/profile-weather-view?style=flat-square&logo=github)](https://github.com/tashfiqul-islam/profile-weather-view/network/members)
+[![GitHub issues](https://img.shields.io/github/issues/tashfiqul-islam/profile-weather-view?style=flat-square&logo=github)](https://github.com/tashfiqul-islam/profile-weather-view/issues)
+[![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+[![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh)
+[![Temporal API](https://img.shields.io/badge/using-Temporal_API-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md)
+
+<br>
+
+<div align="center">
+
+```
+⭐ Transform your GitHub profile into a live weather dashboard ⭐
+```
+
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/12345678/your-logo.png" width="120" alt="Project Logo">
+  <b>Profile Weather View</b> seamlessly integrates real-time weather data into your GitHub profile README using the OpenWeather API and GitHub Actions automation. Built with TypeScript and Bun, it delivers accurate weather information for any location with sunrise, sunset, temperature, and humidity metrics that automatically update every 8 hours.
 </p>
 
-<h1 align="center">🌦️ Profile Weather View</h1>
 <p align="center">
-  <strong>Real-time weather updates on your GitHub profile README — fully automated.</strong>
+  <i>Set it up once and enjoy dynamic weather updates forever—no maintenance required.</i>
 </p>
-<p align="center">
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/update-readme.yml">
-    <img src="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/update-readme.yml/badge.svg" alt="Readme Weather Update">
+
+</div>
+
+<br>
+
+<details>
+<summary>📊 Example Weather Display</summary>
+<br>
+
+<div align="center">
+
+### Current Weather in Uttara, Dhaka
+
+| Weather | Temperature | Sunrise | Sunset | Humidity |
+|:-------:|:-----------:|:-------:|:------:|:--------:|
+| Clear <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""> | 32°C | 06:12:30 | 18:15:45 | 65% |
+
+<div align="center">
+  <h6>
+    <em>Last refresh: Friday, March 08, 2025 14:30:22 UTC+6</em>
+  </h6>
+</div>
+
+</div>
+</details>
+
+<a href="https://github.com/tashfiqul-islam/profile-weather-view/generate">
+  <img src="https://img.shields.io/badge/use%20this-template-brightgreen?style=for-the-badge&logo=github" alt="Use this template">
+</a>
+
+</div>
+
+<hr>
+
+## 📋 Overview
+
+Profile Weather View dynamically updates your GitHub profile README with real-time weather data for your location. Built with TypeScript and modern web technologies, it leverages GitHub Actions for fully automated updates every 8 hours.
+
+<details open>
+<summary><b>📚 Table of Contents</b></summary>
+
+- [📋 Overview](#-overview)
+- [✨ Key Features](#-key-features)
+- [🚀 Quick Start](#-quick-start)
+- [🧩 Architecture](#-architecture)
+- [🏗️ Core Components](#️-core-components)
+- [⚡ Technology Stack](#-technology-stack)
+- [🔄 CI/CD Pipeline](#-cicd-pipeline)
+- [⚙️ Configuration](#-configuration)
+- [🛠️ Development](#-development)
+- [🧪 Testing](#-testing)
+- [📈 Roadmap](#-roadmap)
+- [🤝 Contributing](#-contributing)
+- [📜 License](#-license)
+- [🙏 Acknowledgements](#-acknowledgements)
+
+</details>
+
+## ✨ Key Features
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center">
+      <h3>🌐</h3>
+      <b>Real-time Data</b><br>
+      <small>OpenWeather API 3.0</small>
+    </td>
+    <td align="center">
+      <h3>🔄</h3>
+      <b>Auto-Updates</b><br>
+      <small>Every 8 hours via Actions</small>
+    </td>
+    <td align="center">
+      <h3>🛠️</h3>
+      <b>Type Safety</b><br>
+      <small>100% TypeScript + Zod</small>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <h3>⚡</h3>
+      <b>High Performance</b><br>
+      <small>Bun runtime optimization</small>
+    </td>
+    <td align="center">
+      <h3>🕒</h3>
+      <b>Smart Time Handling</b><br>
+      <small>Temporal API integration</small>
+    </td>
+    <td align="center">
+      <h3>🧪</h3>
+      <b>Reliability</b><br>
+      <small>100% test coverage</small>
+    </td>
+  </tr>
+</table>
+</div>
+
+## 🚀 Quick Start
+
+### One-Minute Setup
+
+```bash
+# Clone, install, and set up in one command
+npx degit tashfiqul-islam/profile-weather-view my-weather-profile && \
+cd my-weather-profile && \
+bun install && \
+echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
+```
+
+### Manual Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/tashfiqul-islam/profile-weather-view.git
+   cd profile-weather-view
+   ```
+
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Configure environment**
+   ```bash
+   echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
+   ```
+
+4. **Run locally**
+   ```bash
+   bun start
+   ```
+
+5. **Setup GitHub Actions**
+    - Fork this repository
+    - Add your OpenWeather API key as a GitHub secret named `OPEN_WEATHER_KEY`
+    - The workflow will automatically run every 8 hours
+
+## 🧩 Architecture
+
+Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
+
+```mermaid
+graph TD
+    A[GitHub Actions] -->|Triggers| B[index.ts]
+    B -->|Calls| C[fetchWeather.ts]
+    C -->|Uses| D[OpenWeather API]
+    D -->|Returns| C
+    C -->|Returns| B
+    B -->|Passes data to| E[updateReadme.ts]
+    E -->|Updates| F[README.md]
+    G[preload.ts] -->|Configures| B
+```
+
+## 🏗️ Project Details
+
+Profile Weather View follows a modular design with four core components working together to deliver real-time weather data to your GitHub profile.
+
+<div align="center">
+  <img src="https://mermaid.ink/svg/pako:eNp1kk9v2zAMxb-K4dMKJM6W7JACRbEa7WE7DTnMPtCWmAiVJUGU0xpBvvsoOcm6rTuJ5O_xkXzk0RljgWue9dBz5UBm3NuetjTEvNWqLsBvGFnk7dbaHooULTlpnXT1FBPYI21JBp8OOnpCDWd_n7OlQQcXOmgcKadtwcFdXSNpTZ3s1QK_WasuOeZo-zTkjDVanUkTdyRbCv9BnWrK34QOb2pUgwPUTvoOZvdXtJbTrJrnnM1XkD1kGapGtkBGo0I1vGxAaYcjw9Z79A1CzVW_OaDTvPYWkRY75oWS4OTm0YbAWDEbXcX3dAE6TFcX2Gk8RqfnkOyj6qOeONbYqaFLZo-NWf4rWmvBVpPM40o3OMTd8PDt_WTbPwY_x2tZ4Jc-5dJz_BnPPKUi9YS6XxRWMrB5uKrPrTJonVLGjNHC9NLEeeCm8xHBJqeJYsyLR3dEYIhJvwxvUjhlKZZ-cKYekzUiXCfP5sWBgzgZAzMchDBOMZtY2R-xPJXAbcxm_Bms18w-5uOLZJP6a9IyZNRzwskMb1z8-xbK-qiD8hSqM-oe-mRYCTf_AIzQqI4" alt="Core Components Interaction" width="80%">
+</div>
+
+### Core Components
+
+Profile Weather View is built around four specialized modules, each with a distinct responsibility:
+
+| Component | Purpose |
+|-----------|---------|
+| **🚀 `index.ts`** | Application entry point and orchestrator that manages the flow between services |
+| **🌐 `fetchWeather.ts`** | Weather service that retrieves and validates data from the OpenWeather API |
+| **📝 `updateReadme.ts`** | Service that updates the README with new weather data |
+| **⚙️ `preload.ts`** | Environment validator that ensures required configuration is present |
+
+### Data Flow
+
+The application follows a unidirectional data flow:
+
+1. **Initialization** — Load and validate environment variables
+2. **Data Acquisition** — Fetch and validate weather data from OpenWeather API
+3. **Display** — Update README with formatted weather information
+4. **Completion** — Report success or provide troubleshooting details
+
+## 📚 Documentation
+
+Comprehensive documentation for the Profile Weather View project is available in the [`src/docs/`](./src/docs/) directory. This includes detailed information on:
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><a href="./src/docs/getting-started.md">🚀 Getting Started</a></td>
+      <td align="center"><a href="./src/docs/architecture.md">🏗️ Architecture</a></td>
+      <td align="center"><a href="./src/docs/api-reference.md">📋 API Reference</a></td>
+      <td align="center"><a href="./src/docs/configuration.md">⚙️ Configuration</a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="./src/docs/deployment.md">🚢 Deployment</a></td>
+      <td align="center"><a href="./src/docs/testing.md">🧪 Testing</a></td>
+      <td align="center"><a href="./src/docs/contributing.md">👥 Contributing</a></td>
+      <td align="center"><a href="./src/docs/troubleshooting.md">🔧 Troubleshooting</a></td>
+    </tr>
+  </table>
+</div>
+
+<div align="center">
+  <a href="./src/docs/README.md">
+    <img src="https://img.shields.io/badge/View_Complete_Documentation-Guide-blue?style=for-the-badge" alt="View Complete Documentation">
   </a>
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
+</div>
+
+For comprehensive details on all aspects of the project, please refer to the [Documentation Home](./src/docs/README.md).
+
+## ⚡ Technology Stack
+
+<div align="center">
+
+[![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/language-typescript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![OpenWeather API](https://img.shields.io/badge/api-openweather-eb6e4b?style=flat-square&logo=openweathermap)](https://openweathermap.org/api)
+[![Temporal API](https://img.shields.io/badge/datetime-temporal_api-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/)
+[![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=flat-square&logo=zod)](https://zod.dev)
+[![GitHub Actions](https://img.shields.io/badge/ci%2Fcd-github_actions-2088FF?style=flat-square&logo=github-actions)](https://github.com/features/actions)
+[![Node.js API](https://img.shields.io/badge/core-node.js_api-339933?style=flat-square&logo=node.js)](https://nodejs.org/api/)
+[![ESLint](https://img.shields.io/badge/linting-eslint-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
+
+</div>
+
+## 🔄 CI/CD Pipeline
+
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://mermaid.ink/svg/pako:eNqVVMtu2zAQ_BVWpwRwLKc9GIgCw1CKAkUvhhHYPTAkZYkIRQoiZbsw9O-lqJcd2030YlHcnZ0dLnl0nBgDXPHIgS9ccVAp96ajSzQ-77RqS_BzRo5YtaXrQaWrGqR10tVTCsGK0yD-S5cWqZEWNRlXdg2oe9upUMtICytRc9pSf50N88trKnc3VxdYLr99oHzT-VDT96B9cABU5U8xvF8O-vzq-iIVyFYrWLYfr2P9qXxabrTXkLLdDumT0Eiee0_lVYoZnefz8PvnFxhZ3rLiQlE17Nxoo2yHpLSgKljqVcdjZQyQ49b6RQmxg0a1UlT5GApgaXHh2IhWs-NHWHpUjrDvxLr1Qot0JA_KRsKlGHYXPPYpw5oXLnw2KmfUcbEGrQCPmz5XzwgdaIoEpDWTDVrwrhqLKY4A8dGKdSf8cZNLYQXJv1XUdtJCNq3-LYwGXcEqLMPiJZTQHZyRXA1JozhzTFE9p_s1qAy6tEH0lO1m-1yVX5OVOo9mzqWwnDBSOjkrtJfCWD8-DKfZ-JJZSTVnGeLEJGJpmUXu1Rjjm8Sk_aWRfkZ7DlGGAuQj5-x59tgkLo05YKB3nqvPpXG7Dn4V31nxkgIJnEq1-cDtKZhPpYIZDnhzjAMU29cojjZBx5D34nrGMo-sDpzjQIQhHpMU5n5PSB4LUDv85bQtRPo5Yf1M1XiA1_lkMpsw3fszOqVtPl288j9OMWVxcjxbTPMFe3sMBxPLotk0m8fJjC3vD7HG4p8PfwETDkXs">
+    <source media="(prefers-color-scheme: light)" srcset="https://mermaid.ink/svg/pako:eNqVVEtv2zAM_iuETgmQ2GkPA1BgGJpiQLeL4QbuZRBkKY4AWZJJOfXQ9L-PsmcnadreKln8vvfiJnLiDAjNEw-hEsZDrYX3HV2jC3mvlVuhXzCyRM2VdANofV2Dtk7aZk4h9OK0iP_SlUVqpEVNzlfDGuSeOzXUchKBbdFwukdvzYbF1S2Vu6erK1wuv32gYtOFWNP3YEN0AFyVT0l-WG77_Or2IjfIVisou4_XqflUPi23OmjI2X6P9EmZSF54T-V1jhmdF4vw--cXGFnes-JCUj3u3Chd2x5ZakFVsNSrnnNtLZATVoalwthDo3opqiJMBYi0uPBsRMt0cAhLjyoQ9p1Yt8FpkY_kQdlEuCTD7kLAPmtYC-LCZ6tyRh2IN2gF-LTpi_QMaKAJEpA2bDbqILh6KiYcAc5HK9adCMdNroQVZP9WUddrC_m0-rewGnQNq7gMS5RQQf_iSLk5JI3izDNF9ZweNqBz6PMG0VO2n-1zVX5NVuk8mjmXwnLGSOn0rNBeSmvD9DCc5uNLZiXXnGWIE5OIpWUWu9dTjG9Sk_aXJvoZ7XmKMpQgHzlnz7PHNnNpzBEDvQtcfS6N23fwq_jBipccSOC1Npsffk7BXC4VzHDAm1Mc4NS-JnG0jTqGghfXM5ZFYnXkHAfiGOIxTWDu94SUMQN1wF9B20Lknwvez1SNB3ydTyazCdODP-NTus6ny1f-xymmbEnOZ4tpvmD7p3gwsSyazrPFLJmy5eNxrLH0Z8NfDAdF5g">
+    <img src="https://mermaid.ink/svg/pako:eNqVVEtv2zAM_iuETgmQ2GkPA1BgGJpiQLeL4QbuZRBkKY4AWZJJOfXQ9L-PsmcnadreKln8vvfiJnLiDAjNEw-hEsZDrYX3HV2jC3mvlVuhXzCyRM2VdANofV2Dtk7aZk4h9OK0iP_SlUVqpEVNzlfDGuSeOzXUchKBbdFwukdvzYbF1S2Vu6erK1wuv32gYtOFWNP3YEN0AFyVT0l-WG77_Or2IjfIVisou4_XqflUPi23OmjI2X6P9EmZSF54T-V1jhmdF4vw--cXGFnes-JCUj3u3Chd2x5ZakFVsNSrnnNtLZATVoalwthDo3opqiJMBYi0uPBsRMt0cAhLjyoQ9p1Yt8FpkY_kQdlEuCTD7kLAPmtYC-LCZ6tyRh2IN2gF-LTpi_QMaKAJEpA2bDbqILh6KiYcAc5HK9adCMdNroQVZP9WUddrC_m0-rewGnQNq7gMS5RQQf_iSLk5JI3izDNF9ZweNqBz6PMG0VO2n-1zVX5NVuk8mjmXwnLGSOn0rNBeSmvD9DCc5uNLZiXXnGWIE5OIpWUWu9dTjG9Sk_aXJvoZ7XmKMpQgHzlnz7PHNnNpzBEDvQtcfS6N23fwq_jBipccSOC1Npsffk7BXC4VzHDAm1Mc4NS-JnG0jTqGghfXM5ZFYnXkHAfiGOIxTWDu94SUMQN1wF9B20Lknwvez1SNB3ydTyazCdODP-NTus6ny1f-xymmbEnOZ4tpvmD7p3gwsSyazrPFLJmy5eNxrLH0Z8NfDAdF5g" alt="CI/CD Pipeline">
+  </picture>
+</div>
+
+<div align="center">
+  <table>
+    <tr>
+      <th align="center">Feature</th>
+      <th align="center">Implementation</th>
+      <th align="center">Benefit</th>
+    </tr>
+    <tr>
+      <td align="center"><b>Matrix Strategy</b></td>
+      <td align="center">Parallel task execution</td>
+      <td align="center">Up to 70% faster build times</td>
+    </tr>
+    <tr>
+      <td align="center"><b>OIDC Authentication</b></td>
+      <td align="center">Token-based security</td>
+      <td align="center">Enhanced protection, no PATs</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Artifact Persistence</b></td>
+      <td align="center">Job data sharing</td>
+      <td align="center">Reliable data transfer between steps</td>
+    </tr>
+    <tr>
+      <td align="center"><b>GPG Signing</b></td>
+      <td align="center">Cryptographic validation</td>
+      <td align="center">Verified commits with GitHub's GPG</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Cache System</b></td>
+      <td align="center">Dependency preservation</td>
+      <td align="center">Reduced network traffic & faster builds</td>
+    </tr>
+  </table>
+</div>
+
+## ⚙️ Configuration
+
+Profile Weather View is highly configurable to meet your specific needs.
+
+### Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `OPEN_WEATHER_KEY` | API key for OpenWeather | `a1b2c3d4e5...` |
+
+### Location Settings (in fetchWeather.ts)
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `LAT` | Latitude coordinate | `23.8759` (Uttara, Dhaka) |
+| `LON` | Longitude coordinate | `90.3795` (Uttara, Dhaka) |
+| `TIMEZONE` | Local timezone | `Asia/Dhaka` |
+
+### Bun Configuration (bunfig.toml)
+
+```toml
+# Key Bun configuration settings
+preload = ["./src/utils/preload.ts"]
+smol = false  # Optimized for performance
+logLevel = "warn"
+
+[run]
+bun = true
+
+[loader]
+".ts" = "ts"
+```
+
+## 🛠️ Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh) >= 1.0.0
+- [OpenWeather API Key](https://openweathermap.org/api)
+- [GitHub Account](https://github.com)
+
+### Common Commands
+
+```bash
+# Start the application
+bun start
+
+# Run tests
+bun test
+
+# Check types
+bun run typecheck
+
+# Format code
+bun run format
+```
+
+### Project Structure
+
+```
+src/
+├── index.ts               # Entry point
+├── services/              # Core services
+│   ├── fetchWeather.ts    # Weather API integration
+│   └── updateReadme.ts    # README modification
+└── utils/                 # Utility functions
+    └── preload.ts         # Environment setup
+```
+
+## 🧪 Testing
+
+The project has comprehensive test coverage to ensure reliability:
+
+```
+% Coverage report from v8
+------------------|---------|----------|---------|---------|-------------------
+File              | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+------------------|---------|----------|---------|---------|-------------------
+All files         |     100 |      100 |     100 |     100 |                  
+ src              |     100 |      100 |     100 |     100 |                  
+  index.ts        |     100 |      100 |     100 |     100 |                  
+ src/services     |     100 |      100 |     100 |     100 |                  
+  fetchWeather.ts |     100 |      100 |     100 |     100 |                  
+  updateReadme.ts |     100 |      100 |     100 |     100 |                  
+ src/utils        |     100 |      100 |     100 |     100 |                  
+  preload.ts      |     100 |      100 |     100 |     100 |                  
+------------------|---------|----------|---------|---------|-------------------
+```
+
+### Testing Strategies
+
+- **Unit Tests**: Each function is tested in isolation
+- **Integration Tests**: Services are tested together
+- **Mock Tests**: External API calls are mocked
+- **Error Handling Tests**: Verify proper error handling
+
+<details>
+<summary><b>Completed Milestones</b></summary>
+<br>
+
+### Q1 2025
+- ✅ Bun runtime integration
+- ✅ TypeScript migration
+- ✅ Temporal API implementation
+- ✅ Optimized CI/CD pipeline
+- ✅ 100% test coverage
+
+</details>
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**
+4. **Run tests**: `bun test`
+5. **Commit changes**: Use conventional commit format
+6. **Push to your fork**: `git push origin feature/amazing-feature`
+7. **Open a pull request**
+
+<div align="center">
+  <a href="./src/docs/contributing.md">
+    <img src="https://img.shields.io/badge/View_Contribution_Guidelines-Documentation-brightgreen?style=for-the-badge" alt="View Contribution Guidelines">
   </a>
-  <a href="https://github.com/tashfiqul-islam">
-    <img src="https://img.shields.io/github/followers/tashfiqul-islam?style=social" alt="GitHub Followers">
-  </a>
-</p>
+</div>
 
----
+For detailed contribution guidelines, including code style, commit standards, and development workflow, please refer to the [Contributing Documentation](./src/docs/contributing.md).
 
-## **📌 Overview**
-💡 **Profile Weather View** automatically fetches and updates your GitHub profile with live weather data using **Bun**, **OpenWeather API**, and **GitHub Actions**.  
-💡 This ensures your **README stays dynamic** with the latest weather details — completely hands-free.
+## 📜 License
 
----
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## **🏰 Features**
-✅ **Real-time Weather Updates** — Fetches and displays live weather every 8 hours  
-✅ **Automated GitHub Profile Updates** — Uses GitHub Actions to modify your README  
-✅ **Lightning-Fast Performance** — Powered by **Bun** instead of Node.js  
-✅ **Pre-commit Hooks (Husky)** — Enforces linting, formatting, type checking, and tests  
-✅ **Effortless CI/CD Integration** — Works seamlessly with GitHub Workflows
-
----
-
-## **⚡ Quick Start**
-Get up and running in just a few steps:
-
-### **1️⃣ Clone the Repository**
-```sh
-git clone https://github.com/tashfiqul-islam/profile-weather-view.git
-cd profile-weather-view
+```
+Copyright (c) 2025 Tashfiqul Islam
 ```
 
-### **2️⃣ Install Dependencies (Bun)**
-```sh
-bun install
-```
+## 🙏 Acknowledgements
 
-### **3️⃣ Configure Environment Variables**
-Create a `.env` file in the root directory:
-```sh
-OPEN_WEATHER_KEY=your_openweather_api_key
-```
-
-### **4️⃣ Run the Application Locally**
-```sh
-bun run src/index.ts
-```
-This will fetch and display the latest weather details.
-
-### **5️⃣ Manually Update Your README**
-```sh
-bun run src/updateReadme.ts
-```
-This updates your GitHub profile README with the latest weather data.
-
----
-
-## **🔄 Automated Updates with GitHub Actions**
-This project uses **GitHub Actions** to update your README every **8 hours**.
-
-### **GitHub Workflow Setup**
-The following **workflow is already configured** and runs automatically:
-```yaml
-on:
-  schedule:
-    - cron: '0 */8 * * *' # Runs every 8 hours
-  workflow_dispatch: # Allows manual execution
-
-jobs:
-  update-readme-weather:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Fetch Weather Data
-        run: |
-          WEATHER_DATA=$(bun run src/index.ts)
-          echo "WEATHER_DATA=$WEATHER_DATA" >> $GITHUB_ENV
-
-      - name: Update README
-        run: bun run src/updateReadme.ts "${{ env.WEATHER_DATA }}"
-
-      - name: Commit & Push Changes
-        run: |
-          git add README.md
-          git commit -m "chore(weather): update profile weather"
-          git push origin master
-```
-✅ **No manual effort required.** Your README stays updated **automatically**.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://openweathermap.org/">
+          <img src="https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png" width="50" alt="OpenWeather"><br>
+          <b>OpenWeather API</b>
+        </a><br>
+        <sub>Real-time weather data</sub>
+      </td>
+      <td align="center">
+        <a href="https://bun.sh">
+          <img src="https://user-images.githubusercontent.com/709451/182802334-d9c42afe-f35d-4a7b-86ea-9985f73f20c3.png" width="50" alt="Bun"><br>
+          <b>Bun</b>
+        </a><br>
+        <sub>Blazing fast runtime</sub>
+      </td>
+      <td align="center">
+        <a href="https://www.typescriptlang.org/">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/512px-Typescript_logo_2020.svg.png" width="50" alt="TypeScript"><br>
+          <b>TypeScript</b>
+        </a><br>
+        <sub>Type safety</sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <a href="https://tc39.es/proposal-temporal/docs/">
+          <img src="https://avatars.githubusercontent.com/u/1725583?s=200&v=4" width="50" alt="TC39"><br>
+          <b>Temporal API</b>
+        </a><br>
+        <sub>Modern date/time handling</sub>
+      </td>
+      <td align="center">
+        <a href="https://zod.dev">
+          <img src="https://zod.dev/logo.svg" width="50" alt="Zod"><br>
+          <b>Zod</b>
+        </a><br>
+        <sub>Schema validation</sub>
+      </td>
+      <td align="center">
+        <a href="https://github.com/features/actions">
+          <img src="https://github.githubassets.com/images/modules/site/features/actions-icon-actions.svg" width="50" alt="GitHub Actions"><br>
+          <b>GitHub Actions</b>
+        </a><br>
+        <sub>CI/CD automation</sub>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
-## **💻 Tech Stack**
-<p align="center">
-  <img src="https://img.shields.io/badge/Bun-1.1.9-black?style=for-the-badge&logo=bun&logoColor=white">
-  <img src="https://img.shields.io/badge/TypeScript-5.4-007ACC?style=for-the-badge&logo=typescript&logoColor=white">
-  <img src="https://img.shields.io/badge/Vitest-3.0.7-6E5EEF?style=for-the-badge&logo=vitest&logoColor=white">
-  <img src="https://img.shields.io/badge/OpenWeather_API-0069C2?style=for-the-badge&logo=openweather&logoColor=white">
-</p>
-
----
-
-## **🔧 Pre-commit Hook (Husky)**
-This project enforces strict commit rules using **Husky**. Before every commit, the following checks run **automatically**:
-✅ **Prettier (formatting)**  
-✅ **ESLint (linting)**  
-✅ **TypeScript Type Checking**  
-✅ **Vitest (Testing)**
-
-### **Running Pre-commit Hooks Manually**
-```sh
-bun run format && bun run lint && bun run type-check && bun run test --run
-```
-
----
-
-## **🤝 Contributing**
-Want to improve this project? Follow these steps:
-
-1️⃣ **Fork the repository**  
-2️⃣ **Create a feature branch:** `git checkout -b feature-name`  
-3️⃣ **Commit your changes using Conventional Commits:**
-```sh
-git commit -m "feat: add new feature"
-```
-4️⃣ **Push to your branch:** `git push origin feature-name`  
-5️⃣ **Open a Pull Request**
-
-💡 **Always ensure pre-commit hooks pass before pushing.**  
-💡 Follow the **Conventional Commits** format for a clean commit history.
-
----
-
-## **📜 License**
-This project is licensed under the **MIT License**.  
-Feel free to **use, modify, and distribute** as needed.
-
----
-
-## **📣 Shoutout to the Devs!**
-<p align="center">
-    <strong>🚀 Created with ❤️ by <a href="https://github.com/tashfiqul-islam">Tashfiq</a></strong>
-</p>
-
-<p align="center">
-    <a href="https://github.com/tashfiqul-islam" target="_blank">🌟 Follow me on GitHub</a> —
-    My future projects will have <em>slightly</em> fewer bugs! 🐛
-</p>
-
+<div align="center">
+  <p>
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">Request Feature</a>
+    ·
+    <a href="https://github.com/sponsors/tashfiqul-islam">Sponsor</a>
+  </p>
+  <p>
+    <small>
+      Made with ❤️ by <a href="https://github.com/tashfiqul-islam">Tashfiqul Islam</a>
+    </small>
+  </p>
+</div>
