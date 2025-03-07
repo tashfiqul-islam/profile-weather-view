@@ -81,6 +81,26 @@ describe('fetchWeatherData()', () => {
     );
   });
 
+  it('should handle non-Error rejection from fetch', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('Non-Error rejection'))), // Reject with an Error object
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(vi.fn());
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      '❌ Weather data fetch failed. Check logs for details.',
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '❌ Failed to fetch weather data:',
+      'Non-Error rejection', // The error message is still logged
+    );
+  });
+
   it('should handle non-Error rejection cases', async () => {
     vi.stubGlobal(
       'fetch',
