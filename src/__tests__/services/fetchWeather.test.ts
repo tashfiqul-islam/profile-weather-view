@@ -219,4 +219,97 @@ describe('fetchWeatherData()', () => {
       expect.any(Array), // ✅ Ensures Zod error logs the validation issue
     );
   });
+
+  it('should handle Zod validation errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          json: vi.fn().mockResolvedValue({
+            current: {
+              humidity: 'invalid', // ❌ Invalid type for Zod
+              sunrise: 1710000000,
+              sunset: 1710050000,
+              temp: 30,
+              weather: [{}],
+            },
+          }),
+          ok: true,
+        }),
+      ),
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(vi.fn());
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      '❌ Weather data fetch failed. Check logs for details.',
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '❌ Invalid API response format:',
+      expect.any(Array), // ✅ Ensures Zod error logs the validation issue
+    );
+  });
+
+  it('should handle unexpected errors in the catch block', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('Unexpected error'))),
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(vi.fn());
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      '❌ Weather data fetch failed. Check logs for details.',
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '❌ Failed to fetch weather data:',
+      'Unexpected error',
+    );
+  });
+
+  it('should handle unexpected non-Error types in the catch block', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('Unexpected string error'))),
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(vi.fn());
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      '❌ Weather data fetch failed. Check logs for details.',
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '❌ Failed to fetch weather data:',
+      'Unexpected string error',
+    );
+  });
+
+  it('should handle non-ZodError exceptions in the catch block', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new Error('Non-ZodError exception'))),
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(vi.fn());
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      '❌ Weather data fetch failed. Check logs for details.',
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '❌ Failed to fetch weather data:',
+      'Non-ZodError exception',
+    );
+  });
 });
