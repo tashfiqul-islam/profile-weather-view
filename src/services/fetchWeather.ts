@@ -99,12 +99,16 @@ export async function fetchWeatherData(): Promise<string> {
 
     return `${weatherDescription}|${roundedTemperature}|${sunriseTime}|${sunsetTime}|${humidity}|${iconCode}`;
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error('❌ Invalid API response format:', error.errors);
+    // Normalize the error into an Error object
+    const normalizedError =
+      error instanceof Error ? error : new Error(String(error));
+
+    if (normalizedError instanceof z.ZodError) {
+      console.error('❌ Invalid API response format:', normalizedError.errors);
     } else {
       console.error(
         '❌ Failed to fetch weather data:',
-        error instanceof Error ? error.message : error,
+        normalizedError.message,
       );
     }
     throw new Error('❌ Weather data fetch failed. Check logs for details.');
