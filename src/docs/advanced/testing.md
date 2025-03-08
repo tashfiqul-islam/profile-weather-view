@@ -1,6 +1,8 @@
 # Testing
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Testing-Vitest-6E9F18" alt="Testing Framework">
   <img src="https://img.shields.io/badge/Coverage-V8-4B32C3" alt="Coverage">
   <img src="https://img.shields.io/badge/CI_Integration-Husky-8A4182" alt="CI Integration">

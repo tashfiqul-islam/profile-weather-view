@@ -18,7 +18,10 @@
     "test:coverage": "bunx vitest --coverage",
     "check-all": "bunx vitest --run && bun run tsc --noEmit && bun format && bun lint",
     "prepare": "husky",
-    "commit": "bunx commit"
+    "commit": "bunx commit",
+    "docs:dev": "vitepress dev src/docs",
+    "docs:build": "vitepress build src/docs",
+    "docs:preview": "vitepress preview src/docs"
   },
   "keywords": [
     "weather",
@@ -35,18 +38,18 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
-    "@eslint/js": "^9.21.0",
+    "@eslint/js": "^9.22.0",
     "@stylistic/eslint-plugin": "^4.2.0",
-    "@types/node": "^22.13.9",
+    "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "@vitest/coverage-v8": "^3.0.8",
     "@vitest/expect": "^3.0.8",
-    "eslint": "^9.21.0",
+    "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-perfectionist": "^4.9.0",
+    "eslint-plugin-perfectionist": "^4.10.0",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
@@ -59,6 +62,7 @@
     "tseslint": "^0.0.2",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.0",
+    "vitepress": "^1.6.3",
     "vitest": "^3.0.8"
   },
   "dependencies": {

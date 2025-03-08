@@ -1,6 +1,8 @@
-# Getting Started
+# Introduction
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Bun-latest-F9AD00" alt="Bun Version">
   <img src="https://img.shields.io/badge/TypeScript-5.8.2-3178C6" alt="TypeScript Version">
   <img src="https://img.shields.io/badge/API-OpenWeather-EB6E4B" alt="API">
@@ -206,7 +208,7 @@ This runs the application without the build step, using Bun's built-in TypeScrip
 
 If you encounter issues not covered here:
 
-1. Check the [troubleshooting documentation](./troubleshooting.md)
+1. Check the [troubleshooting documentation](../advanced/troubleshooting.md)
 2. Open an issue on GitHub with detailed steps to reproduce
 3. Include error logs and environment information
 
@@ -214,10 +216,10 @@ If you encounter issues not covered here:
 
 Now that you've set up Profile Weather View, you might want to:
 
-- [Customize the weather display format](./configuration.md)
-- [Set up automated updates with GitHub Actions](./deployment.md)
-- [Contribute to the project](./contributing.md)
-- [Explore the API reference](./api-reference.md)
+- [Customize the weather display format](../reference/configuration.md)
+- [Set up automated updates with GitHub Actions](../advanced/deployment.md)
+- [Contribute to the project](../advanced/contributing.md)
+- [Explore the API reference](../reference/api-reference.md)
 
 ---
 
@@ -226,6 +228,6 @@ Now that you've set up Profile Weather View, you might want to:
     <strong>Profile Weather View</strong> | Made with ❤️ using Bun and TypeScript
   </p>
   <p>
-    <small>For more information, see the <a href="./README.md">documentation home</a>.</small>
+    <small>For more information, see the <a href="../README.md">documentation home</a>.</small>
   </p>
 </div>

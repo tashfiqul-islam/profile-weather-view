@@ -1,10 +1,14 @@
 # Architecture
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Architecture-Modern-blue" alt="Architecture">
   <img src="https://img.shields.io/badge/Design-Service_Oriented-green" alt="Design Pattern">
   <img src="https://img.shields.io/badge/CI/CD-GitHub_Actions-orange" alt="CI/CD">
 </div>
+
+<br>
 
 ## Overview
 

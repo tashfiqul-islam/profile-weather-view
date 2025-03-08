@@ -133,6 +133,8 @@ export default tseslint.config(
       '*.lock',
       '*.log',
       'src/config/*.config.mjs',
+      'src/docs/.vitepress/config.js',
+      'src/docs/.vitepress/dist',
       'package.json',
       'tsconfig.json',
       'tsconfig.test.json',

@@ -1,6 +1,8 @@
 # API Reference
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/TypeScript-v5.8.2-blue" alt="TypeScript Version">
   <img src="https://img.shields.io/badge/Bun-latest-important" alt="Bun Version">
   <img src="https://img.shields.io/badge/Documentation-Comprehensive-success" alt="Documentation Status">

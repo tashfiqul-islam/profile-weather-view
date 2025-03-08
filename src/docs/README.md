@@ -39,14 +39,14 @@ This comprehensive documentation will guide you through every aspect of the Prof
 
 | Section                                 | Description                                 |
 |-----------------------------------------|---------------------------------------------|
-| [Getting Started](./getting-started.md) | Installation guide and basic usage          |
-| [Architecture](./architecture.md)       | System design and component overview        |
-| [API Reference](./api-reference.md)     | Detailed function and service documentation |
-| [Configuration](./configuration.md)     | Configuration options and customization     |
-| [Deployment](./deployment.md)           | GitHub Actions setup and deployment options |
-| [Testing](./testing.md)                 | Testing strategy and execution              |
-| [Contributing](./contributing.md)       | Guidelines for contributing to the project  |
-| [Troubleshooting](./troubleshooting.md) | Common issues and solutions                 |
+| [Getting Started](guide/introduction) | Installation guide and basic usage          |
+| [Architecture](guide/architecture.md)       | System design and component overview        |
+| [API Reference](reference/api-reference.md)     | Detailed function and service documentation |
+| [Configuration](reference/configuration.md)     | Configuration options and customization     |
+| [Deployment](advanced/deployment.md)           | GitHub Actions setup and deployment options |
+| [Testing](advanced/testing.md)                 | Testing strategy and execution              |
+| [Contributing](advanced/contributing.md)       | Guidelines for contributing to the project  |
+| [Troubleshooting](advanced/troubleshooting.md) | Common issues and solutions                 |
 
 ## Quick Start
 
@@ -67,7 +67,7 @@ echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
 bun start
 ```
 
-For detailed setup instructions, check the [Getting Started](./getting-started.md) guide.
+For detailed setup instructions, check the [Getting Started](guide/introduction) guide.
 
 ## How It Works
 
@@ -127,7 +127,7 @@ This project is licensed under the MIT License—see the [LICENSE](../LICENSE) f
 
 ## Support
 
-If you encounter any issues or have questions, please check the [Troubleshooting](./troubleshooting.md) guide or open an issue on GitHub.
+If you encounter any issues or have questions, please check the [Troubleshooting](advanced/troubleshooting.md) guide or open an issue on GitHub.
 
 ---
 

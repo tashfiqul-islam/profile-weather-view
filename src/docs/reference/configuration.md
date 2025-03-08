@@ -1,6 +1,8 @@
 # Configuration
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Configuration-Standard-blue" alt="Configuration">
   <img src="https://img.shields.io/badge/TypeScript-5.8.2-blue" alt="TypeScript">
   <img src="https://img.shields.io/badge/ESLint-9.21.0-purple" alt="ESLint">

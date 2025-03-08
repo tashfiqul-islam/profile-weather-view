@@ -1,6 +1,8 @@
 # Troubleshooting
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Support-Active-success" alt="Support Status">
   <img src="https://img.shields.io/badge/Documentation-Comprehensive-blue" alt="Documentation">
   <img src="https://img.shields.io/badge/Issues-GitHub_Tracker-orange" alt="Issue Tracking">

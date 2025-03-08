@@ -218,16 +218,16 @@ Comprehensive documentation for the Profile Weather View project is available in
 <div align="center">
   <table>
     <tr>
-      <td align="center"><a href="./src/docs/getting-started.md">🚀 Getting Started</a></td>
-      <td align="center"><a href="./src/docs/architecture.md">🏗️ Architecture</a></td>
-      <td align="center"><a href="./src/docs/api-reference.md">📋 API Reference</a></td>
-      <td align="center"><a href="./src/docs/configuration.md">⚙️ Configuration</a></td>
+      <td align="center"><a href="src/docs/guide/introduction.md">🚀 Getting Started</a></td>
+      <td align="center"><a href="src/docs/guide/architecture.md">🏗️ Architecture</a></td>
+      <td align="center"><a href="src/docs/reference/api-reference.md">📋 API Reference</a></td>
+      <td align="center"><a href="src/docs/reference/configuration.md">⚙️ Configuration</a></td>
     </tr>
     <tr>
-      <td align="center"><a href="./src/docs/deployment.md">🚢 Deployment</a></td>
-      <td align="center"><a href="./src/docs/testing.md">🧪 Testing</a></td>
-      <td align="center"><a href="./src/docs/contributing.md">👥 Contributing</a></td>
-      <td align="center"><a href="./src/docs/troubleshooting.md">🔧 Troubleshooting</a></td>
+      <td align="center"><a href="src/docs/advanced/deployment.md">🚢 Deployment</a></td>
+      <td align="center"><a href="src/docs/advanced/testing.md">🧪 Testing</a></td>
+      <td align="center"><a href="src/docs/advanced/contributing.md">👥 Contributing</a></td>
+      <td align="center"><a href="src/docs/advanced/troubleshooting.md">🔧 Troubleshooting</a></td>
     </tr>
   </table>
 </div>
@@ -307,7 +307,7 @@ inputs:
   debug:         # Enable verbose logging
 ```
 
-For detailed information about the deployment process, configuration options, and troubleshooting, please refer to the [full deployment documentation](src/docs/deployment.md).
+For detailed information about the deployment process, configuration options, and troubleshooting, please refer to the [full deployment documentation](src/docs/advanced/deployment.md).
 
 ## ⚙️ Configuration
 
@@ -431,12 +431,12 @@ We welcome contributions from the community! Here's how you can help:
 7. **Open a pull request**
 
 <div align="center">
-  <a href="./src/docs/contributing.md">
+  <a href="src/docs/advanced/contributing.md">
     <img src="https://img.shields.io/badge/View_Contribution_Guidelines-Documentation-brightgreen?style=for-the-badge" alt="View Contribution Guidelines">
   </a>
 </div>
 
-For detailed contribution guidelines, including code style, commit standards, and development workflow, please refer to the [Contributing Documentation](./src/docs/contributing.md).
+For detailed contribution guidelines, including code style, commit standards, and development workflow, please refer to the [Contributing Documentation](src/docs/advanced/contributing.md).
 
 ## 📜 License
 

@@ -33,9 +33,10 @@
       "@/config/*": ["src/config/*"],
       "@/services/*": ["src/services/*"],
       "@/utils/*": ["src/utils/*"],
-      "@/test/*": ["src/__tests__/*"]
+      "@/test/*": ["src/__tests__/*"],
+      "@/docs/*": ["src/docs/*"]
     }
   },
-  "include": ["src", "src/__tests__"],
+  "include": ["src", "src/__tests__", "src/docs"],
   "exclude": ["node_modules", "dist", "tmp", "coverage"]
 }

@@ -1,6 +1,8 @@
 # Deployment
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Deployment-GitHub_Actions-2088FF" alt="GitHub Actions">
   <img src="https://img.shields.io/badge/Automation-Scheduled-success" alt="Scheduled">
   <img src="https://img.shields.io/badge/Runtime-Bun-F9AD00" alt="Bun">

@@ -1,6 +1,8 @@
 # Contributing
 
-<div align="center">
+<br>
+
+<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs Welcome">
   <img src="https://img.shields.io/badge/Conventional_Commits-1.0.0-yellow" alt="Conventional Commits">
   <img src="https://img.shields.io/badge/Code_Style-ESLint_+_Prettier-blue" alt="Code Style">
