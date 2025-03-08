@@ -41,9 +41,9 @@
 
 ### Current Weather in Uttara, Dhaka
 
-| Weather | Temperature | Sunrise | Sunset | Humidity |
-|:-------:|:-----------:|:-------:|:------:|:--------:|
-| Clear <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""> | 32°C | 06:12:30 | 18:15:45 | 65% |
+|                                   Weather                                    | Temperature | Sunrise  |  Sunset  | Humidity |
+|:----------------------------------------------------------------------------:|:-----------:|:--------:|:--------:|:--------:|
+| Clear <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""> |    32°C     | 06:12:30 | 18:15:45 |   65%    |
 
 <div align="center">
   <h6>
@@ -64,7 +64,7 @@
 
 ## 📋 Overview
 
-Profile Weather View dynamically updates your GitHub profile README with real-time weather data for your location. Built with TypeScript and modern web technologies, it leverages GitHub Actions for fully automated updates every 8 hours.
+Profile Weather View dynamically updates your GitHub profile README with real-time weather data for your location. Built with TypeScript and modern web technologies, it leverages GitHub Actions for fully automated updates every 6 hours.
 
 <details open>
 <summary><b>📚 Table of Contents</b></summary>
@@ -73,13 +73,13 @@ Profile Weather View dynamically updates your GitHub profile README with real-ti
 - [✨ Key Features](#-key-features)
 - [🚀 Quick Start](#-quick-start)
 - [🧩 Architecture](#-architecture)
-- [🏗️ Core Components](#️-core-components)
+- [🏗️ Core Components](#core-components)
+- [📚 Documentation](#-documentation)
 - [⚡ Technology Stack](#-technology-stack)
-- [🔄 CI/CD Pipeline](#-cicd-pipeline)
+- [🔄 CI/CD Pipeline](#cicd-pipeline)
 - [⚙️ Configuration](#-configuration)
 - [🛠️ Development](#-development)
 - [🧪 Testing](#-testing)
-- [📈 Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📜 License](#-license)
 - [🙏 Acknowledgements](#-acknowledgements)
@@ -195,12 +195,12 @@ Profile Weather View follows a modular design with four core components working 
 
 Profile Weather View is built around four specialized modules, each with a distinct responsibility:
 
-| Component | Purpose |
-|-----------|---------|
-| **🚀 `index.ts`** | Application entry point and orchestrator that manages the flow between services |
-| **🌐 `fetchWeather.ts`** | Weather service that retrieves and validates data from the OpenWeather API |
-| **📝 `updateReadme.ts`** | Service that updates the README with new weather data |
-| **⚙️ `preload.ts`** | Environment validator that ensures required configuration is present |
+| Component             | Purpose                                                                         |
+|-----------------------|---------------------------------------------------------------------------------|
+| **`index.ts`**        | Application entry point and orchestrator that manages the flow between services |
+| **`fetchWeather.ts`** | Weather service that retrieves and validates data from the OpenWeather API      |
+| **`updateReadme.ts`** | Service that updates the README with new weather data                           |
+| **`preload.ts`**      | Environment validator that ensures required configuration is present            |
 
 ### Data Flow
 
@@ -255,50 +255,59 @@ For comprehensive details on all aspects of the project, please refer to the [Do
 
 </div>
 
-## 🔄 CI/CD Pipeline
+## CI/CD Pipeline
 
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://mermaid.ink/svg/pako:eNqVVMtu2zAQ_BVWpwRwLKc9GIgCw1CKAkUvhhHYPTAkZYkIRQoiZbsw9O-lqJcd2030YlHcnZ0dLnl0nBgDXPHIgS9ccVAp96ajSzQ-77RqS_BzRo5YtaXrQaWrGqR10tVTCsGK0yD-S5cWqZEWNRlXdg2oe9upUMtICytRc9pSf50N88trKnc3VxdYLr99oHzT-VDT96B9cABU5U8xvF8O-vzq-iIVyFYrWLYfr2P9qXxabrTXkLLdDumT0Eiee0_lVYoZnefz8PvnFxhZ3rLiQlE17Nxoo2yHpLSgKljqVcdjZQyQ49b6RQmxg0a1UlT5GApgaXHh2IhWs-NHWHpUjrDvxLr1Qot0JA_KRsKlGHYXPPYpw5oXLnw2KmfUcbEGrQCPmz5XzwgdaIoEpDWTDVrwrhqLKY4A8dGKdSf8cZNLYQXJv1XUdtJCNq3-LYwGXcEqLMPiJZTQHZyRXA1JozhzTFE9p_s1qAy6tEH0lO1m-1yVX5OVOo9mzqWwnDBSOjkrtJfCWD8-DKfZ-JJZSTVnGeLEJGJpmUXu1Rjjm8Sk_aWRfkZ7DlGGAuQj5-x59tgkLo05YKB3nqvPpXG7Dn4V31nxkgIJnEq1-cDtKZhPpYIZDnhzjAMU29cojjZBx5D34nrGMo-sDpzjQIQhHpMU5n5PSB4LUDv85bQtRPo5Yf1M1XiA1_lkMpsw3fszOqVtPl288j9OMWVxcjxbTPMFe3sMBxPLotk0m8fJjC3vD7HG4p8PfwETDkXs">
-    <source media="(prefers-color-scheme: light)" srcset="https://mermaid.ink/svg/pako:eNqVVEtv2zAM_iuETgmQ2GkPA1BgGJpiQLeL4QbuZRBkKY4AWZJJOfXQ9L-PsmcnadreKln8vvfiJnLiDAjNEw-hEsZDrYX3HV2jC3mvlVuhXzCyRM2VdANofV2Dtk7aZk4h9OK0iP_SlUVqpEVNzlfDGuSeOzXUchKBbdFwukdvzYbF1S2Vu6erK1wuv32gYtOFWNP3YEN0AFyVT0l-WG77_Or2IjfIVisou4_XqflUPi23OmjI2X6P9EmZSF54T-V1jhmdF4vw--cXGFnes-JCUj3u3Chd2x5ZakFVsNSrnnNtLZATVoalwthDo3opqiJMBYi0uPBsRMt0cAhLjyoQ9p1Yt8FpkY_kQdlEuCTD7kLAPmtYC-LCZ6tyRh2IN2gF-LTpi_QMaKAJEpA2bDbqILh6KiYcAc5HK9adCMdNroQVZP9WUddrC_m0-rewGnQNq7gMS5RQQf_iSLk5JI3izDNF9ZweNqBz6PMG0VO2n-1zVX5NVuk8mjmXwnLGSOn0rNBeSmvD9DCc5uNLZiXXnGWIE5OIpWUWu9dTjG9Sk_aXJvoZ7XmKMpQgHzlnz7PHNnNpzBEDvQtcfS6N23fwq_jBipccSOC1Npsffk7BXC4VzHDAm1Mc4NS-JnG0jTqGghfXM5ZFYnXkHAfiGOIxTWDu94SUMQN1wF9B20Lknwvez1SNB3ydTyazCdODP-NTus6ny1f-xymmbEnOZ4tpvmD7p3gwsSyazrPFLJmy5eNxrLH0Z8NfDAdF5g">
-    <img src="https://mermaid.ink/svg/pako:eNqVVEtv2zAM_iuETgmQ2GkPA1BgGJpiQLeL4QbuZRBkKY4AWZJJOfXQ9L-PsmcnadreKln8vvfiJnLiDAjNEw-hEsZDrYX3HV2jC3mvlVuhXzCyRM2VdANofV2Dtk7aZk4h9OK0iP_SlUVqpEVNzlfDGuSeOzXUchKBbdFwukdvzYbF1S2Vu6erK1wuv32gYtOFWNP3YEN0AFyVT0l-WG77_Or2IjfIVisou4_XqflUPi23OmjI2X6P9EmZSF54T-V1jhmdF4vw--cXGFnes-JCUj3u3Chd2x5ZakFVsNSrnnNtLZATVoalwthDo3opqiJMBYi0uPBsRMt0cAhLjyoQ9p1Yt8FpkY_kQdlEuCTD7kLAPmtYC-LCZ6tyRh2IN2gF-LTpi_QMaKAJEpA2bDbqILh6KiYcAc5HK9adCMdNroQVZP9WUddrC_m0-rewGnQNq7gMS5RQQf_iSLk5JI3izDNF9ZweNqBz6PMG0VO2n-1zVX5NVuk8mjmXwnLGSOn0rNBeSmvD9DCc5uNLZiXXnGWIE5OIpWUWu9dTjG9Sk_aXJvoZ7XmKMpQgHzlnz7PHNnNpzBEDvQtcfS6N23fwq_jBipccSOC1Npsffk7BXC4VzHDAm1Mc4NS-JnG0jTqGghfXM5ZFYnXkHAfiGOIxTWDu94SUMQN1wF9B20Lknwvez1SNB3ydTyazCdODP-NTus6ny1f-xymmbEnOZ4tpvmD7p3gwsSyazrPFLJmy5eNxrLH0Z8NfDAdF5g" alt="CI/CD Pipeline">
-  </picture>
-</div>
+The application uses GitHub Actions for automated deployment with the following key features:
 
 <div align="center">
   <table>
     <tr>
       <th align="center">Feature</th>
-      <th align="center">Implementation</th>
       <th align="center">Benefit</th>
     </tr>
     <tr>
-      <td align="center"><b>Matrix Strategy</b></td>
-      <td align="center">Parallel task execution</td>
-      <td align="center">Up to 70% faster build times</td>
+      <td align="center"><b>Two-Job Structure</b></td>
+      <td align="center">Early failure detection with preflight checks</td>
     </tr>
     <tr>
-      <td align="center"><b>OIDC Authentication</b></td>
-      <td align="center">Token-based security</td>
-      <td align="center">Enhanced protection, no PATs</td>
+      <td align="center"><b>Scheduled Updates</b></td>
+      <td align="center">Automatic refresh every 6 hours</td>
     </tr>
     <tr>
-      <td align="center"><b>Artifact Persistence</b></td>
-      <td align="center">Job data sharing</td>
-      <td align="center">Reliable data transfer between steps</td>
+      <td align="center"><b>Manual Triggering</b></td>
+      <td align="center">Run on-demand with custom parameters</td>
     </tr>
     <tr>
-      <td align="center"><b>GPG Signing</b></td>
-      <td align="center">Cryptographic validation</td>
-      <td align="center">Verified commits with GitHub's GPG</td>
+      <td align="center"><b>Dependency Caching</b></td>
+      <td align="center">Faster builds with reduced network usage</td>
     </tr>
     <tr>
-      <td align="center"><b>Cache System</b></td>
-      <td align="center">Dependency preservation</td>
-      <td align="center">Reduced network traffic & faster builds</td>
+      <td align="center"><b>Retry Logic</b></td>
+      <td align="center">Resilience against temporary API failures</td>
     </tr>
   </table>
 </div>
+
+### Required Secrets
+
+You'll need to add one secret to your GitHub repository:
+
+- `OPEN_WEATHER_KEY`: Your OpenWeather API key
+
+### Basic Configuration
+
+```yaml
+# Schedule: Every 6 hours at minute 17
+cron: '17 */6 * * *'
+
+# Manual inputs available:
+inputs:
+  location:      # Weather location to display
+  force_update:  # Force update even if no changes
+  debug:         # Enable verbose logging
+```
+
+For detailed information about the deployment process, configuration options, and troubleshooting, please refer to the [full deployment documentation](src/docs/deployment.md).
 
 ## ⚙️ Configuration
 
@@ -306,17 +315,17 @@ Profile Weather View is highly configurable to meet your specific needs.
 
 ### Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable           | Description             | Example         |
+|--------------------|-------------------------|-----------------|
 | `OPEN_WEATHER_KEY` | API key for OpenWeather | `a1b2c3d4e5...` |
 
 ### Location Settings (in fetchWeather.ts)
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `LAT` | Latitude coordinate | `23.8759` (Uttara, Dhaka) |
-| `LON` | Longitude coordinate | `90.3795` (Uttara, Dhaka) |
-| `TIMEZONE` | Local timezone | `Asia/Dhaka` |
+| Setting    | Description          | Default                   |
+|------------|----------------------|---------------------------|
+| `LAT`      | Latitude coordinate  | `23.8759` (Uttara, Dhaka) |
+| `LON`      | Longitude coordinate | `90.3795` (Uttara, Dhaka) |
+| `TIMEZONE` | Local timezone       | `Asia/Dhaka`              |
 
 ### Bun Configuration (bunfig.toml)
 
