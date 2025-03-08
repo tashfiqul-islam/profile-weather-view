@@ -1,7 +1,7 @@
 # Configuration
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Configuration-Comprehensive-blue" alt="Configuration">
+  <img src="https://img.shields.io/badge/Configuration-Standard-blue" alt="Configuration">
   <img src="https://img.shields.io/badge/TypeScript-5.8.2-blue" alt="TypeScript">
   <img src="https://img.shields.io/badge/ESLint-9.21.0-purple" alt="ESLint">
   <img src="https://img.shields.io/badge/Bun-Latest-orange" alt="Bun">
@@ -32,7 +32,7 @@ Environment variables are loaded using the `dotenv` package in `src/utils/preloa
 
 ### Validation
 
-The application performs strict validation of required environment variables:
+The application performs validation of required environment variables:
 
 ```typescript
 // From src/utils/preload.ts
@@ -42,14 +42,14 @@ export function ensureEnvironmentVariables(): void {
     process.env.OPEN_WEATHER_KEY.trim() === ''
   ) {
     console.error(
-      '[preload.ts] ❌ Missing required environment variable: OPEN_WEATHER_KEY',
+      '[preload.ts] Missing required environment variable: OPEN_WEATHER_KEY',
     );
     throw new Error(
-      '[preload.ts] ❌ Missing required environment variable: OPEN_WEATHER_KEY',
+      '[preload.ts] Missing required environment variable: OPEN_WEATHER_KEY',
     );
   }
 
-  console.warn('[preload.ts] ✅ Environment variables loaded successfully');
+  console.log('[preload.ts] Environment variables loaded successfully');
 }
 ```
 
@@ -57,10 +57,10 @@ export function ensureEnvironmentVariables(): void {
 
 ### bunfig.toml
 
-The `bunfig.toml` file configures the Bun runtime environment with optimized settings for the application.
+The `bunfig.toml` file configures the Bun runtime environment with settings for the application.
 
 ```toml
-# 🚀 Bun Configuration for profile-weather-view
+# Bun Configuration for profile-weather-view
 
 # Reduce memory usage at the cost of performance (disabled for speed)
 smol = false
@@ -75,11 +75,11 @@ preload = ["./src/utils/preload.ts"]
 [run]
 bun = true
 
-# ✅ TypeScript Loader
+# TypeScript Loader
 [loader]
 ".ts" = "ts"
 
-# ✅ Optimized Package Installation Behavior
+# Package Installation Behavior
 [install]
 optional = true
 dev = true
@@ -99,14 +99,14 @@ registry = "https://registry.npmjs.org"
 
 - Automatic preloading of environment variables
 - TypeScript loader configuration
-- Optimized package installation settings
+- Package installation settings
 - Registry configuration for dependencies
 
 ## Development Tools
 
 ### TypeScript Configuration
 
-The `tsconfig.json` file enforces strict type checking and configures path aliases for cleaner imports.
+The `tsconfig.json` file enforces type checking and configures path aliases for cleaner imports.
 
 ```json
 {
@@ -157,7 +157,7 @@ The `tsconfig.json` file enforces strict type checking and configures path alias
 - ESNext target for modern JavaScript features
 - Strict type checking enabled
 - Path aliases for cleaner imports (`@/services/*`, etc.)
-- Comprehensive safety rules enabled
+- Safety rules enabled
 
 The project also includes `tsconfig.test.json` which extends the base configuration with test-specific settings.
 
@@ -228,16 +228,16 @@ export default defineConfig({
   test: {
     coverage: {
       reporter: ['text', 'json', 'html'], // Generates coverage reports
-      include: ['src/**'], // ✅ Only include the `src` directory
+      include: ['src/**'], // Include the `src` directory
       exclude: [
-        'src/config/**', // ❌ Ignore ESLint & config files
-        'src/__tests__/**', // ❌ Ignore test files (tests don't need coverage)
+        'src/config/**', // Ignore ESLint & config files
+        'src/__tests__/**', // Ignore test files (tests don't need coverage)
       ],
     },
     environment: 'node', // Simulates Node.js
     globals: true, // Allows global `expect`
     alias: {
-      '@/': new URL('./src/', import.meta.url).pathname, // ✅ Fix path aliasing
+      '@/': new URL('./src/', import.meta.url).pathname, // Fix path aliasing
     },
   },
 });
@@ -256,58 +256,83 @@ export default defineConfig({
 The `.github/workflows/update-readme.yml` file configures the automated workflow for updating the README with weather data.
 
 ```yaml
-name: Readme Weather Update
+name: Profile README Weather Update
 
-# 🚀 Trigger Mechanisms for GitHub Actions
+# Trigger mechanisms for workflow execution
 on:
   schedule:
-    - cron: '0 */8 * * *' # Runs automatically every 8 hours
-  workflow_dispatch: # Allows manual triggering
+    # Runs at 17 minutes past every 6th hour (avoiding peak traffic times)
+    - cron: '17 */6 * * *'
+  workflow_dispatch: # Allows manual triggering with parameters
+    inputs:
+      location:
+        description: 'Weather location to display'
+        required: false
+        default: 'Dhaka'
+        type: string
+      force_update:
+        description: 'Force README update even if weather unchanged'
+        required: false
+        default: false
+        type: boolean
+      debug:
+        description: 'Enable verbose debug logging'
+        required: false
+        default: false
+        type: boolean
+
+# Workflow environment variables
+env:
+  WORKFLOW_VERSION: '2.5.0'
+  LAST_UPDATED: '2025-03-08'
+  BUN_VERSION: 'latest'
+  WEATHER_LOCATION: ${{ github.event.inputs.location || 'Dhaka' }}
+  FORCE_UPDATE: ${{ github.event.inputs.force_update == 'true' }}
+  DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
+  TIMEZONE: 'Asia/Dhaka'
 
 jobs:
-  update-readme-weather:
+  preflight:
+    name: Preflight Checks
     runs-on: ubuntu-latest
+    # Job steps...
 
-    # 🏎️ Strategy matrix to parallelize tasks
-    strategy:
-      matrix:
-        task:
-          [
-            checkout-repos,
-            setup-bun,
-            install-deps,
-            fetch-weather,
-            update-readme,
-            commit-push,
-          ]
-
-    steps:
-      # Steps for each task...
+  update-weather:
+    name: Update Profile README Weather
+    needs: preflight
+    runs-on: ubuntu-latest
+    # Job steps...
 ```
 
 **Key Features:**
 
-- **Automated Scheduling**: Runs every 8 hours via cron expression
+- **Automated Scheduling**: Runs every 6 hours via cron expression
 - **Manual Trigger**: Can be triggered manually with `workflow_dispatch`
-- **Parallelization**: Uses a matrix strategy to run tasks in parallel
-- **Workflow Steps**:
-  1. Repository checkout (both the script and personal repositories)
-  2. Bun runtime setup
-  3. Dependency installation
-  4. Weather data fetching
-  5. README file updating
-  6. Change committing and pushing
+- **Customizable Parameters**:
+  - Weather location
+  - Force update option
+  - Debug logging toggle
+- **Two-job structure**:
+  1. Preflight checks to verify environment and API availability
+  2. Main update job for fetching weather and updating README
 
-**Authentication & Security:**
+**Workflow Process:**
 
-- Uses GitHub's OpenID Connect (OIDC) for secure authentication
-- Configures Git for commit signing using GitHub's built-in GPG
-- Only commits changes when the README has actually been modified
+1. Check runner environment and verify secrets
+2. Test OpenWeather API health
+3. Checkout repositories (weather script and personal profile)
+4. Set up Bun runtime environment
+5. Install and cache dependencies
+6. Fetch weather data with retry logic
+7. Update README with new weather information
+8. Commit and push changes if README was modified
+9. Generate execution summary report
 
-**Artifact Handling:**
+**Security Features:**
 
-- Uploads weather data as artifacts to persist between jobs
-- Downloads artifacts when needed by subsequent steps
+- Minimal permission scoping
+- Git commit signing
+- Secret validation
 
 ## Best Practices
 
@@ -329,8 +354,8 @@ jobs:
 
 1. **Automatic Scheduling**: Set appropriate intervals for data updates
 2. **Manual Override**: Always provide a manual trigger option
-3. **Artifact Sharing**: Use artifacts to share data between workflow steps
-4. **Idempotent Operations**: Only make changes when necessary
+3. **Change Detection**: Only make changes when necessary
+4. **Error Handling**: Implement backup and recovery mechanisms
 
 ---
 

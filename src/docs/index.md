@@ -34,7 +34,7 @@ Profile Weather View is a modern TypeScript utility that automatically fetches c
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/profile-weather-view.git
+git clone https://github.com/tashfiqul-islam/profile-weather-view.git
 cd profile-weather-view
 
 # Install dependencies
@@ -114,7 +114,7 @@ Profile Weather View operates through a simple yet powerful workflow:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/yourusername/profile-weather-view/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tashfiqul-islam/profile-weather-view/blob/main/LICENSE) file for details.
 
 ---
 
