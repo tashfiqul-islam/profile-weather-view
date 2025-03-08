@@ -11,15 +11,15 @@
 
 - [Overview](#overview)
 - [GitHub Actions Deployment](#github-actions-deployment)
-   - [Workflow Architecture](#workflow-architecture)
-   - [Workflow Configuration](#workflow-configuration)
-   - [Execution Strategy](#execution-strategy)
-   - [Security and Authentication](#security-and-authentication)
-   - [Artifact Management](#artifact-management)
+  - [Workflow Architecture](#workflow-architecture)
+  - [Workflow Configuration](#workflow-configuration)
+  - [Execution Strategy](#execution-strategy)
+  - [Security and Authentication](#security-and-authentication)
+  - [Artifact Management](#artifact-management)
 - [Manual Deployment](#manual-deployment)
-   - [Local Environment Setup](#local-environment-setup)
-   - [Execution Process](#execution-process)
-   - [Debugging](#debugging)
+  - [Local Environment Setup](#local-environment-setup)
+  - [Execution Process](#execution-process)
+  - [Debugging](#debugging)
 - [Monitoring and Maintenance](#monitoring-and-maintenance)
 - [Troubleshooting](#troubleshooting)
 
@@ -100,15 +100,16 @@ The workflow can be initiated in two ways:
    - Triggered via GitHub's UI using the `workflow_dispatch` event
    - Accessible through the "Actions" tab in the repository
    - Supports customizable parameters:
-      - Weather location
-      - Force update option
-      - Debug logging toggle
+     - Weather location
+     - Force update option
+     - Debug logging toggle
 
 ### Execution Strategy
 
 The workflow is organized into two main jobs:
 
 1. **Preflight Checks**
+
    - Verifies the execution environment
    - Checks for required secrets
    - Tests the OpenWeather API availability
@@ -119,15 +120,15 @@ The workflow is organized into two main jobs:
 
 The update weather job follows this process:
 
-| Step | Description |
-| ---- | ----------- |
-| Repository Setup | Checks out both the weather script and personal repositories |
-| Environment Setup | Sets up the Bun runtime and configures the environment |
-| Dependency Management | Installs and caches required packages |
-| Data Acquisition | Fetches weather data with retry logic |
-| README Management | Updates the README.md with new weather data |
-| Version Control | Commits and pushes changes if the README was updated |
-| Reporting | Generates an execution summary |
+| Step                  | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| Repository Setup      | Checks out both the weather script and personal repositories |
+| Environment Setup     | Sets up the Bun runtime and configures the environment       |
+| Dependency Management | Installs and caches required packages                        |
+| Data Acquisition      | Fetches weather data with retry logic                        |
+| README Management     | Updates the README.md with new weather data                  |
+| Version Control       | Commits and pushes changes if the README was updated         |
+| Reporting             | Generates an execution summary                               |
 
 #### Process Flow
 
@@ -161,10 +162,11 @@ The workflow employs several security practices:
 
    - Uses minimal required permissions for the workflow
    - Restricts access to only necessary resources
+
    ```yaml
    permissions:
-     contents: write    # For README updates
-     id-token: write    # For OIDC authentication
+     contents: write # For README updates
+     id-token: write # For OIDC authentication
      security-events: write # For security scanning
    ```
 
@@ -175,11 +177,11 @@ The workflow employs several security practices:
    - Provides verification that commits came from the workflow
 
    ```yaml
-   - name: "Configure Git for Secure Operations"
+   - name: 'Configure Git for Secure Operations'
      run: |
        git config user.name "github-actions[bot]"
        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-       
+
        git config commit.gpgsign true
        git config gpg.format ssh
        git config user.signingkey "${{ github.token }}"

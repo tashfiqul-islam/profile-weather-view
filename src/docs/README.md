@@ -37,16 +37,16 @@ This comprehensive documentation will guide you through every aspect of the Prof
 
 ### Table of Contents
 
-| Section | Description |
-|---------|-------------|
-| [Getting Started](./getting-started.md) | Installation guide and basic usage |
-| [Architecture](./architecture.md) | System design and component overview |
-| [API Reference](./api-reference.md) | Detailed function and service documentation |
-| [Configuration](./configuration.md) | Configuration options and customization |
-| [Deployment](./deployment.md) | GitHub Actions setup and deployment options |
-| [Testing](./testing.md) | Testing strategy and execution |
-| [Contributing](./contributing.md) | Guidelines for contributing to the project |
-| [Troubleshooting](./troubleshooting.md) | Common issues and solutions |
+| Section                                 | Description                                 |
+|-----------------------------------------|---------------------------------------------|
+| [Getting Started](./getting-started.md) | Installation guide and basic usage          |
+| [Architecture](./architecture.md)       | System design and component overview        |
+| [API Reference](./api-reference.md)     | Detailed function and service documentation |
+| [Configuration](./configuration.md)     | Configuration options and customization     |
+| [Deployment](./deployment.md)           | GitHub Actions setup and deployment options |
+| [Testing](./testing.md)                 | Testing strategy and execution              |
+| [Contributing](./contributing.md)       | Guidelines for contributing to the project  |
+| [Troubleshooting](./troubleshooting.md) | Common issues and solutions                 |
 
 ## Quick Start
 
@@ -54,7 +54,7 @@ For the impatient, here's how to get started in just a few steps:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/profile-weather-view.git
+git clone https://github.com/tashfiqul-islam/profile-weather-view.git
 cd profile-weather-view
 
 # Install dependencies
