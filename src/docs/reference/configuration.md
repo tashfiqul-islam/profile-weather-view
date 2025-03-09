@@ -1,4 +1,6 @@
-# Configuration
+<div align="center">
+  <h1>Configuration</h1>
+</div>
 
 <br>
 

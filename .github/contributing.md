@@ -1,4 +1,6 @@
-# Contributing
+<div align="center">
+  <h1>Contributing</h1>
+</div>
 
 <br>
 

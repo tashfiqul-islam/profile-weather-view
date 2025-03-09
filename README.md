@@ -224,10 +224,10 @@ Comprehensive documentation for the Profile Weather View project is available in
       <td align="center"><a href="src/docs/reference/configuration.md">⚙️ Configuration</a></td>
     </tr>
     <tr>
-      <td align="center"><a href="src/docs/advanced/deployment.md">🚢 Deployment</a></td>
-      <td align="center"><a href="src/docs/advanced/testing.md">🧪 Testing</a></td>
-      <td align="center"><a href="src/docs/advanced/contributing.md">👥 Contributing</a></td>
-      <td align="center"><a href="src/docs/advanced/troubleshooting.md">🔧 Troubleshooting</a></td>
+      <td align="center"><a href="src/docs/guide/deployment.md">🚢 Deployment</a></td>
+      <td align="center"><a href="src/docs/guide/testing.md">🧪 Testing</a></td>
+      <td align="center"><a href=".github/contributing.md">👥 Contributing</a></td>
+      <td align="center"><a href="src/docs/guide/troubleshooting.md">🔧 Troubleshooting</a></td>
     </tr>
   </table>
 </div>
@@ -307,7 +307,7 @@ inputs:
   debug:         # Enable verbose logging
 ```
 
-For detailed information about the deployment process, configuration options, and troubleshooting, please refer to the [full deployment documentation](src/docs/advanced/deployment.md).
+For detailed information about the deployment process, configuration options, and troubleshooting, please refer to the [full deployment documentation](src/docs/guide/deployment.md).
 
 ## ⚙️ Configuration
 
@@ -431,12 +431,12 @@ We welcome contributions from the community! Here's how you can help:
 7. **Open a pull request**
 
 <div align="center">
-  <a href="src/docs/advanced/contributing.md">
+  <a href=".github/contributing.md">
     <img src="https://img.shields.io/badge/View_Contribution_Guidelines-Documentation-brightgreen?style=for-the-badge" alt="View Contribution Guidelines">
   </a>
 </div>
 
-For detailed contribution guidelines, including code style, commit standards, and development workflow, please refer to the [Contributing Documentation](src/docs/advanced/contributing.md).
+For detailed contribution guidelines, including code style, commit standards, and development workflow, please refer to the [Contributing Documentation](.github/contributing.md).
 
 ## 📜 License
 

@@ -1,4 +1,6 @@
-# Architecture
+<div align="center">
+  <h1>Architecture</h1>
+</div>
 
 <br>
 
@@ -7,8 +9,6 @@
   <img src="https://img.shields.io/badge/Design-Service_Oriented-green" alt="Design Pattern">
   <img src="https://img.shields.io/badge/CI/CD-GitHub_Actions-orange" alt="CI/CD">
 </div>
-
-<br>
 
 ## Overview
 

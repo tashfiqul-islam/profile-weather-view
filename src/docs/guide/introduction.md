@@ -1,4 +1,6 @@
-# Introduction
+<div align="center">
+  <h1>Introduction</h1>
+</div>
 
 <br>
 
@@ -208,7 +210,7 @@ This runs the application without the build step, using Bun's built-in TypeScrip
 
 If you encounter issues not covered here:
 
-1. Check the [troubleshooting documentation](../advanced/troubleshooting.md)
+1. Check the [troubleshooting documentation](troubleshooting.md)
 2. Open an issue on GitHub with detailed steps to reproduce
 3. Include error logs and environment information
 
@@ -217,8 +219,8 @@ If you encounter issues not covered here:
 Now that you've set up Profile Weather View, you might want to:
 
 - [Customize the weather display format](../reference/configuration.md)
-- [Set up automated updates with GitHub Actions](../advanced/deployment.md)
-- [Contribute to the project](../advanced/contributing.md)
+- [Set up automated updates with GitHub Actions](deployment.md)
+- [Contribute to the project](../../../.github/contributing.md)
 - [Explore the API reference](../reference/api-reference.md)
 
 ---

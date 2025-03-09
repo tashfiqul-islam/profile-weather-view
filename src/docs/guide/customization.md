@@ -1,4 +1,6 @@
-# Customizing Your Weather Display
+<div align="center">
+  <h1>Customizing Your Weather Display</h1>
+</div>
 
 <br>
 
@@ -54,20 +56,24 @@ Which renders as:
 
 <div align="center">
   <table>
-    <tr>
-      <th>Weather</th>
-      <th>Temperature</th>
-      <th>Sunrise</th>
-      <th>Sunset</th>
-      <th>Humidity</th>
-    </tr>
-    <tr>
-      <td align="center">Cloudy <img width="15" src="https://openweathermap.org/img/w/03d.png" alt=""></td>
-      <td align="center">30°C</td>
-      <td align="center">06:18 AM</td>
-      <td align="center">06:02 PM</td>
-      <td align="center">60%</td>
-    </tr>
+    <thead>
+      <tr>
+        <th>Weather</th>
+        <th>Temperature</th>
+        <th>Sunrise</th>
+        <th>Sunset</th>
+        <th>Humidity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td align="center">Cloudy <img width="15" src="https://openweathermap.org/img/w/03d.png" alt=""></td>
+        <td align="center">30°C</td>
+        <td align="center">06:18 AM</td>
+        <td align="center">06:02 PM</td>
+        <td align="center">60%</td>
+      </tr>
+    </tbody>
   </table>
   <small><em>Last refresh: Wednesday, March 06, 2025 12:00:00 UTC+6</em></small>
 </div>

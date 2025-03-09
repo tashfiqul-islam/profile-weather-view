@@ -43,10 +43,10 @@ This comprehensive documentation will guide you through every aspect of the Prof
 | [Architecture](guide/architecture.md)       | System design and component overview        |
 | [API Reference](reference/api-reference.md)     | Detailed function and service documentation |
 | [Configuration](reference/configuration.md)     | Configuration options and customization     |
-| [Deployment](advanced/deployment.md)           | GitHub Actions setup and deployment options |
-| [Testing](advanced/testing.md)                 | Testing strategy and execution              |
-| [Contributing](advanced/contributing.md)       | Guidelines for contributing to the project  |
-| [Troubleshooting](advanced/troubleshooting.md) | Common issues and solutions                 |
+| [Deployment](guide/deployment.md)           | GitHub Actions setup and deployment options |
+| [Testing](guide/testing.md)                 | Testing strategy and execution              |
+| [Contributing](../../.github/contributing.md)       | Guidelines for contributing to the project  |
+| [Troubleshooting](guide/troubleshooting.md) | Common issues and solutions                 |
 
 ## Quick Start
 
@@ -127,7 +127,7 @@ This project is licensed under the MIT License—see the [LICENSE](../LICENSE) f
 
 ## Support
 
-If you encounter any issues or have questions, please check the [Troubleshooting](advanced/troubleshooting.md) guide or open an issue on GitHub.
+If you encounter any issues or have questions, please check the [Troubleshooting](guide/troubleshooting.md) guide or open an issue on GitHub.
 
 ---
 

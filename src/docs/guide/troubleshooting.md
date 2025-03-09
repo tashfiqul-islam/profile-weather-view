@@ -1,4 +1,6 @@
-# Troubleshooting
+<div align="center">
+  <h1>Troubleshooting</h1>
+</div>
 
 <br>
 
@@ -6,10 +8,6 @@
   <img src="https://img.shields.io/badge/Support-Active-success" alt="Support Status">
   <img src="https://img.shields.io/badge/Documentation-Comprehensive-blue" alt="Documentation">
   <img src="https://img.shields.io/badge/Issues-GitHub_Tracker-orange" alt="Issue Tracking">
-</div>
-
-<div align="center">
-  <p><em>A comprehensive guide to resolving common issues with Profile Weather View</em></p>
 </div>
 
 ## Table of Contents
@@ -26,9 +24,16 @@
 ### Missing API Key
 
 <table>
-<tr>
-<td width="15%" align="center">🔑</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🔑</td>
+    <td>
 
 **Error Message**:
 
@@ -53,15 +58,23 @@
 4. **Verify the key format** - it should be a string of alphanumeric characters with no quotes.
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### Environment Configuration Issues
 
 <table>
-<tr>
-<td width="15%" align="center">⚙️</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">⚙️</td>
+    <td>
 
 **Error Message**:
 
@@ -88,7 +101,8 @@
 3. **Debug environment loading** by adding temporary console logs to `preload.ts`.
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ## API Integration Issues
@@ -96,9 +110,16 @@
 ### Weather Data Fetch Failed
 
 <table>
-<tr>
-<td width="15%" align="center">🌦️</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🌦️</td>
+    <td>
 
 **Error Message**:
 
@@ -130,15 +151,23 @@
      ```
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### Invalid API Response Format
 
 <table>
-<tr>
-<td width="15%" align="center">📋</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">📋</td>
+    <td>
 
 **Error Message**:
 
@@ -171,7 +200,8 @@
 4. **Check OpenWeather documentation** for any announced changes to their API structure.
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ## GitHub Actions Issues
@@ -179,9 +209,16 @@
 ### Workflow Execution Failure
 
 <table>
-<tr>
-<td width="15%" align="center">🔄</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🔄</td>
+    <td>
 
 **Issue**: GitHub Actions workflow fails to complete successfully.
 
@@ -203,15 +240,23 @@
    | Permission denied      | Check repository access permissions    |
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### README Not Updating
 
 <table>
-<tr>
-<td width="15%" align="center">📄</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">📄</td>
+    <td>
 
 **Issue**: GitHub Actions workflow runs successfully, but README doesn't update.
 
@@ -246,7 +291,8 @@
    - Check the Git configuration for user name and email
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ## Development Issues
@@ -254,9 +300,16 @@
 ### Type Checking Errors
 
 <table>
-<tr>
-<td width="15%" align="center">📝</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">📝</td>
+    <td>
 
 **Issue**: TypeScript errors when running `bun run type-check`
 
@@ -293,15 +346,23 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
    - Check path aliases configuration
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### Testing Failures
 
 <table>
-<tr>
-<td width="15%" align="center">🧪</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🧪</td>
+    <td>
 
 **Issue**: Tests failing when running `bun run test`
 
@@ -340,7 +401,8 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
    ```
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ## Advanced Debugging
@@ -348,9 +410,16 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
 ### Debugging Workflow
 
 <table>
-<tr>
-<td width="15%" align="center">🔍</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🔍</td>
+    <td>
 
 Follow this systematic debugging approach for complex issues:
 
@@ -381,15 +450,23 @@ Follow this systematic debugging approach for complex issues:
    ```
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### Debugging GitHub Actions
 
 <table>
-<tr>
-<td width="15%" align="center">🔧</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🔧</td>
+    <td>
 
 For debugging GitHub Actions workflows:
 
@@ -414,7 +491,8 @@ For debugging GitHub Actions workflows:
 4. **Check workflow artifacts** for any intermediate files or outputs.
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ## Getting Help
@@ -424,9 +502,16 @@ If you encounter any issues not covered in this guide:
 ### Reporting Issues
 
 <table>
-<tr>
-<td width="15%" align="center">🆘</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">🆘</td>
+    <td>
 
 Please report issues on the GitHub repository with:
 
@@ -443,15 +528,23 @@ Please report issues on the GitHub repository with:
 Use the issue template when available for a standardized format.
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ### Community Resources
 
 <table>
-<tr>
-<td width="15%" align="center">👥</td>
-<td>
+<thead>
+  <tr>
+    <th width="15%" align="center">Icon</th>
+    <th>Details</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td width="15%" align="center">👥</td>
+    <td>
 
 - **GitHub Discussions**: For questions and community support
 - **Documentation**: Refer to other sections of the documentation for specific guidance
@@ -462,7 +555,8 @@ Use the issue template when available for a standardized format.
   - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
 </td>
-</tr>
+  </tr>
+</tbody>
 </table>
 
 ---

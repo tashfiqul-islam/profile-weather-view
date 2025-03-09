@@ -1,4 +1,6 @@
-# Weather Icons Gallery
+<div align="center">
+  <h1>Weather Icons Gallery</h1>
+</div>
 
 <br>
 

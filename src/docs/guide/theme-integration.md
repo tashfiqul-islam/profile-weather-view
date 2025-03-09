@@ -1,4 +1,6 @@
-# Theme Integration Guide
+<div align="center">
+  <h1>Theme Integration Guide</h1>
+</div>
 
 <br>
 

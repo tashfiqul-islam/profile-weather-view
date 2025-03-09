@@ -1,4 +1,6 @@
-# API Reference
+<div align="center">
+  <h1>API Reference</h1>
+</div>
 
 <br>
 
