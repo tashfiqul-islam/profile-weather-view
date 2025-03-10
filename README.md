@@ -369,13 +369,46 @@ bun run format
 ### Project Structure
 
 ```
-src/
-├── index.ts               # Entry point
-├── services/              # Core services
-│   ├── fetchWeather.ts    # Weather API integration
-│   └── updateReadme.ts    # README modification
-└── utils/                 # Utility functions
-    └── preload.ts         # Environment setup
+profile-weather-view/
+├── .github/
+│   └── workflows/               # GitHub Actions automation
+│       └── update-readme.yml    # Scheduled weather update workflow
+├── .husky/                      # Git hooks for code quality
+│   ├── commit-msg               # Commit message validation
+│   └── pre-commit               # Pre-commit checks
+├── Coveraage
+├── src/
+│   ├── tests/               # Comprehensive test suite
+│   │   ├── index.test.ts        # Main application tests
+│   │   ├── services/            # Service-specific tests
+│   │   └── utils/               # Utility tests
+│   ├── config/                  # Configuration modules
+│   │   ├── comments.config.mjs  # ESLint comments configuration
+│   │   ├── parser.config.mjs    # TypeScript parser settings
+│   │   ├── security.config.mjs  # Security rules
+│   │   └── ...                  # Other config modules
+│   ├── docs/                    # Documentation files
+│   │   ├── .vitepress
+│   │   ├── guide
+│   │   ├── public/icons
+│   │   ├── reference
+│   │   ├── README.md
+│   │   └── index.md
+│   ├── services/                # Core business logic
+│   │   ├── fetchWeather.ts      # Weather API interaction
+│   │   └── updateReadme.ts      # README file manipulation
+│   ├── utils/                   # Shared utilities
+│   │   └── preload.ts           # Environment validation
+│   └── index.ts                 # Application entry point
+├── .env                         # Environment variables (gitignored)
+├── bunfig.toml                  # Bun runtime configuration
+├── eslint.config.mjs            # ESLint configuration
+├── prettier.config.mjs          # Code formatting rules
+├── tsconfig.json                # TypeScript compilation settings
+├── tsconfig.test.json
+├── package.json
+├── commitlint.config.cjs        # Commit message validation
+└── vitest.config.ts             # Test runner configuration
 ```
 
 ## 🧪 Testing
