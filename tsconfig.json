@@ -2,40 +2,52 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
+
+    "types": ["bun"],
+
     "baseUrl": "./",
     "rootDir": "src",
     "outDir": "dist",
-    "lib": ["ESNext"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+
+    "lib": ["ESNext", "DOM"],
+
     "strict": true,
-    "strictNullChecks": true,
     "noImplicitAny": true,
-    "noImplicitReturns": true,
+    "strictNullChecks": true,
     "noImplicitThis": true,
+    "noImplicitReturns": true,
     "exactOptionalPropertyTypes": true,
+
     "esModuleInterop": true,
-    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "emitDecoratorMetadata": true,
+
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     "experimentalDecorators": true,
-    "importHelpers": true,
+    "emitDecoratorMetadata": true,
+
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+
     "noEmit": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+
     "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "paths": {
-      "@/index": ["src/index"],
-      "@/config/*": ["src/config/*"],
-      "@/services/*": ["src/services/*"],
-      "@/utils/*": ["src/utils/*"],
-      "@/test/*": ["src/__tests__/*"],
-      "@/docs/*": ["src/docs/*"]
-    }
+
+    "incremental": true,
+    "disableSourceOfProjectReferenceRedirect": true
   },
   "include": ["src", "src/__tests__", "src/docs"],
   "exclude": ["node_modules", "dist", "tmp", "coverage"]

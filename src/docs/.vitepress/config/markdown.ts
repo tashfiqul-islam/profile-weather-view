@@ -1,9 +1,7 @@
-/**
- * markdown.ts
- * Contains configuration for Markdown processing and code syntax highlighting
- */
+/* src/docs/.vitepress/config/markdown.ts */
 
 import type { MarkdownOptions } from 'vitepress';
+import MarkdownIt from 'markdown-it';
 
 /**
  * Supported syntax highlighting themes
@@ -20,6 +18,14 @@ export const HighlightTheme = {
 } as const;
 
 /**
+ * Extend Markdown-It configuration
+ * @param md - Markdown-It instance
+ */
+const extendMarkdownIt = (md: MarkdownIt) => {
+  // Custom Markdown-It plugins can be added here
+};
+
+/**
  * Creates markdown configuration with custom options
  * @returns Configured markdown options
  */
@@ -32,9 +38,8 @@ export const createMarkdownConfig = (): MarkdownOptions => {
     lineNumbers: true,
     toc: {
       level: [2, 3],
-      // Note: containerClass and listClass were causing TypeScript errors with exactOptionalPropertyTypes
-      // Removed to maintain compatibility
     },
+    config: (md) => extendMarkdownIt(md),
   };
 };
 

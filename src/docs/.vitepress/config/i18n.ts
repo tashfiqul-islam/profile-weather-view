@@ -1,12 +1,9 @@
-/**
- * i18n.ts
- * Contains internationalization configuration for the VitePress site
- */
+/* src/docs/.vitepress/config/i18n.ts */
 
 import type { DefaultTheme, LocaleConfig } from 'vitepress';
 
 /**
- * Interface for locale configuration with enhanced meta-options
+ * Interface for locale configuration with enhanced options
  */
 export interface LocaleOptions {
   label: string;
@@ -55,20 +52,18 @@ export const dateFormatOptions: Intl.DateTimeFormatOptions = {
  * @returns Configured locales object
  */
 export const createLocales = (): LocaleConfig => {
-  // Start with an empty locales object
-  const localesConfig: LocaleConfig = {};
-
-  // Build each locale configuration
-  Object.entries(availableLocales).forEach(([key, locale]) => {
-    localesConfig[key] = {
-      label: locale.label,
-      lang: locale.lang,
-      description: locale.description,
-      themeConfig: locale.themeConfig,
-    };
-  });
-
-  return localesConfig;
+  return Object.entries(availableLocales).reduce(
+    (localesConfig, [key, locale]) => {
+      localesConfig[key] = {
+        label: locale.label,
+        lang: locale.lang,
+        description: locale.description,
+        themeConfig: locale.themeConfig,
+      };
+      return localesConfig;
+    },
+    {} as LocaleConfig,
+  );
 };
 
 /**

@@ -46,15 +46,15 @@ export const siteTitle: string = 'Profile Weather View';
  * Dark/light mode appearance settings
  */
 export const appearance: AppearanceConfig = {
-  preference: 'auto',
-  darkModeSwitchLabel: 'Theme',
+  preference: 'auto', // Auto-detects system preference
+  darkModeSwitchLabel: 'Theme', // Label for dark mode toggle
 };
 
 /**
- * Outline configuration
+ * Outline configuration for table of contents
  */
 export const outline: DefaultTheme.Outline = {
-  level: [2, 3],
+  level: [2, 3], // Depth levels for the outline
   label: 'On this page',
 };
 
@@ -73,7 +73,7 @@ export const lastUpdated: LastUpdatedConfig = {
  * Configure Carbon Ads (optional revenue source)
  */
 export const carbonAds: DefaultTheme.CarbonAdsOptions = {
-  code: '', // Add Carbon Ads code here
+  code: '', // Add Carbon Ads code here if applicable
   placement: '',
 };
 
@@ -96,11 +96,27 @@ export const externalLinkIcon: boolean = true;
  */
 export const markdown = {
   theme: {
-    light: 'github-light',
-    dark: 'github-dark',
+    light: 'github-light', // Light mode syntax theme
+    dark: 'github-dark', // Dark mode syntax theme
   },
-  lineNumbers: true,
-  toc: { level: [2, 3] },
+  lineNumbers: true, // Enables line numbers for code blocks
+  toc: { level: [2, 3] }, // Table of contents depth
+};
+
+/**
+ * Tailwind Theme Colors - Aligns with VitePress branding
+ */
+export const tailwindTheme = {
+  light: {
+    background: 'bg-white',
+    text: 'text-gray-900',
+    border: 'border-gray-200',
+  },
+  dark: {
+    background: 'bg-gray-900',
+    text: 'text-gray-100',
+    border: 'border-gray-700',
+  },
 };
 
 /**
@@ -117,6 +133,7 @@ export const createThemeConfig = (): {
   returnToTopLabel: string;
   sidebarMenuLabel: string;
   externalLinkIcon: boolean;
+  tailwindTheme: typeof tailwindTheme;
 } => {
   return {
     logo,
@@ -129,5 +146,8 @@ export const createThemeConfig = (): {
     returnToTopLabel: accessibilityLabels.returnToTopLabel,
     sidebarMenuLabel: accessibilityLabels.sidebarMenuLabel,
     externalLinkIcon,
+    tailwindTheme,
   };
 };
+
+//

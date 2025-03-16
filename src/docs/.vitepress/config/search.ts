@@ -1,7 +1,4 @@
-/**
- * search.ts
- * Contains configuration for the search functionality
- */
+/* src/docs/.vitepress/config/search.ts */
 
 import type { DefaultTheme } from 'vitepress';
 
@@ -44,29 +41,10 @@ export interface SearchTranslations {
  * Interface for local search options
  */
 export interface LocalSearchOptions {
-  /**
-   * Show detailed search results view
-   */
   detailedView: boolean;
-
-  /**
-   * Custom translations for search UI
-   */
   translations?: SearchTranslations;
-
-  /**
-   * Maximum number of results to display
-   */
   maxSuggestions?: number;
-
-  /**
-   * Custom search logic or filters
-   */
   filter?: (page: any, query: string) => boolean;
-
-  /**
-   * Custom result view
-   */
   getItemValue?: (item: any) => string;
 }
 

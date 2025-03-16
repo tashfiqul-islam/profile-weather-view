@@ -86,7 +86,7 @@ For a more visually appealing display, you can use a card-based format:
 <!-- Hourly Weather Update -->
 <div align="center">
   <img src="https://openweathermap.org/img/w/03d.png" width="60" alt="" />
-  <h3>Currently 30°C in Dhaka</h3>
+  <h3>Currently, 30°C in Dhaka</h3>
   <h4>Cloudy with 60% humidity</h4>
   <p>☀️ Sunrise: 06:18 AM | 🌙 Sunset: 06:02 PM</p>
 </div>

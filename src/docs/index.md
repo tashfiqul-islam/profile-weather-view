@@ -35,21 +35,4 @@ features:
   - icon: ⚡
     title: 'Blazing Performance'
     details: Optimized with Bun's cutting-edge JavaScript runtime for near-instant execution, delivering up to 30x faster processing than traditional Node.js implementations.
-highlights:
-  - title: 'Seamless Integration'
-    items:
-      - 'One-click setup with GitHub template'
-      - 'Works with any Markdown-based profile'
-      - 'No configuration needed for common use cases'
-  - title: 'Developer Experience'
-    items:
-      - 'Extensive documentation with practical examples'
-      - 'Modular design for easy customization'
-      - 'Active community support and contributions'
-  - title: 'Production-Ready'
-    items:
-      - 'Built-in error handling and graceful fallbacks'
-      - 'Comprehensive logging for troubleshooting'
-      - 'Designed with GitHub rate limits in mind'
-footer: 'MIT Licensed | Copyright © 2025 Tashfiqul Islam | Made with ❤️ by developers, for developers'
 ---

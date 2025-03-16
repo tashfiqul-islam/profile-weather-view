@@ -1,7 +1,4 @@
-/**
- * seo.ts
- * Contains SEO optimization configurations including sitemap generation
- */
+/* src/docs/.vitepress/config/seo.ts */
 
 import type { SitemapStreamOptions } from 'vitepress';
 import type { SitemapItem as VitePressSitemapItem } from 'vitepress';
@@ -37,7 +34,6 @@ export const assignPriorityByDepth = (
 
     return {
       ...item,
-      // Ensure priority is a number, not a string
       priority,
     };
   });
@@ -60,23 +56,12 @@ export const sitemap: SitemapStreamOptions & {
  * Robots.txt configuration options
  */
 export interface RobotsOptions {
-  /**
-   * Allow all user agents to index the site
-   */
   allowAll?: boolean;
-
-  /**
-   * Specific rules for user agents
-   */
   rules?: Array<{
     userAgent: string;
     allow?: string[];
     disallow?: string[];
   }>;
-
-  /**
-   * Sitemap URL for robots.txt
-   */
   sitemapUrl?: string;
 }
 

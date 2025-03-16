@@ -1,29 +1,26 @@
-/**
- * config.ts
- * Main entry point for VitePress configuration
- * Imports and composes modular configuration components
- */
+/* src/docs/.vitepress/config.ts */
 
 import { defineConfig } from 'vitepress';
 import type { DefaultTheme } from 'vitepress';
+import tailwindcss from '@tailwindcss/vite';
 
-// Import all configuration modules
+// Import modular configurations
 import { head } from './config/meta';
 import { nav, sidebar, editLink, docFooter } from './config/nav';
 import { createThemeConfig } from './config/theme';
 import { socialLinks } from './config/social';
-import { footer } from './config/footer';
+import { footer, createFooter } from './config/footer';
 import { markdown } from './config/markdown';
 import { search } from './config/search';
 import { sitemap } from './config/seo';
-import { locales } from './config/i18n';
+import { createLocales } from './config/i18n';
 
 /**
- * The Main VitePress configuration
- * Brings together all modular components
+ * Main VitePress configuration
+ * Ensures alignment with the custom theme and Tailwind CSS setup
  */
 export default defineConfig({
-  // Site-wide configurations
+  // Global site metadata
   title: 'Profile Weather View',
   description: 'Automated weather updates for your GitHub profile README',
   lang: 'en-US',
@@ -31,51 +28,54 @@ export default defineConfig({
   cleanUrls: true,
   ignoreDeadLinks: true,
 
-  // Meta-tags and SEO configuration from meta.ts
+  // SEO and metadata from meta.ts
   head,
 
-  // Theme configuration - combines all UI-related settings
+  // Theme configuration - combining all UI elements
   themeConfig: {
-    // Base theme configuration from theme.ts
-    ...createThemeConfig(),
+    ...createThemeConfig(), // Load base theme settings
 
-    // Navigation configuration from nav.ts
+    // Navigation structure
     nav,
     sidebar,
     editLink,
     docFooter,
 
-    // Social links configuration from social.ts
+    // Social links
     socialLinks,
 
-    // Footer configuration from footer.ts
-    footer,
+    // Footer content with optional customization support
+    footer: createFooter(),
 
-    // Search configuration from search.ts
+    // Search integration
     search,
   } as DefaultTheme.Config,
 
-  // Markdown configuration from markdown.ts
+  // Markdown parsing and customization
   markdown,
 
-  // Internationalization from i18n.ts
-  locales,
+  // Internationalization settings
+  locales: createLocales(),
 
-  // Sitemap configuration from seo.ts
+  // Sitemap for SEO
   sitemap,
 
-  // Build optimization hooks
-  buildEnd: async (siteConfig): Promise<void> => {
-    // Can add custom build logic here
-    console.log('VitePress site build complete!');
+  // Optimize a build process
+  buildEnd: async () => {
+    console.log('✅ VitePress site build completed successfully!');
   },
 
-  // Vue options for advanced customization
+  // Vue-specific configurations
   vue: {
     template: {
       compilerOptions: {
         isCustomElement: (tag: string): boolean => tag === 'custom-element',
       },
     },
+  },
+
+  // Vite configuration, ensuring Tailwind is included
+  vite: {
+    plugins: [tailwindcss()],
   },
 });

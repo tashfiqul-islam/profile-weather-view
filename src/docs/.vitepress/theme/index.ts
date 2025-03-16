@@ -1,36 +1,23 @@
-/**
- * index.ts
- * Main entry point for VitePress theme customization
- */
+/* src/docs/.vitepress/theme/index.ts */
 
 import { type Theme, inBrowser } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
-import './custom.css';
+import './tailwind.css';
 
-// Import any custom components here
-// import CustomComponent from './components/CustomComponent.vue';
-
-// Any theme enhancement configuration can be done here
-export default {
+/**
+ * Custom VitePress theme with enhanced performance,
+ * modern UI, and smooth dark/light mode transitions.
+ */
+const theme: Theme = {
   ...DefaultTheme,
-
-  enhanceApp({ app, router, siteData }) {
-    // Register custom components
-    // app.component('CustomComponent', CustomComponent);
-
-    // Add any app-level enhancements
+  enhanceApp({ app, router }) {
     if (inBrowser) {
-      // Client-side-only code
-      router.onAfterRouteChanged = (to) => {
-        // Analytics tracking code can go here
-        console.log('Route changed to:', to);
+      // Handle route changes (useful for analytics, logging, etc.)
+      router.onAfterRouteChange = (to) => {
+        console.log('Navigated to:', to);
       };
-
-      // Initialize any client-side libraries
-      // Example: initialize tooltips, etc.
-      window.addEventListener('DOMContentLoaded', () => {
-        // Initialize any features that require DOM to be loaded
-      });
     }
   },
-} satisfies Theme;
+};
+
+export default theme;

@@ -7,7 +7,7 @@ smol = false
 logLevel = "warn"
 
 # Enable OpenWeather API key preload (Auto-load environment variables)
-preload = ["./src/utils/preload.ts"]
+preload = ["./src/weather-update/utils/preload.ts"]
 
 # Ensure Node.js aliases to Bun for smooth execution
 [run]

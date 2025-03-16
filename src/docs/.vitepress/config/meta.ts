@@ -1,16 +1,19 @@
-/**
- * meta.ts
- * Contains all meta tags, SEO configurations, and document head elements
- */
+/* src/docs/.vitepress/config/meta.ts */
 
 import type { HeadConfig } from 'vitepress';
 
+/**
+ * Interface for structured data schema
+ */
 export interface StructuredData {
   '@context': string;
   '@type': string;
   [key: string]: any;
 }
 
+/**
+ * Interface for meta tag options
+ */
 export interface MetaOptions {
   title: string;
   description: string;
@@ -90,7 +93,6 @@ export const createHeadTags = (
   } = mergedOptions;
 
   return [
-    // Favicon and icon configuration
     [
       'link',
       { rel: 'icon', type: 'image/svg+xml', href: '/icons/weather.svg' },
@@ -101,26 +103,22 @@ export const createHeadTags = (
     ],
     ['link', { rel: 'canonical', href: baseUrl }],
 
-    // Primary meta tags
     ['meta', { name: 'theme-color', content: themeColor }],
     ['meta', { name: 'author', content: author }],
     ['meta', { name: 'keywords', content: keywords.join(', ') }],
 
-    // Open Graph / Facebook
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:title', content: title }],
     ['meta', { name: 'og:description', content: description }],
     ['meta', { name: 'og:image', content: ogImage }],
     ['meta', { name: 'og:url', content: baseUrl }],
 
-    // Twitter
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: twitterHandle }],
     ['meta', { name: 'twitter:title', content: title }],
     ['meta', { name: 'twitter:description', content: description }],
     ['meta', { name: 'twitter:image', content: ogImage }],
 
-    // Structured data
     [
       'script',
       { type: 'application/ld+json' },
@@ -131,6 +129,5 @@ export const createHeadTags = (
 
 /**
  * Default head configuration for VitePress
- * Can be imported directly into the main config
  */
 export const head: HeadConfig[] = createHeadTags();
