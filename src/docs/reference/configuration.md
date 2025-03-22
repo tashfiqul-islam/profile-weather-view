@@ -210,12 +210,12 @@ const prettierConfig = {
 export default prettierConfig;
 ```
 
-#### Commitlint Configuration (commitlint.config.cjs)
+#### Commitlint Configuration (commitlint.config.mjs)
 
 Enforces conventional commit messages for better repository history.
 
 ```javascript
-// commitlint.config.cjs
+// commitlint.config.mjs
 module.exports = {
   extends: ['@commitlint/config-conventional'],
 };

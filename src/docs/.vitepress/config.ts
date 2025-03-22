@@ -4,16 +4,21 @@ import { defineConfig } from 'vitepress';
 import type { DefaultTheme } from 'vitepress';
 import tailwindcss from '@tailwindcss/vite';
 
-// Import modular configurations
-import { head } from './config/meta';
-import { nav, sidebar, editLink, docFooter } from './config/nav';
-import { createThemeConfig } from './config/theme';
-import { socialLinks } from './config/social';
-import { footer, createFooter } from './config/footer';
-import { markdown } from './config/markdown';
-import { search } from './config/search';
-import { sitemap } from './config/seo';
-import { createLocales } from './config/i18n';
+// Import modular configurations using path aliases
+import { head } from '@/docs/.vitepress/config/meta';
+import {
+  nav,
+  sidebar,
+  editLink,
+  docFooter,
+} from '@/docs/.vitepress/config/nav';
+import { createThemeConfig } from '@/docs/.vitepress/config/theme';
+import { socialLinks } from '@/docs/.vitepress/config/social';
+import { footer, createFooter } from '@/docs/.vitepress/config/footer';
+import { markdown } from '@/docs/.vitepress/config/markdown';
+import { search } from '@/docs/.vitepress/config/search';
+import { sitemap } from '@/docs/.vitepress/config/seo';
+import { createLocales } from '@/docs/.vitepress/config/i18n';
 
 /**
  * Main VitePress configuration
@@ -77,5 +82,10 @@ export default defineConfig({
   // Vite configuration, ensuring Tailwind is included
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '@': '/src',
+      },
+    },
   },
 });

@@ -1,5 +1,5 @@
 export function ensureEnvironmentVariables(): void {
-  const apiKey = Bun.env.OPEN_WEATHER_KEY?.trim();
+  const apiKey = Bun.env['OPEN_WEATHER_KEY']?.trim();
 
   if (!apiKey) {
     console.error(

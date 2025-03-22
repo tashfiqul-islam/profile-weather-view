@@ -12,7 +12,7 @@ globalThis.Bun = {
 describe('ensureEnvironmentVariables', () => {
   beforeEach(() => {
     // Reset the environment variable before each test
-    globalThis.Bun.env.OPEN_WEATHER_KEY = 'mock-api-key';
+    globalThis.Bun.env['OPEN_WEATHER_KEY'] = 'mock-api-key';
   });
 
   test('should validate required environment variables without throwing', () => {
@@ -23,7 +23,7 @@ describe('ensureEnvironmentVariables', () => {
 
   test('should throw an error if OPEN_WEATHER_KEY is missing', () => {
     // Simulate missing OPEN_WEATHER_KEY
-    delete globalThis.Bun.env.OPEN_WEATHER_KEY;
+    delete globalThis.Bun.env['OPEN_WEATHER_KEY'];
     expect(() => {
       ensureEnvironmentVariables();
     }).toThrowError(
@@ -33,9 +33,9 @@ describe('ensureEnvironmentVariables', () => {
 
   test('should ensure environment variables are correctly set in Bun runtime', () => {
     // Check if environment variable exists in Bun's runtime
-    globalThis.Bun.env.BUN_ENV_CHECK = 'true';
-    expect(globalThis.Bun.env.BUN_ENV_CHECK).toBeDefined();
-    delete globalThis.Bun.env.BUN_ENV_CHECK; // Clean up
+    globalThis.Bun.env['BUN_ENV_CHECK'] = 'true';
+    expect(globalThis.Bun.env['BUN_ENV_CHECK']).toBeDefined();
+    delete globalThis.Bun.env['BUN_ENV_CHECK']; // Clean up
   });
 
   test('should log a success message when environment variables are loaded', () => {

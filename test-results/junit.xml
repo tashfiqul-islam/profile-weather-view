@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="32" failures="0" errors="0" time="0.0592608">
+    <testsuite name="src/__tests__/unit/index.test.ts" timestamp="2025-03-22T05:41:25.421Z" hostname="Tashfiq" tests="10" failures="0" errors="0" skipped="0" time="0.0083498">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should fetch weather data and update the README successfully" time="0.0023328">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should log a warning if no changes were made to the README" time="0.0003276">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during weather data fetch" time="0.0013919">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during README update" time="0.0004028">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during environment variable validation" time="0.0003462">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unhandled errors in the main function" time="0.0002949">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unknown errors in the main function" time="0.0002837">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should use custom README path if provided in environment" time="0.0003178">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report changes status to GitHub Actions" time="0.0002232">
+        </testcase>
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report no changes status to GitHub Actions" time="0.000193">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/unit/services/fetchWeather.test.ts" timestamp="2025-03-22T05:41:25.422Z" hostname="Tashfiq" tests="12" failures="0" errors="0" skipped="0" time="0.0215673">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should correctly convert UTC timestamp to Dhaka time" time="0.0035494">
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should fetch weather data successfully" time="0.0037324">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should throw error if API key is missing" time="0.0011614">
+            <system-err>
+❌ Missing required environment variable: OPEN_WEATHER_KEY
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle HTTP errors" time="0.0024212">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: Error: ❌ HTTP Error undefined: undefined
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:65:13[90m)[39m
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle invalid API responses (empty JSON)" time="0.0027684">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: ZodError: [
+  {
+    &quot;code&quot;: &quot;invalid_type&quot;,
+    &quot;expected&quot;: &quot;object&quot;,
+    &quot;received&quot;: &quot;undefined&quot;,
+    &quot;path&quot;: [
+      &quot;current&quot;
+    ],
+    &quot;message&quot;: &quot;Required&quot;
+  }
+]
+    at Object.get error [as error] [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mzod[24m/lib/index.mjs:587:31[90m)[39m
+    at ZodObject.parse [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mzod[24m/lib/index.mjs:663:22[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:71:45[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:89:5
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:22 {
+  issues: [
+    {
+      code: [32m&apos;invalid_type&apos;[39m,
+      expected: [32m&apos;object&apos;[39m,
+      received: [32m&apos;undefined&apos;[39m,
+      path: [36m[Array][39m,
+      message: [32m&apos;Required&apos;[39m
+    }
+  ],
+  addIssue: [36m[Function (anonymous)][39m,
+  addIssues: [36m[Function (anonymous)][39m,
+  errors: [
+    {
+      code: [32m&apos;invalid_type&apos;[39m,
+      expected: [32m&apos;object&apos;[39m,
+      received: [32m&apos;undefined&apos;[39m,
+      path: [36m[Array][39m,
+      message: [32m&apos;Required&apos;[39m
+    }
+  ]
+}
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle network failures" time="0.0007377">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: Error: Network Error
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:97:34
+    at mockCall [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+    at spy [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:62:38[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:100:18
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:182:14
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:28
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:64:24
+    at new Promise (&lt;anonymous&gt;)
+    at runWithTimeout [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:41:12[90m)[39m
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle non-Error fetch rejection" time="0.0004636">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: Error: Unexpected string rejection
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:108:34
+    at mockCall [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+    at spy [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:62:38[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:111:18
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:182:14
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:28
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:64:24
+    at new Promise (&lt;anonymous&gt;)
+    at runWithTimeout [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:41:12[90m)[39m
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle response.json() rejection" time="0.0005595">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: Error: Invalid JSON
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:121:43
+    at mockCall [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+    at spy [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:62:38[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:127:18
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:182:14
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:28
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:64:24
+    at new Promise (&lt;anonymous&gt;)
+    at runWithTimeout [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:41:12[90m)[39m
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle Zod validation errors" time="0.0005885">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: ZodError: [
+  {
+    &quot;code&quot;: &quot;invalid_type&quot;,
+    &quot;expected&quot;: &quot;number&quot;,
+    &quot;received&quot;: &quot;string&quot;,
+    &quot;path&quot;: [
+      &quot;current&quot;,
+      &quot;humidity&quot;
+    ],
+    &quot;message&quot;: &quot;Expected number, received string&quot;
+  }
+]
+    at Object.get error [as error] [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mzod[24m/lib/index.mjs:587:31[90m)[39m
+    at ZodObject.parse [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mzod[24m/lib/index.mjs:663:22[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:71:45[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:143:5
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:22 {
+  issues: [
+    {
+      code: [32m&apos;invalid_type&apos;[39m,
+      expected: [32m&apos;number&apos;[39m,
+      received: [32m&apos;string&apos;[39m,
+      path: [36m[Array][39m,
+      message: [32m&apos;Expected number, received string&apos;[39m
+    }
+  ],
+  addIssue: [36m[Function (anonymous)][39m,
+  addIssues: [36m[Function (anonymous)][39m,
+  errors: [
+    {
+      code: [32m&apos;invalid_type&apos;[39m,
+      expected: [32m&apos;number&apos;[39m,
+      received: [32m&apos;string&apos;[39m,
+      path: [36m[Array][39m,
+      message: [32m&apos;Expected number, received string&apos;[39m
+    }
+  ]
+}
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;Unknown&quot; weather description" time="0.0009899">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;01d&quot; weather icon if missing" time="0.0008506">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should reject with an Error object on all failures" time="0.000479">
+            <system-err>
+🌍 Fetching weather data from OpenWeather API...
+
+❌ Weather data fetch failed: Error: Mocked network failure
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:191:34
+    at mockCall [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+    at spy [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+    at fetchWeatherData [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\fetchWeather.ts:62:38[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\fetchWeather.test.ts:194:18
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:182:14
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:28
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:64:24
+    at new Promise (&lt;anonymous&gt;)
+    at runWithTimeout [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:41:12[90m)[39m
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/unit/services/updateReadme.test.ts" timestamp="2025-03-22T05:41:25.425Z" hostname="Tashfiq" tests="6" failures="0" errors="0" skipped="0" time="0.0230158">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if README.md file does not exist" time="0.0018159">
+            <system-err>
+❌ Error: README.md file not found at path: D:\Projects\profile-weather-view\README.md
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather data format is invalid" time="0.0003876">
+            <system-err>
+❌ Error: Invalid weather data format. Expected 6 segments.
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather section is missing in README.md" time="0.0109452">
+            <system-err>
+⚠️ Warning: Weather section not found in README. Skipping update.
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should update the README successfully with valid data" time="0.0012462">
+            <system-err>
+✅ README updated successfully at: D:\Projects\profile-weather-view\README.md
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if writing to README fails" time="0.0045126">
+            <system-err>
+❌ Error writing to README file: Error: Write failed
+    at Object.&lt;anonymous&gt; [90m(D:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\updateReadme.test.ts:99:41[90m)[39m
+    at Object.mockCall [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/spy/dist/index.js:61:17[90m)[39m
+    at Object.spy [as write] [90m(file:///D:/Projects/profile-weather-view/[39mnode_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[39m
+    at updateReadme [90m(D:\Projects\profile-weather-view\[39msrc\weather-update\services\updateReadme.ts:90:15[90m)[39m
+    at [90mD:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\updateReadme.test.ts:102:20
+    at [90mfile:///D:/Projects/profile-weather-view/[39mnode_modules/[4m@vitest[24m/runner/dist/index.js:573:22
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if no changes are needed to README" time="0.0014507">
+            <system-err>
+ℹ️ No changes needed to README.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/unit/utils/preload.test.ts" timestamp="2025-03-22T05:41:25.426Z" hostname="Tashfiq" tests="4" failures="0" errors="0" skipped="0" time="0.0063279">
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should validate required environment variables without throwing" time="0.0014314">
+            <system-err>
+[preload.ts] ✅ Environment variables loaded successfully
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should throw an error if OPEN_WEATHER_KEY is missing" time="0.0003001">
+            <system-err>
+[preload.ts] ❌ Missing required environment variable: OPEN_WEATHER_KEY
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should ensure environment variables are correctly set in Bun runtime" time="0.000123">
+        </testcase>
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should log a success message when environment variables are loaded" time="0.0017848">
+            <system-err>
+[preload.ts] ✅ Environment variables loaded successfully
+
+            </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>

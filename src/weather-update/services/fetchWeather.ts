@@ -45,7 +45,7 @@ export function convertToDhakaTime(utcSeconds: number): string {
  * 🌍 Fetches current weather data from OpenWeather API.
  */
 export async function fetchWeatherData(): Promise<string> {
-  const API_KEY = Bun.env.OPEN_WEATHER_KEY?.trim();
+  const API_KEY = Bun.env['OPEN_WEATHER_KEY']?.trim();
 
   if (!API_KEY) {
     console.error('❌ Missing required environment variable: OPEN_WEATHER_KEY');

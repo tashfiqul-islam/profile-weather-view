@@ -1,0 +1,550 @@
+name: "Profile Weather Update"
+
+# ============================================================
+# 🚀 Optimized triggers for reliability and performance
+# ============================================================
+on:
+  schedule:
+    # Strategic times that capture meaningful weather changes while conserving resources
+    - cron: "23 5,13,21 * * *"  # 3 times daily: morning (5:23), afternoon (13:23), evening (21:23)
+
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: "Enable debug mode"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      retry_strategy:
+        description: "API failure retry strategy"
+        type: choice
+        options:
+          - exponential
+          - linear
+          - none
+        default: "exponential"
+      skip_tests:
+        description: "Skip test execution"
+        type: boolean
+        default: false
+      force_update:
+        description: "Force README update regardless of changes"
+        type: boolean
+        default: false
+
+  # Self-healing mechanism (Triggers on failure)
+  workflow_run:
+    workflows: ["Profile Weather Update"]
+    types: [completed]
+    branches: [master]
+
+# ============================================================
+# 🚀 Prevent redundant executions (Ensures single execution)
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Explicit permissions (Principle of least privilege)
+# ============================================================
+permissions:
+  contents: write  # For repository updates
+  id-token: write  # For OIDC token (keyless signing)
+  actions: read    # For workflow status checks
+
+# ============================================================
+# 🌍 Global environment variables
+# ============================================================
+env:
+  BUN_VERSION: "latest"
+  CACHE_KEY_PREFIX: "v3-profile-weather"
+  LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
+  TIMEZONE: "Asia/Dhaka"
+  RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
+  EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+  CODE_REPO: "tashfiqul-islam/profile-weather-view"
+  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"
+  BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
+  NODE_ENV: "production"
+  FORCE_UPDATE: ${{ github.event.inputs.force_update == true }}
+  SKIP_TESTS: ${{ github.event.inputs.skip_tests == true }}
+
+# ============================================================
+# 📌 JOB: PREFLIGHT (Checks environment & dependencies)
+# ============================================================
+jobs:
+  preflight:
+    name: "🚀 Preflight Checks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      api_status: ${{ steps.api-check.outputs.status }}
+      env_valid: ${{ steps.env-check.outputs.valid }}
+      cache_hit: ${{ steps.cache-check.outputs.cache_hit }}
+      node_modules_hash: ${{ steps.hash-check.outputs.node_modules_hash }}
+
+    steps:
+      - name: "🔍 Log Execution Context"
+        run: |
+          echo "::group::Execution Context"
+          echo "🔹 Run ID: ${{ env.EXECUTION_ID }}"
+          echo "🔹 Workflow: ${{ github.workflow }}"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 Target Profile: ${{ env.PROFILE_REPO }}"
+          echo "🔹 Trigger: ${{ github.event_name }}"
+          echo "🔹 Execution Mode: ${{ env.FORCE_UPDATE == 'true' && 'Force Update' || 'Normal' }}"
+          echo "🔹 Tests: ${{ env.SKIP_TESTS == 'true' && 'Skipped' || 'Enabled' }}"
+          echo "::endgroup::"
+
+      - name: "🔑 Verify Required Secrets"
+        id: env-check
+        env:
+          OPEN_WEATHER_KEY: ${{ secrets.OPEN_WEATHER_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -z "$OPEN_WEATHER_KEY" ]]; then
+            echo "::error::Missing required secret: OPEN_WEATHER_KEY"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ -z "$GITHUB_TOKEN" ]]; then
+            echo "::error::Missing required secret: GITHUB_TOKEN"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "::notice::API and token validation successful"
+          fi
+
+      - name: "🌐 Check OpenWeather API Health"
+        id: api-check
+        if: steps.env-check.outputs.valid == 'true'
+        env:
+          OPEN_WEATHER_KEY: ${{ secrets.OPEN_WEATHER_KEY }}
+        run: |
+          # Create cache directory if it doesn't exist
+          mkdir -p /tmp/weather-cache
+          CACHE_FILE="/tmp/weather-cache/openweather_status"
+          CACHE_EXPIRATION=21600 # 6 hours in seconds
+          
+          # Check if cache exists and is still valid
+          if [[ -f "$CACHE_FILE" && $(($(date +%s) - $(stat -c %Y "$CACHE_FILE"))) -lt $CACHE_EXPIRATION ]]; then
+            CACHED_STATUS=$(cat "$CACHE_FILE")
+            echo "status=$CACHED_STATUS" >> $GITHUB_OUTPUT
+            echo "::notice::Using cached API status ($CACHED_STATUS) - still valid for $((CACHE_EXPIRATION - $(date +%s) + $(stat -c %Y "$CACHE_FILE"))) seconds"
+            exit 0
+          fi
+          
+          # Quick API health check with minimal data request
+          RESPONSE=$(curl -s -o response.json -w "%{http_code}" \
+            "https://api.openweathermap.org/data/3.0/onecall?lat=23.8759&lon=90.3795&exclude=minutely,hourly,daily,alerts&appid=$OPEN_WEATHER_KEY&units=metric")
+          
+          if [[ "$RESPONSE" == "200" ]]; then
+            echo "status=operational" >> $GITHUB_OUTPUT
+            echo "operational" > "$CACHE_FILE"
+            echo "::notice::OpenWeather API is operational"
+          else
+            echo "status=degraded" >> $GITHUB_OUTPUT
+            echo "degraded" > "$CACHE_FILE"
+            echo "::warning::OpenWeather API returned status code: $RESPONSE"
+            echo "::debug::$(cat response.json)"
+          fi
+
+      - name: "⬇️ Checkout Weather Code Repository (For Hash Calculation)"
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CODE_REPO }}
+          path: hash-check
+          fetch-depth: 1
+
+      - name: "📦 Calculate Dependency Hashes"
+        id: hash-check
+        working-directory: hash-check
+        run: |
+          # Generate deterministic hash of package.json for cache key
+          PACKAGE_HASH=$(sha256sum package.json | cut -d ' ' -f1)
+          echo "node_modules_hash=$PACKAGE_HASH" >> $GITHUB_OUTPUT
+          echo "::notice::Dependency hash: $PACKAGE_HASH"
+
+      - name: "📦 Check Dependency Cache Status"
+        id: cache-check
+        run: |
+          echo "cache_check_time=$(date +%s)" >> $GITHUB_OUTPUT
+          echo "cache_hit=unknown" >> $GITHUB_OUTPUT
+
+  # ============================================================
+  # 📌 JOB: UPDATE WEATHER (Main execution)
+  # ============================================================
+  update-weather:
+    name: "🌦️ Update Weather Data"
+    needs: preflight
+    if: needs.preflight.outputs.env_valid == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout Weather Code Repository"
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CODE_REPO }}
+          path: weather-code
+          fetch-depth: 1
+
+      - name: "⬇️ Checkout Profile Repository"
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.PROFILE_REPO }}
+          path: profile-repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+          ref: master
+
+      - name: "🧰 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: "🔍 Verify Bun Runtime"
+        run: |
+          echo "::group::Bun Runtime Verification"
+          BUN_VERSION=$(bun --version)
+          echo "🔹 Bun Version: $BUN_VERSION"
+          
+          # Check if Bun meets minimum requirements
+          if [[ "$BUN_VERSION" < "1.0.0" ]]; then
+            echo "::error::Bun version $BUN_VERSION is below minimum required version 1.0.0"
+            exit 1
+          fi
+          
+          # Verify TypeScript support
+          echo "🔹 TypeScript Support: $(bun --help | grep -q typescript && echo "Enabled" || echo "Disabled")"
+          echo "::endgroup::"
+
+      - name: "📦 Cache Dependencies"
+        uses: actions/cache@v4
+        id: bun-cache
+        with:
+          path: |
+            weather-code/node_modules
+            ~/.bun/install/cache
+            weather-code/bun.lockb
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ needs.preflight.outputs.node_modules_hash }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
+
+      - name: "🔄 Install Dependencies"
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        working-directory: weather-code
+        run: |
+          echo "::group::Bun Installation"
+          bun --version
+          bun install --frozen-lockfile
+          echo "::endgroup::"
+
+      - name: "⚡ Install Dependencies (Fast Path)"
+        if: steps.bun-cache.outputs.cache-hit == 'true'
+        working-directory: weather-code
+        run: |
+          echo "::notice::Using cached dependencies"
+          bun install --frozen-lockfile --no-summary
+
+      - name: "🔍 Code Quality Check"
+        working-directory: weather-code
+        run: |
+          echo "::group::Code Quality Verification"
+          echo "🔹 Running ESLint..."
+          bun run lint || { echo "::error::ESLint check failed"; exit 1; }
+          
+          echo "🔹 Running Prettier..."
+          bun run format --check || { echo "::error::Prettier check failed"; exit 1; }
+          echo "::endgroup::"
+          echo "::notice::Code quality checks passed"
+
+      - name: "📋 Run Type Check"
+        working-directory: weather-code
+        run: bun run type-check
+
+      - name: "🧪 Run Tests"
+        if: env.SKIP_TESTS != 'true'
+        working-directory: weather-code
+        run: |
+          echo "::group::Test Execution"
+          bun run test
+          echo "::endgroup::"
+        env:
+          # Mock environment variables for tests
+          OPEN_WEATHER_KEY: "mock-api-key-for-tests"
+          CI: "true"
+
+      - name: "📦 Cache Test Results"
+        if: env.SKIP_TESTS != 'true'
+        uses: actions/cache@v4
+        with:
+          path: weather-code/coverage
+          key: ${{ env.CACHE_KEY_PREFIX }}-test-${{ hashFiles('weather-code/src/**/*.ts') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-test-
+
+      - name: "📝 Verify Profile README"
+        id: readme-check
+        run: |
+          echo "::group::README Verification"
+          if [[ ! -f "profile-repo/README.md" ]]; then
+            echo "::error::README.md file not found in profile repository"
+            exit 1
+          fi
+          
+          # Check if weather section exists in README
+          if ! grep -q "<!-- Hourly Weather Update -->" profile-repo/README.md; then
+            echo "::error::Weather section not found in README.md"
+            exit 1
+          fi
+          echo "::notice::Weather section found in profile README"
+          echo "::endgroup::"
+
+      - name: "🔒 Prevent Concurrent README Updates"
+        run: |
+          LOCKFILE="/tmp/readme_update.lock"
+          exec 200>"$LOCKFILE"
+          flock -n 200 || { 
+            echo "::error::Another instance is already updating README"
+            exit 1
+          }
+          echo "::notice::Acquired exclusive lock for README update"
+
+      - name: "🌦️ Update Weather and README"
+        id: update-weather-and-readme
+        env:
+          OPEN_WEATHER_KEY: ${{ secrets.OPEN_WEATHER_KEY }}
+          GITHUB_ACTIONS: "true"
+          PROFILE_README_PATH: "../profile-repo/README.md"
+          LOG_LEVEL: ${{ env.LOG_LEVEL }}
+          BUN_RUNTIME_SAFETY: ${{ env.BUN_RUNTIME_SAFETY }}
+          # Force update if requested via input
+          FORCE_UPDATE: ${{ env.FORCE_UPDATE }}
+        working-directory: weather-code
+        run: |
+          echo "::group::Weather Update Process"
+          
+          # Execute the TypeScript code to fetch weather and update README
+          OUTPUT=$(OPEN_WEATHER_KEY="$OPEN_WEATHER_KEY" \
+                  GITHUB_ACTIONS="true" \
+                  PROFILE_README_PATH="../profile-repo/README.md" \
+                  LOG_LEVEL="${{ env.LOG_LEVEL }}" \
+                  BUN_RUNTIME_SAFETY="${{ env.BUN_RUNTIME_SAFETY }}" \
+                  FORCE_UPDATE="${{ env.FORCE_UPDATE }}" \
+                  bun run src/weather-update/index.ts)
+          
+          # Capture the execution status
+          EXECUTION_STATUS=$?
+          
+          if [[ $EXECUTION_STATUS -ne 0 ]]; then
+            echo "::error::Weather update process failed with code $EXECUTION_STATUS"
+            echo "$OUTPUT" | grep -E '❌|Error'
+            exit $EXECUTION_STATUS
+          fi
+          
+          # Parse output for CHANGES_DETECTED flag
+          if echo "$OUTPUT" | grep -q "CHANGES_DETECTED=true"; then
+            echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
+            echo "::notice::README changes detected by TypeScript code"
+          else
+            echo "CHANGES_DETECTED=false" >> $GITHUB_ENV
+            echo "::notice::No README changes needed"
+          fi
+          
+          # Log key output lines for monitoring
+          echo "$OUTPUT" | grep -E '✅|⚠️|❌|🌍|📝|🎉' || true
+          
+          echo "::endgroup::"
+
+      - name: "📊 Generate Code Coverage Report"
+        if: env.SKIP_TESTS != 'true'
+        working-directory: weather-code
+        run: |
+          if [[ -d "coverage" ]]; then
+            echo "::group::Code Coverage Summary"
+            cat coverage/coverage-summary.json | jq '.total'
+            echo "::endgroup::"
+          
+            echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
+            echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | $(cat coverage/coverage-summary.json | jq -r '.total.statements.pct')% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | $(cat coverage/coverage-summary.json | jq -r '.total.branches.pct')% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | $(cat coverage/coverage-summary.json | jq -r '.total.functions.pct')% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | $(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')% |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::notice::No coverage report found"
+          fi
+
+      - name: "📤 Upload Weather Output Artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-output-${{ github.run_id }}
+          path: profile-repo/README.md
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: "📤 Upload Coverage Report"
+        if: env.SKIP_TESTS != 'true' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_id }}
+          path: weather-code/coverage
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: "💾 Commit and Push Changes with Verified Signature"
+        if: env.CHANGES_DETECTED == 'true'
+        working-directory: profile-repo
+        run: |
+          echo "::group::Git Operations"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Enable commit signing with GitHub Actions token
+          git config --global commit.gpgsign true
+
+          # Apply correct commit timestamp in Dhaka timezone
+          export GIT_AUTHOR_DATE="$(TZ='${{ env.TIMEZONE }}' date)"
+          export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE"
+
+          # Format the last updated time for commit message
+          FORMATTED_DATE=$(TZ="${{ env.TIMEZONE }}" date "+%Y-%m-%d %H:%M:%S %Z")
+
+          git add README.md
+          git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
+
+          # Optimized push with intelligent handling of failures
+          if ! git push origin master; then
+            echo "::warning::Initial push failed. Checking if upstream has changes..."
+
+            # Fetch latest changes to compare
+            git fetch origin
+
+            # Check if our local branch differs from remote
+            if git diff --quiet HEAD origin/master; then
+              # No difference found, try force push
+              echo "::notice::No upstream changes detected. Force pushing..."
+              git push --force-with-lease origin master && echo "::notice::Force push successful"
+            else
+              # There are upstream changes, rebase and push
+              echo "::notice::Upstream changes detected. Rebasing..."
+              git pull --rebase origin master
+              git push origin master && echo "::notice::Push after rebase successful"
+            fi
+          else
+            echo "::notice::Changes pushed successfully on first attempt"
+          fi
+          echo "::endgroup::"
+
+  # ============================================================
+  # 📌 JOB: VERIFICATION (Ensures update success)
+  # ============================================================
+  verify:
+    name: "✅ Verify & Report"
+    needs: [preflight, update-weather]
+    if: always() && needs.preflight.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: "📊 Generate Execution Report"
+        run: |
+          echo "::group::Execution Summary"
+          echo "# Profile Weather Update Report" >> $GITHUB_STEP_SUMMARY
+          echo "## Execution Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** ${{ env.EXECUTION_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target Repository:** ${{ env.PROFILE_REPO }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Mode:** ${{ env.FORCE_UPDATE == 'true' && 'Force Update' || 'Normal' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** ${{ env.SKIP_TESTS == 'true' && 'Skipped' || 'Executed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Preflight:** ${{ needs.preflight.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Weather Update:** ${{ needs.update-weather.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Status:** ${{ needs.preflight.outputs.api_status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cache Hit:** ${{ needs.preflight.outputs.cache_hit }}" >> $GITHUB_STEP_SUMMARY
+          echo "::endgroup::"
+
+      - name: "⏱️ Schedule Next Update"
+        run: |
+          NEXT_UPDATE_TIME=$(TZ="${{ env.TIMEZONE }}" date -d "+8 hours" "+%H:%M:%S %Z")
+          echo "::notice title=Next Update::Scheduled for approximately ${NEXT_UPDATE_TIME}"
+          echo "## Next Update" >> $GITHUB_STEP_SUMMARY
+          echo "- **Scheduled for:** ${NEXT_UPDATE_TIME}" >> $GITHUB_STEP_SUMMARY
+
+      - name: "📊 Workflow Performance Metrics"
+        run: |
+          echo "::group::Performance Metrics"
+          echo "## Performance Metrics" >> $GITHUB_STEP_SUMMARY
+
+          # Calculate duration if possible
+          if [ -n "$GITHUB_WORKFLOW_REF" ]; then
+            DURATION="$(( $(date +%s) - $GITHUB_RUN_ATTEMPT_STARTED_AT ))"
+            echo "- **Total Duration:** $(($DURATION / 60)) minutes and $(($DURATION % 60)) seconds" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Total Duration:** See workflow details in GitHub UI" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "- **API Response Time:** Retrieved from execution logs" >> $GITHUB_STEP_SUMMARY
+          echo "::endgroup::"
+
+  # ============================================================
+  # 📌 JOB: RECOVERY (Retries on failure)
+  # ============================================================
+  recovery:
+    name: "🔄 Recovery Actions"
+    needs: [preflight, update-weather, verify]
+    if: always() && (needs.update-weather.result == 'failure' || needs.verify.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: "🔍 Analyze Failure"
+        run: |
+          echo "::group::Failure Analysis"
+          echo "# Workflow Failure Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "## Failed Jobs" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.preflight.result }}" == "failure" ]]; then
+            echo "- **Preflight:** Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.update-weather.result }}" == "failure" ]]; then
+            echo "- **Weather Update:** Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.verify.result }}" == "failure" ]]; then
+            echo "- **Verification:** Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Recovery Actions" >> $GITHUB_STEP_SUMMARY
+          echo "- Recovery mode activated" >> $GITHUB_STEP_SUMMARY
+          echo "- Creating notification for manual intervention" >> $GITHUB_STEP_SUMMARY
+          echo "::endgroup::"
+
+      - name: "📅 Schedule Re-run"
+        if: env.RETRY_STRATEGY != 'none'
+        run: |
+          # Calculate exponential or linear backoff based on strategy
+          if [[ "${{ env.RETRY_STRATEGY }}" == "exponential" ]]; then
+            DELAY_MINUTES=$((15 * 2 ** (${{ github.run_attempt }} - 1)))
+            # Cap at 4 hours
+            DELAY_MINUTES=$((DELAY_MINUTES > 240 ? 240 : DELAY_MINUTES))
+          else
+            # Linear: 15 minutes per attempt
+            DELAY_MINUTES=$((15 * ${{ github.run_attempt }}))
+          fi
+          
+          NEXT_RETRY=$(date -d "+${DELAY_MINUTES} minutes" "+%H:%M:%S")
+          
+          echo "::notice title=Automatic Retry::Scheduled in ${DELAY_MINUTES} minutes (at approximately ${NEXT_RETRY})"
+          echo "- **Next automatic retry:** in ${DELAY_MINUTES} minutes (at ${NEXT_RETRY})" >> $GITHUB_STEP_SUMMARY

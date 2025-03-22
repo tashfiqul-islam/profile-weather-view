@@ -102,4 +102,38 @@ describe('updateReadme()', () => {
     const result = await updateReadme(validWeatherData);
     expect(result).toBe(false);
   });
+
+  it('should return false if no changes are needed to README', async () => {
+    // Setup spies to track function behavior
+    const consoleSpy = vi.spyOn(console, 'warn');
+    const writeMock = vi.fn(() => Promise.resolve());
+
+    // Mock Bun
+    vi.stubGlobal('Bun', {
+      file: vi.fn(() => ({
+        exists: vi.fn(() => Promise.resolve(true)),
+        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
+      })),
+      write: writeMock,
+    });
+
+    // Instead of modifying String.prototype.replace directly,
+    // use vi.spyOn with mockImplementation
+    const replaceSpy = vi.spyOn(String.prototype, 'replace');
+
+    // This approach avoids the unbound method warning
+    replaceSpy.mockImplementation(function (this: string) {
+      // 'this' is properly bound in the mockImplementation
+      return this.toString();
+    });
+
+    const result = await updateReadme(validWeatherData);
+
+    // Restore the original replace method
+    replaceSpy.mockRestore();
+
+    expect(result).toBe(false);
+    expect(writeMock).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('ℹ️ No changes needed to README.');
+  });
 });

@@ -3,52 +3,90 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-
-    "types": ["bun"],
+    "lib": ["ESNext", "DOM", "WebWorker"],
 
     "baseUrl": "./",
     "rootDir": "src",
     "outDir": "dist",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/docs/*": ["src/docs/*"],
+      "@/tests/*": ["src/tests/*"],
+      "@/weather-updates/*": ["src/weather-updates/*"]
+    },
+    "types": ["bun", "node"],
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
     ],
-
-    "lib": ["ESNext", "DOM"],
+    "resolveJsonModule": true,
 
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
     "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+
+    "noPropertyAccessFromIndexSignature": true,
+    "noErrorTruncation": true,
 
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
-    "resolveJsonModule": true,
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "forceConsistentCasingInFileNames": true,
+    "preserveSymlinks": false,
+    "verbatimModuleSyntax": true,
 
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "forceConsistentCasingInFileNames": true,
-
     "noEmit": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
     "importHelpers": true,
     "skipLibCheck": true,
-
-    "verbatimModuleSyntax": true,
-    "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
-
+    "isolatedModules": true,
     "incremental": true,
-    "disableSourceOfProjectReferenceRedirect": true
+
+    "composite": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+
+    "useDefineForClassFields": true
   },
-  "include": ["src", "src/__tests__", "src/docs"],
-  "exclude": ["node_modules", "dist", "tmp", "coverage"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.mts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tmp",
+    "coverage",
+    ".git",
+    ".github"
+  ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
+    "excludeDirectories": ["**/node_modules", "dist"]
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "esm": true
+  }
 }

@@ -2,13 +2,18 @@ import { join } from 'node:path';
 
 /**
  * ✅ Updates the README file with new weather data.
+ * @param weatherData The formatted weather data string
+ * @param customReadmePath Optional path to a README file in a different location
  */
-export async function updateReadme(weatherData: string): Promise<boolean> {
-  const readmePath = join(process.cwd(), 'README.md');
+export async function updateReadme(
+  weatherData: string,
+  customReadmePath?: string,
+): Promise<boolean> {
+  const readmePath = customReadmePath ?? join(process.cwd(), 'README.md');
   const readmeFile = Bun.file(readmePath);
 
   if (!(await readmeFile.exists())) {
-    console.error('❌ Error: README.md file not found.');
+    console.error(`❌ Error: README.md file not found at path: ${readmePath}`);
 
     return false;
   }
@@ -37,28 +42,22 @@ export async function updateReadme(weatherData: string): Promise<boolean> {
     year: 'numeric',
   }).format(new Date());
 
-  const lastRefreshTime = `${formattedTime} UTC+6`;
+  const lastRefreshTime = `${formattedTime} (UTC+6)`;
 
+  // Updated weather section to *exactly* match the README format
   const updatedWeatherData = `<!-- Hourly Weather Update -->
-  <td align="center">${description} <img width="15" src="https://openweathermap.org/img/w/${icon}.png" alt=""></td>
-  <td align="center">${temperature}°C</td>
-  <td align="center">${sunrise}</td>
-  <td align="center">${sunset}</td>
-  <td align="center">${humidity}%</td>
-  <!-- End of Hourly Weather Update -->
-  </tr>
-  </table>
-  <div align="center">
-    <h6>
-      <em>Last refresh: ${lastRefreshTime}</em>
-    </h6>
-  </div>
-  <!-- End of Dhaka's weather table -->`;
+        <td align="center">${description} <img width="15" src="https://openweathermap.org/img/w/${icon}.png" alt=""></td>
+        <td align="center">${temperature}°C</td>
+        <td align="center">${sunrise}</td>
+        <td align="center">${sunset}</td>
+        <td align="center">${humidity}%</td>
+        <!-- End of Hourly Weather Update -->`;
 
   const readmeContent = await readmeFile.text();
+  const oldContent = readmeContent;
 
   const weatherSectionRegex =
-    /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Dhaka's weather table -->/;
+    /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/;
 
   if (!weatherSectionRegex.test(readmeContent)) {
     console.warn(
@@ -73,9 +72,23 @@ export async function updateReadme(weatherData: string): Promise<boolean> {
     updatedWeatherData,
   );
 
+  // Update the last refresh time separately
+  const updatedWithRefreshTime = updatedContent.replace(
+    /<em>Last refresh:.*?<\/em>/,
+    `<em>Last refresh: ${lastRefreshTime}</em>`,
+  );
+
+  // Check if there are actually any changes to make
+  if (updatedWithRefreshTime === oldContent) {
+    console.warn('ℹ️ No changes needed to README.');
+
+    return false;
+  }
+
   try {
-    await Bun.write(readmePath, updatedContent);
-    console.warn('✅ README updated successfully.');
+    // Use Bun's write API
+    await Bun.write(readmePath, updatedWithRefreshTime);
+    console.warn(`✅ README updated successfully at: ${readmePath}`);
 
     return true;
   } catch (error) {

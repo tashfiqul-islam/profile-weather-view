@@ -1,20 +1,56 @@
-<div align="center">
-  <h1>Architecture</h1>
-</div>
+# Architecture
 
-<br>
-
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Architecture-Modern-blue" alt="Architecture">
-  <img src="https://img.shields.io/badge/Design-Service_Oriented-green" alt="Design Pattern">
-  <img src="https://img.shields.io/badge/CI/CD-GitHub_Actions-orange" alt="CI/CD">
+<div class="architecture-header">
+  <div class="badges">
+    <Badge type="info" text="Modern Architecture"></Badge>
+    <Badge type="tip" text="Service Oriented"></Badge>
+    <Badge type="warning" text="GitHub Actions"></Badge>
+  </div>
 </div>
 
 ## Overview
 
-Profile Weather View follows a service-oriented architecture pattern designed for simplicity, maintainability, and automation. The application is structured to run both as a scheduled task via GitHub Actions and as a local development tool.
+Profile Weather View employs a service-oriented architecture designed with simplicity, maintainability, and automation at its core. This architecture enables the application to function both as a scheduled GitHub Actions workflow and as a local development tool, ensuring consistent behavior across environments.
 
-## Project Structure
+## Architectural Principles
+
+The application follows several key architectural principles:
+
+- **Separation of Concerns**: Each component has a single, well-defined responsibility
+- **Fail-Fast Validation**: Early detection of configuration issues prevents cascading failures
+- **Defensive Programming**: Comprehensive error handling at every layer
+- **Type Safety**: Strong typing throughout the application lifecycle
+- **Testing First**: High test coverage with isolated component testing
+
+## System Architecture
+
+### High-Level Overview
+
+```mermaid
+flowchart TD
+    subgraph "Execution Environment"
+        GHA[GitHub Actions] --> Main
+        Local[Local Development] --> Main
+        Main[Main Application] --> Services
+    end
+
+    subgraph "Services Layer"
+        Services --> FW[Weather Service]
+        Services --> UR[README Service]
+    end
+
+    subgraph "External Systems"
+        FW --> OW[OpenWeather API]
+        UR --> GR[GitHub Repository]
+    end
+
+    style GHA fill:#f9d77e,stroke:#333,stroke-width:2px
+    style Local fill:#f9d77e,stroke:#333,stroke-width:2px
+    style OW fill:#a2d2ff,stroke:#333,stroke-width:2px
+    style GR fill:#97d1a9,stroke:#333,stroke-width:2px
+```
+
+### Project Structure
 
 ```
 profile-weather-view/
@@ -25,10 +61,16 @@ profile-weather-view/
 │   ├── commit-msg               # Commit message validation
 │   └── pre-commit               # Pre-commit checks
 ├── src/
-│   ├── __tests__/               # Comprehensive test suite
-│   │   ├── index.test.ts        # Main application tests
-│   │   ├── services/            # Service-specific tests
-│   │   └── utils/               # Utility tests
+│   ├── tests/                   # Comprehensive test suite
+│   │   ├── benchmark/           # Performance benchmarking tests
+│   │   |   ├── index.test.ts    # Main application tests
+│   │   |   ├── services/        # Service-specific tests
+│   │   |   ├── utils/           # Utility tests
+│   │   ├── unit/                # Unit tests
+│   │   |   ├── index.test.ts    # Main application tests
+│   │   |   ├── services/        # Service-specific tests
+│   │   |   ├── utils/           # Utility tests
+│   │   ├── setup.ts             # Test setup & configuration
 │   ├── config/                  # Configuration modules
 │   │   ├── comments.config.mjs  # ESLint comments configuration
 │   │   ├── parser.config.mjs    # TypeScript parser settings
@@ -43,206 +85,305 @@ profile-weather-view/
 │   └── index.ts                 # Application entry point
 ├── .env                         # Environment variables (gitignored)
 ├── bunfig.toml                  # Bun runtime configuration
+├── package.json                 # Project dependencies and scripts
 ├── eslint.config.mjs            # ESLint configuration
 ├── prettier.config.mjs          # Code formatting rules
 ├── tsconfig.json                # TypeScript compilation settings
-├── commitlint.config.cjs        # Commit message validation
+├── commitlint.config.mjs        # Commit message validation
 └── vitest.config.ts             # Test runner configuration
 ```
 
+````
+
 ## Core Components
 
-The application is organized into distinct components, each with a single responsibility:
+### Entry Point (`index.ts`)
 
-### Entry Point
+The main orchestrator that coordinates the application flow:
 
-**`index.ts`** - The main application orchestrator that:
+- Initializes the environment and validates configuration
+- Orchestrates the service interactions
+- Implements top-level error handling and reporting
+- Provides exit status codes for CI/CD integration
 
-- Initializes the application
-- Coordinates between services
-- Handles top-level error management
-- Provides a clean execution flow
+::: details Source Code Example
+```typescript
+export async function main(): Promise<void> {
+  try {
+    // Ensure required environment variables are present
+    ensureEnvironmentVariables();
+
+    console.warn('🌍 Starting weather update process...');
+
+    // Fetch current weather data
+    const weatherData = await fetchWeatherData();
+    console.warn('✅ Weather data fetched successfully:', weatherData);
+
+    // Check for a custom README path from environment variable
+    const customReadmePath = process.env.PROFILE_README_PATH;
+    if (customReadmePath) {
+      console.warn(`📝 Using custom README path: ${customReadmePath}`);
+    }
+
+    // Update the README with the new weather data
+    const updateSuccess = await updateReadme(weatherData, customReadmePath);
+
+    // Report update status and log appropriate message
+    console.warn(
+      updateSuccess
+        ? '✅ README updated successfully with new weather data.'
+        : '⚠️ No changes were made to the README.',
+    );
+
+    // Report status for GitHub Actions
+    reportUpdateStatus(updateSuccess);
+
+    console.warn('🎉 Weather update process completed successfully.');
+  } catch (error: unknown) {
+    handleError(error);
+    process.exit(1); // Ensure process.exit(1) is called on error
+  }
+}
+````
+
+:::
 
 ### Services Layer
 
-The services layer encapsulates the core business logic of the application:
+The services layer encapsulates the core business logic with clear boundaries of responsibility.
 
-#### `fetchWeather.ts`
+#### Weather Service (`fetchWeather.ts`)
 
-**Purpose**: Manages all interactions with the OpenWeather API.
-
-**Responsibilities**:
-
-- Constructing API requests with proper parameters
-- Validating API responses using Zod schema
-- Converting UTC timestamps to local time
-- Formatting weather data for downstream use
-- Handling network and validation errors
+**Responsibility**: Handles all interactions with the OpenWeather API.
 
 **Key Functions**:
 
-- `fetchWeatherData()`: Makes API calls and processes responses
-- `convertToDhakaTime()`: Timezone conversion utility
+- `fetchWeatherData()`: Retrieves and processes weather data
+- `convertToDhakaTime()`: Converts UTC timestamps to local time
 
-#### `updateReadme.ts`
+**Design Patterns**:
 
-**Purpose**: Manages README file operations.
+- Data Validation with Zod Schema
+- Temporal API for timezone handling
+- Error normalization
 
-**Responsibilities**:
+::: details Implementation Details
 
-- Reading the current README content
-- Parsing weather data components
-- Generating HTML-formatted weather section
-- Replacing content via regex pattern matching
-- Writing updated content back to disk
-- Timestamping updates
+- **API Integration**: Uses native fetch API with proper error handling
+- **Data Validation**: Implements Zod schema to validate API responses
+- **Data Transformation**: Processes raw data into a standardized format
+- **Error Handling**: Normalizes different error types into consistent messages
+  :::
+
+#### README Service (`updateReadme.ts`)
+
+**Responsibility**: Manages all README file operations.
 
 **Key Functions**:
 
-- `updateReadme()`: Performs the README update operation
+- `updateReadme()`: Updates the README with new weather data
+
+**Design Patterns**:
+
+- Regex-based content replacement
+- Idempotent operations (safe to run multiple times)
+- File I/O with error handling
+
+::: details Implementation Details
+
+- **Content Detection**: Uses regex to locate weather section in README
+- **Format Preservation**: Maintains existing README formatting
+- **Conditional Updates**: Only updates when content has changed
+- **Last Updated Timestamp**: Adds formatted timestamp for tracking
+  :::
 
 ### Utilities Layer
 
-Provides shared functionality used across the application:
+#### Environment Utility (`preload.ts`)
 
-#### `preload.ts`
-
-**Purpose**: Environment preparation and validation.
-
-**Responsibilities**:
-
-- Loading environment variables from .env file
-- Validating required variables presence
-- Providing early failure for missing configurations
-- Enabling type-safe environment variable access
+**Responsibility**: Ensures the application environment is properly configured.
 
 **Key Functions**:
 
-- `ensureEnvironmentVariables()`: Validates configuration
+- `ensureEnvironmentVariables()`: Validates required environment variables
 
-### Configuration Layer
+**Design Patterns**:
 
-Houses modular configuration files for various tools:
-
-- **ESLint Configurations**: Code quality rules
-- **TypeScript Configuration**: Type checking settings
-- **Test Configuration**: Test runner settings
-- **Commit Lint Rules**: Commit message standardization
+- Fail-fast validation
+- Early error detection
 
 ## Data Flow
 
-The application follows a unidirectional data flow pattern:
+The application follows a linear data flow pattern:
+
+```mermaid
+sequenceDiagram
+    participant GHA as GitHub Actions
+    participant App as Main Application
+    participant Weather as Weather Service
+    participant OWA as OpenWeather API
+    participant README as README Service
+    participant Repo as GitHub Repository
+
+    GHA->>App: Trigger execution
+    App->>App: Validate environment
+    App->>Weather: Request weather data
+    Weather->>OWA: API request
+    OWA-->>Weather: JSON response
+    Weather-->>App: Formatted weather data
+    App->>README: Update with weather data
+    README->>Repo: Read README
+    Repo-->>README: Current README content
+    README->>README: Generate updated content
+    README->>Repo: Write updated README
+    README-->>App: Update status
+    App-->>GHA: Execution result
+```
+
+## Configuration Architecture
+
+The application uses a layered configuration approach:
+
+1. **Runtime Configuration**: Environment variables for sensitive or environment-specific settings
+2. **Build Configuration**: TypeScript and build tool settings
+3. **Quality Configuration**: ESLint, Prettier, and other code quality tools
+4. **CI/CD Configuration**: GitHub Actions workflow definitions
+
+## Testing Architecture
+
+The testing strategy follows a comprehensive approach with dedicated test categories:
 
 ```mermaid
 graph TD
-    A[GitHub Actions Trigger] -->|Scheduled or Manual| B[Checkout Repositories]
-    B --> C[Setup Environment]
-    C --> D[Fetch Weather Data]
-    D -->|API Request| E[OpenWeather API]
-    E -->|JSON Response| F[Parse & Validate]
-    F -->|Formatted String| G[Update README]
-    G --> H[Commit Changes]
-    H --> I[Push to Repository]
+    subgraph "Test Categories"
+        Unit[Unit Tests] --> Services
+        Unit --> Utilities
+        Benchmark[Performance Tests] --> PerformanceMetrics[Performance Metrics]
+    end
 
-    style A fill:#f9d77e,stroke:#333,stroke-width:2px
-    style E fill:#a2d2ff,stroke:#333,stroke-width:2px
-    style I fill:#97d1a9,stroke:#333,stroke-width:2px
+    subgraph "Testing Techniques"
+        Mocking[Mock External Dependencies]
+        StateVerification[State Verification]
+        BehaviorVerification[Behavior Verification]
+        ErrorHandling[Error Case Coverage]
+        PerformanceAnalysis[Performance Analysis]
+    end
+
+    Services --> Mocking
+    Services --> StateVerification
+    Utilities --> BehaviorVerification
+    Unit --> ErrorHandling
+    Benchmark --> PerformanceAnalysis
+
+    style Unit fill:#d4f1f9,stroke:#333,stroke-width:2px
+    style Benchmark fill:#ffcccc,stroke:#333,stroke-width:2px
 ```
 
-### Execution Flow
+### Testing Approach
 
-1. **Trigger**: GitHub Actions workflow activates either:
+- **Unit Testing**: Individual components tested in isolation
+- **Performance Benchmarking**: Tests for execution speed and resource usage
+- **Mock Strategy**: External dependencies (API, filesystem) are mocked
+- **Coverage Requirements**: 100% coverage for all metrics
+- **Test Environment**: Vitest with Node environment
 
-   - On schedule (every 8 hours via cron)
-   - Manually through workflow_dispatch
+### Test Directory Structure
 
-2. **Repository Setup**:
+The tests directory is organized by test type:
 
-   - Checkout the weather script repository
-   - Checkout the target personal repository
-   - Setup authentication for Git operations
+```
+src/tests/
+├── benchmark/           # Performance testing
+│   ├── index.test.ts
+│   ├── services/
+│   └── utils/
+├── unit/               # Unit testing
+│   ├── index.test.ts
+│   ├── services/
+│   └── utils/
+└── setup.ts           # Shared test configuration
+```
 
-3. **Environment Preparation**:
-
-   - Setup Bun runtime
-   - Install dependencies
-   - Validate environment variables
-
-4. **Data Retrieval**:
-
-   - Fetch current weather data for configured location
-   - Parse and validate API response
-   - Format data for README integration
-
-5. **Content Update**:
-
-   - Read current README content
-   - Replace weather section with updated data
-   - Add timestamp for last refresh
-
-6. **Publication**:
-   - Commit changes if README was modified
-   - Push changes to the repository
-   - Skip commit if no changes detected
-
-## Architecture Decisions
-
-### Technology Selection
-
-- **Bun**: Chosen for its speed and modern JavaScript runtime capabilities
-- **TypeScript**: Provides type safety and improved developer experience
-- **Zod**: Ensures runtime validation of external API responses
-- **Vitest**: Modern, ESM-compatible testing framework
-- **GitHub Actions**: Enables seamless automation without external dependencies
-
-### Design Patterns
-
-- **Service-Oriented Design**: Separates concerns into focused service modules
-- **Configuration-as-Code**: Externalizes all configuration for flexibility
-- **Dependency Injection**: Simplifies testing through mock substitution
-- **Error Normalization**: Standardizes error handling across the application
-
-### Quality Assurance
-
-- **Pre-commit Hooks**: Enforce code quality before changes are committed
-- **Conventional Commits**: Standardize commit messages for better history
-- **Comprehensive Testing**: Ensures reliability through high test coverage
-- **Type Safety**: Prevents common runtime errors through static analysis
+This structure allows for clear separation between functional correctness testing (unit tests) and performance optimization (benchmark tests).
 
 ## Deployment Architecture
 
-The application is primarily deployed as a GitHub Actions workflow, running directly in GitHub's cloud infrastructure:
+The application is deployed as a GitHub Actions workflow, functioning as a serverless solution:
 
+```mermaid
+graph TD
+    subgraph "GitHub Infrastructure"
+        Scheduler[Scheduled Trigger]
+        Runner[Actions Runner]
+        Secrets[GitHub Secrets]
+    end
+
+    subgraph "Application"
+        App[Weather Update App]
+    end
+
+    subgraph "External Services"
+        OWA[OpenWeather API]
+        GithubAPI[GitHub API]
+    end
+
+    Scheduler -->|Triggers| Runner
+    Runner -->|Executes| App
+    Secrets -->|Provides Keys| App
+    App -->|Fetches Data| OWA
+    App -->|Updates Content| GithubAPI
+
+    style Scheduler fill:#f9d77e,stroke:#333,stroke-width:2px
+    style OWA fill:#a2d2ff,stroke:#333,stroke-width:2px
+    style GithubAPI fill:#97d1a9,stroke:#333,stroke-width:2px
 ```
-┌─────────────────────────────┐
-│   GitHub Actions Runner     │
-│                             │
-│  ┌─────────────────────┐    │
-│  │  Profile Weather    │    │
-│  │  View Application   │    │
-│  └─────────────────────┘    │
-│           │                 │
-└───────────┼─────────────────┘
-            ▼
-┌─────────────────────────────┐
-│    OpenWeather API          │
-└─────────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────┐
-│    GitHub Repository        │
-│  ┌─────────────────────┐    │
-│  │    README.md        │◄───┘
-│  └─────────────────────┘    │
-└─────────────────────────────┘
-```
 
-This serverless approach eliminates the need for dedicated infrastructure while leveraging GitHub's robust CI/CD capabilities.
+### Deployment Features
 
----
+- **Scheduled Execution**: Runs automatically on defined schedule
+- **Manual Triggering**: Allows on-demand execution
+- **Self-healing**: Implements retry mechanisms for transient failures
+- **Concurrency Control**: Prevents overlapping executions
+- **Dependency Caching**: Optimizes performance through caching
+- **Selective Commits**: Only commits when changes are detected
 
-<div align="center">
-  <p>
-    <strong>Profile Weather View</strong> | Modern TypeScript Architecture
-  </p>
-</div>
+## Security Architecture
+
+Security is built into the architecture:
+
+- **Secret Management**: API keys stored as GitHub Secrets
+- **Principle of Least Privilege**: Minimal permissions in GitHub Actions
+- **Input Validation**: All external data validated before use
+- **Dependency Management**: Regular updates via Dependabot
+- **Code Scanning**: Linting rules include security checks
+
+## Performance Considerations
+
+The application is optimized for efficiency:
+
+- **Minimal API Calls**: Only requests necessary data
+- **Conditional Updates**: Only writes to files when content changes
+- **Optimized Workflow**: Fast Bun runtime with dependency caching
+- **Strategic Scheduling**: Balances freshness with resource usage
+
+## Future Architecture Extensions
+
+The architecture is designed to accommodate future enhancements:
+
+- **Multiple Weather Providers**: Service abstraction allows provider switching
+- **Enhanced Visualization**: Data structure supports richer visualizations
+- **Multi-profile Support**: Design allows for updating multiple profiles
+- **Metrics Collection**: Architecture supports adding telemetry
+
+<style>
+.architecture-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+}
+</style>

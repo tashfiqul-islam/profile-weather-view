@@ -141,7 +141,7 @@ export default tseslint.config(
       'eslint.config.mjs',
       'src_old/',
       'vitest.config.ts',
-      'commitlint.config.cjs',
+      'commitlint.config.mjs',
     ],
   },
 );
