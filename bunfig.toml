@@ -61,7 +61,7 @@ peer = true
 production = false
 exact = false
 auto = "fallback"
-frozenLockfile = true
+frozenLockfile = false
 saveTextLockfile = false
 esm = true
 

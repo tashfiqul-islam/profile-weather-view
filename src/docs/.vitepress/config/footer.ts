@@ -42,8 +42,3 @@ export const createFooter = (options?: Partial<FooterConfig>): FooterConfig => {
     ...options,
   };
 };
-
-/**
- * Default export for direct import into config
- */
-export default footer;

@@ -1,10 +1,10 @@
-<div align="center">
+<div style="text-align: center;">
   <h1>Weather Icons Gallery</h1>
 </div>
 
 <br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/OpenWeather-Icons-EB6E4B" alt="OpenWeather Icons">
   <img src="https://img.shields.io/badge/Usage-Reference-blue" alt="Usage">
 </div>
@@ -33,19 +33,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/01d.png" alt="Clear sky day" width="50">
+    <img src="https://openweathermap.org/img/w/01d.png" alt="Clear sky day" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 01d<br>
       <strong>Condition:</strong> Clear sky (day)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/01d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/01d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/01n.png" alt="Clear sky night" width="50">
+    <img src="https://openweathermap.org/img/w/01n.png" alt="Clear sky night" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 01n<br>
       <strong>Condition:</strong> Clear sky (night)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/01n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/01n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -54,19 +54,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/02d.png" alt="Few clouds day" width="50">
+    <img src="https://openweathermap.org/img/w/02d.png" alt="Few clouds day" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 02d<br>
       <strong>Condition:</strong> Few clouds (day)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/02d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/02d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/02n.png" alt="Few clouds night" width="50">
+    <img src="https://openweathermap.org/img/w/02n.png" alt="Few clouds night" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 02n<br>
       <strong>Condition:</strong> Few clouds (night)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/02n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/02n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -75,19 +75,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/03d.png" alt="Scattered clouds" width="50">
+    <img src="https://openweathermap.org/img/w/03d.png" alt="Scattered clouds" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 03d<br>
       <strong>Condition:</strong> Scattered clouds<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/03d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/03d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/03n.png" alt="Scattered clouds" width="50">
+    <img src="https://openweathermap.org/img/w/03n.png" alt="Scattered clouds" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 03n<br>
       <strong>Condition:</strong> Scattered clouds<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/03n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/03n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -96,19 +96,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/04d.png" alt="Broken clouds" width="50">
+    <img src="https://openweathermap.org/img/w/04d.png" alt="Broken clouds" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 04d<br>
       <strong>Condition:</strong> Broken clouds<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/04d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/04d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/04n.png" alt="Broken clouds" width="50">
+    <img src="https://openweathermap.org/img/w/04n.png" alt="Broken clouds" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 04n<br>
       <strong>Condition:</strong> Broken clouds<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/04n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/04n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -117,19 +117,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/09d.png" alt="Shower rain" width="50">
+    <img src="https://openweathermap.org/img/w/09d.png" alt="Shower rain" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 09d<br>
       <strong>Condition:</strong> Shower rain<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/09d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/09d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/09n.png" alt="Shower rain" width="50">
+    <img src="https://openweathermap.org/img/w/09n.png" alt="Shower rain" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 09n<br>
       <strong>Condition:</strong> Shower rain<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/09n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/09n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -138,19 +138,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/10d.png" alt="Rain day" width="50">
+    <img src="https://openweathermap.org/img/w/10d.png" alt="Rain day" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 10d<br>
       <strong>Condition:</strong> Rain (day)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/10d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/10d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/10n.png" alt="Rain night" width="50">
+    <img src="https://openweathermap.org/img/w/10n.png" alt="Rain night" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 10n<br>
       <strong>Condition:</strong> Rain (night)<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/10n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/10n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -159,19 +159,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/11d.png" alt="Thunderstorm" width="50">
+    <img src="https://openweathermap.org/img/w/11d.png" alt="Thunderstorm" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 11d<br>
       <strong>Condition:</strong> Thunderstorm<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/11d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/11d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/11n.png" alt="Thunderstorm" width="50">
+    <img src="https://openweathermap.org/img/w/11n.png" alt="Thunderstorm" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 11n<br>
       <strong>Condition:</strong> Thunderstorm<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/11n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/11n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -180,19 +180,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/13d.png" alt="Snow" width="50">
+    <img src="https://openweathermap.org/img/w/13d.png" alt="Snow" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 13d<br>
       <strong>Condition:</strong> Snow<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/13d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/13d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/13n.png" alt="Snow" width="50">
+    <img src="https://openweathermap.org/img/w/13n.png" alt="Snow" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 13n<br>
       <strong>Condition:</strong> Snow<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/13n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/13n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -201,19 +201,19 @@ Here's a complete gallery of available weather icons and their corresponding con
 
 <div class="icon-row">
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/50d.png" alt="Mist" width="50">
+    <img src="https://openweathermap.org/img/w/50d.png" alt="Mist" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 50d<br>
       <strong>Condition:</strong> Mist<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/50d.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/50d.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
   <div class="icon-card">
-    <img src="https://openweathermap.org/img/w/50n.png" alt="Mist" width="50">
+    <img src="https://openweathermap.org/img/w/50n.png" alt="Mist" style="width: 50px;">
     <div class="icon-details">
       <strong>Code:</strong> 50n<br>
       <strong>Condition:</strong> Mist<br>
-      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/50n.png" alt=""&gt;</code>
+      <strong>Usage:</strong> <code>&lt;img src="https://openweathermap.org/img/w/50n.png" style="width: 15px;" alt=""&gt;</code>
     </div>
   </div>
 </div>
@@ -226,18 +226,18 @@ If you prefer not to use OpenWeather's default icons, you have several alternati
 
 You can replace the OpenWeather icons with emoji for a more consistent look across platforms:
 
-| Weather Condition | Emoji | Example Usage                                 |
-| ----------------- | ----- | --------------------------------------------- |
-| Clear sky (day)   | ☀️    | `<td align="center">Clear ☀️</td>`            |
-| Clear sky (night) | 🌙    | `<td align="center">Clear 🌙</td>`            |
-| Few clouds        | 🌤️    | `<td align="center">Few clouds 🌤️</td>`       |
-| Scattered clouds  | ⛅    | `<td align="center">Scattered clouds ⛅</td>` |
-| Broken clouds     | 🌥️    | `<td align="center">Broken clouds 🌥️</td>`    |
-| Shower rain       | 🌦️    | `<td align="center">Shower rain 🌦️</td>`      |
-| Rain              | 🌧️    | `<td align="center">Rain 🌧️</td>`             |
-| Thunderstorm      | ⛈️    | `<td align="center">Thunderstorm ⛈️</td>`     |
-| Snow              | ❄️    | `<td align="center">Snow ❄️</td>`             |
-| Mist              | 🌫️    | `<td align="center">Mist 🌫️</td>`             |
+| Weather Condition | Emoji | Example Usage                                              |
+| ----------------- | ----- | ---------------------------------------------------------- |
+| Clear sky (day)   | ☀️    | `<td style="text-align: center;">Clear ☀️</td>`            |
+| Clear sky (night) | 🌙    | `<td style="text-align: center;">Clear 🌙</td>`            |
+| Few clouds        | 🌤️    | `<td style="text-align: center;">Few clouds 🌤️</td>`       |
+| Scattered clouds  | ⛅    | `<td style="text-align: center;">Scattered clouds ⛅</td>` |
+| Broken clouds     | 🌥️    | `<td style="text-align: center;">Broken clouds 🌥️</td>`    |
+| Shower rain       | 🌦️    | `<td style="text-align: center;">Shower rain 🌦️</td>`      |
+| Rain              | 🌧️    | `<td style="text-align: center;">Rain 🌧️</td>`             |
+| Thunderstorm      | ⛈️    | `<td style="text-align: center;">Thunderstorm ⛈️</td>`     |
+| Snow              | ❄️    | `<td style="text-align: center;">Snow ❄️</td>`             |
+| Mist              | 🌫️    | `<td style="text-align: center;">Mist 🌫️</td>`             |
 
 ### 2. Weather Icons Font
 
@@ -251,7 +251,7 @@ You can integrate [Weather Icons](https://erikflowers.github.io/weather-icons/) 
 />
 
 <!-- Example usage -->
-<td align="center">Clear <i class="wi wi-day-sunny"></i></td>
+<td style="text-align: center;">Clear <i class="wi wi-day-sunny"></i></td>
 ```
 
 ### 3. Custom SVG Icons
@@ -259,11 +259,10 @@ You can integrate [Weather Icons](https://erikflowers.github.io/weather-icons/) 
 For advanced customization, you could create your own SVG icons and include them directly:
 
 ```html
-<td align="center">
+<td style="text-align: center;">
   Rain
   <svg
-    width="20"
-    height="20"
+    style="width: 20px; height: 20px;"
     viewBox="0 0 20 20"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -306,8 +305,7 @@ To further enhance the appearance of your weather icons:
    ```html
    <img
      src="https://openweathermap.org/img/w/01d.png"
-     style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3));"
-     width="25"
+     style="width: 25px; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3));"
      alt=""
    />
    ```
@@ -315,15 +313,23 @@ To further enhance the appearance of your weather icons:
 2. **Make icons larger**:
 
    ```html
-   <img src="https://openweathermap.org/img/w/01d.png" width="40" alt="" />
+   <img
+     src="https://openweathermap.org/img/w/01d.png"
+     style="width: 40px;"
+     alt=""
+   />
    ```
 
 3. **Add a decorative background**:
    ```html
    <span
-     style="display:inline-block; background-color: #f0f8ff; border-radius: 50%; padding: 5px;"
+     style="display: inline-block; background-color: #f0f8ff; border-radius: 50%; padding: 5px;"
    >
-     <img src="https://openweathermap.org/img/w/01d.png" width="25" alt="" />
+     <img
+       src="https://openweathermap.org/img/w/01d.png"
+       style="width: 25px;"
+       alt=""
+     />
    </span>
    ```
 
@@ -352,7 +358,7 @@ To further enhance the appearance of your weather icons:
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
   <p>
     <strong>Profile Weather View</strong> | Weather Icons Gallery
   </p>

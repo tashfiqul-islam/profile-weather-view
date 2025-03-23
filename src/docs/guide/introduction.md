@@ -1,17 +1,17 @@
-<div align="center">
+<div style="text-align: center;">
   <h1>Introduction</h1>
 </div>
 
 <br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Bun-latest-F9AD00" alt="Bun Version">
   <img src="https://img.shields.io/badge/TypeScript-5.8.2-3178C6" alt="TypeScript Version">
   <img src="https://img.shields.io/badge/API-OpenWeather-EB6E4B" alt="API">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
 </div>
 
-<div align="center">
+<div style="text-align: center;">
   <p><em>Welcome to Profile Weather View, a utility that updates your GitHub profile README with current weather data.</em></p>
 </div>
 
@@ -89,7 +89,7 @@ Follow these steps to set up the project locally:
 
    By default, the application fetches weather for Uttara, Dhaka (23.8759°N, 90.3795°E).
 
-   To change the location, modify the `LAT` and `LON` constants in `src/services/fetchWeather.ts`.
+   To change the location, modify the `LAT` and `LON` constants in `src/weather-update/services/fetchWeather.ts`.
 
 ## Usage
 
@@ -98,7 +98,7 @@ Follow these steps to set up the project locally:
 Run the application to fetch current weather data and update your README:
 
 ```bash
-bun start
+bun run start
 ```
 
 The application will:
@@ -113,12 +113,10 @@ The application will:
 When successful, you'll see output similar to:
 
 ```
-🌍 Fetching weather data from OpenWeather API...
-🌅 Raw Sunrise (UTC): 1710000000
-🌇 Raw Sunset (UTC): 1710050000
-🕒 Converted Sunrise (Dhaka): 06:18:20
-🕒 Converted Sunset (Dhaka): 06:02:40
-✅ README updated successfully.
+🌍 Starting weather update process...
+✅ Weather data fetched successfully: Clear|25|06:00:00|18:00:00|60|01d
+✅ README updated successfully with new weather data.
+🎉 Weather update process completed successfully.
 ```
 
 ### Weather Section Format
@@ -127,14 +125,18 @@ The application will update a specially marked section in your README with weath
 
 ```html
 <!-- Hourly Weather Update -->
-<td align="center">
+<td style="text-align: center;">
   Cloudy
-  <img width="15" src="https://openweathermap.org/img/w/03d.png" alt="" />
+  <img
+    style="width: 15px;"
+    src="https://openweathermap.org/img/w/03d.png"
+    alt=""
+  />
 </td>
-<td align="center">30°C</td>
-<td align="center">06:18 AM</td>
-<td align="center">06:02 PM</td>
-<td align="center">60%</td>
+<td style="text-align: center;">30°C</td>
+<td style="text-align: center;">06:18:00</td>
+<td style="text-align: center;">18:02:00</td>
+<td style="text-align: center;">60%</td>
 <!-- End of Hourly Weather Update -->
 ```
 
@@ -160,23 +162,25 @@ This runs the application without the build step, using Bun's built-in TypeScrip
 ### Hot Tips
 
 - Use `// @ts-expect-error` or `// @ts-ignore` sparingly when needed
-- Create tests for new functionality in the `src/__tests__` directory
+- Create tests for new functionality in the `src/__tests__/unit` directory
 - Update documentation when adding new features
 
 ## Available Commands
 
-| Command                 | Description                                 |
-| ----------------------- | ------------------------------------------- |
-| `bun start`             | Build and run the application               |
-| `bun run dev`           | Run in development mode                     |
-| `bun run lint`          | Run ESLint to check code quality            |
-| `bun run format`        | Format code with Prettier                   |
-| `bun run test`          | Run tests with Vitest                       |
-| `bun run test:watch`    | Run tests in watch mode                     |
-| `bun run test:coverage` | Run tests with coverage report              |
-| `bun run type-check`    | Check TypeScript types                      |
-| `bun run check-all`     | Run all checks (tests, types, lint, format) |
-| `bun run commit`        | Create a conventional commit                |
+| Command              | Description                                      |
+| -------------------- | ------------------------------------------------ |
+| `bun run dev`        | Run in development mode                          |
+| `bun run build`      | Build the application                            |
+| `bun run start`      | Build and run the application                    |
+| `bun run lint`       | Run ESLint to check code quality                 |
+| `bun run format`     | Format code with Prettier                        |
+| `bun run check`      | Run lint and format                              |
+| `bun run type-check` | Check TypeScript types                           |
+| `bun test`           | Run tests with Vitest                            |
+| `bun test:watch`     | Run tests in watch mode                          |
+| `bun test:coverage`  | Run tests with coverage report                   |
+| `bun run check-all`  | Run tests, type checking, formatting and linting |
+| `bun run commit`     | Create a conventional commit                     |
 
 ## Troubleshooting
 
@@ -210,7 +214,7 @@ This runs the application without the build step, using Bun's built-in TypeScrip
 
 If you encounter issues not covered here:
 
-1. Check the [troubleshooting documentation](troubleshooting.md)
+1. Check the [deployment guide](deployment.md) for additional troubleshooting
 2. Open an issue on GitHub with detailed steps to reproduce
 3. Include error logs and environment information
 
@@ -218,18 +222,18 @@ If you encounter issues not covered here:
 
 Now that you've set up Profile Weather View, you might want to:
 
-- [Customize the weather display format](../reference/configuration.md)
+- [Customize the weather display format](customization.md)
 - [Set up automated updates with GitHub Actions](deployment.md)
-- [Contribute to the project](../../../.github/contributing.md)
-- [Explore the API reference](../reference/api-reference.md)
+- [Explore the project architecture](architecture.md)
+- [Run the project with Docker](deployment.md#containerized-deployment)
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
   <p>
     <strong>Profile Weather View</strong> | Made with ❤️ using Bun and TypeScript
   </p>
   <p>
-    <small>For more information, see the <a href="../README.md">documentation home</a>.</small>
+    <small>For more information, see the documentation in the docs directory.</small>
   </p>
 </div>

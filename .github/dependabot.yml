@@ -1,0 +1,251 @@
+# Dependabot configuration for automated dependency management
+# File location: .github/dependabot.yml
+
+version: 2
+updates:
+  # Production dependencies management
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:30"
+      timezone: "UTC"
+
+    # Dependency grouping based on project structure
+    groups:
+      core-dependencies:
+        patterns:
+          - "@js-temporal/*"
+          - "zod"
+          - "axios"
+          - "dotenv"
+        update-types:
+          - "minor"
+          - "patch"
+      ui-framework:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+        update-types:
+          - "minor"
+          - "patch"
+      documentation:
+        patterns:
+          - "markdown-it*"
+          - "vitepress"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Commit message configuration aligned with existing commit patterns
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps"
+      include: "scope"
+
+    # PR configuration with auto-merge labeling
+    labels:
+      - "dependencies"
+      - "production"
+      - "npm"
+      - "automerge"
+
+    # PR settings
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "/"
+
+    # Notification settings
+    reviewers:
+      - "tashfiqul-islam"
+
+    # Automatic rebasing
+    rebase-strategy: "auto"
+
+    # Major version handling with exceptions for core tools
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Allow major updates for critical dependencies
+      - dependency-name: "zod"
+        update-types: []
+      - dependency-name: "@js-temporal/polyfill"
+        update-types: []
+
+  # Development dependencies management
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "04:30"
+      timezone: "UTC"
+
+    # Dependency grouping optimized for your dev tooling
+    groups:
+      lint-tools:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+          - "@stylistic/*"
+          - "eslint-plugin-*"
+          - "prettier"
+          - "tseslint"
+        update-types:
+          - "minor"
+          - "patch"
+      testing-tools:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+        update-types:
+          - "minor"
+          - "patch"
+      typescript-ecosystem:
+        patterns:
+          - "typescript"
+          - "typescript-eslint"
+          - "ts-node"
+          - "@types/*"
+          - "bun-types"
+        update-types:
+          - "minor"
+          - "patch"
+      developer-tools:
+        patterns:
+          - "@commitlint/*"
+          - "husky"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Commit message configuration
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+    # PR configuration with auto-merge labeling
+    labels:
+      - "dependencies"
+      - "development"
+      - "npm"
+      - "automerge"
+
+    # Dependency selection
+    allow:
+      - dependency-type: "development"
+
+    # Reviewer settings
+    reviewers:
+      - "tashfiqul-islam"
+
+    # Major version handling with exceptions for dev tools
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Allow major updates for critical tooling
+      - dependency-name: "typescript"
+        update-types: []
+      - dependency-name: "eslint"
+        update-types: []
+      - dependency-name: "vitest"
+        update-types: []
+
+  # GitHub Actions dependencies management
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+
+    # Commit message configuration
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+    # PR configuration with auto-merge labeling
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+      - "automerge"
+
+    # Reviewer settings
+    reviewers:
+      - "tashfiqul-islam"
+
+    # PR limit to prevent overwhelming CI
+    open-pull-requests-limit: 10
+
+    # Dependency grouping based on action criticality
+    groups:
+      core-actions:
+        patterns:
+          - "actions/checkout"
+          - "actions/setup-node"
+          - "oven-sh/setup-bun"
+        update-types:
+          - "minor"
+          - "patch"
+      ci-actions:
+        patterns:
+          - "actions/cache"
+          - "actions/upload-artifact"
+          - "actions/download-artifact"
+        update-types:
+          - "minor"
+          - "patch"
+      notification-actions:
+        patterns:
+          - "dawidd6/action-send-mail"
+          - "actions/github-script"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Only block major updates for non-critical actions
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Always update critical checkout and setup actions
+      - dependency-name: "actions/checkout"
+        update-types: []
+      - dependency-name: "oven-sh/setup-bun"
+        update-types: []
+
+  # Documentation dependencies management
+  - package-ecosystem: "npm"
+    directory: "/src/docs"
+    schedule:
+      interval: "monthly"
+
+    # Commit message configuration
+    commit-message:
+      prefix: "docs"
+      include: "scope"
+
+    # PR configuration with auto-merge labeling
+    labels:
+      - "dependencies"
+      - "documentation"
+      - "automerge"
+
+    # Dependency grouping
+    groups:
+      docs-tools:
+        patterns:
+          - "vitepress"
+          - "markdown-it*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Lower priority for docs dependencies
+    open-pull-requests-limit: 5
+
+    # Only block major updates
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

@@ -37,16 +37,16 @@ This comprehensive documentation will guide you through every aspect of the Prof
 
 ### Table of Contents
 
-| Section                                 | Description                                 |
-|-----------------------------------------|---------------------------------------------|
-| [Getting Started](guide/introduction) | Installation guide and basic usage          |
-| [Architecture](guide/architecture.md)       | System design and component overview        |
-| [API Reference](reference/api-reference.md)     | Detailed function and service documentation |
-| [Configuration](reference/configuration.md)     | Configuration options and customization     |
-| [Deployment](guide/deployment.md)           | GitHub Actions setup and deployment options |
-| [Testing](guide/testing.md)                 | Testing strategy and execution              |
-| [Contributing](../../.github/contributing.md)       | Guidelines for contributing to the project  |
-| [Troubleshooting](guide/troubleshooting.md) | Common issues and solutions                 |
+| Section                                       | Description                                 |
+|-----------------------------------------------|---------------------------------------------|
+| [Getting Started](guide/introduction)         | Installation guide and basic usage          |
+| [Architecture](guide/architecture.md)         | System design and component overview        |
+| [API Reference](reference/api-reference.md)   | Detailed function and service documentation |
+| [Configuration](reference/configuration.md)   | Configuration options and customization     |
+| [Deployment](guide/deployment.md)             | GitHub Actions setup and deployment options |
+| [Testing](guide/testing.md)                   | Testing strategy and execution              |
+| [Contributing](../../.github/contributing.md) | Guidelines for contributing to the project  |
+| [Troubleshooting](guide/troubleshooting.md)   | Common issues and solutions                 |
 
 ## Quick Start
 

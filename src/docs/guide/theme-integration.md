@@ -1,10 +1,10 @@
-<div align="center">
+<div style="text-align: center;">
   <h1>Theme Integration Guide</h1>
 </div>
 
 <br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Theme-Integration-blueviolet" alt="Theme Integration">
   <img src="https://img.shields.io/badge/Dark_Mode-Support-lightgrey" alt="Dark Mode">
   <img src="https://img.shields.io/badge/GitHub-Themes-success" alt="GitHub Themes">
@@ -29,19 +29,27 @@
 
 ## Overview
 
-This guide will help you integrate the weather display from Profile Weather View seamlessly with your GitHub profile's visual theme. Whether you're using a custom theme, dark mode, or any popular GitHub profile theme, these techniques will ensure your weather display looks cohesive and professional.
+This guide will help you integrate the weather display from Profile Weather View seamlessly
+with your GitHub profile's visual theme.
+Whether you're using a custom theme, dark mode,
+or any popular GitHub profile theme, these techniques will ensure your weather display
+looks cohesive and professional.
 
 ## Theme-Aware Displays
 
-GitHub profile READMEs support both light and dark themes, following the user's personal GitHub theme preference. Creating theme-aware weather displays ensures your profile looks great regardless of which theme the visitor is using.
+GitHub profile README supports both light and dark themes, following the user's personal
+GitHub theme preference.
+Creating theme-aware weather displays ensures your profile looks
+great regardless of which theme the visitor is using.
 
 ### Dark/Light Mode Detection
 
-GitHub supports the `prefers-color-scheme` media query via the `<picture>` element, allowing you to provide different images based on the user's theme:
+GitHub supports the `prefers-color-scheme` media query via the `<picture>` element, allowing
+you to provide different images based on the user's theme:
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <h3>Current Weather in Dhaka</h3>
   <table>
     <tr>
@@ -50,27 +58,29 @@ GitHub supports the `prefers-color-scheme` media query via the `<picture>` eleme
       <th>Humidity</th>
     </tr>
     <tr>
-      <td align="center">
+      <td style="text-align: center;">
         <picture>
           <source
             media="(prefers-color-scheme: dark)"
-            srcset="https://openweathermap.org/img/wn/01n@2x.png"
+            src="https://openweathermap.org/img/wn/01n@2x.png"
+            srcset=""
           />
           <source
             media="(prefers-color-scheme: light)"
-            srcset="https://openweathermap.org/img/wn/01d@2x.png"
+            src="https://openweathermap.org/img/wn/01d@2x.png"
+            srcset=""
           />
           <img
             alt="Weather icon"
             src="https://openweathermap.org/img/wn/01d@2x.png"
-            width="30"
+            style="width: 30px;"
           />
         </picture>
         <br />
         Clear
       </td>
-      <td align="center">30°C</td>
-      <td align="center">60%</td>
+      <td style="text-align: center;">30°C</td>
+      <td style="text-align: center;">60%</td>
     </tr>
   </table>
 </div>
@@ -83,53 +93,57 @@ For a more sophisticated approach, you can style your table to respond to GitHub
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <table>
     <thead>
       <tr>
-        <th align="center">Weather</th>
-        <th align="center">Temperature</th>
-        <th align="center">Sunrise</th>
-        <th align="center">Sunset</th>
-        <th align="center">Humidity</th>
+        <th style="text-align: center;">Weather</th>
+        <th style="text-align: center;">Temperature</th>
+        <th style="text-align: center;">Sunrise</th>
+        <th style="text-align: center;">Sunset</th>
+        <th style="text-align: center;">Humidity</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td align="center">
+        <td style="text-align: center;">
           <picture>
             <source
               media="(prefers-color-scheme: dark)"
-              srcset="https://openweathermap.org/img/wn/03n@2x.png"
+              src="https://openweathermap.org/img/wn/03n@2x.png"
+              srcset=""
             />
             <source
               media="(prefers-color-scheme: light)"
-              srcset="https://openweathermap.org/img/wn/03d@2x.png"
+              src="https://openweathermap.org/img/wn/03d@2x.png"
+              srcset=""
             />
             <img
               alt="Cloudy"
               src="https://openweathermap.org/img/wn/03d@2x.png"
-              width="30"
+              style="width: 30px;"
             />
           </picture>
           <br />
           Cloudy
         </td>
-        <td align="center">30°C</td>
-        <td align="center">06:18 AM</td>
-        <td align="center">06:02 PM</td>
-        <td align="center">60%</td>
+        <td style="text-align: center;">30°C</td>
+        <td style="text-align: center;">06:18:00</td>
+        <td style="text-align: center;">18:02:00</td>
+        <td style="text-align: center;">60%</td>
       </tr>
     </tbody>
   </table>
-  <p><em>Last refresh: Wednesday, March 08, 2025 12:00:00 UTC+6</em></p>
+  <p><em>Last refresh: Wednesday, March 08, 2025 12:00:00 (UTC+6)</em></p>
 </div>
 <!-- End of Hourly Weather Update -->
 ```
 
 ## GitHub Profile Themes
 
-Many GitHub users implement custom themes for their profile README. Here's how to integrate weather data with common themes.
+Many GitHub users implement custom themes for their profile README.
+Here's how to
+integrate weather data with common themes.
 
 ### Popular Theme Integration
 
@@ -140,11 +154,15 @@ Many GitHub users implement custom themes for their profile README. Here's how t
 <details>
   <summary>📌 Current Weather</summary>
   <br />
-  <div align="center">
-    <img src="https://openweathermap.org/img/wn/01d@2x.png" width="40" />
+  <div style="text-align: center;">
+    <img
+      src="https://openweathermap.org/img/wn/01d@2x.png"
+      style="width: 40px;"
+      alt=""
+    />
     <h3>30°C | Clear</h3>
     <h4>Dhaka, Bangladesh</h4>
-    <p>Sunrise: 06:18 AM | Sunset: 06:02 PM | Humidity: 60%</p>
+    <p>Sunrise: 06:18:00 | Sunset: 18:02:00 | Humidity: 60%</p>
   </div>
 </details>
 <!-- End of Hourly Weather Update -->
@@ -179,19 +197,23 @@ Many GitHub users implement custom themes for their profile README. Here's how t
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
-  <img src="https://openweathermap.org/img/wn/01d@4x.png" width="100" />
+<div style="text-align: center;">
+  <img
+    src="https://openweathermap.org/img/wn/01d@4x.png"
+    style="width: 100px;"
+    alt=""
+  />
   <h2>30°C | Dhaka</h2>
   <table>
     <tr>
-      <td align="center"><b>Sunrise</b></td>
-      <td align="center"><b>Sunset</b></td>
-      <td align="center"><b>Humidity</b></td>
+      <td style="text-align: center;"><b>Sunrise</b></td>
+      <td style="text-align: center;"><b>Sunset</b></td>
+      <td style="text-align: center;"><b>Humidity</b></td>
     </tr>
     <tr>
-      <td align="center">06:18 AM</td>
-      <td align="center">06:02 PM</td>
-      <td align="center">60%</td>
+      <td style="text-align: center;">06:18:00</td>
+      <td style="text-align: center;">18:02:00</td>
+      <td style="text-align: center;">60%</td>
     </tr>
   </table>
 </div>
@@ -207,11 +229,12 @@ Many GitHub users implement custom themes for their profile README. Here's how t
 <table>
   <tr>
     <td>
-      <div align="center">
+      <div style="text-align: center;">
         <h3>Dhaka Weather</h3>
         <img
           src="https://openweathermap.org/img/wn/02d@2x.png"
-          width="40"
+          style="width: 40px;"
+          alt=""
         /><br />
         <b>Few Clouds</b><br />
         Temperature: 30°C<br />
@@ -220,10 +243,10 @@ Many GitHub users implement custom themes for their profile README. Here's how t
       </div>
     </td>
     <td>
-      <div align="center">
+      <div style="text-align: center;">
         <h3>Day Cycle</h3>
-        🌅 Sunrise: 06:18 AM<br />
-        🌇 Sunset: 06:02 PM<br />
+        🌅 Sunrise: 06:18:00<br />
+        🌇 Sunset: 18:02:00<br />
         ⏱️ Day Length: 11h 44m<br />
         <sub><em>Timezone: Asia/Dhaka</em></sub>
       </div>
@@ -237,14 +260,14 @@ Many GitHub users implement custom themes for their profile README. Here's how t
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <span title="Current Weather in Dhaka">
     <img
       src="https://openweathermap.org/img/wn/01d.png"
-      width="20"
-      valign="bottom"
+      style="width: 20px; vertical-align: bottom;"
+      alt=""
     />
-    30°C <sup>☀️6:18AM</sup>/<sub>🌙6:02PM</sub>
+    30°C <sup>☀️6:18:00</sup>/<sub>🌙18:02:00</sub>
     <code>60%💧</code>
   </span>
 </div>
@@ -253,7 +276,8 @@ Many GitHub users implement custom themes for their profile README. Here's how t
 
 ## CSS Styling Techniques
 
-While GitHub README files have limitations with CSS, there are still several techniques you can use to style your weather display.
+While GitHub README files have limitations with CSS, there are still several techniques
+you can use to style your weather display.
 
 ### GitHub-Safe Inline Styles
 
@@ -261,24 +285,24 @@ GitHub supports a limited set of inline style attributes. Here are safe ones to 
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <table>
     <tr>
-      <th align="center" width="150">Weather</th>
-      <th align="center" width="120">Temperature</th>
-      <th align="center" width="120">Humidity</th>
+      <th style="text-align: center; width: 150px;">Weather</th>
+      <th style="text-align: center; width: 120px;">Temperature</th>
+      <th style="text-align: center; width: 120px;">Humidity</th>
     </tr>
     <tr>
-      <td align="center">
+      <td style="text-align: center;">
         <img
           src="https://openweathermap.org/img/wn/01d@2x.png"
-          width="50"
-          height="50"
+          style="width: 50px; height: 50px;"
+          alt=""
         /><br />
         <span>Clear</span>
       </td>
-      <td align="center"><b>30°C</b></td>
-      <td align="center"><b>60%</b></td>
+      <td style="text-align: center;"><b>30°C</b></td>
+      <td style="text-align: center;"><b>60%</b></td>
     </tr>
   </table>
 </div>
@@ -287,30 +311,48 @@ GitHub supports a limited set of inline style attributes. Here are safe ones to 
 
 ### Using HTML Attributes
 
-Some HTML attributes can be used to achieve styling effects:
+Modern alternatives to HTML presentation attributes:
 
 ```html
 <!-- Hourly Weather Update -->
-<table align="center" width="80%">
+<table style="text-align: center; width: 80%; margin: 0 auto;">
   <tr>
-    <th align="center" bgcolor="#f6f8fa" width="20%">Weather</th>
-    <th align="center" bgcolor="#f6f8fa" width="20%">Temperature</th>
-    <th align="center" bgcolor="#f6f8fa" width="20%">Humidity</th>
-    <th align="center" bgcolor="#f6f8fa" width="20%">Sunrise</th>
-    <th align="center" bgcolor="#f6f8fa" width="20%">Sunset</th>
+    <th style="text-align: center; background-color: #f6f8fa; width: 20%;">
+      Weather
+    </th>
+    <th style="text-align: center; background-color: #f6f8fa; width: 20%;">
+      Temperature
+    </th>
+    <th style="text-align: center; background-color: #f6f8fa; width: 20%;">
+      Humidity
+    </th>
+    <th style="text-align: center; background-color: #f6f8fa; width: 20%;">
+      Sunrise
+    </th>
+    <th style="text-align: center; background-color: #f6f8fa; width: 20%;">
+      Sunset
+    </th>
   </tr>
   <tr>
-    <td align="center" valign="middle">
-      <img src="https://openweathermap.org/img/wn/02d.png" width="30" /><br />
+    <td style="text-align: center; vertical-align: middle;">
+      <img
+        src="https://openweathermap.org/img/wn/02d.png"
+        style="width: 30px;"
+        alt=""
+      /><br />
       Few Clouds
     </td>
-    <td align="center" valign="middle"><font color="#e63946">30°C</font></td>
-    <td align="center" valign="middle"><font color="#457b9d">60%</font></td>
-    <td align="center" valign="middle">
-      <font color="#f77f00">06:18 AM</font>
+    <td style="text-align: center; vertical-align: middle; color: #e63946;">
+      30°C
     </td>
-    <td align="center" valign="middle">
-      <font color="#023e8a">06:02 PM</font>
+    <td style="text-align: center; vertical-align: middle; color: #457b9d;">
+      60%
+    </td>
+    <td style="text-align: center; vertical-align: middle; color: #f77f00;">
+      06:18:00
+    </td>
+    <td style="text-align: center; vertical-align: middle; color: #023e8a;">
+      18:02:00
     </td>
   </tr>
 </table>
@@ -384,7 +426,7 @@ For the simplest integration that works with any theme:
 
 ```html
 <!-- Hourly Weather Update -->
-<p align="center">
+<p style="text-align: center;">
   <a href="https://openweathermap.org">
     <img
       src="https://img.shields.io/badge/Dhaka-30°C_|_Cloudy_|_60%_humidity-informational?style=for-the-badge&logo=openweathermap&logoColor=white"
@@ -403,40 +445,40 @@ Below are complete, ready-to-use templates you can copy directly into your updat
 
 ```typescript
 // In updateReadme.ts
-const weatherSection = `
+const updatedWeatherData = `
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <h3>Current Weather in ${location}</h3>
   <div>
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://openweathermap.org/img/wn/${icon}@2x.png">
       <source media="(prefers-color-scheme: light)" srcset="https://openweathermap.org/img/wn/${icon}@2x.png">
-      <img alt="${description}" src="https://openweathermap.org/img/wn/${icon}@2x.png" width="100">
+      <img alt="${description}" src="https://openweathermap.org/img/wn/${icon}@2x.png" style="width: 100px;">
     </picture>
   </div>
   <table>
     <tr>
-      <td align="center" width="200"><b>Condition</b></td>
-      <td align="center" width="150"><b>Temperature</b></td>
-      <td align="center" width="150"><b>Humidity</b></td>
+      <td style="text-align: center; width: 200px;"><b>Condition</b></td>
+      <td style="text-align: center; width: 150px;"><b>Temperature</b></td>
+      <td style="text-align: center; width: 150px;"><b>Humidity</b></td>
     </tr>
     <tr>
-      <td align="center">${description}</td>
-      <td align="center">${temperature}°C</td>
-      <td align="center">${humidity}%</td>
+      <td style="text-align: center;">${description}</td>
+      <td style="text-align: center;">${temperature}°C</td>
+      <td style="text-align: center;">${humidity}%</td>
     </tr>
   </table>
   <table>
     <tr>
-      <td align="center" width="200"><b>Sunrise</b></td>
-      <td align="center" width="200"><b>Sunset</b></td>
+      <td style="text-align: center; width: 200px;"><b>Sunrise</b></td>
+      <td style="text-align: center; width: 200px;"><b>Sunset</b></td>
     </tr>
     <tr>
-      <td align="center">${sunrise}</td>
-      <td align="center">${sunset}</td>
+      <td style="text-align: center;">${sunrise}</td>
+      <td style="text-align: center;">${sunset}</td>
     </tr>
   </table>
-  <p><em>Last refresh: ${timestamp}</em></p>
+  <p><em>Last refresh: ${lastRefreshTime}</em></p>
 </div>
 <!-- End of Hourly Weather Update -->
 `;
@@ -446,13 +488,13 @@ const weatherSection = `
 
 ```typescript
 // In updateReadme.ts
-const weatherSection = `
+const updatedWeatherData = `
 <!-- Hourly Weather Update -->
-<p align="center">
+<p style="text-align: center;">
   <img src="https://img.shields.io/badge/Weather-${encodeURIComponent(description)}-informational?style=flat-square&logo=openweathermap" alt="Weather">
   <img src="https://img.shields.io/badge/Temperature-${encodeURIComponent(temperature)}°C-orange?style=flat-square" alt="Temperature">
   <img src="https://img.shields.io/badge/Humidity-${encodeURIComponent(humidity)}%25-blue?style=flat-square" alt="Humidity">
-  <img src="https://img.shields.io/badge/Updated-${encodeURIComponent(timestamp.replace(/\s/g, '_'))}-green?style=flat-square" alt="Updated">
+  <img src="https://img.shields.io/badge/Updated-${encodeURIComponent(lastRefreshTime.replace(/\s/g, '_'))}-green?style=flat-square" alt="Updated">
 </p>
 <!-- End of Hourly Weather Update -->
 `;
@@ -462,28 +504,28 @@ const weatherSection = `
 
 ```typescript
 // In updateReadme.ts
-const weatherSection = `
+const updatedWeatherData = `
 <!-- Hourly Weather Update -->
-<div align="center">
+<div style="text-align: center;">
   <table>
     <tr>
-      <td align="center">
-        <h3>☀️ ${location} Weather</h3>
-        <img src="https://openweathermap.org/img/wn/${icon}@4x.png" width="100"><br>
+      <td style="text-align: center;">
+        <h3>☀️ Weather in Dhaka</h3>
+        <img src="https://openweathermap.org/img/wn/${icon}@4x.png" style="width: 100px;"><br>
         <h2>${temperature}°C | ${description}</h2>
         <table>
           <tr>
-            <td align="center"><b>🌅 Sunrise</b></td>
-            <td align="center"><b>🌇 Sunset</b></td>
-            <td align="center"><b>💧 Humidity</b></td>
+            <td style="text-align: center;"><b>🌅 Sunrise</b></td>
+            <td style="text-align: center;"><b>🌇 Sunset</b></td>
+            <td style="text-align: center;"><b>💧 Humidity</b></td>
           </tr>
           <tr>
-            <td align="center">${sunrise}</td>
-            <td align="center">${sunset}</td>
-            <td align="center">${humidity}%</td>
+            <td style="text-align: center;">${sunrise}</td>
+            <td style="text-align: center;">${sunset}</td>
+            <td style="text-align: center;">${humidity}%</td>
           </tr>
         </table>
-        <p><sub><em>Last updated: ${timestamp}</em></sub></p>
+        <p><sub><em>Last updated: ${lastRefreshTime}</em></sub></p>
       </td>
     </tr>
   </table>
@@ -494,7 +536,7 @@ const weatherSection = `
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
   <p>
     <strong>Profile Weather View</strong> | Theme Integration Guide
   </p>

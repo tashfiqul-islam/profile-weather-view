@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'Ropa Sans';
+  src: url('/fonts/RopaSans-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ropa Sans';
+  src: url('/fonts/RopaSans-Italic.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}

@@ -1,23 +1,49 @@
-/* src/docs/.vitepress/theme/index.ts */
+import DefaultTheme from 'vitepress/theme-without-fonts';
+import type { Theme } from 'vitepress';
+import type { EnhanceAppContext } from 'vitepress';
 
-import { type Theme, inBrowser } from 'vitepress';
-import DefaultTheme from 'vitepress/theme';
-import './tailwind.css';
+// Import custom styles
+import './styles/font.css';
+import './styles/tailwind.css';
+
+// Import theme configuration
+import { createThemeConfig } from '../config/theme';
 
 /**
- * Custom VitePress theme with enhanced performance,
- * modern UI, and smooth dark/light mode transitions.
+ * Enhanced VitePress Theme Configuration
+ * Implements advanced performance and accessibility features
  */
-const theme: Theme = {
-  ...DefaultTheme,
-  enhanceApp({ app, router }) {
-    if (inBrowser) {
-      // Handle route changes (useful for analytics, logging, etc.)
-      router.onAfterRouteChange = (to) => {
-        console.log('Navigated to:', to);
-      };
-    }
-  },
-};
+export default {
+  /**
+   * Extend default VitePress theme
+   */
+  extends: DefaultTheme,
 
-export default theme;
+  /**
+   * Theme configuration from existing settings
+   */
+  ...createThemeConfig(),
+
+  /**
+   * Enhanced app initialization
+   * Provides hooks for global component registration and plugin initialization
+   */
+  enhanceApp(ctx: EnhanceAppContext) {
+    const { app } = ctx;
+
+    // Optional: Add global components
+    // Example: app.component('GlobalComponent', GlobalComponent);
+
+    // Optional: Add global error handling
+    app.config.errorHandler = (err, instance, info) => {
+      console.error('Global Error Handler:', {
+        error: err,
+        instance,
+        info,
+      });
+    };
+
+    // Return void or a promise resolving to void to match VitePress theme type
+    return Promise.resolve();
+  },
+} satisfies Theme;

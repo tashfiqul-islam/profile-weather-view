@@ -1,357 +1,270 @@
-<div align="center">
-  <h1>Deployment</h1>
-</div>
+# Deployment Guide
 
-<br>
-
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Deployment-GitHub_Actions-2088FF" alt="GitHub Actions">
-  <img src="https://img.shields.io/badge/Automation-Scheduled-success" alt="Scheduled">
-  <img src="https://img.shields.io/badge/Runtime-Bun-F9AD00" alt="Bun">
-  <img src="https://img.shields.io/badge/CI/CD-Workflow-blue" alt="CI/CD">
+<div style="text-align: center;">
+  <img src="https://img.shields.io/badge/Bun-Runtime-black?logo=bun" alt="Bun Runtime">
+  <img src="https://img.shields.io/badge/GitHub-Actions-blue?logo=github" alt="GitHub Actions">
+  <img src="https://img.shields.io/badge/OpenWeather-API-orange?logo=openweathermap" alt="OpenWeather API">
 </div>
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Environment Configuration](#environment-configuration)
+- [Local Deployment](#local-deployment)
 - [GitHub Actions Deployment](#github-actions-deployment)
-  - [Workflow Architecture](#workflow-architecture)
-  - [Workflow Configuration](#workflow-configuration)
-  - [Execution Strategy](#execution-strategy)
-  - [Security and Authentication](#security-and-authentication)
-  - [Artifact Management](#artifact-management)
-- [Manual Deployment](#manual-deployment)
-  - [Local Environment Setup](#local-environment-setup)
-  - [Execution Process](#execution-process)
-  - [Debugging](#debugging)
 - [Monitoring and Maintenance](#monitoring-and-maintenance)
 - [Troubleshooting](#troubleshooting)
+- [Advanced Deployment Options](#advanced-deployment-options)
 
 ## Overview
 
-Profile Weather View uses a serverless deployment model via GitHub Actions, eliminating the need for dedicated infrastructure while leveraging GitHub's CI/CD capabilities. The application runs on a scheduled basis to keep GitHub profile weather information up-to-date, with options for both automated and manual execution.
+Profile Weather View is designed to be deployed both locally and as a GitHub Actions workflow.
+This guide covers all aspects of deployment,
+from setting up your local environment to configuring the automated GitHub Actions workflow for continuous updates.
+
+## Prerequisites
+
+Before deploying Profile Weather View, ensure you have:
+
+- **API Key**: An OpenWeather API key ([Get one here](https://openweathermap.org/api))
+- **GitHub Repository**: Access to update your GitHub profile README
+- **Bun Runtime**: Version 1.0.0 or later for local development
+
+## Environment Configuration
+
+### Required Environment Variables
+
+The application requires the following environment variables:
+
+| Variable              | Description                     | Required | Default       |
+| --------------------- | ------------------------------- | :------: | ------------- |
+| `OPEN_WEATHER_KEY`    | Your OpenWeather API key        |   Yes    | None          |
+| `PROFILE_README_PATH` | Custom path to your README file |    No    | `./README.md` |
+| `BUN_RUNTIME_SAFETY`  | Enable runtime safety features  |    No    | `true`        |
+| `LOG_LEVEL`           | Logging verbosity               |    No    | `warn`        |
+
+### Setting Up Environment Variables
+
+#### Local Development
+
+Create a `.env` file in the project root with the following content:
+
+```
+OPEN_WEATHER_KEY=your_api_key_here
+# Optional variables
+PROFILE_README_PATH=../your-username/README.md
+LOG_LEVEL=warn
+BUN_RUNTIME_SAFETY=true
+```
+
+#### GitHub Actions
+
+Add the following secrets to your GitHub repository:
+
+1. Navigate to your repository settings
+2. Go to "Secrets and variables" → "Actions"
+3. Add a new repository secret named `OPEN_WEATHER_KEY` with your API key
+
+## Local Deployment
+
+### Installing Dependencies
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/profile-weather-view.git
+cd profile-weather-view
+
+# Install dependencies using Bun
+bun install
+```
+
+### Running Locally
+
+```bash
+# Single execution
+bun run dev
+
+# Build and run
+bun run start
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run with coverage
+bun test:coverage
+```
 
 ## GitHub Actions Deployment
 
-### Workflow Architecture
+Profile Weather View is primarily designed
+to run as a GitHub Actions workflow
+that automatically updates your GitHub profile README with current weather information.
 
-The application is deployed as a GitHub Actions workflow with the following characteristics:
+### Quick Setup
 
-- **Serverless Execution**: Runs directly in GitHub's cloud infrastructure
-- **No Dedicated Infrastructure**: No servers to maintain
-- **Cost-Effective**: Uses GitHub's free tier for open-source projects
-- **Automated Scheduling**: Maintains up-to-date weather information
-
-<div align="center">
-  <img src="https://mermaid.ink/svg/pako:eNptkE1rwzAMhv-K0WmFbuTDLnUXHQZ7OLTdpYcNT0mF7YxYTktD_vtcZ9kY6EXoo_eRhLP2pC0hxP4SLd9Djz8jOSN7cnmR7w8v5_0n5J1hzRbfVHGCOjLQnl0g5Tqy7-kOPdQAFbSQYn-iZYBHGIMxD-7wFzE6VTOMjZI9OzR5cAZmVQvZtXTnqmk2DFXeVhkPL-Ni_0rLDy0ItQjyRJ5wfvTOBopjp9TEYkkCQmPsXQlLXNsMHCJETz-kdEsK0WGEvG6rUkBYqF3ByyjX5YG2PpAT7i1NNKt6KTrW5iOy-6QgRJsyJ0PoaBRRl2Gs_wA0WGpd" alt="Workflow Architecture Diagram">
-</div>
+1. Fork or clone this repository
+2. Add your OpenWeather API key as a repository secret
+3. Update the repository URL in the workflow file (if necessary)
+4. Ensure your profile README contains the required markers
 
 ### Workflow Configuration
 
-The workflow is defined in `.github/workflows/update-readme.yml`:
+The main workflow file is located at `.github/workflows/profile-weather-update.yml`
+and is already configured for optimal performance.
+
+Key features of the workflow:
+
+- Runs on a schedule (three times daily)
+- Supports manual triggering with custom parameters
+- Implements intelligent caching for dependencies
+- Features self-healing mechanisms for reliability
+- Uses minimal GitHub Actions permissions
+
+### Required README Markers
+
+Your profile README must contain the following markers for the weather update to work:
+
+```html
+<!-- Hourly Weather Update -->
+<!-- Your existing content will be replaced -->
+<!-- End of Hourly Weather Update -->
+```
+
+These markers enable the workflow to identify and update the correct section of your README.
+
+### Advanced Workflow Settings
+
+The workflow supports advanced configuration through manual dispatch:
 
 ```yaml
-name: Profile README Weather Update
-
-# Trigger mechanisms for workflow execution
-on:
-  schedule:
-    # Runs at 17 minutes past every 6th hour (avoiding peak traffic times)
-    - cron: '17 */6 * * *'
-  workflow_dispatch: # Allows manual triggering with parameters
-    inputs:
-      location:
-        description: 'Weather location to display'
-        required: false
-        default: 'Dhaka'
-        type: string
-      force_update:
-        description: 'Force README update even if weather unchanged'
-        required: false
-        default: false
-        type: boolean
-      debug:
-        description: 'Enable verbose debug logging'
-        required: false
-        default: false
-        type: boolean
-
-jobs:
-  preflight:
-    name: Preflight Checks
-    runs-on: ubuntu-latest
-    # Job steps...
-
-  update-weather:
-    name: Update Profile README Weather
-    needs: preflight
-    runs-on: ubuntu-latest
-    # Job steps...
+workflow_dispatch:
+  inputs:
+    debug:
+      description: 'Enable debug mode'
+      required: false
+      default: 'false'
+      type: choice
+      options:
+        - 'true'
+        - 'false'
+    retry_strategy:
+      description: 'API failure retry strategy'
+      type: choice
+      options:
+        - exponential
+        - linear
+        - none
+      default: 'exponential'
+    force_update:
+      description: 'Force README update regardless of changes'
+      type: boolean
+      default: false
 ```
-
-#### Trigger Mechanisms
-
-The workflow can be initiated in two ways:
-
-1. **Scheduled Execution**
-
-   - Runs automatically every 6 hours
-   - Uses cron syntax: `17 */6 * * *`
-   - Translates to: "At minute 17, every 6th hour, every day"
-   - Example times: 00:17, 06:17, 12:17, 18:17 UTC
-
-2. **Manual Execution**
-   - Triggered via GitHub's UI using the `workflow_dispatch` event
-   - Accessible through the "Actions" tab in the repository
-   - Supports customizable parameters:
-     - Weather location
-     - Force update option
-     - Debug logging toggle
-
-### Execution Strategy
-
-The workflow is organized into two main jobs:
-
-1. **Preflight Checks**
-
-   - Verifies the execution environment
-   - Checks for required secrets
-   - Tests the OpenWeather API availability
-
-2. **Update Weather**
-   - Main job for updating the README with weather data
-   - Runs only if preflight checks succeed
-
-The update weather job follows this process:
-
-| Step                  | Description                                                  |
-| --------------------- | ------------------------------------------------------------ |
-| Repository Setup      | Checks out both the weather script and personal repositories |
-| Environment Setup     | Sets up the Bun runtime and configures the environment       |
-| Dependency Management | Installs and caches required packages                        |
-| Data Acquisition      | Fetches weather data with retry logic                        |
-| README Management     | Updates the README.md with new weather data                  |
-| Version Control       | Commits and pushes changes if the README was updated         |
-| Reporting             | Generates an execution summary                               |
-
-#### Process Flow
-
-```mermaid
-flowchart TD
-    A[Workflow Triggered] --> B[Run Preflight Checks]
-    B --> C[Checkout Repositories]
-    C --> D[Setup Bun Runtime]
-    D --> E[Install Dependencies]
-    E --> F[Fetch Weather Data]
-    F --> G[Update README]
-    G --> H[Calculate Checksum]
-    H --> I{README Changed?}
-    I -->|Yes| J[Configure Git]
-    J --> K[Commit & Push]
-    I -->|No| L[Skip Commit]
-    K --> M[Generate Report]
-    L --> M
-
-    style A fill:#f9d77e,stroke:#333,stroke-width:2px
-    style F fill:#a2d2ff,stroke:#333,stroke-width:2px
-    style K fill:#97d1a9,stroke:#333,stroke-width:2px
-    style L fill:#ffb3ba,stroke:#333,stroke-width:2px
-```
-
-### Security and Authentication
-
-The workflow employs several security practices:
-
-1. **Permission Scoping**
-
-   - Uses minimal required permissions for the workflow
-   - Restricts access to only necessary resources
-
-   ```yaml
-   permissions:
-     contents: write # For README updates
-     id-token: write # For OIDC authentication
-     security-events: write # For security scanning
-   ```
-
-2. **Commit Signing**
-
-   - All commits are cryptographically signed
-   - Uses GitHub's built-in signing capabilities
-   - Provides verification that commits came from the workflow
-
-   ```yaml
-   - name: 'Configure Git for Secure Operations'
-     run: |
-       git config user.name "github-actions[bot]"
-       git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-       git config commit.gpgsign true
-       git config gpg.format ssh
-       git config user.signingkey "${{ github.token }}"
-   ```
-
-3. **Secrets Management**
-   - API keys stored as GitHub secrets
-   - Secrets verified during preflight checks
-   - Not exposed in logs or outputs
-
-### Backup and Recovery
-
-The workflow includes backup and recovery mechanisms:
-
-1. **README Backups**
-
-   - Creates a backup of the README before modification
-   - Allows rollback in case of update failures
-
-   ```yaml
-   # Create backup for safety and rollback capability
-   cp tashfiqul-islam/README.md tashfiqul-islam/README.md.bak
-   ```
-
-2. **Error Handling**
-   - Contains appropriate error handling throughout
-   - Restores from backup on failure
-   - Detailed error logging for troubleshooting
-
-## Manual Deployment
-
-The application can also be run manually in a local environment for development, testing, or one-off updates.
-
-### Local Environment Setup
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/yourusername/profile-weather-view.git
-   cd profile-weather-view
-   ```
-
-2. **Install Dependencies**
-
-   ```bash
-   bun install
-   ```
-
-3. **Configure Environment Variables**
-   - Create a `.env` file in the project root:
-   ```
-   OPEN_WEATHER_KEY=your_api_key_here
-   ```
-
-### Execution Process
-
-1. **Run the Application**
-
-   ```bash
-   bun start
-   ```
-
-2. **What Happens**
-
-   - Bun builds the TypeScript code
-   - The application loads environment variables
-   - Weather data is fetched from OpenWeather API
-   - The README.md file in your current directory is updated
-
-3. **Development Mode**
-   For faster iteration during development:
-   ```bash
-   bun run dev
-   ```
-
-### Debugging
-
-For troubleshooting local deployment issues:
-
-1. **Check API Key**
-
-   - Verify your OpenWeather API key is valid
-   - Ensure it's correctly set in the `.env` file
-
-2. **Monitor Network Requests**
-
-   - The application logs API request information
-   - Check for any error messages related to API calls
-
-3. **Examine Console Output**
-   - Weather data fetching logs
-   - README update status
-   - Any error messages
 
 ## Monitoring and Maintenance
 
-### Workflow Monitoring
+### Workflow Execution Logs
 
-1. **GitHub Actions Dashboard**
+1. Navigate to the "Actions" tab in your repository
+2. Select the "Profile Weather Update" workflow
+3. Click on a specific run to view detailed logs
 
-   - View workflow runs: Repository → Actions tab
-   - Check run status, logs, and execution history
-   - Filter by workflow name or status
+### Common Success Indicators
 
-2. **Execution Summary**
-   - Each workflow run generates a detailed summary
-   - Includes execution time, weather data, and status
-   - Available in the workflow run logs
+The following log messages indicate successful operation:
 
-### Maintenance Tasks
+- `✅ Weather data fetched successfully`
+- `✅ README updated successfully with new weather data`
+- `🎉 Weather update process completed successfully`
 
-1. **API Key Rotation**
+### Update Frequency
 
-   - Periodically update your OpenWeather API key
-   - Update the repository secrets in GitHub
+By default, the workflow runs three times daily:
 
-2. **Dependency Updates**
+- 05:23 UTC (morning)
+- 13:23 UTC (afternoon)
+- 21:23 UTC (evening)
 
-   - Regularly update dependencies using `bun update`
-   - Consider enabling Dependabot for automated updates
-
-3. **Workflow Updates**
-   - Review and update workflow configuration as needed
-   - Test changes by triggering manual workflow runs
+To change this schedule, modify the cron expression in the workflow file.
 
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-1. **Workflow Failures**
+| Issue              | Possible Cause                        | Solution                                                         |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------- |
+| API Key Error      | Missing or invalid `OPEN_WEATHER_KEY` | Verify the secret is set correctly in GitHub repository settings |
+| README Not Found   | Incorrect repository or path          | Check the target repository path and ensure README.md exists     |
+| No Weather Section | Missing markers in README             | Add the required markers to your README file                     |
+| Workflow Timeout   | Network issues or API outage          | Check OpenWeather API status and try manual workflow dispatch    |
 
-   - **API Rate Limiting**: Check if you've exceeded OpenWeather API limits
-   - **Authentication Issues**: Verify GitHub token permissions
-   - **Network Problems**: Temporary API outages or connectivity issues
+### Diagnostic Steps
 
-2. **README Not Updating**
-   - **No Weather Changes**: The workflow only commits when data changes
-   - **Repository Path Issues**: Verify repository paths in the workflow
-   - **Permissions Problems**: Check if the workflow has write permissions
+If the workflow fails:
 
-### Resolution Steps
+1. Check the error message in the workflow logs
+2. Verify OpenWeather API key is valid and has sufficient quota
+3. Ensure the README contains the required markers
+4. Check network connectivity to OpenWeather API
+5. Examine workflow permissions in repository settings
 
-1. **View Detailed Logs**
+## Advanced Deployment Options
 
-   - Check the specific job that failed
-   - Examine the error messages
-   - Look for any environment or configuration issues
+### Custom Weather Update Schedule
 
-2. **Run Manually with Debug Mode**
+To customize the update frequency, modify the `cron` expression in the workflow file:
 
-   - Trigger the workflow manually with debug mode enabled
-   - Use the workflow_dispatch event in the Actions tab
-   - Set the debug parameter to true
+```yaml
+schedule:
+  - cron: '23 5,13,21 * * *' # Current: 3 times daily
+  # - cron: "0 */3 * * *"     # Alternative: Every 3 hours
+```
 
-3. **Check API Status**
-   - The preflight checks verify API health
-   - View the preflight job output for API status
-   - Consider temporary API issues if status is degraded
+### Multiple Profile Support
+
+To update multiple profiles:
+
+1. Modify the `updateReadme.ts` file to support multiple destinations
+2. Add additional repository secrets for different profiles
+3. Update the workflow file to include matrix strategy for multiple targets
+
+### Self-Hosted Runners
+
+For advanced control, you can use self-hosted runners:
+
+1. Set up a self-hosted GitHub Actions runner
+2. Modify the workflow file to use your custom runner:
+
+```yaml
+jobs:
+  preflight:
+    runs-on: self-hosted # Instead of ubuntu-latest
+```
+
+### Containerized Deployment
+
+The application can be containerized for consistent execution:
+
+```Dockerfile
+FROM oven/bun:latest
+
+WORKDIR /app
+COPY . .
+RUN bun install --frozen-lockfile
+
+CMD ["bun", "run", "src/weather-update/index.ts"]
+```
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
+  <p><strong>Profile Weather View</strong> | Deployment Guide</p>
   <p>
-    <strong>Profile Weather View</strong> | Deployment Documentation
-  </p>
-  <p>
-    <small>Last updated: March 2025</small>
+    <small>For more information, visit the project repository or open an issue.</small>
   </p>
 </div>

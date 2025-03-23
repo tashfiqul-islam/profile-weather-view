@@ -1,0 +1,114 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'automerge') && github.event.pull_request.head.repo.full_name == github.repository }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Log PR Merge Attempt
+        run: |
+          echo "Attempting to auto-merge PR: $PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+
+      - name: Enable auto-merge for Dependabot PRs
+        run: |
+          gh pr merge --auto --merge "$PR_URL" || echo "Failed to merge PR $PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  notify-breaking-changes:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' && !contains(github.event.pull_request.labels.*.name, 'automerge') && contains(github.event.pull_request.title, 'major') && !(contains(github.event.pull_request.title, 'typescript') || contains(github.event.pull_request.title, 'eslint') || contains(github.event.pull_request.title, 'vitest') || contains(github.event.pull_request.title, 'zod') || contains(github.event.pull_request.title, '@js-temporal')) && github.event.pull_request.head.repo.full_name == github.repository }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Extract PR information
+        id: pr-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title
+            const prUrl = context.payload.pull_request.html_url
+            const prBody = context.payload.pull_request.body
+            
+            let packageName = 'Unknown'
+            let oldVersion = 'Unknown'
+            let newVersion = 'Unknown'
+            
+            // Extract package name and versions from PR title
+            const dependencyMatch = prTitle.match(/build\(deps(?:-dev)?\): bump ([\w\-@/]+) from ([\d\.]+) to ([\d\.]+)/)
+            if (dependencyMatch) {
+              packageName = dependencyMatch[1]
+              oldVersion = dependencyMatch[2]
+              newVersion = dependencyMatch[3]
+            } else {
+              // Try to extract info from PR body as fallback
+              if (prBody) {
+                const packageMatch = prBody.match(/Bumps \[([\w\-@/]+)\]/)
+                if (packageMatch) packageName = packageMatch[1]
+            
+                const versionMatch = prBody.match(/from ([\d\.]+) to ([\d\.]+)/)
+                if (versionMatch) {
+                  oldVersion = versionMatch[1]
+                  newVersion = versionMatch[2]
+                }
+              }
+            }
+            
+            // Set outputs for use in subsequent steps
+            core.setOutput('package', packageName)
+            core.setOutput('old_version', oldVersion)
+            core.setOutput('new_version', newVersion)
+            core.setOutput('pr_url', prUrl)
+            
+            console.log(`Package: ${packageName}`)
+            console.log(`Versions: ${oldVersion} -> ${newVersion}`)
+
+      - name: Validate Email Configuration
+        run: |
+          if [[ -z "$MAIL_USERNAME" || -z "$MAIL_PASSWORD" ]]; then
+            echo "::warning::Email configuration is incomplete. Please set MAIL_USERNAME and MAIL_PASSWORD secrets."
+            exit 1
+          fi
+          echo "Email configuration validated."
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Breaking Change Alert: ${{ steps.pr-info.outputs.package }} has a major update"
+          body: |
+            A major version update has been detected that may include breaking changes:
+            
+            | Package | From Version | To Version | PR Link |
+            |---------|--------------|------------|---------|
+            | ${{ steps.pr-info.outputs.package }} | ${{ steps.pr-info.outputs.old_version }} | ${{ steps.pr-info.outputs.new_version }} | ${{ steps.pr-info.outputs.pr_url }} |
+            
+            Please review the pull request to understand the potential breaking changes.
+            
+            This is an automated notification from your Dependabot configuration.
+          to: tashfiq61@gmail.com
+          from: GitHub Actions Dependabot
+          priority: high
+          convert_markdown: true

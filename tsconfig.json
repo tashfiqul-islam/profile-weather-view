@@ -3,7 +3,11 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM", "WebWorker"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "WebWorker"
+    ],
 
     "baseUrl": "./",
     "rootDir": "src",
@@ -14,13 +18,18 @@
       "@/tests/*": ["src/tests/*"],
       "@/weather-updates/*": ["src/weather-updates/*"]
     },
-    "types": ["bun", "node"],
+
+    "types": [
+      "bun",
+      "node"
+    ],
+
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
     ],
-    "resolveJsonModule": true,
 
+    "resolveJsonModule": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -37,19 +46,15 @@
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-
     "noPropertyAccessFromIndexSignature": true,
     "noErrorTruncation": true,
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "preserveSymlinks": false,
     "verbatimModuleSyntax": true,
-
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
     "noEmit": true,
     "sourceMap": true,
     "declaration": true,
@@ -58,18 +63,18 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "incremental": true,
-
     "composite": true,
     "disableSourceOfProjectReferenceRedirect": true,
-
     "useDefineForClassFields": true
   },
+
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.mts",
     "src/**/*.d.ts"
   ],
+
   "exclude": [
     "node_modules",
     "dist",
@@ -78,13 +83,18 @@
     ".git",
     ".github"
   ],
+
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
     "fallbackPolling": "dynamicPriority",
     "synchronousWatchDirectory": true,
-    "excludeDirectories": ["**/node_modules", "dist"]
+    "excludeDirectories": [
+      "**/node_modules",
+      "dist"
+    ]
   },
+
   "ts-node": {
     "transpileOnly": true,
     "esm": true

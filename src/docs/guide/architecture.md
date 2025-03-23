@@ -10,11 +10,15 @@
 
 ## Overview
 
-Profile Weather View employs a service-oriented architecture designed with simplicity, maintainability, and automation at its core. This architecture enables the application to function both as a scheduled GitHub Actions workflow and as a local development tool, ensuring consistent behavior across environments.
+Profile Weather View uses a service-oriented architecture designed with simplicity,
+maintainability, and automation at its core.
+This architecture enables the application
+to function both as a scheduled GitHub Actions workflow and as a local development tool,
+ensuring consistent behavior across environments.
 
 ## Architectural Principles
 
-The application follows several key architectural principles:
+The application follows these key architectural principles:
 
 - **Separation of Concerns**: Each component has a single, well-defined responsibility
 - **Fail-Fast Validation**: Early detection of configuration issues prevents cascading failures
@@ -55,45 +59,47 @@ flowchart TD
 ```
 profile-weather-view/
 ├── .github/
-│   └── workflows/               # GitHub Actions automation
-│       └── update-readme.yml    # Scheduled weather update workflow
-├── .husky/                      # Git hooks for code quality
-│   ├── commit-msg               # Commit message validation
-│   └── pre-commit               # Pre-commit checks
+│   ├── dependabot.yml                     # Dependabot configuration
+│   └── workflows/                         # GitHub Actions automation
+│       ├── profile-weather-update.yml     # Scheduled weather update workflow
+│       ├── dependabot-approve.yml         # Dependabot auto-approve workflow
+│       └── dependabot-automerge.yml       # Dependabot auto-merge workflow
+├── .husky/                                # Git hooks for code quality
+│   ├── commit-msg                         # Commit message validation
+│   └── pre-commit                         # Pre-commit checks
 ├── src/
-│   ├── tests/                   # Comprehensive test suite
-│   │   ├── benchmark/           # Performance benchmarking tests
-│   │   |   ├── index.test.ts    # Main application tests
-│   │   |   ├── services/        # Service-specific tests
-│   │   |   ├── utils/           # Utility tests
-│   │   ├── unit/                # Unit tests
-│   │   |   ├── index.test.ts    # Main application tests
-│   │   |   ├── services/        # Service-specific tests
-│   │   |   ├── utils/           # Utility tests
-│   │   ├── setup.ts             # Test setup & configuration
-│   ├── config/                  # Configuration modules
-│   │   ├── comments.config.mjs  # ESLint comments configuration
-│   │   ├── parser.config.mjs    # TypeScript parser settings
-│   │   ├── security.config.mjs  # Security rules
-│   │   └── ...                  # Other config modules
-│   ├── docs/                    # Documentation files
-│   ├── services/                # Core business logic
-│   │   ├── fetchWeather.ts      # Weather API interaction
-│   │   └── updateReadme.ts      # README file manipulation
-│   ├── utils/                   # Shared utilities
-│   │   └── preload.ts           # Environment validation
-│   └── index.ts                 # Application entry point
-├── .env                         # Environment variables (gitignored)
-├── bunfig.toml                  # Bun runtime configuration
-├── package.json                 # Project dependencies and scripts
-├── eslint.config.mjs            # ESLint configuration
-├── prettier.config.mjs          # Code formatting rules
-├── tsconfig.json                # TypeScript compilation settings
-├── commitlint.config.mjs        # Commit message validation
-└── vitest.config.ts             # Test runner configuration
+│   ├── __tests__/                         # Comprehensive test suite
+│   │   ├── setup.ts                       # Test setup & configuration
+│   │   └── unit/                          # Unit test directory
+│   │       ├── index.test.ts              # Main application tests
+│   │       ├── services/                  # Service tests
+│   │       │   ├── fetchWeather.test.ts   # Weather service tests
+│   │       │   └── updateReadme.test.ts   # README service tests
+│   │       └── utils/                     # Utility tests
+│   │           └── preload.test.ts        # Environment utility tests
+│   ├── config/                            # Configuration modules
+│   │   ├── comments.config.mjs            # ESLint comments configuration
+│   │   ├── parser.config.mjs              # TypeScript parser settings
+│   │   ├── security.config.mjs            # Security rules
+│   │   └── ...                            # Other config modules
+│   ├── docs/                              # Documentation files
+│   ├── weather-update/                    # Core business logic
+│   │   ├── services/                      # Service layer
+│   │   │   ├── fetchWeather.ts            # Weather API interaction
+│   │   │   └── updateReadme.ts            # README file manipulation
+│   │   ├── utils/                         # Shared utilities
+│   │   │   └── preload.ts                 # Environment validation
+│   │   └── index.ts                       # Application entry point
+├── .env                                   # Environment variables (gitignored)
+├── bunfig.toml                            # Bun runtime configuration
+├── package.json                           # Project dependencies and scripts
+├── eslint.config.mjs                      # ESLint configuration
+├── prettier.config.mjs                    # Code formatting rules
+├── tsconfig.json                          # TypeScript compilation settings
+├── tsconfig.test.json                     # Test-specific TypeScript settings
+├── commitlint.config.mjs                  # Commit message validation
+└── vitest.config.ts                       # Test runner configuration
 ```
-
-````
 
 ## Core Components
 
@@ -107,6 +113,7 @@ The main orchestrator that coordinates the application flow:
 - Provides exit status codes for CI/CD integration
 
 ::: details Source Code Example
+
 ```typescript
 export async function main(): Promise<void> {
   try {
@@ -120,7 +127,7 @@ export async function main(): Promise<void> {
     console.warn('✅ Weather data fetched successfully:', weatherData);
 
     // Check for a custom README path from environment variable
-    const customReadmePath = process.env.PROFILE_README_PATH;
+    const customReadmePath = process.env['PROFILE_README_PATH'];
     if (customReadmePath) {
       console.warn(`📝 Using custom README path: ${customReadmePath}`);
     }
@@ -144,17 +151,17 @@ export async function main(): Promise<void> {
     process.exit(1); // Ensure process.exit(1) is called on error
   }
 }
-````
+```
 
 :::
 
 ### Services Layer
 
-The services layer encapsulates the core business logic with clear boundaries of responsibility.
+The service layer encapsulates the core business logic with clear boundaries of responsibility.
 
 #### Weather Service (`fetchWeather.ts`)
 
-**Responsibility**: Handles all interactions with the OpenWeather API.
+**Responsibility**: Handles all interaction with the OpenWeather API.
 
 **Key Functions**:
 
@@ -172,7 +179,7 @@ The services layer encapsulates the core business logic with clear boundaries of
 - **API Integration**: Uses native fetch API with proper error handling
 - **Data Validation**: Implements Zod schema to validate API responses
 - **Data Transformation**: Processes raw data into a standardized format
-- **Error Handling**: Normalizes different error types into consistent messages
+- **Error Handling**: Normalizes different error types into consistent error messages
   :::
 
 #### README Service (`updateReadme.ts`)
@@ -191,7 +198,7 @@ The services layer encapsulates the core business logic with clear boundaries of
 
 ::: details Implementation Details
 
-- **Content Detection**: Uses regex to locate weather section in README
+- **Content Detection**: Uses regex to locate the weather section in README
 - **Format Preservation**: Maintains existing README formatting
 - **Conditional Updates**: Only updates when content has changed
 - **Last Updated Timestamp**: Adds formatted timestamp for tracking
@@ -251,14 +258,14 @@ The application uses a layered configuration approach:
 
 ## Testing Architecture
 
-The testing strategy follows a comprehensive approach with dedicated test categories:
+The testing strategy follows a comprehensive approach:
 
 ```mermaid
 graph TD
     subgraph "Test Categories"
         Unit[Unit Tests] --> Services
         Unit --> Utilities
-        Benchmark[Performance Tests] --> PerformanceMetrics[Performance Metrics]
+        Integration[Integration Tests] --> MainFlow[Main Flow]
     end
 
     subgraph "Testing Techniques"
@@ -266,45 +273,42 @@ graph TD
         StateVerification[State Verification]
         BehaviorVerification[Behavior Verification]
         ErrorHandling[Error Case Coverage]
-        PerformanceAnalysis[Performance Analysis]
+        CoverageAnalysis[Coverage Analysis]
     end
 
     Services --> Mocking
     Services --> StateVerification
     Utilities --> BehaviorVerification
     Unit --> ErrorHandling
-    Benchmark --> PerformanceAnalysis
+    Integration --> CoverageAnalysis
 
     style Unit fill:#d4f1f9,stroke:#333,stroke-width:2px
-    style Benchmark fill:#ffcccc,stroke:#333,stroke-width:2px
+    style Integration fill:#ffcccc,stroke:#333,stroke-width:2px
 ```
 
 ### Testing Approach
 
 - **Unit Testing**: Individual components tested in isolation
-- **Performance Benchmarking**: Tests for execution speed and resource usage
-- **Mock Strategy**: External dependencies (API, filesystem) are mocked
+- **Integration Testing**: Testing component interactions
+- **Mock Strategy**: External dependencies (API, filesystem) are mocked with Vitest
 - **Coverage Requirements**: 100% coverage for all metrics
 - **Test Environment**: Vitest with Node environment
 
 ### Test Directory Structure
 
-The tests directory is organized by test type:
+The tests directory follows a hierarchical structure that mirrors the source code:
 
 ```
-src/tests/
-├── benchmark/           # Performance testing
-│   ├── index.test.ts
-│   ├── services/
-│   └── utils/
-├── unit/               # Unit testing
-│   ├── index.test.ts
-│   ├── services/
-│   └── utils/
-└── setup.ts           # Shared test configuration
+src/__tests__/
+├── setup.ts                           # Test environment configuration
+└── unit/
+    ├── index.test.ts                  # Tests for the main entry point
+    ├── services/
+    │   ├── fetchWeather.test.ts       # Tests for weather service
+    │   └── updateReadme.test.ts       # Tests for README service
+    └── utils/
+        └── preload.test.ts            # Tests for environment utilities
 ```
-
-This structure allows for clear separation between functional correctness testing (unit tests) and performance optimization (benchmark tests).
 
 ## Deployment Architecture
 
@@ -340,31 +344,35 @@ graph TD
 
 ### Deployment Features
 
-- **Scheduled Execution**: Runs automatically on defined schedule
-- **Manual Triggering**: Allows on-demand execution
-- **Self-healing**: Implements retry mechanisms for transient failures
-- **Concurrency Control**: Prevents overlapping executions
-- **Dependency Caching**: Optimizes performance through caching
-- **Selective Commits**: Only commits when changes are detected
+- **Scheduled Execution**: Runs automatically on a defined schedule (three times daily)
+- **Manual Triggering**: Allows on-demand execution with configurable parameters
+- **Self-healing**: Implements retry mechanisms with exponential backoff for transient failures
+- **Concurrency Control**: Prevents overlapping executions with resource locking
+- **Dependency Caching**: Improves performance through intelligent caching
+- **Selective Commits**: Only creates commits when actual changes are detected
+- **Pipeline Stages**: Preflight checks, execution, verification, and recovery
 
 ## Security Architecture
 
 Security is built into the architecture:
 
 - **Secret Management**: API keys stored as GitHub Secrets
-- **Principle of Least Privilege**: Minimal permissions in GitHub Actions
-- **Input Validation**: All external data validated before use
-- **Dependency Management**: Regular updates via Dependabot
-- **Code Scanning**: Linting rules include security checks
+- **Principle of The Least Privilege**: Minimal permissions in GitHub Actions workflows
+- **Input Validation**: All external data validated through Zod schemas
+- **Dependency Management**: Automated updates via Dependabot with security patching
+- **Code Scanning**: ESLint security plugin integration
+- **Environment Isolation**: Clear separation between test and production environments
 
 ## Performance Considerations
 
 The application is optimized for efficiency:
 
-- **Minimal API Calls**: Only requests necessary data
-- **Conditional Updates**: Only writes to files when content changes
-- **Optimized Workflow**: Fast Bun runtime with dependency caching
-- **Strategic Scheduling**: Balances freshness with resource usage
+- **Minimal API Calls**: Only requests necessary weather data parts
+- **Conditional Updates**: Only write to files when content changes
+- **Optimized Runtime**: Fast Bun runtime with TypeScript
+- **Efficient Dependency Management**: Frozen lockfiles and dependency caching
+- **Strategic Scheduling**: Times chosen to balance freshness with resource usage
+- **Resource Constraints**: Defined timeout periods and resource limits
 
 ## Future Architecture Extensions
 
@@ -372,8 +380,9 @@ The architecture is designed to accommodate future enhancements:
 
 - **Multiple Weather Providers**: Service abstraction allows provider switching
 - **Enhanced Visualization**: Data structure supports richer visualizations
-- **Multi-profile Support**: Design allows for updating multiple profiles
+- **Multiprofile Support**: Design allows for updating multiple profiles
 - **Metrics Collection**: Architecture supports adding telemetry
+- **Observability Enhancements**: Structure allows for monitoring integration
 
 <style>
 .architecture-header {

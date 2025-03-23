@@ -1,10 +1,10 @@
-<div align="center">
+<div style="text-align: center;">
   <h1>Customizing Your Weather Display</h1>
 </div>
 
 <br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Customization-Guide-blue" alt="Customization">
   <img src="https://img.shields.io/badge/Display-Options-green" alt="Display Options">
   <img src="https://img.shields.io/badge/Location-Settings-orange" alt="Location">
@@ -41,21 +41,25 @@ The default format is a clean, tabular display that shows the essential weather 
 
 ```html
 <!-- Hourly Weather Update -->
-<td align="center">
+<td style="text-align: center;">
   Cloudy
-  <img width="15" src="https://openweathermap.org/img/w/03d.png" alt="" />
+  <img
+    style="width: 15px;"
+    src="https://openweathermap.org/img/w/03d.png"
+    alt=""
+  />
 </td>
-<td align="center">30°C</td>
-<td align="center">06:18 AM</td>
-<td align="center">06:02 PM</td>
-<td align="center">60%</td>
+<td style="text-align: center;">30°C</td>
+<td style="text-align: center;">06:18:00</td>
+<td style="text-align: center;">18:02:00</td>
+<td style="text-align: center;">60%</td>
 <!-- End of Hourly Weather Update -->
 ```
 
 Which renders as:
 
-<div align="center">
-  <table>
+<div style="text-align: center;">
+  <table style="margin: 0 auto;">
     <thead>
       <tr>
         <th>Weather</th>
@@ -67,15 +71,15 @@ Which renders as:
     </thead>
     <tbody>
       <tr>
-        <td align="center">Cloudy <img width="15" src="https://openweathermap.org/img/w/03d.png" alt=""></td>
-        <td align="center">30°C</td>
-        <td align="center">06:18 AM</td>
-        <td align="center">06:02 PM</td>
-        <td align="center">60%</td>
+        <td style="text-align: center;">Cloudy <img style="width: 15px;" src="https://openweathermap.org/img/w/03d.png" alt=""></td>
+        <td style="text-align: center;">30°C</td>
+        <td style="text-align: center;">06:18:00</td>
+        <td style="text-align: center;">18:02:00</td>
+        <td style="text-align: center;">60%</td>
       </tr>
     </tbody>
   </table>
-  <small><em>Last refresh: Wednesday, March 06, 2025 12:00:00 UTC+6</em></small>
+  <small><em>Last refresh: Wednesday, March 23, 2025 12:00:00 (UTC+6)</em></small>
 </div>
 
 ### Enhanced Card Format
@@ -84,11 +88,15 @@ For a more visually appealing display, you can use a card-based format:
 
 ```html
 <!-- Hourly Weather Update -->
-<div align="center">
-  <img src="https://openweathermap.org/img/w/03d.png" width="60" alt="" />
+<div style="text-align: center;">
+  <img
+    src="https://openweathermap.org/img/w/03d.png"
+    style="width: 60px;"
+    alt=""
+  />
   <h3>Currently, 30°C in Dhaka</h3>
   <h4>Cloudy with 60% humidity</h4>
-  <p>☀️ Sunrise: 06:18 AM | 🌙 Sunset: 06:02 PM</p>
+  <p>☀️ Sunrise: 06:18:00 | 🌙 Sunset: 18:02:00</p>
 </div>
 <!-- End of Hourly Weather Update -->
 ```
@@ -99,11 +107,12 @@ If you prefer a minimal look, consider a badge-style format:
 
 ```html
 <!-- Hourly Weather Update -->
-<a href="#"
-  ><img
+<a href="#">
+  <img
     src="https://img.shields.io/badge/Dhaka-30%C2%B0C%20Cloudy-blue?style=flat-square&logo=openweathermap"
     alt="Weather in Dhaka"
-/></a>
+  />
+</a>
 <!-- End of Hourly Weather Update -->
 ```
 
@@ -111,10 +120,14 @@ If you prefer a minimal look, consider a badge-style format:
 
 ### Changing Location Coordinates
 
-To change the location for which weather data is displayed, modify the `LAT` and `LON` constants in `src/services/fetchWeather.ts`:
+To change the location for which weather data is displayed,
+modify the `LAT` and `LON` constants in `src/weather-update/services/fetchWeather.ts`:
 
 ```typescript
-// Current location constants (Uttara, Dhaka)
+/**
+ * ✅ OpenWeather API Constants
+ * - Latitude and Longitude for Uttara, Dhaka.
+ */
 const LAT = '23.8759';
 const LON = '90.3795';
 
@@ -130,15 +143,44 @@ You can find coordinates for any location using services like:
 
 ### Using Multiple Locations
 
-If you want to display weather for multiple locations, you can modify the `updateReadme.ts` file to include multiple weather sections:
+If you want to display weather for multiple locations,
+you can extend the `updateReadme.ts` file in `src/weather-update/services/`.
+Here's how you might implement this feature:
 
 ```typescript
-// Example modification for multiple locations
-function updateReadme(
+/**
+ * Updates the README file with weather data from multiple locations.
+ * @param primaryWeatherData The formatted weather data string for primary location
+ * @param secondaryWeatherData The formatted weather data string for secondary location
+ * @param customReadmePath Optional path to a README file in a different location
+ */
+export async function updateReadmeMultiLocation(
   primaryWeatherData: string,
   secondaryWeatherData: string,
-): void {
+  customReadmePath?: string,
+): Promise<boolean> {
+  const readmePath = customReadmePath ?? join(process.cwd(), 'README.md');
+  const readmeFile = Bun.file(readmePath);
+
+  if (!(await readmeFile.exists())) {
+    console.error(`❌ Error: README.md file not found at path: ${readmePath}`);
+    return false;
+  }
+
   // Parse primary location data
+  const primarySegments = primaryWeatherData.split('|');
+  if (primarySegments.length !== 6) {
+    console.error('❌ Error: Invalid primary weather data format.');
+    return false;
+  }
+
+  // Parse secondary location data
+  const secondarySegments = secondaryWeatherData.split('|');
+  if (secondarySegments.length !== 6) {
+    console.error('❌ Error: Invalid secondary weather data format.');
+    return false;
+  }
+
   const [
     primaryDescription,
     primaryTemp,
@@ -146,9 +188,7 @@ function updateReadme(
     primarySunset,
     primaryHumidity,
     primaryIcon,
-  ] = primaryWeatherData.split('|');
-
-  // Parse secondary location data
+  ] = primarySegments;
   const [
     secondaryDescription,
     secondaryTemp,
@@ -156,16 +196,15 @@ function updateReadme(
     secondarySunset,
     secondaryHumidity,
     secondaryIcon,
-  ] = secondaryWeatherData.split('|');
+  ] = secondarySegments;
 
-  // Create primary location HTML
-  // ...
-
-  // Create secondary location HTML
-  // ...
+  // Create formatted weather sections for both locations
+  // Implementation details...
 
   // Update README with both sections
-  // ...
+  // Implementation details...
+
+  return true;
 }
 ```
 
@@ -183,7 +222,7 @@ Example with emoji:
 
 ```html
 <!-- Hourly Weather Update -->
-<td align="center">Cloudy ☁️</td>
+<td style="text-align: center;">Cloudy ☁️</td>
 <!-- End of Hourly Weather Update -->
 ```
 
@@ -193,24 +232,31 @@ You can customize colors using HTML/CSS inline styles:
 
 ```html
 <!-- Hourly Weather Update -->
-<td align="center" style="background-color: #e6f7ff; color: #0066cc">
+<td style="text-align: center; background-color: #e6f7ff; color: #0066cc;">
   Cloudy
-  <img width="15" src="https://openweathermap.org/img/w/03d.png" alt="" />
+  <img
+    style="width: 15px;"
+    src="https://openweathermap.org/img/w/03d.png"
+    alt=""
+  />
 </td>
-<td align="center" style="background-color: #fff0f0; color: #cc0000">30°C</td>
+<td style="text-align: center; background-color: #fff0f0; color: #cc0000;">
+  30°C
+</td>
 <!-- End of Hourly Weather Update -->
 ```
 
 ### Adjusting Layout
 
-The layout can be modified by changing the HTML structure in `updateReadme.ts`. For example, to create a horizontal layout:
+The layout can be modified by changing the HTML structure in `src/weather-update/services/updateReadme.ts`.
+For example, to create a horizontal layout:
 
 ```typescript
-const weatherSection = `
-<!-- Hourly Weather Update -->
+// Updated weather section to use a horizontal layout
+const updatedWeatherData = `<!-- Hourly Weather Update -->
 <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
   <div>
-    <img width="50" src="https://openweathermap.org/img/w/${icon}.png" alt="">
+    <img style="width: 50px;" src="https://openweathermap.org/img/w/${icon}.png" alt="">
     <div>${description}</div>
   </div>
   <div>
@@ -222,80 +268,95 @@ const weatherSection = `
     <div>🌇 ${sunset}</div>
   </div>
 </div>
-<!-- End of Hourly Weather Update -->
-`;
+<!-- End of Hourly Weather Update -->`;
 ```
 
 ## Custom Templates
 
-You can create your own custom templates by modifying the `updateReadme.ts` file. The key is to maintain the comment markers so the GitHub Action can find and replace the correct section:
+You can create your own custom templates by modifying the `src/weather-update/services/updateReadme.ts` file.
+The key is to maintain the comment markers so the GitHub Action can find and replace the correct section:
 
 ```typescript
-// The markers must remain consistent
-const START_MARKER = '<!-- Hourly Weather Update -->';
-const END_MARKER = '<!-- End of Hourly Weather Update -->';
+// The weather section regex pattern must match these markers
+const weatherSectionRegex =
+  /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/;
 
-// Your custom template between these markers
-const weatherSection = `
-${START_MARKER}
+// Your custom template using the same markers
+const updatedWeatherData = `<!-- Hourly Weather Update -->
   <!-- Your custom HTML here -->
-${END_MARKER}
-`;
+<!-- End of Hourly Weather Update -->`;
 ```
 
 ## Advanced Customizations
 
 For more advanced customizations, you can modify the GitHub Action workflow file:
 
-1. **Adjust Update Frequency**: Change the cron schedule in `.github/workflows/update-readme.yml`:
+1. **Adjust Update Frequency**: Change the cron schedule in `.github/workflows/profile-weather-update.yml`:
 
    ```yaml
    schedule:
-     - cron: '17 */6 * * *' # Every 6 hours
+     # Strategic times that capture meaningful weather changes while conserving resources
+     - cron: '23 5,13,21 * * *' # 3 times daily: morning (5:23), afternoon (13:23), evening (21:23)
    ```
 
 2. **Add Custom Parameters**: Extend the workflow_dispatch inputs:
 
    ```yaml
-   inputs:
-     display_format:
-       description: 'Weather display format to use'
-       required: false
-       default: 'table'
-       type: choice
-       options:
-         - table
-         - card
-         - badge
+   workflow_dispatch:
+     inputs:
+       display_format:
+         description: 'Weather display format to use'
+         required: false
+         default: 'table'
+         type: choice
+         options:
+           - table
+           - card
+           - badge
    ```
 
 3. **Implement Temperature Units Toggle**: Add a parameter to switch between Celsius and Fahrenheit:
+
    ```yaml
-   inputs:
-     temperature_unit:
-       description: 'Temperature unit'
-       required: false
-       default: 'celsius'
-       type: choice
-       options:
-         - celsius
-         - fahrenheit
+   workflow_dispatch:
+     inputs:
+       temperature_unit:
+         description: 'Temperature unit'
+         required: false
+         default: 'celsius'
+         type: choice
+         options:
+           - celsius
+           - fahrenheit
    ```
 
-You would then modify the `fetchWeather.ts` file to respect these parameters:
+You would then modify the `src/weather-update/services/fetchWeather.ts` file to respect these parameters:
 
 ```typescript
-// Example modification for temperature units
-const API_KEY = process.env.OPEN_WEATHER_KEY;
-const UNIT =
-  process.env.TEMPERATURE_UNIT === 'fahrenheit' ? 'imperial' : 'metric';
+/**
+ * 🌍 Fetches current weather data from OpenWeather API.
+ */
+export async function fetchWeatherData(): Promise<string> {
+  const API_KEY = Bun.env['OPEN_WEATHER_KEY']?.trim();
+  const UNIT =
+    Bun.env['TEMPERATURE_UNIT'] === 'fahrenheit' ? 'imperial' : 'metric';
 
-const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LAT}&lon=${LON}&exclude=minutely,hourly,daily,alerts&appid=${API_KEY}&units=${UNIT}`;
+  if (!API_KEY) {
+    console.error('❌ Missing required environment variable: OPEN_WEATHER_KEY');
+    throw new Error(
+      '❌ Missing required environment variable: OPEN_WEATHER_KEY',
+    );
+  }
+
+  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LAT}&lon=${LON}&exclude=minutely,hourly,daily,alerts&appid=${API_KEY}&units=${UNIT}`;
+
+  // Rest of the function...
+}
 ```
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
   <p>
     <strong>Profile Weather View</strong> | Customization Guide
   </p>

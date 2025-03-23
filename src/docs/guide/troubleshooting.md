@@ -1,10 +1,10 @@
-<div align="center">
+<div style="text-align: center;">
   <h1>Troubleshooting</h1>
 </div>
 
 <br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
   <img src="https://img.shields.io/badge/Support-Active-success" alt="Support Status">
   <img src="https://img.shields.io/badge/Documentation-Comprehensive-blue" alt="Documentation">
   <img src="https://img.shields.io/badge/Issues-GitHub_Tracker-orange" alt="Issue Tracking">
@@ -26,13 +26,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🔑</td>
+    <td style="width: 15%; text-align: center;">🔑</td>
     <td>
 
 **Error Message**:
@@ -67,13 +67,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">⚙️</td>
+    <td style="width: 15%; text-align: center;">⚙️</td>
     <td>
 
 **Error Message**:
@@ -89,13 +89,16 @@
 1. **Check Bun configuration** in `bunfig.toml` to ensure preload is configured correctly:
 
    ```toml
-   preload = ["./src/utils/preload.ts"]
+   preload = [
+       "./src/weather-update/utils/preload.ts",
+       "./src/weather-update/services/fetchWeather.ts"
+   ]
    ```
 
 2. **Verify dotenv installation** by running:
 
    ```bash
-   bun install dotenv --dev
+   bun install dotenv
    ```
 
 3. **Debug environment loading** by adding temporary console logs to `preload.ts`.
@@ -112,13 +115,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🌦️</td>
+    <td style="width: 15%; text-align: center;">🌦️</td>
     <td>
 
 **Error Message**:
@@ -145,7 +148,7 @@
    - Consider upgrading your API plan if you're making frequent requests
 
 4. **API Endpoint Changes**
-   - Verify the API endpoint in `fetchWeather.ts`:
+   - Verify the API endpoint in `src/weather-update/services/fetchWeather.ts`:
      ```typescript
      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LAT}&lon=${LON}&exclude=minutely,hourly,daily,alerts&appid=${API_KEY}&units=metric`;
      ```
@@ -160,19 +163,19 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">📋</td>
+    <td style="width: 15%; text-align: center;">📋</td>
     <td>
 
 **Error Message**:
 
 ```
-❌ Invalid API response format: [Zod error details]
+❌ Weather data fetch failed: ZodError: [...]
 ```
 
 **Cause**: The API response structure does not match the expected schema defined in `WeatherSchema`.
@@ -181,12 +184,24 @@
 
 1. **Check API version** - OpenWeather may have updated their API.
 
-2. **Update schema validation** in `fetchWeather.ts`:
+2. **Update schema validation** in `src/weather-update/services/fetchWeather.ts`:
 
    ```typescript
    const WeatherSchema = z.object({
      current: z.object({
        // Updated schema fields to match API response
+       humidity: z.number(),
+       sunrise: z.number(),
+       sunset: z.number(),
+       temp: z.number(),
+       weather: z
+         .array(
+           z.object({
+             icon: z.string().optional(),
+             main: z.string().optional(),
+           }),
+         )
+         .nonempty(),
      }),
    });
    ```
@@ -194,7 +209,7 @@
 3. **Enable debug logging** to see the full API response:
 
    ```typescript
-   console.log('API response:', JSON.stringify(rawData, null, 2));
+   console.warn('API response:', JSON.stringify(rawData, null, 2));
    ```
 
 4. **Check OpenWeather documentation** for any announced changes to their API structure.
@@ -211,13 +226,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🔄</td>
+    <td style="width: 15%; text-align: center;">🔄</td>
     <td>
 
 **Issue**: GitHub Actions workflow fails to complete successfully.
@@ -249,13 +264,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">📄</td>
+    <td style="width: 15%; text-align: center;">📄</td>
     <td>
 
 **Issue**: GitHub Actions workflow runs successfully, but README doesn't update.
@@ -266,6 +281,7 @@
 
    - The workflow only commits when there are actual changes
    - If the weather data is the same, no update will occur
+   - Check the console output for `CHANGES_DETECTED=false`
 
 2. **Verify README format**:
 
@@ -279,16 +295,19 @@
 3. **Check repository paths** in the workflow file:
 
    ```yaml
-   - name: Checkout Personal Repository
+   - name: '⬇️ Checkout Profile Repository'
      uses: actions/checkout@v4
      with:
-       repository: yourusername/your-repository
-       path: your-repository
+       repository: ${{ env.PROFILE_REPO }}
+       path: profile-repo
+       token: ${{ secrets.GITHUB_TOKEN }}
+       fetch-depth: 1
+       ref: master
    ```
 
 4. **Verify commit configuration**:
    - Ensure the workflow has permission to commit changes
-   - Check the Git configuration for user name and email
+   - Check the Git configuration for username and email
 
 </td>
   </tr>
@@ -302,13 +321,13 @@
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">📝</td>
+    <td style="width: 15%; text-align: center;">📝</td>
     <td>
 
 **Issue**: TypeScript errors when running `bun run type-check`
@@ -316,7 +335,7 @@
 **Example Error**:
 
 ```
-src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+src/weather-update/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
 ```
 
 **Solutions**:
@@ -326,13 +345,18 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
    - Use proper TypeScript type narrowing:
 
      ```typescript
-     // Before
-     const API_KEY = process.env.OPEN_WEATHER_KEY;
+     // Incorrect approach (may cause type errors)
+     // const API_KEY = Bun.env.OPEN_WEATHER_KEY;
 
-     // After
-     const API_KEY = process.env.OPEN_WEATHER_KEY ?? '';
+     // Correct approach with proper type checking
+     const API_KEY = Bun.env['OPEN_WEATHER_KEY']?.trim();
      if (!API_KEY) {
-       throw new Error('Missing API key');
+       console.error(
+         '❌ Missing required environment variable: OPEN_WEATHER_KEY',
+       );
+       throw new Error(
+         '❌ Missing required environment variable: OPEN_WEATHER_KEY',
+       );
      }
      ```
 
@@ -355,28 +379,31 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🧪</td>
+    <td style="width: 15%; text-align: center;">🧪</td>
     <td>
 
-**Issue**: Tests failing when running `bun run test`
+**Issue**: Tests failing when running `bun test`
 
 **Solutions**:
 
 1. **Check test environment**:
 
    - Ensure all required mocks are set up
-   - Verify environment variables are properly set for tests
+   - Verify Bun environment variables are properly mocked:
+     ```typescript
+     vi.stubGlobal('Bun', { env: { OPEN_WEATHER_KEY: 'test-api-key' } });
+     ```
 
 2. **Run specific failing tests** to isolate issues:
 
    ```bash
-   bun test src/__tests__/services/fetchWeather.test.ts
+   bun test src/__tests__/unit/services/fetchWeather.test.ts
    ```
 
 3. **Update test expectations** if code implementation has changed:
@@ -396,7 +423,6 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
    ```typescript
    afterEach(() => {
      vi.restoreAllMocks();
-     process.env = originalEnv;
    });
    ```
 
@@ -412,13 +438,13 @@ src/services/fetchWeather.ts:42:5 - error TS2322: Type 'string | undefined' is n
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🔍</td>
+    <td style="width: 15%; text-align: center;">🔍</td>
     <td>
 
 Follow this systematic debugging approach for complex issues:
@@ -426,8 +452,8 @@ Follow this systematic debugging approach for complex issues:
 1. **Enable verbose logging**:
 
    ```typescript
-   console.log('Debug - API URL:', url);
-   console.log('Debug - API response:', JSON.stringify(response, null, 2));
+   console.warn('Debug - API URL:', url);
+   console.warn('Debug - API response:', JSON.stringify(response, null, 2));
    ```
 
 2. **Check network requests** using browser developer tools:
@@ -439,14 +465,14 @@ Follow this systematic debugging approach for complex issues:
 
    ```bash
    # Test just the fetch weather function
-   bun run src/isolate-fetch.ts
+   bun run src/weather-update/isolate-fetch.ts
    ```
 
 4. **Use temporary test files** to validate specific functionality without running the entire application.
 
 5. **Review recent changes** that might have introduced regressions:
    ```bash
-   git log -p src/services/fetchWeather.ts
+   git log -p src/weather-update/services/fetchWeather.ts
    ```
 
 </td>
@@ -459,33 +485,55 @@ Follow this systematic debugging approach for complex issues:
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🔧</td>
+    <td style="width: 15%; text-align: center;">🔧</td>
     <td>
 
 For debugging GitHub Actions workflows:
 
-1. **Enable debug logging** in workflows:
+1. **Enable debug mode** in the workflow dispatch:
 
-   - Set repository secret `ACTIONS_RUNNER_DEBUG` to `true`
-   - Set repository secret `ACTIONS_STEP_DEBUG` to `true`
+   - Use the workflow_dispatch input `debug: "true"`
+   - Check the `LOG_LEVEL` environment variable setting
 
-2. **Use the `workflow_dispatch` trigger** to manually run and test workflows.
+2. **Use the `workflow_dispatch` trigger** to manually run and test workflows with different parameters:
+
+   ```yaml
+   workflow_dispatch:
+     inputs:
+       debug:
+         description: 'Enable debug mode'
+         required: false
+         default: 'false'
+         type: choice
+         options:
+           - 'true'
+           - 'false'
+       retry_strategy:
+         description: 'API failure retry strategy'
+         type: choice
+         options:
+           - exponential
+           - linear
+           - none
+         default: 'exponential'
+   ```
 
 3. **Add debug steps** to your workflow:
 
    ```yaml
-   - name: Debug Environment
+   - name: '🔍 Log Execution Context'
      run: |
-       echo "Working directory: $GITHUB_WORKSPACE"
-       echo "Repository: $GITHUB_REPOSITORY"
-       echo "Actor: $GITHUB_ACTOR"
-       env
+       echo "::group::Execution Context"
+       echo "🔹 Run ID: ${{ env.EXECUTION_ID }}"
+       echo "🔹 Workflow: ${{ github.workflow }}"
+       echo "🔹 Repository: ${{ github.repository }}"
+       echo "::endgroup::"
    ```
 
 4. **Check workflow artifacts** for any intermediate files or outputs.
@@ -504,13 +552,13 @@ If you encounter any issues not covered in this guide:
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">🆘</td>
+    <td style="width: 15%; text-align: center;">🆘</td>
     <td>
 
 Please report issues on the GitHub repository with:
@@ -537,18 +585,17 @@ Use the issue template when available for a standardized format.
 <table>
 <thead>
   <tr>
-    <th width="15%" align="center">Icon</th>
+    <th style="width: 15%; text-align: center;">Icon</th>
     <th>Details</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td width="15%" align="center">👥</td>
+    <td style="width: 15%; text-align: center;">👥</td>
     <td>
 
 - **GitHub Discussions**: For questions and community support
 - **Documentation**: Refer to other sections of the documentation for specific guidance
-- **Code Examples**: Check the `examples/` directory for demonstration code
 - **Related Tools**:
   - [OpenWeather API Documentation](https://openweathermap.org/api)
   - [Bun Documentation](https://bun.sh/docs)
@@ -561,7 +608,7 @@ Use the issue template when available for a standardized format.
 
 ---
 
-<div align="center">
+<div style="text-align: center;">
   <p>
     <strong>Profile Weather View</strong> | Troubleshooting Guide
   </p>

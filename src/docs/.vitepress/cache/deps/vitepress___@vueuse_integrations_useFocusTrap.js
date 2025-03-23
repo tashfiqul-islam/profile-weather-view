@@ -5,6 +5,7 @@ import {
   unrefElement,
 } from './chunk-PM4QMEAE.js';
 import { computed, shallowRef, toValue, watch } from './chunk-TQVJM66I.js';
+import './chunk-Y3YMTSHA.js';
 
 // node_modules/tabbable/dist/index.esm.js
 var candidateSelectors = [
