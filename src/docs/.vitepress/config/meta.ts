@@ -95,11 +95,11 @@ export const createHeadTags = (
   return [
     [
       'link',
-      { rel: 'icon', type: 'image/svg+xml', href: '/icons/weather.svg' },
+      { rel: 'icon', type: 'image/svg+xml', href: '/icons/weather-hero-2.svg' },
     ],
     [
       'link',
-      { rel: 'mask-icon', href: '/icons/weather.svg', color: themeColor },
+      { rel: 'mask-icon', href: '/icons/weather-hero-2', color: themeColor },
     ],
     ['link', { rel: 'canonical', href: baseUrl }],
 

@@ -6,10 +6,12 @@ bun.lockb
 dist/
 build/
 coverage/
+cache/
 
 # 🔹 TypeScript Config & Compiler Output
 tsconfig.json
 tsconfig.test.json
+*.config.mjs
 
 # 🔹 Environment Files
 .env

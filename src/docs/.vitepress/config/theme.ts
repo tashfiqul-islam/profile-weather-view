@@ -33,8 +33,8 @@ export interface LastUpdatedConfig extends DefaultTheme.LastUpdatedOptions {
  * Configure logo for the site header
  */
 export const logo: LogoConfig = {
-  light: '/icons/weather.svg',
-  dark: '/icons/weather.svg',
+  light: '/icons/weather-hero-2.svg',
+  dark: '/icons/weather-hero-2.svg',
 };
 
 /**
