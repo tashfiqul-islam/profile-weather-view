@@ -1,0 +1,206 @@
+import { defineConfig } from 'vitepress';
+import path from 'node:path';
+
+import { head } from './config/meta';
+import { nav, sidebar, editLink, docFooter } from './config/nav';
+import { search } from './config/search';
+import { markdown } from './config/markdown';
+import { sitemap } from './config/seo';
+import { locales } from './config/i18n';
+import { createFooter } from './config/footer';
+import socialLinks from './config/social';
+import tailwindcssPlugin from '@tailwindcss/vite';
+
+const srcAlias: string = path.join(process.cwd(), 'src');
+
+export default defineConfig({
+  title: 'Profile Weather View',
+  description: 'Automated weather updates for your GitHub profile README',
+  lang: 'en-US',
+  locales,
+  markdown,
+  sitemap,
+  lastUpdated: true,
+  ignoreDeadLinks: process.env.NODE_ENV === 'development',
+  mpa: true,
+
+  // Set appearance based on system preference and allow user toggles
+  // Enable dark mode toggle
+  appearance: {
+    initialValue: 'dark',
+  },
+
+  // Theme configuration
+  themeConfig: {
+    nav: nav as any, // Type assertion to fix nav error
+    sidebar,
+    editLink,
+    docFooter,
+    footer: createFooter(),
+    search,
+    socialLinks,
+
+    // Outline configuration for better navigation
+    outline: {
+      level: [2, 3],
+      label: 'On this page',
+    },
+    lastUpdated: {
+      text: 'Last Updated',
+      formatOptions: {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      },
+    },
+  },
+
+  // Build and optimization settings
+  vite: {
+    plugins: [tailwindcssPlugin()],
+    resolve: {
+      alias: {
+        '@': srcAlias,
+      },
+    },
+    // Bun-optimized settings
+    optimizeDeps: {
+      include: ['tailwindcss'],
+      // Using Bun's faster dependency optimization
+      force: process.env.NODE_ENV === 'development',
+    },
+    server: {
+      hmr: {
+        overlay: true,
+        // Improve HMR performance
+        port: 24680,
+        timeout: 5000,
+      },
+      // Bun's fast fs module for better file watching
+      fs: {
+        strict: false,
+        allow: ['..'],
+      },
+    },
+    css: {
+      transformer: 'lightningcss',
+      // LightningCSS is well-suited for Bun's performance goals
+      lightningcss: {
+        // Enhanced LightningCSS options
+        drafts: {
+          customMedia: true,
+        },
+      },
+      // Empty plugins array since we're using Tailwind Vite plugin
+      postcss: {
+        plugins: [],
+      },
+    },
+    build: {
+      minify: 'esbuild',
+      sourcemap: process.env.NODE_ENV !== 'production',
+      target: 'esnext',
+      // Optimize for modern browsers only - safe with Bun
+      cssMinify: 'lightningcss',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['tailwindcss'],
+            theme: ['./theme/index.ts'],
+          },
+          // Better caching with content-hashing
+          chunkFileNames: 'assets/chunks/[name].[hash].js',
+          entryFileNames: 'assets/entries/[name].[hash].js',
+          assetFileNames: 'assets/[name].[hash].[ext]',
+        },
+      },
+      // Improve build performance
+      reportCompressedSize: false,
+      chunkSizeWarningLimit: 1000,
+    },
+    // Add Bun-specific environment variables
+    define: {
+      'import.meta.env.BUN_VERSION': JSON.stringify(
+        process.versions.bun || 'unknown',
+      ),
+      'import.meta.env.BUILD_TIMESTAMP': JSON.stringify(
+        new Date().toISOString(),
+      ),
+    },
+    // Move esbuild config to the root level
+    esbuild: {
+      target: 'esnext',
+      platform: 'browser',
+      legalComments: 'none',
+      treeShaking: true,
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true,
+    },
+  },
+
+  // Modern URL format without .html extension
+  cleanUrls: true,
+
+  // Extract metadata to separate chunk for better caching
+  metaChunk: true,
+
+  // Font optimization with comprehensive font set
+  transformHead() {
+    // Define all font files to preload
+    const fontFiles = [
+      // Ropa Sans
+      '/fonts/RopaSans/RopaSans-Regular.woff',
+      '/fonts/RopaSans/RopaSans-Italic.woff',
+
+      // Fira Code - All weights
+      '/fonts/FiraCode/FiraCode-Light.woff',
+      '/fonts/FiraCode/FiraCode-Regular.woff',
+      '/fonts/FiraCode/FiraCode-Medium.woff',
+      '/fonts/FiraCode/FiraCode-SemiBold.woff',
+      '/fonts/FiraCode/FiraCode-Bold.woff',
+
+      // Variable font version
+      '/fonts/FiraCode/FiraCode-VF.woff',
+    ];
+
+    return fontFiles.map((font) => [
+      'link',
+      {
+        rel: 'preload',
+        href: font,
+        as: 'font',
+        type: 'font/woff',
+        crossorigin: '',
+      },
+    ]);
+  },
+
+  // Files to exclude from documentation
+  srcExclude: [
+    '**/README.md',
+    '**/CHANGELOG.md',
+    '**/*.test.{js,ts}',
+    '**/*.spec.{js,ts}',
+    '**/*.d.ts',
+    '**/node_modules/**',
+  ],
+
+  // Better-caching strategy
+  cacheDir: './.vitepress/cache',
+
+  // Security headers
+  head: [
+    ...head,
+    ['meta', { name: 'referrer', content: 'strict-origin-when-cross-origin' }],
+    [
+      'meta',
+      {
+        'http-equiv': 'Content-Security-Policy',
+        content:
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'",
+      },
+    ],
+    ['meta', { 'http-equiv': 'X-Content-Type-Options', content: 'nosniff' }],
+    ['meta', { 'http-equiv': 'X-Frame-Options', content: 'SAMEORIGIN' }],
+  ],
+});

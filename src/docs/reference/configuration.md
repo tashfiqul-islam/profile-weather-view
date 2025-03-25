@@ -5,10 +5,10 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Configuration-Standard-blue" alt="Configuration">
-  <img src="https://img.shields.io/badge/TypeScript-5.8.2-blue" alt="TypeScript">
-  <img src="https://img.shields.io/badge/ESLint-9.23.0-purple" alt="ESLint">
-  <img src="https://img.shields.io/badge/Bun-Latest-orange" alt="Bun">
+  <Badge type="info" text="Configuration - Standard"></Badge>
+  <Badge type="info" text="TypeScript - v5.8.2"></Badge>
+  <Badge type="info" text="ESLint - v9"></Badge>
+  <Badge type="warning" text="Bun - Latest"></Badge>
 </div>
 
 ## Table of Contents

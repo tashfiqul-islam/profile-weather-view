@@ -1,49 +1,43 @@
 {
-  "hash": "a53ccd9a",
-  "configHash": "1ff1a3f5",
-  "lockfileHash": "e3b0c442",
-  "browserHash": "fa0f01bb",
+  "hash": "50d2706b",
+  "configHash": "58b02beb",
+  "lockfileHash": "7944f697",
+  "browserHash": "8a45e508",
   "optimized": {
     "vue": {
       "src": "../../../../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "9e37b569",
+      "fileHash": "c7d4a10d",
       "needsInterop": false
     },
     "vitepress > @vue/devtools-api": {
       "src": "../../../../../node_modules/@vue/devtools-api/dist/index.js",
       "file": "vitepress___@vue_devtools-api.js",
-      "fileHash": "202ee80b",
+      "fileHash": "9dc1c0e0",
       "needsInterop": false
     },
     "vitepress > @vueuse/core": {
       "src": "../../../../../node_modules/@vueuse/core/index.mjs",
       "file": "vitepress___@vueuse_core.js",
-      "fileHash": "1d021bfd",
-      "needsInterop": false
-    },
-    "tailwindcss": {
-      "src": "../../../../../node_modules/tailwindcss/dist/lib.mjs",
-      "file": "tailwindcss.js",
-      "fileHash": "238642c0",
+      "fileHash": "17c8a0ac",
       "needsInterop": false
     },
     "vitepress > @vueuse/integrations/useFocusTrap": {
       "src": "../../../../../node_modules/@vueuse/integrations/useFocusTrap.mjs",
       "file": "vitepress___@vueuse_integrations_useFocusTrap.js",
-      "fileHash": "d1f50a75",
+      "fileHash": "e3ec79a5",
       "needsInterop": false
     },
     "vitepress > mark.js/src/vanilla.js": {
       "src": "../../../../../node_modules/mark.js/src/vanilla.js",
       "file": "vitepress___mark__js_src_vanilla__js.js",
-      "fileHash": "f10b0bf2",
+      "fileHash": "f464560d",
       "needsInterop": false
     },
     "vitepress > minisearch": {
       "src": "../../../../../node_modules/minisearch/dist/es/index.js",
       "file": "vitepress___minisearch.js",
-      "fileHash": "bfb04170",
+      "fileHash": "7c8a485f",
       "needsInterop": false
     }
   },
@@ -53,9 +47,6 @@
     },
     "chunk-TQVJM66I": {
       "file": "chunk-TQVJM66I.js"
-    },
-    "chunk-Y3YMTSHA": {
-      "file": "chunk-Y3YMTSHA.js"
     }
   }
 }

@@ -1,10 +1,14 @@
-# Architecture
+<div style="text-align: center;">
+  <h1>Architecture</h1>
+</div>
+
+<br>
 
 <div class="architecture-header">
   <div class="badges">
-    <Badge type="info" text="Modern Architecture"></Badge>
-    <Badge type="tip" text="Service Oriented"></Badge>
-    <Badge type="warning" text="GitHub Actions"></Badge>
+    <Badge type="info">Modern Architecture</Badge>
+    <Badge type="tip">Service Oriented</Badge>
+    <Badge type="warning">GitHub Actions</Badge>
   </div>
 </div>
 

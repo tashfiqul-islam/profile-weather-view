@@ -9,8 +9,6 @@ FNDA:5,handleError
 FNDA:6,reportUpdateStatus
 FNDA:11,main
 DA:1,1
-DA:2,1
-DA:3,1
 DA:8,5
 DA:9,5
 DA:11,4
@@ -59,8 +57,8 @@ DA:76,5
 DA:77,5
 DA:78,11
 DA:81,1
-LF:51
-LH:51
+LF:49
+LH:49
 BRDA:8,0,0,5
 BRDA:9,1,0,4
 BRDA:11,2,0,1
@@ -93,7 +91,6 @@ FNH:2
 FNDA:13,convertToDhakaTime
 FNDA:11,fetchWeatherData
 DA:1,1
-DA:2,1
 DA:8,1
 DA:9,1
 DA:14,1
@@ -150,8 +147,8 @@ DA:83,7
 DA:84,7
 DA:85,7
 DA:86,11
-LF:58
-LH:58
+LF:57
+LH:57
 BRDA:36,0,0,13
 BRDA:47,1,0,11
 BRDA:48,2,0,10

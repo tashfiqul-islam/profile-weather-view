@@ -4,28 +4,29 @@
 
 <br>
 
-<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Customization-Guide-blue" alt="Customization">
-  <img src="https://img.shields.io/badge/Display-Options-green" alt="Display Options">
-  <img src="https://img.shields.io/badge/Location-Settings-orange" alt="Location">
+<div style="text-align: center; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+  <Badge type="info" text="Customization Guide"></Badge>
+  <Badge type="tip" text="Display Options"></Badge>
+  <Badge type="warning" text="Location Settings"></Badge>
 </div>
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Weather Display Format](#weather-display-format)
-  - [Simple Table Format](#simple-table-format)
-  - [Enhanced Card Format](#enhanced-card-format)
-  - [Compact Badge Format](#compact-badge-format)
-- [Location Settings](#location-settings)
-  - [Changing Location Coordinates](#changing-location-coordinates)
-  - [Using Multiple Locations](#using-multiple-locations)
-- [Display Customization](#display-customization)
-  - [Changing Icons](#changing-icons)
-  - [Modifying Colors](#modifying-colors)
-  - [Adjusting Layout](#adjusting-layout)
-- [Custom Templates](#custom-templates)
-- [Advanced Customizations](#advanced-customizations)
+1. [Table of Contents](#table-of-contents)
+2. [Overview](#overview)
+3. [Weather Display Format](#weather-display-format)
+   1. [Simple Table Format](#simple-table-format)
+   2. [Enhanced Card Format](#enhanced-card-format)
+   3. [Compact Badge Format](#compact-badge-format)
+4. [Location Settings](#location-settings)
+   1. [Changing Location Coordinates](#changing-location-coordinates)
+   2. [Using Multiple Locations](#using-multiple-locations)
+5. [Display Customization](#display-customization)
+   1. [Changing Icons](#changing-icons)
+   2. [Modifying Colors](#modifying-colors)
+   3. [Adjusting Layout](#adjusting-layout)
+6. [Custom Templates](#custom-templates)
+7. [Advanced Customizations](#advanced-customizations)
 
 ## Overview
 

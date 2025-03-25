@@ -142,6 +142,7 @@ export default tseslint.config(
       'src_old/',
       'vitest.config.ts',
       'commitlint.config.mjs',
+      'postcss.config.mjs',
     ],
   },
 );

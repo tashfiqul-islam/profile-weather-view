@@ -5,22 +5,30 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/TypeScript-v5.8.2-blue" alt="TypeScript Version">
-  <img src="https://img.shields.io/badge/Bun-latest-important" alt="Bun Version">
-  <img src="https://img.shields.io/badge/Documentation-Comprehensive-success" alt="Documentation Status">
+  <Badge type="info" text="TypeScript - v5.8.2"></Badge>
+  <Badge type="warning" text="Bun - latest"></Badge>
+  <Badge type="success" text="Documentation - Comprehensive"></Badge>
 </div>
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Services](#services)
-  - [fetchWeather.ts](#fetchweatherts)
-  - [updateReadme.ts](#updatereadmets)
-- [Utilities](#utilities)
-  - [preload.ts](#preloadts)
-- [Type Definitions](#type-definitions)
-- [Error Handling](#error-handling)
-- [Best Practices](#best-practices)
+1. [Table of Contents](#table-of-contents)
+2. [Overview](#overview)
+3. [Services](#services)
+   1. [fetchWeather.ts](#fetchweatherts)
+      1. [Constants](#constants)
+      2. [Types](#types)
+      3. [`fetchWeatherData()`](#fetchweatherdata)
+      4. [`convertToDhakaTime(utcSeconds: number)`](#converttodhakatimeutcseconds-number)
+   2. [updateReadme.ts](#updatereadmets)
+      1. [`updateReadme(weatherData: string, customReadmePath?: string)`](#updatereadmeweatherdata-string-customreadmepath-string)
+4. [Utilities](#utilities)
+   1. [preload.ts](#preloadts)
+      1. [`ensureEnvironmentVariables()`](#ensureenvironmentvariables)
+5. [Type Definitions](#type-definitions)
+   1. [Weather Schema (Zod)](#weather-schema-zod)
+6. [Error Handling](#error-handling)
+7. [Best Practices](#best-practices)
 
 ## Overview
 
@@ -102,7 +110,7 @@ export async function fetchWeatherData(): Promise<string> {
 
 **Returns:**
 
-- `Promise<string>` - A pipe-delimited string with the format:  
+- `Promise<string>` - A pipe-delimited string with the format:
   `"weatherDescription|temperature|sunriseTime|sunsetTime|humidity|iconCode"`
 
 **Throws:**
@@ -271,7 +279,7 @@ export async function updateReadme(
 
 **Parameters:**
 
-- `weatherData` (`string`) - Formatted weather data with pipe-delimited values in the format:  
+- `weatherData` (`string`) - Formatted weather data with pipe-delimited values in the format:
   `"description|temperature|sunrise|sunset|humidity|icon"`
 - `customReadmePath` (`string?`) - Optional path to a README file in a different location
 

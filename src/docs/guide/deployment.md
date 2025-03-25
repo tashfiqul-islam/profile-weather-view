@@ -1,9 +1,13 @@
-# Deployment Guide
-
 <div style="text-align: center;">
-  <img src="https://img.shields.io/badge/Bun-Runtime-black?logo=bun" alt="Bun Runtime">
-  <img src="https://img.shields.io/badge/GitHub-Actions-blue?logo=github" alt="GitHub Actions">
-  <img src="https://img.shields.io/badge/OpenWeather-API-orange?logo=openweathermap" alt="OpenWeather API">
+  <h1>Deployment Guide</h1>
+</div>
+
+<br>
+
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
+  <Badge type="default" text="Bun Runtime"></Badge>
+  <Badge type="info" text="GitHub Actions"></Badge>
+  <Badge type="warning" text="OpenWeather API"></Badge>
 </div>
 
 ## Table of Contents

@@ -5,8 +5,8 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/OpenWeather-Icons-EB6E4B" alt="OpenWeather Icons">
-  <img src="https://img.shields.io/badge/Usage-Reference-blue" alt="Usage">
+  <Badge type="danger" text="OpenWeather Icons"></Badge>
+  <Badge type="info" text="Usage Reference"></Badge>
 </div>
 
 ## Overview

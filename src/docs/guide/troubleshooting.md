@@ -5,9 +5,10 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Support-Active-success" alt="Support Status">
-  <img src="https://img.shields.io/badge/Documentation-Comprehensive-blue" alt="Documentation">
-  <img src="https://img.shields.io/badge/Issues-GitHub_Tracker-orange" alt="Issue Tracking">
+  <Badge type="tip" text="Testing Framework - Vitest"></Badge>
+  <Badge type="info" text="Coverage - V8"></Badge>
+  <Badge type="info" text="CI Integration - Husky"></Badge>
+  <Badge type="info" text="TypeScript - v5.8.2"></Badge>
 </div>
 
 ## Table of Contents

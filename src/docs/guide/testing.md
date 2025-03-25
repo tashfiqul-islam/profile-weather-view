@@ -5,10 +5,10 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Testing-Vitest-6E9F18" alt="Testing Framework">
-  <img src="https://img.shields.io/badge/Coverage-V8-4B32C3" alt="Coverage">
-  <img src="https://img.shields.io/badge/CI_Integration-Husky-8A4182" alt="CI Integration">
-  <img src="https://img.shields.io/badge/TypeScript-5.8.2-3178C6" alt="TypeScript">
+  <Badge type="success" text="Testing - Vitest"></Badge>
+  <Badge type="danger" text="Coverage: - V8"></Badge>
+  <Badge type="warning" text="CI Integration - Husky"></Badge>
+  <Badge type="info" text="TypeScript - 5.8.2"></Badge>
 </div>
 
 ## Table of Contents

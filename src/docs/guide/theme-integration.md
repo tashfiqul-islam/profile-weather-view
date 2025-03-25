@@ -5,27 +5,36 @@
 <br>
 
 <div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Theme-Integration-blueviolet" alt="Theme Integration">
-  <img src="https://img.shields.io/badge/Dark_Mode-Support-lightgrey" alt="Dark Mode">
-  <img src="https://img.shields.io/badge/GitHub-Themes-success" alt="GitHub Themes">
+  <Badge type="info" text="Theme - Integration"></Badge>
+  <Badge type="tip" text="Dark Mode Support"></Badge>
+  <Badge type="warning" text="GitHub Themes"></Badge>
 </div>
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Theme-Aware Displays](#theme-aware-displays)
-  - [Dark/Light Mode Detection](#darklight-mode-detection)
-  - [Theme-Responsive Tables](#theme-responsive-tables)
-- [GitHub Profile Themes](#github-profile-themes)
-  - [Popular Theme Integration](#popular-theme-integration)
-  - [Custom Theme Examples](#custom-theme-examples)
-- [CSS Styling Techniques](#css-styling-techniques)
-  - [GitHub-Safe Inline Styles](#github-safe-inline-styles)
-  - [Using HTML Attributes](#using-html-attributes)
-- [Advanced Integration](#advanced-integration)
-  - [SVG-Based Weather Display](#svg-based-weather-display)
-  - [Image-Only Display](#image-only-display)
-- [Theme Templates](#theme-templates)
+1. [Table of Contents](#table-of-contents)
+2. [Overview](#overview)
+3. [Theme-Aware Displays](#theme-aware-displays)
+   1. [Dark/Light Mode Detection](#darklight-mode-detection)
+   2. [Theme-Responsive Tables](#theme-responsive-tables)
+4. [GitHub Profile Themes](#github-profile-themes)
+   1. [Popular Theme Integration](#popular-theme-integration)
+      1. [Minimalist Theme](#minimalist-theme)
+      2. [Badges Theme](#badges-theme)
+      3. [Modern Theme](#modern-theme)
+   2. [Custom Theme Examples](#custom-theme-examples)
+      1. [Card-Based Theme](#card-based-theme)
+      2. [Compact Inline Theme](#compact-inline-theme)
+5. [CSS Styling Techniques](#css-styling-techniques)
+   1. [GitHub-Safe Inline Styles](#github-safe-inline-styles)
+   2. [Using HTML Attributes](#using-html-attributes)
+6. [Advanced Integration](#advanced-integration)
+   1. [SVG-Based Weather Display](#svg-based-weather-display)
+   2. [Image-Only Display](#image-only-display)
+7. [Theme Templates](#theme-templates)
+   1. [Modern Dark/Light Template](#modern-darklight-template)
+   2. [Minimal Badge Template](#minimal-badge-template)
+   3. [Fancy Card Template](#fancy-card-template)
 
 ## Overview
 

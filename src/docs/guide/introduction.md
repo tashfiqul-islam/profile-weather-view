@@ -4,11 +4,11 @@
 
 <br>
 
-<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap;">
-  <img src="https://img.shields.io/badge/Bun-latest-F9AD00" alt="Bun Version">
-  <img src="https://img.shields.io/badge/TypeScript-5.8.2-3178C6" alt="TypeScript Version">
-  <img src="https://img.shields.io/badge/API-OpenWeather-EB6E4B" alt="API">
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+<div style="text-align: center; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin: 20px 0;">
+  <Badge type="warning" text="Bun - latest"></Badge>
+  <Badge type="info" text="TypeScript - 5.8.2"></Badge>
+  <Badge type="danger" text="API - OpenWeather"></Badge>
+  <Badge type="tip" text="License -  MIT"></Badge>
 </div>
 
 <div style="text-align: center;">
@@ -17,14 +17,23 @@
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Development](#development)
-- [Available Commands](#available-commands)
-- [Troubleshooting](#troubleshooting)
-- [Next Steps](#next-steps)
+1. [Table of Contents](#table-of-contents)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Usage](#usage)
+   1. [Basic Usage](#basic-usage)
+   2. [Expected Output](#expected-output)
+   3. [Weather Section Format](#weather-section-format)
+6. [Development](#development)
+   1. [Development Mode](#development-mode)
+   2. [Workflow](#workflow)
+   3. [Hot Tips](#hot-tips)
+7. [Available Commands](#available-commands)
+8. [Troubleshooting](#troubleshooting)
+   1. [Common Issues](#common-issues)
+   2. [Getting Help](#getting-help)
+9. [Next Steps](#next-steps)
 
 ## Prerequisites
 

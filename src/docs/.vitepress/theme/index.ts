@@ -1,5 +1,6 @@
 import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
+import { VPBadge } from 'vitepress/theme';
 import type { ExtendedThemeConfig } from './types/theme';
 
 import './styles/font.css';
@@ -10,6 +11,9 @@ export function createTheme(config: Partial<ExtendedThemeConfig> = {}): Theme {
   return {
     ...DefaultTheme,
     enhanceApp({ app }) {
+      // Register Badge component globally
+      app.component('Badge', VPBadge);
+
       // Register global components if provided
       if (config.globalComponents) {
         Object.entries(config.globalComponents).forEach(([name, component]) => {
