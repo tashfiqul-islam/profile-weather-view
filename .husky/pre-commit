@@ -1,176 +1,266 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # ------------------------------------------------------------------------------
-# Commit Message Validation Hook
-# Ensures commit messages follow the Conventional Commits specification
-# Compatible with Windows (Git Bash/MINGW), macOS, and Linux
+# Pre-commit Validation Script
+# Performs automated code quality checks on staged files before commit
 # ------------------------------------------------------------------------------
 
-# Safer execution mode with appropriate error handling
+# Safer execution mode
 set -e
 
 # ------------------------------------------------------------------------------
 # Configuration
 # ------------------------------------------------------------------------------
-COMMIT_MSG_FILE="$1"
-COMMIT_SOURCE="$2"
-SHA1="$3"
 CACHE_DIR=".git/hooks/cache"
-MAX_MESSAGE_LENGTH=100
-
-# Pattern matching for commit validation
-CONVENTIONAL_PATTERN='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9/-]+\))?!?: .+$'
-EMERGENCY_PATTERN='^EMERGENCY: .+'
-MERGE_PATTERN='^Merge '
-REVERT_PATTERN='^Revert '
+SKIP_PATTERN="EMERGENCY"
 
 # ------------------------------------------------------------------------------
-# Cross-platform terminal support detection
+# Cross-platform terminal color support
 # ------------------------------------------------------------------------------
+# Initialize terminal colors with fallbacks for any environment
 init_colors() {
-  # Check if NO_COLOR environment variable exists (industry standard)
-  if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
-    SUPPORTS_COLOR=0
-  elif [ -t 1 ] && command -v tput >/dev/null 2>&1; then
-    SUPPORTS_COLOR=1
-
-    # Define colors using tput for portability
-    BOLD=$(tput bold 2>/dev/null || echo '')
-    GREEN=$(tput setaf 2 2>/dev/null || echo '')
-    YELLOW=$(tput setaf 3 2>/dev/null || echo '')
-    BLUE=$(tput setaf 4 2>/dev/null || echo '')
-    RED=$(tput setaf 1 2>/dev/null || echo '')
-    CYAN=$(tput setaf 6 2>/dev/null || echo '')
-    RESET=$(tput sgr0 2>/dev/null || echo '')
+  if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
+    BOLD="$(tput bold 2>/dev/null || echo '')"
+    GREEN="$(tput setaf 2 2>/dev/null || echo '')"
+    YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
+    RED="$(tput setaf 1 2>/dev/null || echo '')"
+    BLUE="$(tput setaf 4 2>/dev/null || echo '')"
+    CYAN="$(tput setaf 6 2>/dev/null || echo '')"
+    MAGENTA="$(tput setaf 5 2>/dev/null || echo '')"
+    RESET="$(tput sgr0 2>/dev/null || echo '')"
   else
-    SUPPORTS_COLOR=0
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
   fi
 
-  # If no color support, empty all color variables
-  if [ "$SUPPORTS_COLOR" -eq 0 ]; then
-    BOLD="" GREEN="" YELLOW="" BLUE="" RED="" CYAN="" RESET=""
+  # Disable colors if explicitly requested
+  if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
   fi
+
+  # Export colors for subprocesses
+  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET
 }
 
 # ------------------------------------------------------------------------------
-# Logging functions
+# Logging utilities
 # ------------------------------------------------------------------------------
 log() {
-  local level=$1
-  local message=$2
-  local timestamp=$(date +"%H:%M:%S")
+  local level="$1"
+  local message="$2"
+  local timestamp="$(date '+%H:%M:%S' 2>/dev/null || echo 'TIME')"
 
-  case $level in
-    "INFO")  echo -e "${timestamp} ${BLUE}${BOLD}ℹ️${RESET} ${BLUE}${message}${RESET}" ;;
-    "WARN")  echo -e "${timestamp} ${YELLOW}${BOLD}⚠️${RESET} ${YELLOW}${message}${RESET}" ;;
-    "ERROR") echo -e "${timestamp} ${RED}${BOLD}❌${RESET} ${RED}${message}${RESET}" ;;
-    "SUCCESS") echo -e "${timestamp} ${GREEN}${BOLD}✅${RESET} ${GREEN}${message}${RESET}" ;;
-    *) echo -e "${timestamp} ${message}" ;;
+  case "$level" in
+    "INFO")    printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "ℹ️" "$RESET" "$message" ;;
+    "WARN")    printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "⚠️" "$RESET" "$message" ;;
+    "ERROR")   printf "%s %s%s%s %s\n" "$timestamp" "$RED" "❌" "$RESET" "$message" ;;
+    "SUCCESS") printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "✅" "$RESET" "$message" ;;
+    *)         printf "%s %s\n" "$timestamp" "$message" ;;
   esac
 }
 
-# Display message in a box for better readability
-box_message() {
-  local message=$1
-  echo "╭───────────────────────────────────────────"
-  echo "│ ${YELLOW}${message}${RESET}"
-  echo "╰───────────────────────────────────────────"
-}
+# Display spinner for long-running commands
+show_spinner() {
+  local message="$1"
+  local pid="$2"
+  local delay=0.1
+  local spinstr='|/-\'
 
-# Show helpful examples when commit validation fails
-show_examples() {
-  cat << EOF
+  # Skip animation in non-interactive environments
+  if [ ! -t 1 ]; then
+    log "INFO" "${message} (running...)"
+    wait "$pid"
+    return $?
+  fi
 
-${CYAN}${BOLD}Examples of valid commit messages:${RESET}
-  ${GREEN}feat: add weather forecast feature${RESET}
-  ${GREEN}fix(api): handle network timeouts gracefully${RESET}
-  ${GREEN}docs: update installation instructions${RESET}
-  ${GREEN}refactor(core): simplify weather data processing${RESET}
-  ${GREEN}test: add unit tests for API response handling${RESET}
+  local start_time=$(date +%s 2>/dev/null || echo '0')
 
-${CYAN}${BOLD}Structure:${RESET} ${YELLOW}type(scope): description${RESET}
+  printf "%s%s %s" "$BLUE" "$message" "$RESET"
+  while kill -0 "$pid" 2>/dev/null; do
+    local temp=${spinstr#?}
+    local current_time=$(date +%s 2>/dev/null || echo "$start_time")
+    local elapsed=$((current_time - start_time))
+    printf " [%c] (%ds)" "$spinstr" "$elapsed"
+    local spinstr=$temp${spinstr%"$temp"}
+    sleep $delay
+    printf "\b\b\b\b\b\b\b\b\b\b\b\b"
+  done
+  printf "        \b\b\b\b\b\b\b\b"
 
-${CYAN}${BOLD}Available types:${RESET}
-  ${YELLOW}feat${RESET}     - A new feature
-  ${YELLOW}fix${RESET}      - A bug fix
-  ${YELLOW}docs${RESET}     - Documentation changes
-  ${YELLOW}style${RESET}    - Code style changes (formatting, etc.)
-  ${YELLOW}refactor${RESET} - Code changes that neither fix bugs nor add features
-  ${YELLOW}perf${RESET}     - Performance improvements
-  ${YELLOW}test${RESET}     - Adding or modifying tests
-  ${YELLOW}build${RESET}    - Changes to build system or dependencies
-  ${YELLOW}ci${RESET}       - Changes to CI configuration
-  ${YELLOW}chore${RESET}    - Other changes that don't modify src or test files
-
-${CYAN}${BOLD}Emergency bypass:${RESET}
-  ${YELLOW}EMERGENCY: your critical fix message${RESET}
-EOF
+  wait "$pid"
+  return $?
 }
 
 # ------------------------------------------------------------------------------
-# Main validation logic
+# Environment detection
 # ------------------------------------------------------------------------------
-validate_commit_message() {
-  # Create cache directory for persistent data
-  mkdir -p "$CACHE_DIR" 2>/dev/null || true
+# Create cache directory for persistent data
+mkdir -p "$CACHE_DIR" 2>/dev/null || true
 
-  # Skip validation for git commit --amend
-  if [ "$COMMIT_SOURCE" = "message" ]; then
-    exit 0
-  fi
+# Check for emergency commit pattern
+COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+if echo "$COMMIT_MSG" | grep -q "$SKIP_PATTERN"; then
+  log "WARN" "Emergency commit detected. Bypassing validation checks."
+  exit 0
+fi
 
-  # Read commit message safely across platforms
-  if [ -f "$COMMIT_MSG_FILE" ]; then
-    # Windows-compatible approach to read the file
-    COMMIT_MSG=$(sed -e '/^#/d' < "$COMMIT_MSG_FILE" | tr -d '\r' | tr '\n' ' ' | xargs)
-  else
-    log "ERROR" "Cannot find commit message file: $COMMIT_MSG_FILE"
-    exit 1
-  fi
+# Skip validation in CI environments
+if [ -n "$CI" ]; then
+  log "INFO" "CI environment detected, skipping pre-commit hooks"
+  exit 0
+fi
 
-  # Skip empty commits
-  if [ -z "$COMMIT_MSG" ]; then
-    log "ERROR" "Empty commit message not allowed"
-    exit 1
-  fi
-
-  # Skip validation for system-generated commits
-  if [[ "$COMMIT_MSG" =~ $MERGE_PATTERN ]] || [[ "$COMMIT_MSG" =~ $REVERT_PATTERN ]]; then
-    log "INFO" "System commit detected. Skipping validation."
-    exit 0
-  fi
-
-  # Allow emergency commits to bypass validation
-  if [[ "$COMMIT_MSG" =~ $EMERGENCY_PATTERN ]]; then
-    log "WARN" "Emergency commit detected. Bypassing validation."
-    exit 0
-  fi
-
-  # Begin validation
-  echo
-  log "INFO" "${BOLD}📝 Validating commit message format...${RESET}"
-  echo "${BLUE}Commit message (${BOLD}${#COMMIT_MSG}${RESET}${BLUE} chars):${RESET}"
-  box_message "$COMMIT_MSG"
-  echo "${BLUE}Running commit message validation...${RESET}"
-
-  # Validate against conventional commits pattern
-  if [[ "$COMMIT_MSG" =~ $CONVENTIONAL_PATTERN ]]; then
-    log "SUCCESS" "${BOLD}Commit message format is valid!${RESET}"
-
-    # Length validation with a friendly warning
-    if [ ${#COMMIT_MSG} -gt $MAX_MESSAGE_LENGTH ]; then
-      log "WARN" "Commit message is longer than the recommended maximum of $MAX_MESSAGE_LENGTH characters"
-    fi
-
-    exit 0
-  else
-    log "ERROR" "${BOLD}Commit message does not follow the Conventional Commits specification${RESET}"
-    show_examples
-    exit 1
-  fi
-}
-
-# Initialize color support
+# Initialize colors
 init_colors
 
-# Run validation
-validate_commit_message
+# Track execution time
+START_TIME=$(date +%s 2>/dev/null || echo '0')
+
+# ------------------------------------------------------------------------------
+# File selection
+# ------------------------------------------------------------------------------
+# Get all staged files
+get_staged_files() {
+  git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || echo ""
+}
+
+# Get list of staged files
+ALL_STAGED_FILES=$(get_staged_files)
+
+# Skip if no files are staged
+if [ -z "$ALL_STAGED_FILES" ]; then
+  log "WARN" "No files staged for commit. Nothing to validate."
+  exit 0
+fi
+
+# Filter files by extension for validation
+STAGED_FILES=$(echo "$ALL_STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json)$' 2>/dev/null || echo "")
+
+# Skip if no relevant files are staged
+if [ -z "$STAGED_FILES" ]; then
+  log "INFO" "No relevant code files to validate in this commit."
+  exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Validation pipeline
+# ------------------------------------------------------------------------------
+log "INFO" "${BOLD}Initiating validation pipeline${RESET}"
+echo "$STAGED_FILES" | sort | uniq > "$CACHE_DIR/current_staged_files.txt" 2>/dev/null || true
+
+# Track validation results
+VALIDATION_RESULTS=""
+PIPELINE_STATUS=0
+
+# Run validation task with proper error handling
+run_validation() {
+  local name="$1"
+  local icon="$2"
+  local cmd="$3"
+  local files="$4"
+
+  # Skip if no files to validate
+  if [ -z "$files" ]; then
+    VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: SKIPPED (no files)\n"
+    return 0
+  fi
+
+  log "INFO" "Running ${icon} ${BOLD}${name}${RESET}..."
+
+  # Run command and capture output
+  eval "$cmd" > "$CACHE_DIR/${name}_output.log" 2>&1 &
+  local cmd_pid=$!
+
+  # Show progress spinner
+  show_spinner "Executing ${name}" $cmd_pid
+  local status=$?
+
+  # Handle command result
+  if [ $status -eq 0 ]; then
+    log "SUCCESS" "${icon} ${BOLD}${name}${RESET} passed"
+    VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: PASSED\n"
+  else
+    log "ERROR" "${icon} ${BOLD}${name}${RESET} failed"
+    log "ERROR" "See details: ${YELLOW}cat $CACHE_DIR/${name}_output.log${RESET}"
+    VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: FAILED\n"
+    PIPELINE_STATUS=1
+  fi
+
+  return $status
+}
+
+# Determine command runner (bun or npx)
+CMD_RUNNER="bun run"
+if ! command -v bun >/dev/null 2>&1; then
+  if command -v npx >/dev/null 2>&1; then
+    CMD_RUNNER="npx"
+  else
+    CMD_RUNNER=""
+  fi
+fi
+
+# Run code quality checks
+if [ -n "$CMD_RUNNER" ]; then
+  # Format validation with Prettier
+  PRETTIER_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER prettier --check --cache --cache-location=$CACHE_DIR/.prettierrc"
+  run_validation "Code Formatting" "🖌️" "$PRETTIER_CMD" "$STAGED_FILES"
+
+  # Static analysis with ESLint
+  ESLINT_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER eslint --cache --cache-location=$CACHE_DIR/.eslintcache"
+  run_validation "Linting" "🧹" "$ESLINT_CMD" "$STAGED_FILES"
+
+  # Type checking with TypeScript
+  TS_CMD="$CMD_RUNNER tsc --noEmit"
+  run_validation "Type Checking" "📘" "$TS_CMD" "$STAGED_FILES"
+
+  # Test execution
+  TEST_CMD="$CMD_RUNNER test:staged"
+  run_validation "Testing" "🧪" "$TEST_CMD" "$STAGED_FILES"
+else
+  log "WARN" "No package runner found (bun or npx). Skipping validations."
+  exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Results reporting
+# ------------------------------------------------------------------------------
+# Calculate execution time
+END_TIME=$(date +%s 2>/dev/null || echo "$START_TIME")
+TOTAL_TIME=$((END_TIME - START_TIME))
+
+# Display validation results
+printf "\n"
+log "INFO" "${BOLD}Validation Results${RESET}"
+printf "%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n" "$MAGENTA" "$RESET"
+
+# Process and display results
+echo "$VALIDATION_RESULTS" | while IFS= read -r result; do
+  if [ -n "$result" ]; then
+    if echo "$result" | grep -q ": PASSED"; then
+      log "SUCCESS" "$result"
+    elif echo "$result" | grep -q ": SKIPPED"; then
+      log "INFO" "$result"
+    else
+      log "ERROR" "$result"
+    fi
+  fi
+done
+
+printf "%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n" "$MAGENTA" "$RESET"
+log "INFO" "Execution time: ${CYAN}${TOTAL_TIME}s${RESET}"
+
+# Provide performance tips for slow validations
+if [ "$TOTAL_TIME" -gt 10 ]; then
+  log "INFO" "Tip: For faster commits, consider using ${YELLOW}git add --patch${RESET} to stage fewer files"
+fi
+
+# Final status report
+if [ $PIPELINE_STATUS -ne 0 ]; then
+  printf "\n"
+  log "ERROR" "${BOLD}Pre-commit validation failed. Please fix the issues before committing.${RESET}"
+  log "INFO" "To bypass validation in an emergency: ${YELLOW}git commit -m \"EMERGENCY: your message\"${RESET}"
+  exit 1
+else
+  printf "\n"
+  log "SUCCESS" "${BOLD}All validation checks passed!${RESET}"
+fi
+
+exit 0
