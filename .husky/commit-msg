@@ -1,57 +1,147 @@
 #!/usr/bin/env sh
+# ------------------------------------------------------------------------------
+# Commit Message Validation Hook
+# Ensures commit messages follow the Conventional Commits specification
+# ------------------------------------------------------------------------------
 
+# Safer execution mode with appropriate error handling
+set -e
+
+# ------------------------------------------------------------------------------
+# Color and formatting setup
+# ------------------------------------------------------------------------------
 # Color definitions for output formatting
 BOLD='\033[1m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
+# Check if coloring should be disabled
+if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
+  BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" NC=""
+fi
+
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+# Commit message file and cache directory
+COMMIT_MSG_FILE="$1"
+CACHE_DIR=".git/hooks/cache"
+mkdir -p "$CACHE_DIR" 2>/dev/null || true
+
+# Message length thresholds
+MIN_LENGTH=10
+MAX_LENGTH=100
+
+# ------------------------------------------------------------------------------
+# Utility functions
+# ------------------------------------------------------------------------------
+# Show timestamp with message
+log() {
+  local level=$1
+  local message=$2
+  local timestamp=$(date +"%H:%M:%S")
+
+  case $level in
+    "INFO")  echo "${timestamp} ${BLUE}ℹ️ ${message}${NC}" ;;
+    "WARN")  echo "${timestamp} ${YELLOW}⚠️ ${message}${NC}" ;;
+    "ERROR") echo "${timestamp} ${RED}❌ ${message}${NC}" ;;
+    "SUCCESS") echo "${timestamp} ${GREEN}✅ ${message}${NC}" ;;
+    *) echo "${timestamp} ${message}" ;;
+  esac
+}
+
+# Display message in a box for better readability
+box_message() {
+  local message=$1
+  echo "╭───────────────────────────────────────────"
+  echo "│ ${YELLOW}${message}${NC}"
+  echo "╰───────────────────────────────────────────"
+}
+
+# ------------------------------------------------------------------------------
+# Main execution
+# ------------------------------------------------------------------------------
 # Display execution step
 echo "${BLUE}${BOLD}📝 Validating commit message format...${NC}"
 
 # Check if in CI environment
 if [ -n "$CI" ]; then
-  echo "${YELLOW}CI environment detected, performing simplified validation${NC}"
+  log "WARN" "CI environment detected, performing simplified validation"
 fi
 
-# Extract the commit message for potential display
-COMMIT_MSG=$(cat "$1")
+# Verify commit message file exists
+if [ ! -f "$COMMIT_MSG_FILE" ]; then
+  log "ERROR" "Cannot find commit message file: $COMMIT_MSG_FILE"
+  exit 1
+fi
+
+# Extract the commit message safely (cross-platform)
+COMMIT_MSG=$(sed -e '/^#/d' < "$COMMIT_MSG_FILE" | tr -d '\r' | tr '\n' ' ' | xargs)
 COMMIT_MSG_LENGTH=${#COMMIT_MSG}
 
+# Skip empty messages
+if [ -z "$COMMIT_MSG" ]; then
+  log "ERROR" "Empty commit message not allowed"
+  exit 1
+fi
+
+# Skip merge commits
+if echo "$COMMIT_MSG" | grep -q "^Merge " || echo "$COMMIT_MSG" | grep -q "^Auto-merge "; then
+  log "INFO" "Merge commit detected. Skipping validation."
+  exit 0
+fi
+
+# Allow emergency commits
+if echo "$COMMIT_MSG" | grep -q "^EMERGENCY: "; then
+  log "WARN" "Emergency commit detected. Bypassing validation."
+  exit 0
+fi
+
 # Run initial quick validation to catch obvious issues
-if [ $COMMIT_MSG_LENGTH -lt 10 ]; then
-  echo "${RED}❌ Commit message is too short (${COMMIT_MSG_LENGTH} chars)${NC}"
+if [ $COMMIT_MSG_LENGTH -lt $MIN_LENGTH ]; then
+  log "ERROR" "Commit message is too short (${COMMIT_MSG_LENGTH} chars)"
   echo "${YELLOW}A good commit message should describe what changes were made${NC}"
   exit 1
 fi
 
+if [ $COMMIT_MSG_LENGTH -gt $MAX_LENGTH ]; then
+  log "WARN" "Commit message is quite long (${COMMIT_MSG_LENGTH} chars). Consider keeping it under ${MAX_LENGTH} characters."
+fi
+
 # Display the commit message for visibility
 echo "${BLUE}Commit message (${COMMIT_MSG_LENGTH} chars):${NC}"
-echo "╭───────────────────────────────────────────"
-echo "│ ${YELLOW}${COMMIT_MSG}${NC}"
-echo "╰───────────────────────────────────────────"
+box_message "$COMMIT_MSG"
 
 # Run commitlint validation
 echo "${BLUE}Running commitlint validation...${NC}"
-COMMITLINT_OUTPUT=$(bunx commitlint --color --verbose --edit "$1" 2>&1)
-COMMITLINT_STATUS=$?
 
-# Check commitlint result
-if [ $COMMITLINT_STATUS -ne 0 ]; then
-  echo "${RED}❌ Commit message validation failed${NC}"
-  echo "$COMMITLINT_OUTPUT"
+# Save the output to a temporary file for better error handling
+TMP_OUTPUT="$CACHE_DIR/commitlint-output.log"
+COMMITLINT_CMD="bunx commitlint --color --verbose --edit"
+
+if $COMMITLINT_CMD "$COMMIT_MSG_FILE" > "$TMP_OUTPUT" 2>&1; then
+  log "SUCCESS" "${BOLD}Commit message format is valid!${NC}"
+else
+  COMMITLINT_STATUS=$?
+  log "ERROR" "Commit message validation failed"
+  cat "$TMP_OUTPUT"
 
   # Show examples of valid commit messages
-  echo "\n${YELLOW}Examples of valid commit messages:${NC}"
-  echo "✅ feat(weather): add temperature unit conversion"
-  echo "✅ fix(ui): correct alignment in weather display"
-  echo "✅ docs(readme): update installation instructions"
-  echo "✅ chore(deps): update dependencies"
+  echo
+  echo "${CYAN}${BOLD}Examples of valid commit messages:${NC}"
+  echo "${GREEN}✓ feat(weather): add temperature unit conversion${NC}"
+  echo "${GREEN}✓ fix(ui): correct alignment in weather display${NC}"
+  echo "${GREEN}✓ docs(readme): update installation instructions${NC}"
+  echo "${GREEN}✓ chore(deps): update dependencies${NC}"
 
   # Show available scopes from commitlint config
-  echo "\n${YELLOW}Available scopes:${NC}"
+  echo
+  echo "${CYAN}${BOLD}Available scopes:${NC}"
   echo "- docs      (Documentation changes)"
   echo "- config    (Configuration changes)"
   echo "- weather   (Weather-related functionality)"
@@ -60,12 +150,23 @@ if [ $COMMITLINT_STATUS -ne 0 ]; then
   echo "- deps      (Dependencies)"
   echo "- ci        (Continuous integration)"
 
-  echo "\n${YELLOW}For more information on commit conventions:${NC}"
+  echo
+  echo "${YELLOW}For more information on commit conventions:${NC}"
   echo "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
 
-  exit 1
-else
-  echo "${GREEN}${BOLD}✅ Commit message format is valid!${NC}"
+  exit $COMMITLINT_STATUS
+fi
+
+# Performance monitoring (optional)
+END_TIME=$(date +%s.%N)
+START_TIME=$(stat -c %Y "$COMMIT_MSG_FILE" 2>/dev/null || stat -f %m "$COMMIT_MSG_FILE" 2>/dev/null || echo "$END_TIME")
+DURATION=$(echo "$END_TIME - $START_TIME" | bc 2>/dev/null || echo "0")
+
+# Print final status with timing information if available
+if [ "$DURATION" != "0" ]; then
+  if [ $(echo "$DURATION > 1.0" | bc -l) -eq 1 ]; then
+    log "INFO" "Validation completed in ${CYAN}${DURATION}s${NC}"
+  fi
 fi
 
 exit 0

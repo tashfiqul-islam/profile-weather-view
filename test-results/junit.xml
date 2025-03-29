@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="32" failures="0" errors="0" time="0.063701">
-    <testsuite name="src/__tests__/unit/index.test.ts" timestamp="2025-03-29T19:24:17.616Z" hostname="Tashfiq" tests="10" failures="0" errors="0" skipped="0" time="0.0094021">
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should fetch weather data and update the README successfully" time="0.0023887">
+<testsuites name="vitest tests" tests="32" failures="0" errors="0" time="0.0625496">
+    <testsuite name="src/__tests__/unit/index.test.ts" timestamp="2025-03-29T20:56:38.084Z" hostname="Tashfiq" tests="10" failures="0" errors="0" skipped="0" time="0.0089149">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should fetch weather data and update the README successfully" time="0.0025931">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should log a warning if no changes were made to the README" time="0.0003275">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should log a warning if no changes were made to the README" time="0.0003229">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during weather data fetch" time="0.0015267">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during weather data fetch" time="0.0016489">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during README update" time="0.0004501">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during README update" time="0.0004166">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during environment variable validation" time="0.0003476">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle errors during environment variable validation" time="0.0003382">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unhandled errors in the main function" time="0.0002951">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unhandled errors in the main function" time="0.0003064">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unknown errors in the main function" time="0.000286">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should handle unknown errors in the main function" time="0.0002862">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should use custom README path if provided in environment" time="0.0003149">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should use custom README path if provided in environment" time="0.0003091">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report changes status to GitHub Actions" time="0.0002264">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report changes status to GitHub Actions" time="0.0002417">
         </testcase>
-        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report no changes status to GitHub Actions" time="0.0001951">
+        <testcase classname="src/__tests__/unit/index.test.ts" name="main() &gt; should report no changes status to GitHub Actions" time="0.0002007">
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/unit/services/fetchWeather.test.ts" timestamp="2025-03-29T19:24:17.617Z" hostname="Tashfiq" tests="12" failures="0" errors="0" skipped="0" time="0.0221658">
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should correctly convert UTC timestamp to Dhaka time" time="0.004137">
+    <testsuite name="src/__tests__/unit/services/fetchWeather.test.ts" timestamp="2025-03-29T20:56:38.086Z" hostname="Tashfiq" tests="12" failures="0" errors="0" skipped="0" time="0.0217102">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should correctly convert UTC timestamp to Dhaka time" time="0.0039881">
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should fetch weather data successfully" time="0.0030176">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should fetch weather data successfully" time="0.0029129">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should throw error if API key is missing" time="0.0011915">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should throw error if API key is missing" time="0.0011127">
             <system-err>
 ❌ Missing required environment variable: OPEN_WEATHER_KEY
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle HTTP errors" time="0.0030447">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle HTTP errors" time="0.0030268">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -46,7 +46,7 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle invalid API responses (empty JSON)" time="0.0031553">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle invalid API responses (empty JSON)" time="0.0031488">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -90,7 +90,7 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle network failures" time="0.0007978">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle network failures" time="0.0007526">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -108,7 +108,7 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle non-Error fetch rejection" time="0.0004732">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle non-Error fetch rejection" time="0.0004744">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -126,7 +126,7 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle response.json() rejection" time="0.0005519">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle response.json() rejection" time="0.0005399">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -144,7 +144,7 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle Zod validation errors" time="0.0005809">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should handle Zod validation errors" time="0.0005853">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -189,19 +189,19 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;Unknown&quot; weather description" time="0.0009986">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;Unknown&quot; weather description" time="0.0009842">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;01d&quot; weather icon if missing" time="0.0008409">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should default to &quot;01d&quot; weather icon if missing" time="0.0008367">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should reject with an Error object on all failures" time="0.0004693">
+        <testcase classname="src/__tests__/unit/services/fetchWeather.test.ts" name="fetchWeatherData() &gt; should reject with an Error object on all failures" time="0.0005033">
             <system-err>
 🌍 Fetching weather data from OpenWeather API...
 
@@ -220,32 +220,32 @@
             </system-err>
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/unit/services/updateReadme.test.ts" timestamp="2025-03-29T19:24:17.620Z" hostname="Tashfiq" tests="6" failures="0" errors="0" skipped="0" time="0.0260331">
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if README.md file does not exist" time="0.0031687">
+    <testsuite name="src/__tests__/unit/services/updateReadme.test.ts" timestamp="2025-03-29T20:56:38.088Z" hostname="Tashfiq" tests="6" failures="0" errors="0" skipped="0" time="0.0244157">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if README.md file does not exist" time="0.0021739">
             <system-err>
 ❌ Error: README.md file not found at path: D:\Projects\profile-weather-view\README.md
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather data format is invalid" time="0.0005897">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather data format is invalid" time="0.0004677">
             <system-err>
 ❌ Error: Invalid weather data format. Expected 6 segments.
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather section is missing in README.md" time="0.0113865">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if weather section is missing in README.md" time="0.0107359">
             <system-err>
 ⚠️ Warning: Weather section not found in README. Skipping update.
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should update the README successfully with valid data" time="0.0011384">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should update the README successfully with valid data" time="0.000822">
             <system-err>
 ✅ README updated successfully at: D:\Projects\profile-weather-view\README.md
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if writing to README fails" time="0.004621">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if writing to README fails" time="0.0051353">
             <system-err>
 ❌ Error writing to README file: Error: Write failed
     at Object.&lt;anonymous&gt; [90m(D:\Projects\profile-weather-view\[39msrc\__tests__\unit\services\updateReadme.test.ts:99:41[90m)[39m
@@ -257,29 +257,29 @@
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if no changes are needed to README" time="0.0022169">
+        <testcase classname="src/__tests__/unit/services/updateReadme.test.ts" name="updateReadme() &gt; should return false if no changes are needed to README" time="0.0015548">
             <system-err>
 ℹ️ No changes needed to README.
 
             </system-err>
         </testcase>
     </testsuite>
-    <testsuite name="src/__tests__/unit/utils/preload.test.ts" timestamp="2025-03-29T19:24:17.621Z" hostname="Tashfiq" tests="4" failures="0" errors="0" skipped="0" time="0.0061">
-        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should validate required environment variables without throwing" time="0.0013921">
+    <testsuite name="src/__tests__/unit/utils/preload.test.ts" timestamp="2025-03-29T20:56:38.089Z" hostname="Tashfiq" tests="4" failures="0" errors="0" skipped="0" time="0.0075088">
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should validate required environment variables without throwing" time="0.0020066">
             <system-err>
 [preload.ts] ✅ Environment variables loaded successfully
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should throw an error if OPEN_WEATHER_KEY is missing" time="0.0002734">
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should throw an error if OPEN_WEATHER_KEY is missing" time="0.0003219">
             <system-err>
 [preload.ts] ❌ Missing required environment variable: OPEN_WEATHER_KEY
 
             </system-err>
         </testcase>
-        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should ensure environment variables are correctly set in Bun runtime" time="0.0001187">
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should ensure environment variables are correctly set in Bun runtime" time="0.0001837">
         </testcase>
-        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should log a success message when environment variables are loaded" time="0.0015911">
+        <testcase classname="src/__tests__/unit/utils/preload.test.ts" name="ensureEnvironmentVariables &gt; should log a success message when environment variables are loaded" time="0.0019147">
             <system-err>
 [preload.ts] ✅ Environment variables loaded successfully
 
