@@ -1,58 +1,102 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "profile-weather-view",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
-  "description": "Fetches and updates my GitHub profile with current weather data",
+  "description": "TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically",
   "main": "src/weather-update/index.ts",
+  "engines": {
+    "bun": ">=1.1.0",
+    "node": ">=20.0.0"
+  },
+  "packageManager": "bun@1.2.7",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tashfiqul-islam/profile-weather-view"
+  },
   "scripts": {
-    "lint": "bunx eslint . --fix",
-    "format": "bunx prettier --write .",
-    "check": "bun run lint && bun run format",
-    "type-check": "bun run tsc --noEmit",
+    "// Development": "",
     "dev": "bun run src/weather-update/index.ts",
-    "build": "bun run build",
     "start": "bun run build && bun run src/weather-update/index.ts",
+    "// Build": "",
+    "build": "bun build src/weather-update/index.ts --outdir ./dist",
+    "build:prod": "bun build src/weather-update/index.ts --outdir ./dist --minify",
+    "// Testing": "",
     "test": "bunx vitest",
-    "test:staged": "bunx vitest --run",
+    "test:ci": "bunx vitest --run",
     "test:watch": "bunx vitest --watch",
     "test:coverage": "bunx vitest --coverage",
-    "check-all": "bunx vitest --run && bun run tsc --noEmit && bun format && bun lint",
-    "prepare": "husky",
-    "commit": "bunx commit",
+    "test:staged": "bunx vitest --run $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.test\\.(ts|js)$' || echo 'src')",
+    "// Quality": "",
+    "lint": "bunx eslint . --fix",
+    "lint:check": "bunx eslint . --max-warnings=0",
+    "format": "bunx prettier --write .",
+    "format:check": "bunx prettier --check .",
+    "type-check": "bun run tsc --noEmit",
+    "check": "bun run lint && bun run format",
+    "check-all": "bun run type-check && bun run test:ci && bun run lint:check && bun run format:check",
+    "// Security": "",
+    "security": "bunx biome check --apply",
+    "audit": "bun audit",
+    "// Documentation": "",
     "docs:dev": "vitepress dev src/docs",
     "docs:build": "vitepress build src/docs",
-    "docs:preview": "vitepress preview src/docs"
+    "docs:preview": "vitepress preview src/docs",
+    "docs:deploy": "bun run docs:build && bun scripts/deploy-docs.ts",
+    "// Git Hooks": "",
+    "prepare": "husky",
+    "commit": "bunx commit",
+    "preinstall": "npx only-allow bun",
+    "postinstall": "bun run prepare"
   },
   "keywords": [
     "weather",
     "GitHub",
     "profile",
     "Bun",
-    "OpenWeather"
+    "OpenWeather",
+    "typescript",
+    "automation",
+    "github-actions",
+    "zod"
   ],
-  "author": "Tashfiqul Islam",
+  "author": {
+    "name": "Tashfiqul Islam",
+    "url": "https://github.com/tashfiqul-islam"
+  },
   "license": "MIT",
-  "engines": {
-    "bun": "latest"
+  "homepage": "https://github.com/tashfiqul-islam/profile-weather-view#readme",
+  "bugs": {
+    "url": "https://github.com/tashfiqul-islam/profile-weather-view/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/tashfiqul-islam"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "^0.4.4",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@eslint/js": "^9.23.0",
     "@stylistic/eslint-plugin": "^4.2.0",
-    "@types/bun": "^1.2.5",
-    "@types/node": "^22.13.13",
+    "@types/bun": "^1.2.8",
+    "@types/node": "^22.13.14",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "@vitest/coverage-v8": "^3.0.9",
     "@vitest/expect": "^3.0.9",
-    "bun-types": "^1.2.5",
+    "bun-types": "^1.2.7",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-perfectionist": "^4.10.1",
-    "eslint-plugin-prettier": "^5.2.4",
+    "eslint-plugin-prettier": "^5.2.5",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sonarjs": "^3.0.2",
@@ -69,18 +113,19 @@
     "vitepress": "^1.6.3",
     "vitest": "^3.0.9"
   },
-  "dependencies": {
-    "@js-temporal/polyfill": "^0.4.4",
-    "@tailwindcss/vite": "^4.0.15",
-    "axios": "^1.8.4",
-    "dotenv": "^16.4.7",
+  "optionalDependencies": {
+    "@tailwindcss/vite": "^4.0.17",
     "markdown-it": "^14.1.0",
     "markdown-it-mathjax3": "^4.3.2",
     "sitemap": "^8.0.0",
-    "tailwindcss": "^4.0.15",
+    "tailwindcss": "^4.0.17",
     "vite-tsconfig-paths": "^5.1.4",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
-    "zod": "^3.24.2"
+    "vue-router": "^4.5.0"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

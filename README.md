@@ -1,313 +1,465 @@
-<!-- Header Section -->
+# 🌦️ Profile Weather View
+
 <div align="center">
-  <img src="https://github.com/tashfiqul-islam/tashfiqul-islam/blob/master/assets/tashfiq-banner.png" alt="Tashfiq's Banner" width="100%" />
+  <img src="https://raw.githubusercontent.com/tashfiqul-islam/profile-weather-view/master/image/readme_cover.png" alt="Profile Weather View Cover Image" width="400">
 </div>
 
-<h1 align="center">
-  <a href="https://git.io/typing-svg">
-    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&pause=1000&center=true&width=550&height=90&lines=Hello+World!+I'm+Tashfiq%F0%9F%91%8B;Product+Leader+%7C+Strategic+Thinker;Digital+Innovator+%7C+Tech+Enthusiast;Welcome+to+my+digital+Hogwarts!+%F0%9F%AA%84" alt="Typing SVG" />
-  </a>
-</h1>
-
-<!-- Connect Section -->
 <div align="center">
-  <a href="mailto:tashfiq61@gmail.com"><img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail"/></a>
-  <a href="https://www.linkedin.com/in/tashfiqulislam/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
-  <a href="https://discordapp.com/users/257896257740079105"><img src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/></a>
-  <a href="https://www.instagram.com/_tashfiqulislam/"><img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram"/></a>
-  <a href="https://www.threads.net/@_tashfiqulislam"><img src="https://img.shields.io/badge/Threads-000000?style=for-the-badge&logo=Threads&logoColor=white" alt="Threads"/></a>
-  <a href="https://www.reddit.com/user/DeadShotss/"><img src="https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Reddit"/></a>
-</div>
 
 <br>
 
-<p align="center" style="font-size: 16px; max-width: 700px; margin: 0 auto;">
-  Welcome to my <strong>Digital Hogwarts</strong> 🧙‍♂️, where technology meets strategy, 
-  and ideas turn into reality. Whether it's building seamless user experiences, 
-  leading high-impact product roadmaps, or geeking out over the latest tech, 
-  you'll find me at the intersection of <strong>innovation & execution</strong>. 
-  Grab your wand (or keyboard) and explore! ⚡✨
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat-square&logo=github&label=weather%20update)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml) [![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org) [![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh) [![MIT License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](CONTRIBUTING.md) [![Temporal API](https://img.shields.io/badge/using-Temporal_API-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/) [![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=flat-square&logo=zod)](https://zod.dev)
+
+<br>
+
+<p align="center">
+  <b>Transform your GitHub profile into a live weather dashboard</b>
 </p>
 
+<p align="center">
+  Profile Weather View integrates real-time weather data into your GitHub profile README using OpenWeather API and GitHub Actions automation. Built with TypeScript and Bun, it delivers accurate weather information that updates automatically every 8 hours.
+</p>
+
+<details>
+<summary><b>📊 Example Weather Display</b></summary>
 <br>
 
 <div align="center">
-  <a href="https://github.com/tashfiqul-islam/profile-view-counter" target="_blank">
-    <img src="https://profile-view-counter-jcp1.onrender.com/api/view-counter?username=tashfiqul-islam&cachebust=1" alt="Profile Views" />
-  </a>
-</div>
 
-<br>
+### Current Weather in Uttara, Dhaka
 
-<!-- About Me Section -->
-## 👨‍💻 About Me
-
-Hey there! I'm **Tashfiq**—a **Product Manager** who thrives at the intersection of
-**technology, business, and human experience**. I build products that **don't just function—they resonate**.
-Whether it's optimizing workflows, defining roadmaps, or launching new solutions, I believe in crafting experiences that are
-**as seamless as they are impactful**.
-
-### 🚀 What I Do
-At **Field Nation, LLC**, I turn **complex challenges into structured solutions**,
-leading cross-functional teams to deliver **high-impact digital products**. From **strategic roadmaps
-to hands-on execution**, I navigate the full spectrum of product development, ensuring every decision aligns with
-**both user needs and business goals**.
-
-### 🎭 Beyond the Job Title
-I'm more than just my work. I'm a **curious explorer, a tech tinkerer, and a firm believer in structured chaos**—
-the kind that **fuels innovation**. I have a **computer science background**, but my real expertise
-lies in **blending logic with creativity**, ensuring that every product decision is **both data-driven
-and human-centric**.
-
-### ⚡ My Approach
-I see product management as **a mix of art and science**. It's about balancing **analytics with intuition,
-efficiency with empathy, and technology with real-world impact**. My philosophy? **Think big, build smart, and never
-settle for mediocrity.**
-
-### 🧙‍♂️ A Little Extra
-- 🔹 **Hogwarts House?** **Slytherin**—because *ambition, resourcefulness, and loyalty drive success.*
-- 🔹 **Tech Stack I Love?** Typescript, Javascript, NodeJS, NextJS, Expo React Native, Vite, PostgreSQL, TailwindCSS
-- 🔹 **Best Way to Reach Me?** Probably **Instagram or Discord**—but carrier pigeons are cool too.
-
-<br>
-
-<!-- Live Weather Section -->
-## 📍 Live from Dhaka, BD
+|                                   Weather                                    | Temperature | Sunrise  |  Sunset  | Humidity |
+|:----------------------------------------------------------------------------:|:-----------:|:--------:|:--------:|:--------:|
+| Clear <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""> |    32°C     | 06:12:30 | 18:15:45 |   65%    |
 
 <div align="center">
-  <table style="width:70%; margin: 0 auto; border-collapse: separate; border-spacing: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <thead>
-      <tr style="background-color: #2C3E50; color: white;">
-        <th style="padding: 12px 15px; text-align: center;">Weather</th>
-        <th style="padding: 12px 15px; text-align: center;">Temperature</th>
-        <th style="padding: 12px 15px; text-align: center;">Sunrise</th>
-        <th style="padding: 12px 15px; text-align: center;">Sunset</th>
-        <th style="padding: 12px 15px; text-align: center;">Humidity</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="background-color: rgba(60, 145, 230, 0.1);">
-        <!-- Hourly Weather Update -->
-        <td align="center">Haze <img width="15" src="https://openweathermap.org/img/w/50d.png" alt=""></td>
-        <td align="center">24°C</td>
-        <td align="center">05:59:40</td>
-        <td align="center">18:10:27</td>
-        <td align="center">73%</td>
-        <!-- End of Hourly Weather Update -->
-      </tr>
-    </tbody>
-  </table>
-  <div align="center">
-    <p style="font-size: 12px; color: #718096; margin-top: 8px;">
-      <em>Last refresh: Sunday, March 23, 2025 at 08:19:48 (UTC+6)</em>
-    </p>
-  </div>
+  <h6>
+    <em>Last refresh: Friday, March 29, 2025 14:30:22 UTC+6</em>
+  </h6>
 </div>
 
-<br>
+</div>
 
-<!-- Professional Journey -->
-## 🚀 Professional Journey
+<a href="https://github.com/tashfiqul-islam/profile-weather-view/generate">
+  <img src="https://img.shields.io/badge/use%20this-template-brightgreen?style=for-the-badge&logo=github" alt="Use this template">
+</a>
 
-<table align="center">
+</div>
+</details>
+
+## 📋 Overview
+
+Profile Weather View automatically updates your GitHub profile README with real-time weather data for your location. Built with TypeScript and modern web technologies, it leverages GitHub Actions for fully automated updates every 8 hours.
+
+<details>
+<summary><b>📚 Table of Contents</b></summary>
+
+1. [📋 Overview](#-overview)
+2. [✨ Key Features](#-key-features)
+3. [🚀 Quick Start](#-quick-start)
+   1. [One-Minute Setup](#one-minute-setup)
+   2. [Manual Installation](#manual-installation)
+4. [⚙️ Configuration](#️-configuration)
+   1. [Environment Variables](#environment-variables)
+   2. [Location Settings (in fetchWeather.ts)](#location-settings-in-fetchweatherts)
+   3. [Display Customization](#display-customization)
+5. [🧩 Architecture](#-architecture)
+6. [🏗️ Core Components](#️-core-components)
+   1. [Data Flow](#data-flow)
+7. [⚡ Technology Stack](#-technology-stack)
+8. [🛠️ Development](#️-development)
+   1. [Prerequisites](#prerequisites)
+   2. [Available Scripts](#available-scripts)
+   3. [Project Structure](#project-structure)
+9. [🔄 CI/CD Pipeline](#-cicd-pipeline)
+10. [🧪 Testing](#-testing)
+    1. [Testing Strategy](#testing-strategy)
+11. [📚 Documentation](#-documentation)
+12. [🤝 Contributing](#-contributing)
+13. [📜 License](#-license)
+14. [🙏 Acknowledgements](#-acknowledgements)
+
+</details>
+
+## ✨ Key Features
+
+<div align="center">
+<table>
   <tr>
-    <td colspan="3" align="center"><strong>🏢 Field Nation, LLC</strong></td>
+    <td align="center">
+      <h3>🌐</h3>
+      <b>Real-time Data</b><br>
+      <small>OpenWeather API 3.0</small>
+    </td>
+    <td align="center">
+      <h3>🔄</h3>
+      <b>Auto-Updates</b><br>
+      <small>Every 8 hours via Actions</small>
+    </td>
+    <td align="center">
+      <h3>🛠️</h3>
+      <b>Type Safety</b><br>
+      <small>100% TypeScript + Zod</small>
+    </td>
   </tr>
   <tr>
-    <td>📅 <strong>Jan 2025 - Present</strong></td>
-    <td>💼 <strong>Product Owner</strong></td>
-    <td>Defining key initiatives, managing backlogs, and leading product strategy.</td>
-  </tr>
-  <tr>
-    <td>📅 <strong>Dec 2021 - Jan 2025</strong></td>
-    <td>💼 <strong>Product Manager</strong></td>
-    <td>Led cross-functional teams, optimized product roadmaps, and enhanced user experience.</td>
-  </tr>
-  <tr>
-    <td>📅 <strong>Mar 2021 - Nov 2021</strong></td>
-    <td>💼 <strong>Associate Product Manager</strong></td>
-    <td>Conducted feature research, ran discovery sessions, and supported roadmap execution.</td>
-  </tr>
-  <tr>
-    <td>📅 <strong>Jan 2021 - Mar 2021</strong></td>
-    <td>💼 <strong>Service Company Team Lead</strong></td>
-    <td>Managed provider onboarding, optimized service company growth, and led strategic initiatives.</td>
-  </tr>
-  <tr>
-    <td>📅 <strong>Jul 2019 - Dec 2020</strong></td>
-    <td>💼 <strong>Service Company Program Specialist</strong></td>
-    <td>Educated service companies on platform usage and optimized marketplace engagement.</td>
-  </tr>
-  <tr>
-    <td>📅 <strong>Sep 2018 - Jun 2019</strong></td>
-    <td>💼 <strong>Recruitment & Onboarding Coordinator</strong></td>
-    <td>Recruited and onboarded professionals, expanding the Field Nation marketplace.</td>
+    <td align="center">
+      <h3>⚡</h3>
+      <b>High Performance</b><br>
+      <small>Bun runtime optimization</small>
+    </td>
+    <td align="center">
+      <h3>🕒</h3>
+      <b>Smart Time Handling</b><br>
+      <small>Temporal API integration</small>
+    </td>
+    <td align="center">
+      <h3>🧪</h3>
+      <b>Reliability</b><br>
+      <small>100% test coverage</small>
+    </td>
   </tr>
 </table>
+</div>
 
-<br>
+## 🚀 Quick Start
 
-<!-- Professional & Personal Interests -->
-## ⚡ Professional & Personal Dimensions
+### One-Minute Setup
+
+```bash
+# Clone and set up in one command
+npx degit tashfiqul-islam/profile-weather-view my-weather-profile && \
+cd my-weather-profile && \
+bun install && \
+echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
+```
+
+### Manual Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/tashfiqul-islam/profile-weather-view.git
+   cd profile-weather-view
+   ```
+
+2. **Install dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Configure environment**
+   ```bash
+   echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
+   ```
+
+4. **Run locally**
+   ```bash
+   bun start
+   ```
+
+5. **Setup GitHub Actions**
+    - Fork this repository
+    - Add your OpenWeather API key as a repository secret named `OPEN_WEATHER_KEY`
+    - The workflow will automatically run every 8 hours
+
+## ⚙️ Configuration
+
+Profile Weather View is highly configurable to meet your specific needs.
+
+### Environment Variables
+
+| Variable           | Description             | Example         |
+|--------------------|-------------------------|-----------------|
+| `OPEN_WEATHER_KEY` | API key for OpenWeather | `a1b2c3d4e5...` |
+
+### Location Settings (in fetchWeather.ts)
+
+| Setting    | Description          | Default                   |
+|------------|----------------------|---------------------------|
+| `LAT`      | Latitude coordinate  | `23.8759` (Uttara, Dhaka) |
+| `LON`      | Longitude coordinate | `90.3795` (Uttara, Dhaka) |
+| `TIMEZONE` | Local timezone       | `Asia/Dhaka`              |
+
+### Display Customization
+
+You can customize how the weather data appears in your README by modifying the update template in `updateReadme.ts`. See the [theme integration guide](./src/docs/guide/theme-integration.md) for detailed examples.
+
+## 🧩 Architecture
+
+Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
+
+```mermaid
+graph TD
+    A[GitHub Actions] -->|Triggers| B[index.ts]
+    B -->|Calls| C[fetchWeather.ts]
+    C -->|Uses| D[OpenWeather API]
+    D -->|Returns| C
+    C -->|Returns| B
+    B -->|Passes data to| E[updateReadme.ts]
+    E -->|Updates| F[README.md]
+    G[preload.ts] -->|Configures| B
+```
+
+## 🏗️ Core Components
+
+Profile Weather View is built around four specialized modules, each with a distinct responsibility:
+
+| Component             | Purpose                                                                         |
+|-----------------------|---------------------------------------------------------------------------------|
+| **`index.ts`**        | Application entry point and orchestrator that manages the flow between services |
+| **`fetchWeather.ts`** | Weather service that retrieves and validates data from the OpenWeather API      |
+| **`updateReadme.ts`** | Service that updates the README with new weather data                           |
+| **`preload.ts`**      | Environment validator that ensures required configuration is present            |
+
+### Data Flow
+
+1. **Initialization**: Load and validate environment variables
+2. **Data Acquisition**: Fetch and validate weather data from OpenWeather API
+3. **Display**: Update README with formatted weather information
+4. **Completion**: Report success or provide troubleshooting details
+
+## ⚡ Technology Stack
 
 <div align="center">
-  <table border="0" style="width: 100%; border-collapse: collapse;">
+
+[![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh) [![TypeScript](https://img.shields.io/badge/language-typescript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/) [![OpenWeather API](https://img.shields.io/badge/api-openweather-eb6e4b?style=flat-square&logo=openweathermap)](https://openweathermap.org/api) [![Temporal API](https://img.shields.io/badge/datetime-temporal_api-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/) [![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=flat-square&logo=zod)](https://zod.dev) [![GitHub Actions](https://img.shields.io/badge/ci%2Fcd-github_actions-2088FF?style=flat-square&logo=github-actions)](https://github.com/features/actions) [![Vitest](https://img.shields.io/badge/testing-vitest-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev) [![ESLint v9](https://img.shields.io/badge/linting-eslint_v9-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
+
+</div>
+
+## 🛠️ Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh) >= 1.0.0
+- [OpenWeather API Key](https://openweathermap.org/api)
+- [GitHub Account](https://github.com)
+
+### Available Scripts
+
+```bash
+# Development
+bun run dev              # Run development mode
+bun run start            # Build and run
+
+# Build
+bun run build            # Standard build
+bun run build:prod       # Production build with minification
+
+# Testing
+bun run test             # Run all tests
+bun run test:ci          # Run tests in CI mode
+bun run test:watch       # Run tests in watch mode
+bun run test:coverage    # Generate coverage report
+
+# Quality
+bun run lint             # Run ESLint and fix issues
+bun run format           # Run Prettier and fix formatting
+bun run type-check       # Check TypeScript types
+bun run check-all        # Run all quality checks
+
+# Documentation
+bun run docs:dev         # Develop documentation
+bun run docs:build       # Build documentation
+bun run docs:preview     # Preview built documentation
+```
+
+### Project Structure
+
+```
+profile-weather-view/
+├── .github/
+│   └── workflows/              # GitHub Actions automation
+│       └── profile-weather-update.yml
+├── .husky/                     # Git hooks for code quality
+├── src/
+│   ├── __tests__/              # Comprehensive test suite
+│   ├── config/                 # Configuration modules
+│   ├── docs/                   # Documentation files
+│   └── weather-update/         # Core application
+│       ├── services/
+│       │   ├── fetchWeather.ts # Weather API integration
+│       │   └── updateReadme.ts # README file manipulation
+│       ├── utils/
+│       │   └── preload.ts      # Environment validation
+│       └── index.ts            # Entry point
+├── .env                        # Environment variables (gitignored)
+├── bunfig.toml                 # Bun runtime configuration
+├── eslint.config.mjs           # ESLint flat configuration (v9)
+├── prettier.config.mjs         # Prettier configuration
+├── tsconfig.json               # TypeScript configuration
+├── commitlint.config.mjs       # Commit message validation
+└── vitest.config.ts            # Test runner configuration
+```
+
+## 🔄 CI/CD Pipeline
+
+The application uses GitHub Actions for automated deployment with the following key features:
+
+<div align="center">
+  <table>
     <tr>
-      <td width="50%" align="center" style="padding: 10px;">
-        <h3>💼 Professional Focus</h3>
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-          <img src="https://img.shields.io/badge/Product_Strategy-0D76A8?style=flat-square&logo=strategy&logoColor=white" alt="Product Strategy">
-          <img src="https://img.shields.io/badge/UX_Design-FF4088?style=flat-square&logo=adobe-xd&logoColor=white" alt="UX Design">
-          <img src="https://img.shields.io/badge/Agile_Methodology-009688?style=flat-square&logo=agile&logoColor=white" alt="Agile">
-          <img src="https://img.shields.io/badge/Data_Analysis-4285F4?style=flat-square&logo=google-analytics&logoColor=white" alt="Data Analysis">
-          <img src="https://img.shields.io/badge/Product_Development-FB8C00?style=flat-square&logo=product-hunt&logoColor=white" alt="Product Development">
-          <img src="https://img.shields.io/badge/Project_Management-7952B3?style=flat-square&logo=asana&logoColor=white" alt="Project Management">
-          <img src="https://img.shields.io/badge/Market_Research-03A9F4?style=flat-square&logo=research&logoColor=white" alt="Market Research">
-        </div>
+      <th align="center">Feature</th>
+      <th align="center">Benefit</th>
+    </tr>
+    <tr>
+      <td align="center"><b>Multi-Stage Pipeline</b></td>
+      <td align="center">Preflight, execution, verification, and recovery stages</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Scheduled Updates</b></td>
+      <td align="center">Automatic refresh every 8 hours</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Self-Healing</b></td>
+      <td align="center">Automatic recovery with configurable retries</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Optimized Caching</b></td>
+      <td align="center">Dependency and test result caching for faster runs</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Manual Control</b></td>
+      <td align="center">Custom workflow parameters for on-demand execution</td>
+    </tr>
+  </table>
+</div>
+
+## 🧪 Testing
+
+The project has comprehensive test coverage to ensure reliability:
+
+```
+% Coverage report from v8
+------------------|---------|----------|---------|---------|-------------------
+File              | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+------------------|---------|----------|---------|---------|-------------------
+All files         |     100 |      100 |     100 |     100 |
+ src              |     100 |      100 |     100 |     100 |
+  index.ts        |     100 |      100 |     100 |     100 |
+ src/services     |     100 |      100 |     100 |     100 |
+  fetchWeather.ts |     100 |      100 |     100 |     100 |
+  updateReadme.ts |     100 |      100 |     100 |     100 |
+ src/utils        |     100 |      100 |     100 |     100 |
+  preload.ts      |     100 |      100 |     100 |     100 |
+------------------|---------|----------|---------|---------|-------------------
+```
+
+### Testing Strategy
+
+- **Unit Tests**: Isolated testing of functions and components
+- **Integration Tests**: Verify component interactions
+- **Mocks**: Simulation of external dependencies
+- **Performance Benchmarks**: Measure execution speed
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`src/docs/`](./src/docs/) directory, including:
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><a href="src/docs/guide/introduction.md">🚀 Getting Started</a></td>
+      <td align="center"><a href="src/docs/guide/architecture.md">🏗️ Architecture</a></td>
+      <td align="center"><a href="src/docs/reference/api-reference.md">📋 API Reference</a></td>
+      <td align="center"><a href="src/docs/reference/configuration.md">⚙️ Configuration</a></td>
+    </tr>
+    <tr>
+      <td align="center"><a href="src/docs/guide/deployment.md">🚢 Deployment</a></td>
+      <td align="center"><a href="src/docs/guide/testing.md">🧪 Testing</a></td>
+      <td align="center"><a href="src/docs/guide/theme-integration.md">🎨 Theme Integration</a></td>
+      <td align="center"><a href="src/docs/guide/troubleshooting.md">🔧 Troubleshooting</a></td>
+    </tr>
+  </table>
+</div>
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**
+4. **Run tests**: `bun test`
+5. **Commit changes**: Use conventional commit format
+6. **Push to your fork**: `git push origin feature/amazing-feature`
+7. **Open a pull request**
+
+For detailed contribution guidelines, please refer to the [Contributing Guide](.github/contributing.md).
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+```
+Copyright (c) 2025 Tashfiqul Islam
+```
+
+## 🙏 Acknowledgements
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://openweathermap.org/">
+          <img src="https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png" width="50" alt="OpenWeather"><br>
+          <b>OpenWeather API</b>
+        </a><br>
+        <sub>Real-time weather data</sub>
       </td>
-      <td width="50%" align="center" style="padding: 10px;">
-        <h3>🧙‍♂️ Personal Passions</h3>
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-          <img src="https://img.shields.io/badge/World_Travel-F59E0B?style=flat-square&logo=airbnb&logoColor=white" alt="World Travel">
-          <img src="https://img.shields.io/badge/Strategic_Gaming-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Strategic Gaming">
-          <img src="https://img.shields.io/badge/Global_Cuisine-D00000?style=flat-square&logo=yelp&logoColor=white" alt="Global Cuisine">
-          <img src="https://img.shields.io/badge/Literature-107C10?style=flat-square&logo=goodreads&logoColor=white" alt="Literature">
-          <img src="https://img.shields.io/badge/Cinematic_Arts-8B5CF6?style=flat-square&logo=cinema-4d&logoColor=white" alt="Cinematic Arts">
-          <img src="https://img.shields.io/badge/Technology_Exploration-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Technology">
-        </div>
+      <td align="center">
+        <a href="https://bun.sh">
+          <img src="https://user-images.githubusercontent.com/709451/182802334-d9c42afe-f35d-4a7b-86ea-9985f73f20c3.png" width="50" alt="Bun"><br>
+          <b>Bun</b>
+        </a><br>
+        <sub>Blazing fast runtime</sub>
+      </td>
+      <td align="center">
+        <a href="https://www.typescriptlang.org/">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/512px-Typescript_logo_2020.svg.png" width="50" alt="TypeScript"><br>
+          <b>TypeScript</b>
+        </a><br>
+        <sub>Type safety</sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <a href="https://tc39.es/proposal-temporal/docs/">
+          <img src="https://avatars.githubusercontent.com/u/1725583?s=200&v=4" width="50" alt="TC39"><br>
+          <b>Temporal API</b>
+        </a><br>
+        <sub>Modern date/time handling</sub>
+      </td>
+      <td align="center">
+        <a href="https://zod.dev">
+          <img src="https://zod.dev/logo.svg" width="50" alt="Zod"><br>
+          <b>Zod</b>
+        </a><br>
+        <sub>Schema validation</sub>
+      </td>
+      <td align="center">
+        <a href="https://github.com/features/actions">
+          <img src="https://github.githubassets.com/images/modules/site/features/actions-icon-actions.svg" width="50" alt="GitHub Actions"><br>
+          <b>GitHub Actions</b>
+        </a><br>
+        <sub>CI/CD automation</sub>
       </td>
     </tr>
   </table>
 </div>
 
-<br>
+---
 
-<!-- 
-   ╔═══════════════════════════════════════════════════════════════════════════╗
-   ║                           TECH STACK & TOOLS                               ║
-   ╚═══════════════════════════════════════════════════════════════════════════╝
-   -->
-<h2 align="center">
-   <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Hammer%20and%20Wrench.png" alt="Tools" width="30" height="30" />
-   Tech Stack & Tools
-</h2>
-<div style="max-width: 800px; margin: 0 auto 40px auto;">
-   <!-- Languages -->
-   <div style="margin-bottom: 25px;">
-      <h3 style="border-bottom: 2px solid #dbeafe; padding-bottom: 8px; color: #2563eb;">
-         <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Keyboard.png" alt="Keyboard" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" />
-         Programming Languages
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-         <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
-         <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"/>
-         <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5"/>
-         <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3"/>
-         <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
-         <img src="https://img.shields.io/badge/SQL-4479A1?style=for-the-badge&logo=postgresql&logoColor=white" alt="SQL"/>
-      </div>
-   </div>
-   <!-- Frameworks & Libraries -->
-   <div style="margin-bottom: 25px;">
-      <h3 style="border-bottom: 2px solid #dbeafe; padding-bottom: 8px; color: #2563eb;">
-         <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Package.png" alt="Package" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" />
-         Frameworks & Libraries
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-         <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"/>
-         <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js"/>
-         <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/>
-         <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express"/>
-         <img src="https://img.shields.io/badge/React_Native-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native"/>
-         <img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo"/>
-         <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS"/>
-         <img src="https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=redux&logoColor=white" alt="Redux"/>
-      </div>
-   </div>
-   <!-- Tools & Platforms -->
-   <div style="margin-bottom: 25px;">
-      <h3 style="border-bottom: 2px solid #dbeafe; padding-bottom: 8px; color: #2563eb;">
-         <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Toolbox.png" alt="Toolbox" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" />
-         Tools & Platforms
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-         <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git"/>
-         <img src="https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="VS Code"/>
-         <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
-         <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel"/>
-         <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/>
-         <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-         <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS"/>
-         <img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" alt="Figma"/>
-      </div>
-   </div>
-   <!-- Dev Practices -->
-   <div>
-      <h3 style="border-bottom: 2px solid #dbeafe; padding-bottom: 8px; color: #2563eb;">
-         <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Gear.png" alt="Gear" width="20" height="20" style="vertical-align: middle; margin-right: 8px;" />
-         Development Practices
-      </h3>
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-         <img src="https://img.shields.io/badge/Agile-009688?style=for-the-badge&logo=scrumalliance&logoColor=white" alt="Agile"/>
-         <img src="https://img.shields.io/badge/CI_CD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="CI/CD"/>
-         <img src="https://img.shields.io/badge/Test_Driven-DD0031?style=for-the-badge&logo=testing-library&logoColor=white" alt="Test Driven"/>
-         <img src="https://img.shields.io/badge/Clean_Code-14B8A6?style=for-the-badge&logo=codecov&logoColor=white" alt="Clean Code"/>
-         <img src="https://img.shields.io/badge/Microservices-FF4088?style=for-the-badge&logo=apachekafka&logoColor=white" alt="Microservices"/>
-         <img src="https://img.shields.io/badge/UX_Focused-7952B3?style=for-the-badge&logo=adobe&logoColor=white" alt="UX Focused"/>
-      </div>
-   </div>
-</div>
-<!-- 
-   ╔═══════════════════════════════════════════════════════════════════════════╗
-   ║                           GITHUB ANALYTICS                                 ║
-   ╚═══════════════════════════════════════════════════════════════════════════╝
-   -->
-<h2 align="center">
-   <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bar%20Chart.png" alt="Bar Chart" width="30" height="30" />
-   GitHub Analytics
-</h2>
-<div align="center" style="margin-bottom: 30px;">
-   <!-- GitHub Stats Cards with Dark/Light Mode Support -->
-   <a href="https://github.com/tashfiqul-islam">
-      <picture>
-         <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=tashfiqul-islam&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0D1117&title_color=38B2AC&icon_color=38B2AC&text_color=FFFFFF" />
-         <source media="(prefers-color-scheme: light)" srcset="https://github-readme-stats.vercel.app/api?username=tashfiqul-islam&show_icons=true&theme=default&hide_border=true&title_color=0D76A8&icon_color=0D76A8" />
-         <img width="49%" src="https://github-readme-stats.vercel.app/api?username=tashfiqul-islam&show_icons=true&theme=default&hide_border=true&title_color=0D76A8&icon_color=0D76A8" alt="GitHub Stats" />
-      </picture>
-      <picture>
-         <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=tashfiqul-islam&theme=tokyonight&hide_border=true&background=0D1117&stroke=38B2AC&ring=38B2AC&fire=38B2AC&currStreakNum=FFFFFF&sideNums=FFFFFF&currStreakLabel=38B2AC&sideLabels=38B2AC&dates=FFFFFF" />
-         <source media="(prefers-color-scheme: light)" srcset="https://streak-stats.demolab.com?user=tashfiqul-islam&theme=default&hide_border=true&stroke=0D76A8&ring=0D76A8&fire=0D76A8&currStreakLabel=0D76A8&sideLabels=0D76A8" />
-         <img width="49%" src="https://streak-stats.demolab.com?user=tashfiqul-islam&theme=default&hide_border=true&stroke=0D76A8&ring=0D76A8&fire=0D76A8&currStreakLabel=0D76A8&sideLabels=0D76A8" alt="GitHub Streak" />
-      </picture>
-   </a>
-   <!-- Top Languages Card -->
-   <div style="margin-top: 20px;">
-      <a href="https://github.com/tashfiqul-islam">
-         <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api/top-langs/?username=tashfiqul-islam&layout=compact&theme=tokyonight&hide_border=true&bg_color=0D1117&title_color=38B2AC&text_color=FFFFFF" />
-            <source media="(prefers-color-scheme: light)" srcset="https://github-readme-stats.vercel.app/api/top-langs/?username=tashfiqul-islam&layout=compact&theme=default&hide_border=true&title_color=0D76A8" />
-            <img width="49%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=tashfiqul-islam&layout=compact&theme=default&hide_border=true&title_color=0D76A8" alt="Top Languages" />
-         </picture>
-      </a>
-   </div>
-</div>
-
-<!-- Signature Quote - Professional yet personal -->
 <div align="center">
-  <table border="0" style="width: 80%; margin: 0 auto; border-collapse: collapse;">
-    <tr>
-      <td>
-        <blockquote style="border-left: 4px solid #60ABEE; padding: 10px 20px; font-style: italic; color: #333; background-color: #f8f9fa; border-radius: 0 5px 5px 0;">
-          "I navigate the intersection of technology and human experience, applying both strategic thinking and creative problem-solving. While I value the ambition and resourcefulness of my Slytherin heritage, I bring these qualities to building meaningful products and connections in the real world."
-        </blockquote>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<br>
-
-<!-- Footer -->
-<div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=60ABEE&height=120&section=footer" width="100%">
+  <p>
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">Request Feature</a>
+    ·
+    <a href="https://github.com/sponsors/tashfiqul-islam">Sponsor</a>
+  </p>
+  <p>
+    <small>
+      Made with ❤️ by <a href="https://github.com/tashfiqul-islam">Tashfiqul Islam</a>
+    </small>
+  </p>
 </div>

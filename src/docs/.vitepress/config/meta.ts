@@ -58,18 +58,18 @@ export const createStructuredData = (
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: mergedOptions.title,
-    description: mergedOptions.description,
-    applicationCategory: 'DeveloperApplication',
-    operatingSystem: 'Any',
-    offers: {
+    'name': mergedOptions.title,
+    'description': mergedOptions.description,
+    'applicationCategory': 'DeveloperApplication',
+    'operatingSystem': 'Any',
+    'offers': {
       '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
+      'price': '0',
+      'priceCurrency': 'USD',
     },
-    author: {
+    'author': {
       '@type': 'Person',
-      name: mergedOptions.author,
+      'name': mergedOptions.author,
     },
   };
 };

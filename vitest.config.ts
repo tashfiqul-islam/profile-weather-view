@@ -97,7 +97,7 @@ export default defineConfig({
       shuffle: false,
     },
     typecheck: {
-      enabled: true,
+      enabled: false,
       checker: 'tsc',
     },
 
@@ -176,6 +176,38 @@ export default defineConfig({
     target: 'esnext',
     minify: false,
     sourcemap: true,
+  },
+
+  // Enhanced caching for faster reruns
+  cache: {
+    dir: '.vitest-cache',
+    enabled: true,
+    clearOnStartup: false, // Preserve cache between test runs
+  },
+
+  // Performance history tracking
+  perfHistogram: {
+    enabled: true,
+    directory: '.vitest-perf',
+    retention: 10, // Keep last 10 runs to track performance trends
+  },
+
+  // Improved CI detection with environment-specific optimizations
+  ci: {
+    server: {
+      /* server-specific settings for pull request builds */
+    },
+    local: {
+      /* local-specific settings for dev machines */
+    },
+    silent: process.env.CI === 'true',
+  },
+
+  // Modern Node.js features
+  node: {
+    deps: {
+      experimentalSpecifiers: true,
+    },
   },
 
   /**

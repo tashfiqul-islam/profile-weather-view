@@ -1,96 +1,233 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
+# ==============================================================================
+# Pre-commit Validation Script
+# Performs automated code quality checks on staged files before allowing commit
+# ==============================================================================
 
-# Pre-commit hook for profile-weather-view
-# Validates staged files before allowing commit
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+# Execution and performance settings
+MAX_CONCURRENT_JOBS=4
+TIME_BUDGET=120
+INCREMENTAL_MODE="true"
+CACHE_DIR=".git/hooks/cache"
+SKIP_PATTERN="EMERGENCY"
 
-# Color definitions for output formatting
-BOLD='\033[1m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# ------------------------------------------------------------------------------
+# Terminal Support
+# ------------------------------------------------------------------------------
+# Detect terminal capabilities for appropriate output formatting
+if [ -t 1 ] && command -v tput > /dev/null; then
+  SUPPORTS_COLOR=1
+  BOLD=$(tput bold)
+  GREEN=$(tput setaf 2)
+  YELLOW=$(tput setaf 3)
+  RED=$(tput setaf 1)
+  BLUE=$(tput setaf 4)
+  MAGENTA=$(tput setaf 5)
+  CYAN=$(tput setaf 6)
+  RESET=$(tput sgr0)
+else
+  # Ensure graceful operation in environments without color support
+  SUPPORTS_COLOR=0
+  BOLD="" GREEN="" YELLOW="" RED="" BLUE="" MAGENTA="" CYAN="" RESET=""
+fi
 
-# Display execution steps
-echo "${BLUE}${BOLD}🔍 Running pre-commit validation checks...${NC}"
+# ------------------------------------------------------------------------------
+# Utility Functions
+# ------------------------------------------------------------------------------
+# Structured logging with consistent formatting
+log() {
+  local level=$1
+  local message=$2
+  local timestamp=$(date +"%H:%M:%S")
 
-# Check if we're in a CI environment and skip if needed
+  case $level in
+    "INFO")  echo -e "${CYAN}${timestamp} ℹ️ ${RESET}${message}" ;;
+    "WARN")  echo -e "${YELLOW}${timestamp} ⚠️ ${RESET}${message}" ;;
+    "ERROR") echo -e "${RED}${timestamp} ❌ ${RESET}${message}" ;;
+    "SUCCESS") echo -e "${GREEN}${timestamp} ✅ ${RESET}${message}" ;;
+    *) echo -e "${timestamp} ${message}" ;;
+  esac
+}
+
+# Process visualization with live feedback
+show_spinner() {
+  local message=$1
+  local pid=$2
+  local delay=0.1
+  local spinstr='|/-\'
+
+  # Skip animation in non-compatible terminals
+  if [ $SUPPORTS_COLOR -eq 0 ]; then
+    log "INFO" "${message} (running...)"
+    wait $pid
+    return $?
+  fi
+
+  local start_time=$(date +%s)
+
+  echo -ne "${BLUE}${message} ${RESET}"
+  while kill -0 $pid 2>/dev/null; do
+    local temp=${spinstr#?}
+    local elapsed=$(($(date +%s) - start_time))
+    printf " [%c] (%ds)" "$spinstr" "$elapsed"
+    local spinstr=$temp${spinstr%"$temp"}
+    sleep $delay
+    printf "\b\b\b\b\b\b\b\b\b\b\b\b"
+  done
+  printf "        \b\b\b\b\b\b\b\b"
+
+  wait $pid
+  return $?
+}
+
+# ------------------------------------------------------------------------------
+# Environment Detection
+# ------------------------------------------------------------------------------
+# Prepare storage for operational data
+mkdir -p "$CACHE_DIR"
+
+# Check for special commit conditions
+COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+if echo "$COMMIT_MSG" | grep -q "$SKIP_PATTERN"; then
+  log "WARN" "Emergency commit detected. Bypassing validation checks."
+  exit 0
+fi
+
+# Respect CI environment conventions
 if [ -n "$CI" ]; then
-  echo "${YELLOW}CI environment detected, skipping pre-commit hooks${NC}"
+  log "INFO" "CI environment detected, skipping pre-commit hooks"
   exit 0
 fi
 
-# Get list of staged files for selective linting
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$')
+# Start performance tracking
+START_TIME=$(date +%s)
 
-# Check if there are relevant files to validate
+# ------------------------------------------------------------------------------
+# File Selection
+# ------------------------------------------------------------------------------
+# Retrieve staged files efficiently
+get_staged_files() {
+  git diff --cached --name-only --diff-filter=ACMR
+}
+
+# Collect and filter relevant files
+ALL_STAGED_FILES=$(get_staged_files)
+
+if [ -z "$ALL_STAGED_FILES" ]; then
+  log "WARN" "No files staged for commit. Nothing to validate."
+  exit 0
+fi
+
+# Select files for validation based on extension patterns
+STAGED_FILES=$(echo "$ALL_STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json)$' || echo "")
+
 if [ -z "$STAGED_FILES" ]; then
-  echo "${YELLOW}No relevant files to validate, skipping checks${NC}"
+  log "INFO" "No relevant code files to validate in this commit."
   exit 0
 fi
 
-# Store the exit status for each step
-FORMAT_STATUS=0
-LINT_STATUS=0
-TYPE_STATUS=0
-TEST_STATUS=0
+# ------------------------------------------------------------------------------
+# Validation Pipeline
+# ------------------------------------------------------------------------------
+log "INFO" "${BOLD}Initiating validation pipeline${RESET}"
+echo "$STAGED_FILES" | sort | uniq > "$CACHE_DIR/current_staged_files.txt"
 
-# Begin validation stages
-echo "${BLUE}Starting validation pipeline${NC}"
+# Track validation status for comprehensive reporting
+declare -a VALIDATION_RESULTS=()
+PIPELINE_STATUS=0
 
-# 1. Run Prettier formatting
-echo "${BLUE}🖌️  Checking code formatting...${NC}"
-if [ -n "$STAGED_FILES" ]; then
-  echo "$STAGED_FILES" | xargs bun run prettier --check || FORMAT_STATUS=$?
-else
-  bun run format || FORMAT_STATUS=$?
+# Execute individual validation tasks with consistent error handling
+run_validation() {
+  local name=$1
+  local icon=$2
+  local cmd=$3
+  local files=$4
+
+  # Skip unnecessary processing
+  if [ -z "$files" ]; then
+    VALIDATION_RESULTS+=("$name: SKIPPED (no files)")
+    return 0
+  fi
+
+  log "INFO" "Running ${icon} ${BOLD}${name}${RESET}..."
+
+  # Execute asynchronously with output capture
+  eval "$cmd" > "$CACHE_DIR/${name}_output.log" 2>&1 &
+  local cmd_pid=$!
+
+  # Provide visual feedback during execution
+  show_spinner "Executing ${name}" $cmd_pid
+  local status=$?
+
+  # Process and record results
+  if [ $status -eq 0 ]; then
+    log "SUCCESS" "${icon} ${BOLD}${name}${RESET} passed"
+    VALIDATION_RESULTS+=("$name: PASSED")
+  else
+    log "ERROR" "${icon} ${BOLD}${name}${RESET} failed"
+    log "ERROR" "See details: ${YELLOW}cat $CACHE_DIR/${name}_output.log${RESET}"
+    VALIDATION_RESULTS+=("$name: FAILED")
+    PIPELINE_STATUS=1
+  fi
+
+  return $status
+}
+
+# Format validation
+PRETTIER_CMD="echo \"$STAGED_FILES\" | xargs bun run prettier --check --cache --cache-location=$CACHE_DIR/.prettierrc"
+run_validation "Code Formatting" "🖌️" "$PRETTIER_CMD" "$STAGED_FILES"
+
+# Static analysis
+ESLINT_CMD="echo \"$STAGED_FILES\" | xargs bun run eslint --cache --cache-location=$CACHE_DIR/.eslintcache"
+run_validation "Linting" "🧹" "$ESLINT_CMD" "$STAGED_FILES"
+
+# Type checking
+TS_CMD="bun run type-check"
+run_validation "Type Checking" "📘" "$TS_CMD" "$STAGED_FILES"
+
+# Test execution
+AFFECTED_MODULES=$(echo "$STAGED_FILES" | grep -o -E "src/[a-zA-Z0-9_-]+" | sort | uniq)
+TEST_CMD="bun run test:staged"
+run_validation "Testing" "🧪" "$TEST_CMD" "$STAGED_FILES"
+
+# ------------------------------------------------------------------------------
+# Results Reporting
+# ------------------------------------------------------------------------------
+TOTAL_TIME=$(($(date +%s) - START_TIME))
+
+# Present validation outcomes
+echo
+log "INFO" "${BOLD}Validation Results${RESET}"
+echo "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+for result in "${VALIDATION_RESULTS[@]}"; do
+  if [[ $result == *": PASSED"* ]]; then
+    log "SUCCESS" "$result"
+  elif [[ $result == *": SKIPPED"* ]]; then
+    log "INFO" "$result"
+  else
+    log "ERROR" "$result"
+  fi
+done
+echo "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+log "INFO" "Execution time: ${CYAN}${TOTAL_TIME}s${RESET}"
+
+# Provide context-sensitive guidance
+if [ $TOTAL_TIME -gt 10 ]; then
+  log "INFO" "Tip: For faster commits, consider using ${YELLOW}git add --patch${RESET} to stage fewer files"
 fi
 
-# 2. Run ESLint checks
-echo "${BLUE}🧹 Running linter checks...${NC}"
-if [ -n "$STAGED_FILES" ]; then
-  echo "$STAGED_FILES" | xargs bun run eslint || LINT_STATUS=$?
-else
-  bun run lint || LINT_STATUS=$?
-fi
-
-# 3. Run TypeScript type checking
-echo "${BLUE}📘 Running TypeScript type checking...${NC}"
-bun run type-check || TYPE_STATUS=$?
-
-# 4. Run associated tests (only affected tests if possible)
-echo "${BLUE}🧪 Running tests for affected areas...${NC}"
-bun run test:staged || TEST_STATUS=$?
-
-# Check if any validation step failed
-FAILED=0
-if [ $FORMAT_STATUS -ne 0 ]; then
-  echo "${RED}❌ Code formatting check failed${NC}"
-  FAILED=1
-fi
-
-if [ $LINT_STATUS -ne 0 ]; then
-  echo "${RED}❌ Linter check failed${NC}"
-  FAILED=1
-fi
-
-if [ $TYPE_STATUS -ne 0 ]; then
-  echo "${RED}❌ Type check failed${NC}"
-  FAILED=1
-fi
-
-if [ $TEST_STATUS -ne 0 ]; then
-  echo "${RED}❌ Tests failed${NC}"
-  FAILED=1
-fi
-
-# Exit with failure if any check failed
-if [ $FAILED -ne 0 ]; then
-  echo "${RED}${BOLD}⛔ Pre-commit checks failed. Please fix the issues before committing.${NC}"
-  echo "${YELLOW}Tip: You can use 'git commit --no-verify' to bypass these checks (not recommended)${NC}"
+# Final status determination
+if [ $PIPELINE_STATUS -ne 0 ]; then
+  echo
+  log "ERROR" "${BOLD}Pre-commit validation failed. Please fix the issues before committing.${RESET}"
+  log "INFO" "To bypass validation in an emergency: ${YELLOW}git commit -m \"EMERGENCY: your message\"${RESET}"
   exit 1
 else
-  echo "${GREEN}${BOLD}✅ All pre-commit checks passed!${NC}"
+  echo
+  log "SUCCESS" "${BOLD}All validation checks passed!${RESET}"
 fi
 
 exit 0

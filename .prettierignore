@@ -12,6 +12,7 @@ cache/
 tsconfig.json
 tsconfig.test.json
 *.config.mjs
+vitest
 
 # 🔹 Environment Files
 .env
