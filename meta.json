@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.1.0",
+  "codebaseVersion": "2.0.0",
+  "docsVersion": "1.0.0",
+  "channels": {
+    "docs": {
+      "latest": "1.0.0",
+      "stable": "1.0.0"
+    },
+    "codebase": {
+      "latest": "2.0.0",
+      "stable": "2.0.0"
+    }
+  },
+  "releases": [
+    {
+      "type": "docs",
+      "version": "1.0.0",
+      "date": "2025-03-30T00:00:00Z",
+      "major": "1",
+      "minor": "0",
+      "patch": "0",
+      "channel": "stable",
+      "docs": "/v1.0/"
+    },
+    {
+      "type": "codebase",
+      "version": "2.0.0",
+      "date": "2025-03-30T00:00:00Z",
+      "major": "2",
+      "minor": "0",
+      "patch": "0",
+      "channel": "stable",
+      "docs": "/v2.0/"
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2025-03-30T00:00:00Z",
+    "generatedBy": "release-management-workflow"
+  }
+}

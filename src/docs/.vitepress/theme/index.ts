@@ -1,20 +1,38 @@
+/**
+ * Custom VitePress theme with versioning support
+ * Extends the default theme with version-aware components and styles
+ */
+
 import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
 import { VPBadge } from 'vitepress/theme';
+import Layout from './styles/components/Layout.vue';
+import VersionSelector from './styles/components/VersionSelector.vue';
 import type { ExtendedThemeConfig } from './types/theme';
 
-import './styles/font.css';
-import './styles/home.css';
+// Import styles
 import './styles/tailwind.css';
+import './styles/navbar.css';
+import './styles/home.css';
+import './styles/font.css';
+import './styles/versions.css';
 
+/**
+ * Creates a customized VitePress theme with versioning support
+ *
+ * @param config - Optional extended theme configuration
+ * @returns Configured VitePress theme with version components
+ */
 export function createTheme(config: Partial<ExtendedThemeConfig> = {}): Theme {
   return {
     ...DefaultTheme,
+    Layout,
     enhanceApp({ app }) {
-      // Register Badge component globally
+      // Register global components
       app.component('Badge', VPBadge);
+      app.component('VersionSelector', VersionSelector);
 
-      // Register global components if provided
+      // Register additional global components if provided
       if (config.globalComponents) {
         Object.entries(config.globalComponents).forEach(([name, component]) => {
           app.component(name, component);
@@ -26,8 +44,12 @@ export function createTheme(config: Partial<ExtendedThemeConfig> = {}): Theme {
         config.plugins.forEach((plugin) => {
           if (typeof plugin === 'function') {
             plugin(app);
-          } else if (plugin.install) {
-            plugin.install(app);
+          } else if (
+            typeof plugin === 'object' &&
+            plugin !== null &&
+            typeof plugin.install === 'function'
+          ) {
+            app.use(plugin);
           }
         });
       }

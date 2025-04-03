@@ -1,0 +1,211 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "profile-weather-view",
+      "changelog-path": "CHANGELOG.md",
+      "draft": false,
+      "prerelease": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "pull-request-title-pattern": "chore(release): ${version}",
+      "pull-request-header": "Release PR for version ${version}",
+
+      "changelog-sections": [
+        { "type": "feat", "section": "Features", "hidden": false },
+        { "type": "fix", "section": "Bug Fixes", "hidden": false },
+        { "type": "docs", "section": "Documentation", "hidden": false },
+        { "type": "style", "section": "Styling", "hidden": false },
+        { "type": "refactor", "section": "Code Refactoring", "hidden": false },
+        {
+          "type": "perf",
+          "section": "Performance Improvements",
+          "hidden": false
+        },
+        { "type": "test", "section": "Tests", "hidden": false },
+        { "type": "build", "section": "Build System", "hidden": false },
+        { "type": "ci", "section": "CI/CD", "hidden": false },
+        { "type": "chore", "section": "Chores", "hidden": true },
+        { "type": "revert", "section": "Reverts", "hidden": false },
+        { "type": "security", "section": "Security", "hidden": false }
+      ],
+
+      "changelog-types": [
+        {
+          "type": "feat",
+          "section": "Features",
+          "hidden": false,
+          "semver": "minor",
+          "prefix": "✨",
+          "display-order": 1
+        },
+        {
+          "type": "feature",
+          "section": "Features",
+          "hidden": false,
+          "semver": "minor",
+          "prefix": "✨",
+          "display-order": 1
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🐛",
+          "display-order": 2
+        },
+        {
+          "type": "perf",
+          "section": "Performance Improvements",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "⚡️",
+          "display-order": 3
+        },
+        {
+          "type": "revert",
+          "section": "Reverts",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "⏪",
+          "display-order": 4
+        },
+        {
+          "type": "security",
+          "section": "Security",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🔒",
+          "display-order": 5
+        },
+        {
+          "type": "deps",
+          "section": "Dependencies",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "📦",
+          "display-order": 6
+        },
+        {
+          "type": "refactor",
+          "section": "Code Refactoring",
+          "hidden": false,
+          "semver": null,
+          "prefix": "♻️",
+          "display-order": 7
+        },
+        {
+          "type": "test",
+          "section": "Tests",
+          "hidden": false,
+          "semver": null,
+          "prefix": "✅",
+          "display-order": 8
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": false,
+          "semver": null,
+          "prefix": "📚",
+          "display-order": 9
+        },
+        {
+          "type": "ci",
+          "section": "CI/CD",
+          "hidden": false,
+          "semver": null,
+          "prefix": "🔄",
+          "display-order": 10
+        },
+        {
+          "type": "build",
+          "section": "Build System",
+          "hidden": false,
+          "semver": null,
+          "prefix": "🏗️",
+          "display-order": 11
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": false,
+          "semver": null,
+          "prefix": "💎",
+          "display-order": 12
+        },
+        {
+          "type": "i18n",
+          "section": "Internationalization",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🌐",
+          "display-order": 13
+        },
+        {
+          "type": "a11y",
+          "section": "Accessibility",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "♿",
+          "display-order": 14
+        },
+        {
+          "type": "dx",
+          "section": "Developer Experience",
+          "hidden": false,
+          "semver": null,
+          "prefix": "🛠️",
+          "display-order": 15
+        },
+        {
+          "type": "ui",
+          "section": "UI/UX",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🎨",
+          "display-order": 16
+        },
+        {
+          "type": "config",
+          "section": "Configuration",
+          "hidden": false,
+          "semver": null,
+          "prefix": "⚙️",
+          "display-order": 17
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true,
+          "semver": null,
+          "prefix": "🧹",
+          "display-order": 18
+        }
+      ],
+
+      "versioning": "default",
+
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "meta.json",
+          "jsonpath": "$.codebaseVersion"
+        },
+        {
+          "type": "json",
+          "path": "meta.json",
+          "jsonpath": "$.docsVersion"
+        },
+        {
+          "type": "json",
+          "path": "package.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

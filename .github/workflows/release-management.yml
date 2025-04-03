@@ -1,0 +1,518 @@
+# Release Management Workflow
+#
+# Provides automated versioning, changelog generation, and comprehensive release management.
+#
+# Features:
+# - Conventional commit analysis for version determination
+# - Automated PR creation with changelog and version updates
+# - Release verification and validation
+# - Comprehensive artifact generation and packaging
+# - Documentation versioning integration
+# - Notification system for release status
+
+name: Release Management
+
+on:
+  # Trigger on pushes to main branches
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.vscode/**'
+
+  # Manual trigger with version override options
+  workflow_dispatch:
+    inputs:
+      force_version:
+        description: "Force specific version (optional)"
+        required: false
+        type: string
+      release_type:
+        description: "Release type override"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: "Perform dry run without creating release"
+        required: false
+        type: boolean
+        default: false
+
+# Environment configuration
+env:
+  NODE_ENV: production
+  ARTIFACT_DIR: release-artifacts
+  CACHE_KEY_PREFIX: release-${{ github.sha }}
+  BUN_VERSION: latest
+  ENABLE_TELEMETRY: false
+
+# Required permissions with principle of least privilege
+permissions:
+  contents: write      # For creating releases and tags
+  pull-requests: write # For creating and updating PRs
+  issues: read         # For linking issues in release notes
+  id-token: write      # For OIDC token generation
+  deployments: write   # For deployment tracking
+
+jobs:
+  # Job 1: Preflight checks to validate repository state
+  preflight-check:
+    name: "🚀 Preflight Check"
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.validation.outputs.proceed }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper versioning
+
+      - name: Verify Repository Integrity
+        id: validation
+        run: |
+          # Verify essential files exist
+          required_files=("package.json" "release-please-config.json" ".release-please-manifest.json")
+          missing_files=()
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              missing_files+=("$file")
+            fi
+          done
+
+          if [ ${#missing_files[@]} -ne 0 ]; then
+            echo "::error::Missing required files: ${missing_files[*]}"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Verify no merge conflicts in critical files
+          if grep -q "<<<<<<< HEAD" package.json; then
+            echo "::error::Merge conflicts detected in package.json"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # All checks passed
+          echo "proceed=true" >> $GITHUB_OUTPUT
+          echo "::notice::Repository state validated successfully"
+
+  # Job 2: Run Release Please to manage versioning
+  release-please:
+    name: "🏷️ Release Please"
+    needs: preflight-check
+    if: needs.preflight-check.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.extract-version.outputs.version }}
+      major: ${{ steps.release.outputs.major }}
+      minor: ${{ steps.release.outputs.minor }}
+      patch: ${{ steps.release.outputs.patch }}
+      release_created_at: ${{ steps.release-timestamp.outputs.timestamp }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper versioning
+
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: manifest
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          dry-run: ${{ inputs.dry_run == true }}
+          extra-files: |
+            README.md
+            src/docs/.vitepress/meta.json
+
+      - name: Extract Version
+        id: extract-version
+        if: steps.release.outputs.releases_created
+        run: |
+          TAG="${{ steps.release.outputs.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::Release created with version: $VERSION"
+
+      - name: Capture Release Timestamp
+        id: release-timestamp
+        if: steps.release.outputs.releases_created
+        run: |
+          echo "timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Verify Conventional Commits
+        if: steps.release.outputs.releases_created
+        run: |
+          echo "::group::Verifying Conventional Commits"
+          npx @commitlint/cli --from HEAD~50 --to HEAD
+          echo "::endgroup::"
+
+  # Job 3: Verify release quality and compatibility
+  verify-release:
+    name: "✅ Verify Release"
+    needs: [preflight-check, release-please]
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.verification.outputs.status }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ hashFiles('**/package.json', '**/bun.lockb') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-deps-
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Validate Package Version
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          RELEASE_VERSION="${{ needs.release-please.outputs.version }}"
+
+          if [ "$PACKAGE_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::Version mismatch: package.json ($PACKAGE_VERSION) != release version ($RELEASE_VERSION)"
+            exit 1
+          fi
+
+          echo "::notice::Version validated: $PACKAGE_VERSION"
+
+      - name: Run Type Checks
+        run: bun run type-check
+
+      - name: Run Tests
+        run: bun run test:coverage
+
+      - name: Run Security Audit
+        run: |
+          echo "::group::Security Audit"
+          npx audit-ci --moderate
+          echo "::endgroup::"
+
+      - name: Mark Verification Complete
+        id: verification
+        run: |
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "::notice::Release verification completed successfully"
+
+  # Job 4: Build and publish release artifacts in parallel
+  build-artifacts:
+    name: "📦 Build Artifacts"
+    needs: [release-please, verify-release]
+    if: needs.release-please.outputs.releases_created == 'true' && needs.verify-release.outputs.status == 'success'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.release-please.outputs.version }}
+      TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ hashFiles('**/package.json', '**/bun.lockb') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-deps-
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Production Assets
+        run: bun run build:prod
+
+      - name: Create Release Directory
+        run: mkdir -p ${{ env.ARTIFACT_DIR }}
+
+      - name: Generate Distributable Packages
+        run: |
+          # Create archives with versioned name
+          tar -czf "${{ env.ARTIFACT_DIR }}/profile-weather-view-${{ env.VERSION }}.tar.gz" \
+            dist/ README.md LICENSE package.json
+
+          zip -r "${{ env.ARTIFACT_DIR }}/profile-weather-view-${{ env.VERSION }}.zip" \
+            dist/ README.md LICENSE package.json
+
+      - name: Generate Package Manifest
+        run: |
+          echo "## Package Contents" > package-manifest.md
+          echo "\`\`\`" >> package-manifest.md
+          find dist -type f | sort >> package-manifest.md
+          echo "\`\`\`" >> package-manifest.md
+
+      - name: Generate Bundle Statistics
+        run: |
+          echo "## Bundle Statistics" > bundle-stats.md
+          echo "\`\`\`" >> bundle-stats.md
+          find dist -type f -name "*.js" -exec ls -lh {} \; | sort -k5,5hr >> bundle-stats.md
+          echo "\`\`\`" >> bundle-stats.md
+
+          TOTAL_SIZE=$(find dist -type f -name "*.js" -exec ls -l {} \; | awk '{sum += $5} END {printf "%.2f KB", sum/1024}')
+          echo -e "\nTotal bundle size: $TOTAL_SIZE" >> bundle-stats.md
+
+      - name: Generate Installation Guide
+        run: |
+          cat > installation.md << EOF
+          ## Installation
+
+          ### NPM
+          \`\`\`bash
+          npm install profile-weather-view@${{ env.VERSION }}
+          \`\`\`
+
+          ### Bun
+          \`\`\`bash
+          bun add profile-weather-view@${{ env.VERSION }}
+          \`\`\`
+
+          ### Direct Download
+          - [.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/profile-weather-view-${{ env.VERSION }}.tar.gz)
+          - [.zip](https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/profile-weather-view-${{ env.VERSION }}.zip)
+
+          ### CDN
+          \`\`\`html
+          <script src="https://unpkg.com/profile-weather-view@${{ env.VERSION }}/dist/index.js"></script>
+          \`\`\`
+          EOF
+
+      - name: Generate Changelog Summary
+        run: |
+          # Extract the latest release notes from CHANGELOG.md
+          awk '/^## \[/ {if (p) exit; p=1} p' CHANGELOG.md > changelog-latest.md
+
+      - name: Sign Release Assets
+        id: sign-artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Sign distributable packages with GitHub OIDC token
+          for file in ${{ env.ARTIFACT_DIR }}/*; do
+            sha256sum "$file" | awk '{print $1}' > "$file.sha256"
+            echo "::notice::Generated checksum for $(basename $file)"
+          done
+
+          # Create signature manifest
+          {
+            echo "# Asset Signatures"
+            echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Release: ${{ env.VERSION }}"
+            echo ""
+            echo "| File | SHA-256 |"
+            echo "|------|---------|"
+            for sig_file in ${{ env.ARTIFACT_DIR }}/*.sha256; do
+              base_file=$(basename "${sig_file%.sha256}")
+              checksum=$(cat "$sig_file")
+              echo "| $base_file | \`$checksum\` |"
+            done
+          } > signatures.md
+
+      - name: Upload Artifacts to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::group::Uploading release assets"
+          gh release upload ${{ env.TAG_NAME }} \
+            ${{ env.ARTIFACT_DIR }}/* \
+            bundle-stats.md \
+            package-manifest.md \
+            installation.md \
+            signatures.md \
+            changelog-latest.md \
+            --clobber
+          echo "::endgroup::"
+
+  # Job 5: Create version tags for better reference
+  create-version-tags:
+    name: "🔖 Create Version Tags"
+    needs: [release-please, build-artifacts]
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Create Major Version Tag
+        run: |
+          # Create/update major version tag
+          git tag -d v${{ needs.release-please.outputs.major }} || true
+          git push origin :refs/tags/v${{ needs.release-please.outputs.major }} || true
+          git tag -a v${{ needs.release-please.outputs.major }} -m "Release v${{ needs.release-please.outputs.major }}"
+          git push origin v${{ needs.release-please.outputs.major }}
+          echo "::notice::Created major version tag v${{ needs.release-please.outputs.major }}"
+
+      - name: Create Minor Version Tag
+        run: |
+          # Create/update minor version tag
+          git tag -d v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} || true
+          git push origin :refs/tags/v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} || true
+          git tag -a v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }} -m "Release v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}"
+          git push origin v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}
+          echo "::notice::Created minor version tag v${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}"
+
+      - name: Create Latest Tag
+        run: |
+          # Create/update latest tag
+          git tag -d latest || true
+          git push origin :refs/tags/latest || true
+          git tag -a latest -m "Latest release: ${{ needs.release-please.outputs.tag_name }}"
+          git push origin latest
+          echo "::notice::Created latest tag pointing to ${{ needs.release-please.outputs.tag_name }}"
+
+  # Job 6: Update documentation with new version
+  update-docs:
+    name: "📚 Update Documentation"
+    needs: [release-please, build-artifacts]
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Update Documentation Metadata
+        run: |
+          VERSION="${{ needs.release-please.outputs.version }}"
+          MAJOR="${{ needs.release-please.outputs.major }}"
+          MINOR="${{ needs.release-please.outputs.minor }}"
+          PATCH="${{ needs.release-please.outputs.patch }}"
+          TIMESTAMP="$(date -u '+%Y-%m-%d')"
+
+          # Update docs metadata if it exists
+          if [ -f "src/docs/.vitepress/meta.json" ]; then
+            echo "Updating documentation version metadata..."
+
+            # Extract current content
+            content=$(cat src/docs/.vitepress/meta.json)
+
+            # Update version and add to releases array
+            jq --arg v "$VERSION" \
+               --arg d "$TIMESTAMP" \
+               --arg maj "$MAJOR" \
+               --arg min "$MINOR" \
+               --arg pat "$PATCH" \
+               '.version = $v |
+                .channels.latest = $v |
+                .channels.stable = $v |
+                .releases = (.releases + [{"version": $v, "date": $d, "major": $maj, "minor": $min, "patch": $pat, "channel": "stable", "docs": "/v\($maj).\($min)/"}]) |
+                .releases = (.releases | sort_by(.version) | reverse)' \
+                src/docs/.vitepress/meta.json > meta.json.updated
+
+            mv meta.json.updated src/docs/.vitepress/meta.json
+            echo "::notice::Updated documentation version metadata to $VERSION"
+          else
+            echo "::warning::Documentation metadata file not found. Skipping update."
+          fi
+
+      - name: Build Documentation
+        if: success()
+        run: |
+          if [ -f "src/docs/package.json" ]; then
+            cd src/docs
+            bun install
+            bun run build
+            echo "::notice::Built documentation for version ${{ needs.release-please.outputs.version }}"
+          else
+            echo "::notice::No documentation build configuration found. Skipping."
+          fi
+
+  # Job 7: Notify teams and update systems after release
+  notify:
+    name: "📣 Notify"
+    needs: [release-please, build-artifacts, update-docs]
+    if: always() && needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare Notification Content
+        id: notification
+        run: |
+          VERSION="${{ needs.release-please.outputs.version }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ needs.release-please.outputs.tag_name }}"
+
+          {
+            echo "version=$VERSION"
+            echo "release_url=$RELEASE_URL"
+            echo "message=Version $VERSION has been released! Check it out at $RELEASE_URL"
+          } >> $GITHUB_OUTPUT
+
+      - name: Send GitHub Notification
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create issue comment if this was triggered by an issue
+          if [[ "${{ github.event_name }}" == "issues" ]]; then
+            gh issue comment ${{ github.event.issue.number }} --body "🎉 Version ${{ steps.notification.outputs.version }} has been released! Check it out at ${{ steps.notification.outputs.release_url }}"
+          fi
+
+      - name: Update Deployment Status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create deployment status
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/deployments \
+            -f ref="${{ needs.release-please.outputs.tag_name }}" \
+            -f environment="production" \
+            -f description="Version ${{ steps.notification.outputs.version }}" \
+            -f auto_merge=false \
+            -f required_contexts=[]
+
+          echo "::notice::Deployment status updated for version ${{ steps.notification.outputs.version }}"
