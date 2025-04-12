@@ -56,30 +56,32 @@ Profile Weather View automatically updates your GitHub profile README with real-
 <details>
 <summary><b>📚 Table of Contents</b></summary>
 
-1. [📋 Overview](#-overview)
-2. [✨ Key Features](#-key-features)
-3. [🚀 Quick Start](#-quick-start)
-   1. [One-Minute Setup](#one-minute-setup)
-   2. [Manual Installation](#manual-installation)
-4. [⚙️ Configuration](#️-configuration)
-   1. [Environment Variables](#environment-variables)
-   2. [Location Settings (in fetchWeather.ts)](#location-settings-in-fetchweatherts)
-   3. [Display Customization](#display-customization)
-5. [🧩 Architecture](#-architecture)
-6. [🏗️ Core Components](#️-core-components)
-   1. [Data Flow](#data-flow)
-7. [⚡ Technology Stack](#-technology-stack)
-8. [🛠️ Development](#️-development)
-   1. [Prerequisites](#prerequisites)
-   2. [Available Scripts](#available-scripts)
-   3. [Project Structure](#project-structure)
-9. [🔄 CI/CD Pipeline](#-cicd-pipeline)
-10. [🧪 Testing](#-testing)
-    1. [Testing Strategy](#testing-strategy)
-11. [📚 Documentation](#-documentation)
-12. [🤝 Contributing](#-contributing)
-13. [📜 License](#-license)
-14. [🙏 Acknowledgements](#-acknowledgements)
+- [🌦️ Profile Weather View](#️-profile-weather-view)
+    - [Current Weather in Uttara, Dhaka](#current-weather-in-uttara-dhaka)
+  - [📋 Overview](#-overview)
+  - [✨ Key Features](#-key-features)
+  - [🚀 Quick Start](#-quick-start)
+    - [One-Minute Setup](#one-minute-setup)
+    - [Manual Installation](#manual-installation)
+  - [⚙️ Configuration](#️-configuration)
+    - [Environment Variables](#environment-variables)
+    - [Location Settings (in fetchWeather.ts)](#location-settings-in-fetchweatherts)
+    - [Display Customization](#display-customization)
+  - [🧩 Architecture](#-architecture)
+  - [🏗️ Core Components](#️-core-components)
+    - [Data Flow](#data-flow)
+  - [⚡ Technology Stack](#-technology-stack)
+  - [🛠️ Development](#️-development)
+    - [Prerequisites](#prerequisites)
+    - [Available Scripts](#available-scripts)
+    - [Project Structure](#project-structure)
+  - [🔄 CI/CD Pipeline](#-cicd-pipeline)
+  - [🧪 Testing](#-testing)
+    - [Testing Strategy](#testing-strategy)
+  - [📚 Documentation](#-documentation)
+  - [🤝 Contributing](#-contributing)
+  - [📜 License](#-license)
+  - [🙏 Acknowledgements](#-acknowledgements)
 
 </details>
 
@@ -139,22 +141,26 @@ echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
 ### Manual Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/tashfiqul-islam/profile-weather-view.git
    cd profile-weather-view
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Configure environment**
+
    ```bash
    echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
    ```
 
 4. **Run locally**
+
    ```bash
    bun start
    ```

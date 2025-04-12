@@ -196,7 +196,7 @@ watch(() => route.path, detectCurrentVersion);
 
       <div class="version-dropdown-footer">
         <a
-          href="https://github.com/your-repo/releases"
+          href="https://github.com/tashfiqul-islam/profile-weather-view/releases"
           target="_blank"
           rel="noopener noreferrer"
           class="version-link"

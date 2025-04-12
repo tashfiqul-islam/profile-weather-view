@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "manifest",
+  "plugins": ["conventional-commits", "sentence-case"],
+
+  "changelog-sections": [
+    { "type": "feat", "section": "✨ Features" },
+    { "type": "fix", "section": "🐛 Bug Fixes" },
+    { "type": "docs", "section": "📚 Documentation" },
+    { "type": "perf", "section": "🚀 Performance" },
+    { "type": "refactor", "section": "♻️ Refactoring" },
+    { "type": "security", "section": "🔒 Security" }
+  ],
+
+  "packages": {
+    "docs": {
+      "component": "docs",
+      "package-name": "profile-weather-view-docs",
+      "release-type": "node",
+      "changelog-path": "src/docs/CHANGELOG.md",
+      "draft": false,
+      "prerelease": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+
+      "changelog-types": [
+        {
+          "type": "docs",
+          "section": "📚 Documentation",
+          "hidden": false,
+          "semver": "minor",
+          "prefix": "📖",
+          "display-order": 1
+        },
+        {
+          "type": "feat",
+          "section": "✨ Features",
+          "hidden": false,
+          "semver": "minor",
+          "prefix": "✨",
+          "display-order": 2
+        },
+        {
+          "type": "fix",
+          "section": "🐛 Bug Fixes",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🐛",
+          "display-order": 3
+        }
+      ]
+    },
+    "codebase": {
+      "component": "codebase",
+      "package-name": "profile-weather-view",
+      "release-type": "node",
+      "changelog-path": "CHANGELOG.md",
+      "draft": false,
+      "prerelease": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+
+      "changelog-types": [
+        {
+          "type": "feat",
+          "section": "✨ Features",
+          "hidden": false,
+          "semver": "minor",
+          "prefix": "✨",
+          "display-order": 1
+        },
+        {
+          "type": "fix",
+          "section": "🐛 Bug Fixes",
+          "hidden": false,
+          "semver": "patch",
+          "prefix": "🐛",
+          "display-order": 2
+        }
+      ]
+    }
+  }
+}

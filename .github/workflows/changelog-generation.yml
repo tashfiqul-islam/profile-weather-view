@@ -1,0 +1,156 @@
+# Profile Weather View: Changelog Generation Workflow
+# Automates changelog updates with intelligent version tracking
+
+name: "📋 Changelog Generation"
+
+on:
+  # Trigger on key code and configuration changes
+  push:
+    branches: 
+      - main
+      - master
+    paths:
+      - 'src/**'           # Source code changes
+      - 'package.json'     # Dependency updates
+      - 'release-please-config.json'  # Release configuration
+      - '.release-please-manifest.json'  # Version manifest
+
+  # Manual workflow dispatch for flexible control
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Specify version for changelog (optional)"
+        required: false
+        type: string
+      force:
+        description: "Force full changelog regeneration"
+        type: boolean
+        default: false
+      debug:
+        description: "Enable verbose logging"
+        type: boolean
+        default: false
+
+# Granular permissions for secure GitHub Actions execution
+permissions:
+  contents: write
+  pull-requests: write
+
+# Consistent environment configuration
+env:
+  BUN_VERSION: "latest"
+  CHANGELOG_PATH: "src/docs/CHANGELOG.md"
+  TIMEZONE: "UTC"
+
+# Enhanced job configuration with improved isolation and error handling
+jobs:
+  validate-prerequisites:
+    name: "🔍 Preflight Validation"
+    runs-on: ubuntu-latest
+    outputs:
+      should_proceed: ${{ steps.check-requirements.outputs.proceed }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Required Files
+        id: check-requirements
+        run: |
+          REQUIRED_FILES=(
+            ".release-please-manifest.json"
+            "release-please-config.json"
+            "package.json"
+          )
+          
+          MISSING_FILES=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
+            echo "::error::Missing critical files: ${MISSING_FILES[*]}"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
+  generate-changelog:
+    name: "🚀 Changelog Generation"
+    needs: validate-prerequisites
+    if: needs.validate-prerequisites.outputs.should_proceed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure full commit history
+
+      - name: "🧰 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: "🔍 Version Resolution"
+        id: version-validation
+        run: |
+          # Intelligent version detection strategy
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+            SOURCE="manual input"
+          else
+            VERSION=$(jq -r '.codebase' .release-please-manifest.json)
+            SOURCE="release manifest"
+          fi
+
+          # Version format validation
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
+          fi
+
+          echo "Detected Version: $VERSION (Source: $SOURCE)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: "📦 Prepare Environment"
+        run: |
+          bun add @commitlint/parse
+          mkdir -p src/docs/changelog
+
+      - name: "🚀 Generate Changelog"
+        run: |
+          bun run src/docs/changelog/changelog-generator.ts "${{ steps.version-validation.outputs.version }}"
+        env:
+          FORCE_REGENERATE: ${{ github.event.inputs.force }}
+          DEBUG: ${{ github.event.inputs.debug }}
+
+      - name: "📤 Commit Changelog Updates"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configurable git user for traceability
+          git config user.name 'Profile Weather View Bot'
+          git config user.email 'bot@profile-weather-view.dev'
+          
+          # Intelligent change detection
+          if [[ -n "$(git status --porcelain ${{ env.CHANGELOG_PATH }})" ]]; then
+            git add ${{ env.CHANGELOG_PATH }}
+            git commit -m "docs(changelog): update for v${{ steps.version-validation.outputs.version }}"
+            git push
+          else
+            echo "No changelog updates detected"
+          fi
+
+      - name: "📊 Release Analytics"
+        run: |
+          echo "## 📊 Changelog Generation Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.version-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changelog Path:** ${{ env.CHANGELOG_PATH }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Force Regenerate:** ${{ github.event.inputs.force }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generation Timestamp:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY

@@ -42,28 +42,23 @@ export const VERSION_STATE = {
  * @returns Formatted date string
  */
 export function formatReleaseDate(isoDateString: string): string {
-  console.log('Input date string:', isoDateString);
-
   if (!isoDateString) return 'Unknown Date';
 
-  const date = new Date(isoDateString);
+  try {
+    const date = new Date(isoDateString);
 
-  // Log date parsing details
-  console.log('Parsed date:', date);
-  console.log('Is date valid:', !isNaN(date.getTime()));
+    if (isNaN(date.getTime())) return 'Invalid Date';
 
-  // Check if date is valid
-  if (isNaN(date.getTime())) return 'Invalid Date';
-
-  // Explicitly format the date
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  const formattedDate = `${year}-${month}-${day}T00:00:00Z`;
-  console.log('Formatted date:', formattedDate);
-
-  return formattedDate;
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC', // Explicitly set timezone
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date Format Error';
+  }
 }
 
 /**
@@ -314,7 +309,7 @@ export function getVersionsNavData(): VersionNavItem[] {
     isStable:
       release.version === VERSION_STATE.STABLE &&
       VERSION_STATE.STABLE !== VERSION_STATE.LATEST,
-    date: release.date,
+    date: formatReleaseDate(release.date),
   }));
 }
 
