@@ -1,0 +1,89 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Source code
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text
+*.jsx text
+*.json text
+*.yml text
+*.yaml text
+*.toml text
+*.md text diff=markdown
+*.mdx text diff=markdown
+
+# Configuration files
+.gitignore text
+.gitattributes text
+.env* text
+*.config.js text
+*.config.ts text
+
+# Build and script files
+*.sh text eol=lf
+*.bash text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Documentation
+README* text
+CHANGELOG* text
+LICENSE* text
+
+# Serialization formats
+*.json text
+*.yaml text
+*.toml text
+*.xml text
+
+# Binary files (no line ending conversion)
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Compiled and binary files
+*.map text
+*.compiled text
+*.min.* binary
+*.bundle binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Specific language handling
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+
+# Diff and merge configurations
+*.ts merge=typescript
+*.js merge=javascript
+*.json merge=json
+*.yml merge=yaml
+
+# Performance and security
+*.log text
+*.map text
+
+# Bun-specific
+bunfig.toml text
+bun.lockb binary
+
+# GitHub Actions
+.github/workflows/*.yml text eol=lf
+
+# Editor-specific
+.vscode/settings.json text
+.idea/*.xml text
+
+# Code quality tools
+.eslintrc* text
+.prettierrc* text
+.stylelintrc* text
