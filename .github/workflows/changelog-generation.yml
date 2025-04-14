@@ -149,7 +149,11 @@ jobs:
           echo "🔹 Bun Version: $BUN_VERSION"
 
           # Check if Bun meets minimum requirements
-          if [[ "$BUN_VERSION" < "1.0.0" ]]; then
+          # Extract major, minor, and patch components of the version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BUN_VERSION"
+          
+          # Compare the version numerically
+          if (( MAJOR < 1 || (MAJOR == 1 && MINOR < 0) || (MAJOR == 1 && MINOR == 0 && PATCH < 0) )); then
             echo "::warning::Bun version $BUN_VERSION is below recommended version 1.0.0"
           fi
           echo "::endgroup::"
