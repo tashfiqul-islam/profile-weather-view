@@ -1,12 +1,14 @@
 # Profile Weather View: Changelog Generation Workflow
-# Automates changelog updates with intelligent version tracking
 
 name: "📋 Changelog Generation"
 
+# ============================================================
+# 🚀 Strategic workflow triggers for optimal automation
+# ============================================================
 on:
   # Trigger on key code and configuration changes
   push:
-    branches: 
+    branches:
       - main
       - master
     paths:
@@ -31,32 +33,51 @@ on:
         type: boolean
         default: false
 
-# Granular permissions for secure GitHub Actions execution
+# ============================================================
+# 🔒 Granular permissions (Principle of least privilege)
+# ============================================================
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write    # For repository updates
+  pull-requests: write  # For PR management
 
-# Consistent environment configuration
+# ============================================================
+# 🌍 Global environment configuration
+# ============================================================
 env:
   BUN_VERSION: "latest"
-  CHANGELOG_PATH: "src/docs/CHANGELOG.md"
+  CHANGELOG_PATH: "CHANGELOG.md"
   TIMEZONE: "UTC"
+  DEBUG_MODE: ${{ github.event.inputs.debug == true }}
+  FORCE_REGENERATE: ${{ github.event.inputs.force == true }}
 
-# Enhanced job configuration with improved isolation and error handling
+# ============================================================
+# 📌 JOB: PREREQUISITES (Validates environment readiness)
+# ============================================================
 jobs:
   validate-prerequisites:
     name: "🔍 Preflight Validation"
     runs-on: ubuntu-latest
     outputs:
-      should_proceed: ${{ steps.check-requirements.outputs.proceed }}
-    
+      should_proceed: ${{ steps.check-requirements.outputs.should_proceed }}
+      repo_state: ${{ steps.repo-state.outputs.state }}
+
     steps:
-      - name: Checkout Repository
+      - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Full history for comprehensive changelog
 
-      - name: Check Required Files
+      - name: "🔍 Log Execution Context"
+        run: |
+          echo "::group::Execution Context"
+          echo "🔹 Run ID: ${{ github.run_id }}"
+          echo "🔹 Workflow: ${{ github.workflow }}"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 Trigger: ${{ github.event_name }}"
+          echo "🔹 Debug Mode: ${{ env.DEBUG_MODE == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "::endgroup::"
+
+      - name: "📑 Check Required Files"
         id: check-requirements
         run: |
           REQUIRED_FILES=(
@@ -64,7 +85,7 @@ jobs:
             "release-please-config.json"
             "package.json"
           )
-          
+
           MISSING_FILES=()
           for file in "${REQUIRED_FILES[@]}"; do
             if [[ ! -f "$file" ]]; then
@@ -74,30 +95,66 @@ jobs:
 
           if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
             echo "::error::Missing critical files: ${MISSING_FILES[*]}"
-            echo "proceed=false" >> $GITHUB_OUTPUT
+            echo "should_proceed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
 
-          echo "proceed=true" >> $GITHUB_OUTPUT
+          echo "::notice::All prerequisite files are present"
+          echo "should_proceed=true" >> $GITHUB_OUTPUT
 
+      - name: "🔄 Evaluate Repository State"
+        id: repo-state
+        if: steps.check-requirements.outputs.should_proceed == 'true'
+        run: |
+          # Analyze commit history to determine repo state
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          BRANCH_COUNT=$(git branch -r | wc -l)
+
+          if [[ $COMMIT_COUNT -lt 5 ]]; then
+            echo "state=minimal" >> $GITHUB_OUTPUT
+            echo "::notice::Repository has minimal history ($COMMIT_COUNT commits)"
+          elif [[ $BRANCH_COUNT -gt 10 ]]; then
+            echo "state=complex" >> $GITHUB_OUTPUT
+            echo "::notice::Repository has complex branching structure ($BRANCH_COUNT remote branches)"
+          else
+            echo "state=standard" >> $GITHUB_OUTPUT
+            echo "::notice::Repository has standard structure"
+          fi
+
+# ============================================================
+# 📌 JOB: GENERATE (Creates and updates changelog)
+# ============================================================
   generate-changelog:
     name: "🚀 Changelog Generation"
     needs: validate-prerequisites
     if: needs.validate-prerequisites.outputs.should_proceed == 'true'
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 10
+
     steps:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensure full commit history
+          fetch-depth: 0  # Ensure full commit history for comprehensive changelog
 
       - name: "🧰 Setup Bun Runtime"
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: "🔍 Version Resolution"
+      - name: "🔍 Verify Bun Installation"
+        run: |
+          echo "::group::Runtime Verification"
+          BUN_VERSION=$(bun --version)
+          echo "🔹 Bun Version: $BUN_VERSION"
+
+          # Check if Bun meets minimum requirements
+          if [[ "$BUN_VERSION" < "1.0.0" ]]; then
+            echo "::warning::Bun version $BUN_VERSION is below recommended version 1.0.0"
+          fi
+          echo "::endgroup::"
+
+      - name: "📋 Version Resolution"
         id: version-validation
         run: |
           # Intelligent version detection strategy
@@ -109,48 +166,136 @@ jobs:
             SOURCE="release manifest"
           fi
 
-          # Version format validation
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Invalid version format: $VERSION"
+          # Version format validation with detailed patterns
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.]+)?$ ]]; then
+            echo "::error::Invalid semantic version format: $VERSION"
+            echo "::error::Expected format: major.minor.patch or major.minor.patch-prerelease"
             exit 1
           fi
 
-          echo "Detected Version: $VERSION (Source: $SOURCE)"
+          echo "::notice::Detected Version: $VERSION (Source: $SOURCE)"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "source=$SOURCE" >> $GITHUB_OUTPUT
 
       - name: "📦 Prepare Environment"
         run: |
+          echo "::group::Environment Preparation"
+          echo "🔹 Installing dependencies..."
           bun add @commitlint/parse
+
+          echo "🔹 Creating directory structure..."
           mkdir -p src/docs/changelog
 
-      - name: "🚀 Generate Changelog"
+          # Verify changelog file existence
+          if [[ ! -f "${{ env.CHANGELOG_PATH }}" ]]; then
+            echo "🔹 Creating initial changelog file..."
+            echo "# Changelog\n\nAll notable changes to this project will be documented in this file.\n" > ${{ env.CHANGELOG_PATH }}
+          fi
+          echo "::endgroup::"
+
+      - name: "🔄 Generate Changelog"
+        id: generate
         run: |
-          bun run src/docs/changelog/changelog-generator.ts "${{ steps.version-validation.outputs.version }}"
-        env:
-          FORCE_REGENERATE: ${{ github.event.inputs.force }}
-          DEBUG: ${{ github.event.inputs.debug }}
+          echo "::group::Changelog Generation Process"
+
+          # Execute the changelog generator with appropriate parameters
+          TIMESTAMP=$(date +%s)
+          OUTPUT_LOG="/tmp/changelog-generator-$TIMESTAMP.log"
+
+          DEBUG_FLAG=""
+          if [[ "${{ env.DEBUG_MODE }}" == "true" ]]; then
+            DEBUG_FLAG="--debug"
+            echo "🔹 Debug mode enabled"
+          fi
+
+          FORCE_FLAG=""
+          if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then
+            FORCE_FLAG="--force"
+            echo "🔹 Force regeneration enabled"
+          fi
+
+          REPO_STATE="${{ needs.validate-prerequisites.outputs.repo_state }}"
+          echo "🔹 Repository state: $REPO_STATE"
+
+          echo "🔹 Running changelog generator for version ${{ steps.version-validation.outputs.version }}..."
+          bun run src/docs/changelog/changelog-generator.ts \
+            "${{ steps.version-validation.outputs.version }}" \
+            $FORCE_FLAG $DEBUG_FLAG \
+            --repo-state=$REPO_STATE \
+            2>&1 | tee $OUTPUT_LOG
+
+          # Capture results
+          GENERATION_STATUS=$?
+          CHANGE_COUNT=$(grep -c "Added commit" $OUTPUT_LOG || echo "0")
+
+          echo "::endgroup::"
+
+          if [[ $GENERATION_STATUS -ne 0 ]]; then
+            echo "::error::Changelog generation failed with exit code $GENERATION_STATUS"
+            exit $GENERATION_STATUS
+          fi
+
+          echo "::notice::Successfully processed $CHANGE_COUNT commit entries"
+          echo "change_count=$CHANGE_COUNT" >> $GITHUB_OUTPUT
 
       - name: "📤 Commit Changelog Updates"
+        id: commit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "::group::Git Operations"
           # Configurable git user for traceability
           git config user.name 'Profile Weather View Bot'
           git config user.email 'bot@profile-weather-view.dev'
-          
+
           # Intelligent change detection
           if [[ -n "$(git status --porcelain ${{ env.CHANGELOG_PATH }})" ]]; then
+            echo "🔹 Changes detected in changelog, committing..."
             git add ${{ env.CHANGELOG_PATH }}
-            git commit -m "docs(changelog): update for v${{ steps.version-validation.outputs.version }}"
-            git push
-          else
-            echo "No changelog updates detected"
-          fi
 
-      - name: "📊 Release Analytics"
+            # Create meaningful commit message
+            COMMIT_MSG="docs(changelog): update for v${{ steps.version-validation.outputs.version }}"
+
+            if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then
+              COMMIT_MSG="$COMMIT_MSG (full regeneration)"
+            fi
+
+            if [[ "${{ steps.version-validation.outputs.source }}" == "manual input" ]]; then
+              COMMIT_MSG="$COMMIT_MSG [manual]"
+            fi
+
+            git commit -m "$COMMIT_MSG"
+
+            # Push with error handling
+            if git push; then
+              echo "::notice::Successfully pushed changelog updates"
+              echo "changes_committed=true" >> $GITHUB_OUTPUT
+            else
+              echo "::error::Failed to push changes. Check repository permissions."
+              exit 1
+            fi
+          else
+            echo "🔹 No changelog updates detected"
+            echo "changes_committed=false" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      - name: "📊 Generation Report"
         run: |
+          # Create detailed summary report
           echo "## 📊 Changelog Generation Report" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** ${{ steps.version-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source:** ${{ steps.version-validation.outputs.source }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Changelog Path:** ${{ env.CHANGELOG_PATH }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Force Regenerate:** ${{ github.event.inputs.force }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Force Regenerate:** ${{ env.FORCE_REGENERATE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Debug Mode:** ${{ env.DEBUG_MODE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changes Committed:** ${{ steps.commit.outputs.changes_committed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commits Processed:** ${{ steps.generate.outputs.change_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository State:** ${{ needs.validate-prerequisites.outputs.repo_state }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Generation Timestamp:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+
+          # Add execution time if available
+          if [ -n "$GITHUB_WORKFLOW_REF" ]; then
+            DURATION="$(( $(date +%s) - $GITHUB_RUN_ATTEMPT_STARTED_AT ))"
+            echo "- **Execution Time:** $(($DURATION / 60)) minutes and $(($DURATION % 60)) seconds" >> $GITHUB_STEP_SUMMARY
+          fi

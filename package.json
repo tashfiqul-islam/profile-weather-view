@@ -7,7 +7,7 @@
   "main": "src/weather-update/index.ts",
   "engines": {
     "bun": ">=1.1.0",
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "packageManager": "bun@1.2.7",
   "repository": {
@@ -50,10 +50,10 @@
     "docs:preview": "vitepress preview src/docs",
     "docs:deploy": "bun run docs:build && bun scripts/deploy-docs.ts",
     "docs:serve": "bun run docs:build && bun serve src/docs/.vitepress/dist",
-    
-    "// Git Hooks": "",
-    "changelog:generate": "bun run src/scripts/changelog-generator.ts",
-    "prepare": "...",
+
+    "// Version Control & CI": "",
+    "changelog": "bun run src/docs/changelog/changelog-generator.ts",
+    "prepare": "husky",
     "commit": "bunx commit",
     "preinstall": "npx only-allow bun",
     "postinstall": "bun run prepare"

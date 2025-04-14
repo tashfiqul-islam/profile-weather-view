@@ -1,0 +1,534 @@
+# Documentation Release Management Workflow
+
+name: "📚 Documentation Release Management"
+
+# ============================================================
+# 🚀 Workflow triggers for documentation updates
+# ============================================================
+on:
+  # Trigger on documentation and configuration changes
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/docs/**'            # Documentation source files
+      - 'release-please-config.json'  # Release configuration
+      - '.release-please-manifest.json'  # Version manifest
+      - 'meta.json'              # Site metadata
+
+  # Manual workflow dispatch for immediate releases
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Simulate release without publishing"
+        type: boolean
+        default: false
+      debug:
+        description: "Enable debug logging"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🔒 Prevent redundant executions (Ensures single execution)
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Explicit permissions (Principle of least privilege)
+# ============================================================
+permissions:
+  contents: write     # For Release Please to create releases and tags
+  pull-requests: write # For Release Please to create PRs
+  pages: write        # For GitHub Pages deployment
+  id-token: write     # For Pages authentication
+  issues: read        # For linking issues in release notes
+
+# ============================================================
+# 🌍 Global environment variables
+# ============================================================
+env:
+  BUN_VERSION: "latest"
+  DOCS_SOURCE_DIR: "src/docs"
+  DOCS_OUTPUT_DIR: "src/docs/.vitepress/dist"
+  DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
+  DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
+  EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+  TIMESTAMP: ${{ github.event.repository.updated_at }}
+
+# ============================================================
+# 📌 JOB: PREFLIGHT (Validates repository configuration)
+# ============================================================
+jobs:
+  preflight:
+    name: "🔍 Preflight Checks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      proceed: ${{ steps.validation.outputs.proceed }}
+      config_valid: ${{ steps.config-validation.outputs.valid }}
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for release analysis
+
+      - name: "🔍 Log Execution Context"
+        run: |
+          echo "::group::Execution Context"
+          echo "🔹 Run ID: ${{ env.EXECUTION_ID }}"
+          echo "🔹 Workflow: ${{ github.workflow }}"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 Trigger: ${{ github.event_name }}"
+          echo "🔹 Debug Mode: ${{ env.DEBUG_MODE == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "🔹 Dry Run: ${{ env.DRY_RUN == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "::endgroup::"
+
+      - name: "📑 Validate Required Files"
+        id: validation
+        run: |
+          echo "::group::File Validation"
+          # Verify required files exist
+          REQUIRED_FILES=(
+            "release-please-config.json"
+            ".release-please-manifest.json"
+            "package.json"
+            "meta.json"
+          )
+
+          MISSING_FILES=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [[ -f "$file" ]]; then
+              echo "🔹 Found: $file"
+            else
+              echo "❌ Missing: $file"
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
+            echo "::error::Missing required files: ${MISSING_FILES[*]}"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Validate documentation directory
+          if [[ ! -d "${{ env.DOCS_SOURCE_DIR }}" ]]; then
+            echo "::error::Documentation directory not found: ${{ env.DOCS_SOURCE_DIR }}"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "🔹 Documentation directory validated: ${{ env.DOCS_SOURCE_DIR }}"
+
+          echo "proceed=true" >> $GITHUB_OUTPUT
+          echo "::notice::Repository file structure validation successful"
+          echo "::endgroup::"
+
+      - name: "🔄 Validate Release Configuration"
+        id: config-validation
+        if: steps.validation.outputs.proceed == 'true'
+        run: |
+          echo "::group::Configuration Validation"
+          # Validate release-please config
+          if jq -e '.packages.docs' release-please-config.json > /dev/null; then
+            echo "🔹 Documentation component found in release-please config"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Documentation component not configured in release-please-config.json"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Additional docs-specific configuration checks
+          DOC_PATH=$(jq -r '.packages.docs.path // ""' release-please-config.json)
+          if [[ -n "$DOC_PATH" && ! -d "$DOC_PATH" ]]; then
+            echo "::warning::Configured docs path '$DOC_PATH' in release-please-config.json doesn't exist"
+          fi
+
+          echo "::notice::Release configuration validation successful"
+          echo "::endgroup::"
+
+# ============================================================
+# 📌 JOB: RELEASE (Creates releases via Release Please)
+# ============================================================
+  release:
+    name: "🚀 Release Please"
+    needs: preflight
+    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.version.outputs.version }}
+      release_url: ${{ steps.release.outputs.html_url }}
+      pr_url: ${{ steps.release.outputs.pr }}
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comprehensive release notes
+
+      - name: "🔄 Run Release Please"
+        id: release
+        uses: googleapis/release-please-action@v4
+        env:
+          # Conditionally set DEBUG for release-please CLI if debug mode is enabled
+          DEBUG: ${{ env.DEBUG_MODE == 'true' && 'true' || '' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: manifest
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: ${{ env.DRY_RUN == 'true' }} # Skip creating the release object in dry run
+
+      - name: "🏷️ Extract Version Information"
+        id: version
+        if: steps.release.outputs.releases_created
+        run: |
+          TAG="${{ steps.release.outputs.tag_name }}"
+          VERSION="${TAG#*v}"  # Handle potential component prefix
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "::notice::New documentation release: $VERSION"
+
+      - name: "📊 Log Release Information"
+        if: steps.release.outputs.releases_created
+        run: |
+          echo "::group::Release Information"
+          echo "🔹 Release Created: Yes"
+          echo "🔹 Tag Name: ${{ steps.release.outputs.tag_name }}"
+          echo "🔹 Version: ${{ steps.version.outputs.version }}"
+          echo "🔹 Release URL: ${{ steps.release.outputs.html_url }}"
+
+          # Print release notes summary if available
+          if [[ -n "${{ steps.release.outputs.body }}" ]]; then
+            echo "🔹 Release Notes Preview:"
+            echo "${{ steps.release.outputs.body }}" | head -n 10
+            echo "... (truncated) ..."
+          fi
+          echo "::endgroup::"
+
+      - name: "📊 Record Release Metrics"
+        if: steps.release.outputs.releases_created
+        run: |
+          # Record metrics for later analysis
+          echo "${{ steps.version.outputs.version }},$(date +%s),${{ github.actor }}" >> /tmp/release_metrics.csv
+
+# ============================================================
+# 📌 JOB: BUILD-DEPLOY (Builds and deploys documentation)
+# ============================================================
+  build-deploy:
+    name: "📚 Build & Deploy Documentation"
+    needs: release
+    if: needs.release.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      deployment_url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag_name }}
+          fetch-depth: 1  # Only need the latest commit for building
+
+      - name: "🧰 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: "🔍 Verify Bun Installation"
+        run: |
+          echo "::group::Runtime Verification"
+          BUN_VERSION=$(bun --version)
+          echo "🔹 Bun Version: $BUN_VERSION"
+
+          # Check if Bun meets minimum requirements
+          if [[ "$BUN_VERSION" < "1.0.0" ]]; then
+            echo "::warning::Bun version $BUN_VERSION is below recommended version 1.0.0"
+          fi
+          echo "::endgroup::"
+
+      - name: "📦 Install Dependencies"
+        run: |
+          echo "::group::Dependency Installation"
+          echo "🔹 Installing project dependencies..."
+          bun install --frozen-lockfile
+
+          # Verify VitePress installation for docs
+          if ! bun list | grep -q "vitepress"; then
+            echo "::warning::VitePress not found in dependencies, may cause build issues"
+          else
+            echo "🔹 VitePress detected in dependencies"
+          fi
+          echo "::endgroup::"
+
+      - name: "⚙️ Configure GitHub Pages"
+        uses: actions/configure-pages@v5
+
+      - name: "🔄 Update Version Metadata"
+        id: update-metadata
+        run: |
+          echo "::group::Metadata Update"
+          VERSION="${{ needs.release.outputs.version }}"
+          TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          DATE=$(date '+%B %d, %Y')
+
+          # Parse version components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          echo "🔹 Version components: Major=$MAJOR, Minor=$MINOR, Patch=$PATCH"
+
+          # Create backup of meta.json
+          cp meta.json meta.json.bak
+
+          # Update meta.json for version tracking
+          jq --arg version "$VERSION" \
+             --arg timestamp "$TIMESTAMP" \
+             --arg date "$DATE" \
+             --arg major "$MAJOR" \
+             --arg minor "$MINOR" \
+             --arg patch "$PATCH" \
+          '.docsVersion = $version |
+           .channels.docs.latest = $version |
+           .channels.docs.stable = $version |
+           .metadata.lastUpdatedTimestamp = $timestamp |
+           .releases = (.releases | map(
+              if .type == "docs" and .isLatest then
+                .isLatest = false
+              else
+                .
+              end
+           )) + [{
+             "type": "docs",
+             "version": $version,
+             "date": $date,
+             "timestamp": $timestamp,
+             "formattedDate": $date,
+             "major": $major,
+             "minor": $minor,
+             "patch": $patch,
+             "channel": "stable",
+             "path": "/v" + $major + "." + $minor + "/",
+             "isLatest": true,
+             "isStable": true,
+             "displayOrder": 0
+           }]' meta.json > meta.json.tmp && mv meta.json.tmp meta.json
+
+          # Validate the updated JSON
+          if ! jq empty meta.json; then
+            echo "::error::Failed to update meta.json, syntax error"
+            cp meta.json.bak meta.json
+            exit 1
+          fi
+
+          echo "🔹 meta.json updated successfully with new version information"
+          echo "::endgroup::"
+
+      - name: "🏗️ Build Documentation"
+        id: build
+        run: |
+          echo "::group::Documentation Build"
+          echo "🔹 Building documentation site..."
+
+          # Set environment variables for build
+          export VITE_APP_VERSION="${{ needs.release.outputs.version }}"
+          export VITE_APP_BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+          # Execute build
+          bun run docs:build
+
+          echo "🔹 Build complete"
+          echo "::endgroup::"
+
+      - name: "🔍 Verify Build Output"
+        run: |
+          echo "::group::Build Verification"
+          if [[ ! -d "${{ env.DOCS_OUTPUT_DIR }}" ]]; then
+            echo "::error::Documentation build failed, output directory not found"
+            exit 1
+          fi
+
+          # Check for critical files
+          echo "🔹 Verifying essential files..."
+          CRITICAL_FILES=("index.html" "assets" "404.html")
+          for file in "${CRITICAL_FILES[@]}"; do
+            if [[ ! -e "${{ env.DOCS_OUTPUT_DIR }}/$file" ]]; then
+              echo "::warning::Missing critical file in build output: $file"
+            else
+              echo "🔹 Found: $file"
+            fi
+          done
+
+          # Count pages
+          PAGE_COUNT=$(find "${{ env.DOCS_OUTPUT_DIR }}" -name "*.html" | wc -l)
+          echo "🔹 Generated $PAGE_COUNT HTML pages"
+
+          echo "::notice::Documentation built successfully"
+          echo "::endgroup::"
+
+      - name: "📤 Upload Pages Artifact"
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.DOCS_OUTPUT_DIR }}
+          retention-days: 30
+
+      - name: "🚀 Deploy to GitHub Pages"
+        id: deployment
+        if: env.DRY_RUN != 'true'
+        uses: actions/deploy-pages@v4
+
+      - name: "🔍 Simulate Deployment (Dry Run)"
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry run mode - skipping actual deployment"
+          echo "page_url=https://example.com/docs/preview" >> $GITHUB_OUTPUT
+
+# ============================================================
+# 📌 JOB: VERSION-TAGS (Creates semantic versioning tags)
+# ============================================================
+  version-tags:
+    name: "🏷️ Create Version Tags"
+    needs: [release, build-deploy]
+    if: needs.release.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for proper tagging
+
+      - name: "🔧 Configure Git"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: "🔢 Extract Version Components"
+        id: version-parts
+        run: |
+          echo "::group::Version Analysis"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${{ needs.release.outputs.version }}"
+          echo "🔹 Major: $MAJOR"
+          echo "🔹 Minor: $MINOR"
+          echo "🔹 Patch: $PATCH"
+
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$PATCH" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: "🏷️ Create Semantic Version Tags"
+        id: create-tags
+        if: env.DRY_RUN != 'true'
+        run: |
+          echo "::group::Tag Creation"
+          # Create and update semantic version tags for docs
+          # These provide easy access to latest major and minor versions
+
+          MAJOR_TAG="docs/v${{ steps.version-parts.outputs.major }}"
+          MINOR_TAG="docs/v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}"
+          LATEST_TAG="docs/latest"
+
+          echo "🔹 Creating/updating tags:"
+          echo "🔹 $MAJOR_TAG (Latest v${{ steps.version-parts.outputs.major }} release)"
+          echo "🔹 $MINOR_TAG (Latest v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }} release)"
+          echo "🔹 $LATEST_TAG (Latest overall release)"
+
+          # Create or update tags with annotations
+          git tag -fa "$MAJOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.x documentation release"
+          git tag -fa "$MINOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}.x documentation release"
+          git tag -fa "$LATEST_TAG" -m "Latest documentation release (v${{ needs.release.outputs.version }})"
+
+          # Push tags to remote with proper error handling
+          for TAG in "$MAJOR_TAG" "$MINOR_TAG" "$LATEST_TAG"; do
+            if git push origin "$TAG" --force; then
+              echo "🔹 Successfully pushed tag: $TAG"
+            else
+              echo "::warning::Failed to push tag: $TAG"
+            fi
+          done
+
+          echo "tags_created=true" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: "🏷️ Simulate Tag Creation (Dry Run)"
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "::notice::Dry run mode - simulating tag creation for:"
+          echo "- docs/v${{ steps.version-parts.outputs.major }}"
+          echo "- docs/v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}"
+          echo "- docs/latest"
+
+          echo "tags_created=false" >> $GITHUB_OUTPUT
+
+# ============================================================
+# 📌 JOB: SUMMARY (Provides release overview and metrics)
+# ============================================================
+  summary:
+    name: "📊 Release Summary"
+    needs: [preflight, release, build-deploy, version-tags]
+    if: always() && needs.release.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: "🔢 Process Version for Summary"
+        id: extract-version
+        if: needs.release.outputs.version
+        run: |
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${{ needs.release.outputs.version }}"
+          echo "major=${MAJOR:-x}" >> $GITHUB_OUTPUT
+          echo "minor=${MINOR:-y}" >> $GITHUB_OUTPUT
+          echo "patch=${PATCH:-z}" >> $GITHUB_OUTPUT
+
+      - name: "📝 Generate Comprehensive Summary"
+        run: |
+          echo "# 📚 Documentation Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** v${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** ${{ needs.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release URL:** ${{ needs.release.outputs.release_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Mode:** ${{ env.DRY_RUN == 'true' && '🧪 Dry Run (Simulation)' || '🚀 Production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Version Tags" >> $GITHUB_STEP_SUMMARY
+          echo "- **Major:** `docs/v${{ steps.extract-version.outputs.major }}`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Minor:** `docs/v${{ steps.extract-version.outputs.major }}.${{ steps.extract-version.outputs.minor }}`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Patch:** `v${{ needs.release.outputs.version }}`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Latest:** `docs/latest`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ needs.build-deploy.result == 'success' && '✅ Successful' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
+            echo "- **URL:** 🧪 Dry run - no deployment" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **URL:** [GitHub Pages](${{ needs.build-deploy.outputs.deployment_url }})" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Update documentation links in README.md" >> $GITHUB_STEP_SUMMARY
+          echo "- Verify documentation site functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- Consider announcing the new documentation version" >> $GITHUB_STEP_SUMMARY
+
+      - name: "⏱️ Record Workflow Performance"
+        if: ${{ !env.DEBUG_MODE }}
+        run: |
+          # Note: Accurate duration calculation requires passing start time between jobs.
+          # This summary provides job completion status.
+          echo "## ⏱️ Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Jobs Completed:** 5 (Preflight, Release, Build-Deploy, Version-Tags, Summary)" >> $GITHUB_STEP_SUMMARY
+          # Add more details if needed, e.g., job statuses
+          echo "- Preflight Status: ${{ needs.preflight.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Release Status: ${{ needs.release.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build & Deploy Status: ${{ needs.build-deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Version Tags Status: ${{ needs.version-tags.result }}" >> $GITHUB_STEP_SUMMARY

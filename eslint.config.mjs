@@ -143,6 +143,7 @@ export default tseslint.config(
       'vitest.config.ts',
       'commitlint.config.mjs',
       'postcss.config.mjs',
+      '.vitepress/',
     ],
   },
 );

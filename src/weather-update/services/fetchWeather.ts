@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { Temporal } from '@js-temporal/polyfill';
 
 /**
- * ✅ OpenWeather API Constants
+ * OpenWeather API Constants
  * - Latitude and Longitude for Uttara, Dhaka.
  */
 const LAT = '23.8759';
 const LON = '90.3795';
 
 /**
- * ✅ Define Zod Schema for API Response Validation
+ * Zod Schema for API Response Validation
  */
 const WeatherSchema = z.object({
   current: z.object({
@@ -31,18 +31,25 @@ const WeatherSchema = z.object({
 export type WeatherData = z.infer<typeof WeatherSchema>;
 
 /**
- * 🕒 Converts a UTC timestamp to Dhaka time using Temporal API.
+ * Converts a UTC timestamp to Dhaka time using Temporal API.
+ *
+ * @param utcSeconds - UNIX timestamp in seconds
+ * @returns Formatted time string in HH:mm:ss format
  */
 export function convertToDhakaTime(utcSeconds: number): string {
   return Temporal.Instant.fromEpochSeconds(utcSeconds)
     .toZonedDateTimeISO('Asia/Dhaka')
     .toPlainTime()
     .toString()
-    .replace(/\.\d+/, ''); // HH:mm:ss format
+    .replace(/\.\d+/, ''); // Remove fractional seconds
 }
 
 /**
- * 🌍 Fetches current weather data from OpenWeather API.
+ * Fetches current weather data from OpenWeather API.
+ *
+ * @returns Pipe-delimited string with weather information:
+ *          weatherDescription|temperature|sunrise|sunset|humidity|iconCode
+ * @throws Error if API key is missing or API request fails
  */
 export async function fetchWeatherData(): Promise<string> {
   const API_KEY = Bun.env['OPEN_WEATHER_KEY']?.trim();

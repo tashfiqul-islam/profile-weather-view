@@ -129,7 +129,7 @@ jobs:
           mkdir -p /tmp/weather-cache
           CACHE_FILE="/tmp/weather-cache/openweather_status"
           CACHE_EXPIRATION=21600 # 6 hours in seconds
-          
+
           # Check if cache exists and is still valid
           if [[ -f "$CACHE_FILE" && $(($(date +%s) - $(stat -c %Y "$CACHE_FILE"))) -lt $CACHE_EXPIRATION ]]; then
             CACHED_STATUS=$(cat "$CACHE_FILE")
@@ -137,11 +137,11 @@ jobs:
             echo "::notice::Using cached API status ($CACHED_STATUS) - still valid for $((CACHE_EXPIRATION - $(date +%s) + $(stat -c %Y "$CACHE_FILE"))) seconds"
             exit 0
           fi
-          
+
           # Quick API health check with minimal data request
           RESPONSE=$(curl -s -o response.json -w "%{http_code}" \
             "https://api.openweathermap.org/data/3.0/onecall?lat=23.8759&lon=90.3795&exclude=minutely,hourly,daily,alerts&appid=$OPEN_WEATHER_KEY&units=metric")
-          
+
           if [[ "$RESPONSE" == "200" ]]; then
             echo "status=operational" >> $GITHUB_OUTPUT
             echo "operational" > "$CACHE_FILE"
@@ -212,13 +212,13 @@ jobs:
           echo "::group::Bun Runtime Verification"
           BUN_VERSION=$(bun --version)
           echo "🔹 Bun Version: $BUN_VERSION"
-          
+
           # Check if Bun meets minimum requirements
           if [[ "$BUN_VERSION" < "1.0.0" ]]; then
             echo "::error::Bun version $BUN_VERSION is below minimum required version 1.0.0"
             exit 1
           fi
-          
+
           # Verify TypeScript support
           echo "🔹 TypeScript Support: $(bun --help | grep -q typescript && echo "Enabled" || echo "Disabled")"
           echo "::endgroup::"
@@ -257,7 +257,7 @@ jobs:
           echo "::group::Code Quality Verification"
           echo "🔹 Running ESLint..."
           bun run lint || { echo "::error::ESLint check failed"; exit 1; }
-          
+
           echo "🔹 Running Prettier..."
           bun run format --check || { echo "::error::Prettier check failed"; exit 1; }
           echo "::endgroup::"
@@ -296,7 +296,7 @@ jobs:
             echo "::error::README.md file not found in profile repository"
             exit 1
           fi
-          
+
           # Check if weather section exists in README
           if ! grep -q "<!-- Hourly Weather Update -->" profile-repo/README.md; then
             echo "::error::Weather section not found in README.md"
@@ -309,7 +309,7 @@ jobs:
         run: |
           LOCKFILE="/tmp/readme_update.lock"
           exec 200>"$LOCKFILE"
-          flock -n 200 || { 
+          flock -n 200 || {
             echo "::error::Another instance is already updating README"
             exit 1
           }
@@ -328,7 +328,7 @@ jobs:
         working-directory: weather-code
         run: |
           echo "::group::Weather Update Process"
-          
+
           # Execute the TypeScript code to fetch weather and update README
           OUTPUT=$(OPEN_WEATHER_KEY="$OPEN_WEATHER_KEY" \
                   GITHUB_ACTIONS="true" \
@@ -337,28 +337,28 @@ jobs:
                   BUN_RUNTIME_SAFETY="${{ env.BUN_RUNTIME_SAFETY }}" \
                   FORCE_UPDATE="${{ env.FORCE_UPDATE }}" \
                   bun run src/weather-update/index.ts)
-          
+
           # Capture the execution status
           EXECUTION_STATUS=$?
-          
+
           if [[ $EXECUTION_STATUS -ne 0 ]]; then
             echo "::error::Weather update process failed with code $EXECUTION_STATUS"
             echo "$OUTPUT" | grep -E '❌|Error'
             exit $EXECUTION_STATUS
           fi
-          
-          # Parse output for CHANGES_DETECTED flag
+
+          # Parse output for CHANGES_DETECTED flag and set step output
           if echo "$OUTPUT" | grep -q "CHANGES_DETECTED=true"; then
-            echo "CHANGES_DETECTED=true" >> $GITHUB_ENV
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
             echo "::notice::README changes detected by TypeScript code"
           else
-            echo "CHANGES_DETECTED=false" >> $GITHUB_ENV
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
             echo "::notice::No README changes needed"
           fi
-          
+
           # Log key output lines for monitoring
           echo "$OUTPUT" | grep -E '✅|⚠️|❌|🌍|📝|🎉' || true
-          
+
           echo "::endgroup::"
 
       - name: "📊 Generate Code Coverage Report"
@@ -369,7 +369,7 @@ jobs:
             echo "::group::Code Coverage Summary"
             cat coverage/coverage-summary.json | jq '.total'
             echo "::endgroup::"
-          
+
             echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
             echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
             echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
@@ -400,7 +400,8 @@ jobs:
           if-no-files-found: ignore
 
       - name: "💾 Commit and Push Changes with Verified Signature"
-        if: env.CHANGES_DETECTED == 'true'
+        # Use step output instead of env var for reliable conditional execution
+        if: steps.update-weather-and-readme.outputs.changes_detected == 'true'
         working-directory: profile-repo
         run: |
           echo "::group::Git Operations"
@@ -512,19 +513,19 @@ jobs:
           echo "::group::Failure Analysis"
           echo "# Workflow Failure Analysis" >> $GITHUB_STEP_SUMMARY
           echo "## Failed Jobs" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ needs.preflight.result }}" == "failure" ]]; then
             echo "- **Preflight:** Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "${{ needs.update-weather.result }}" == "failure" ]]; then
             echo "- **Weather Update:** Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "${{ needs.verify.result }}" == "failure" ]]; then
             echo "- **Verification:** Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Recovery Actions" >> $GITHUB_STEP_SUMMARY
           echo "- Recovery mode activated" >> $GITHUB_STEP_SUMMARY
@@ -543,8 +544,8 @@ jobs:
             # Linear: 15 minutes per attempt
             DELAY_MINUTES=$((15 * ${{ github.run_attempt }}))
           fi
-          
+
           NEXT_RETRY=$(date -d "+${DELAY_MINUTES} minutes" "+%H:%M:%S")
-          
+
           echo "::notice title=Automatic Retry::Scheduled in ${DELAY_MINUTES} minutes (at approximately ${NEXT_RETRY})"
           echo "- **Next automatic retry:** in ${DELAY_MINUTES} minutes (at ${NEXT_RETRY})" >> $GITHUB_STEP_SUMMARY
