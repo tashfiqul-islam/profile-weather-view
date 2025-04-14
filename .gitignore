@@ -50,6 +50,7 @@ coverage/
 .stylelintcache
 .vite
 .vitest
+.vitepress
 
 # IDE & Editor
 .idea/
