@@ -1,3 +1,4 @@
+import { Temporal } from '@js-temporal/polyfill';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 
 import {
@@ -194,5 +195,87 @@ describe('fetchWeatherData()', () => {
     await expect(fetchWeatherData()).rejects.toThrowError(
       new Error('❌ Weather data fetch failed. Check logs for details.'),
     );
+  });
+
+  describe('convertToDhakaTime()', () => {
+    it('should handle non-finite numbers', () => {
+      expect(() => convertToDhakaTime(NaN)).toThrowError(
+        'UTC seconds must be a finite number',
+      );
+
+      expect(() => convertToDhakaTime(Infinity)).toThrowError(
+        'UTC seconds must be a finite number',
+      );
+    });
+
+    it('should reject negative timestamps', () => {
+      expect(() => convertToDhakaTime(-1)).toThrowError(
+        'UTC seconds must be between 0 and Number.MAX_SAFE_INTEGER',
+      );
+    });
+
+    it('should reject timestamps exceeding MAX_SAFE_INTEGER', () => {
+      expect(() =>
+        convertToDhakaTime(Number.MAX_SAFE_INTEGER + 1),
+      ).toThrowError(
+        'UTC seconds must be between 0 and Number.MAX_SAFE_INTEGER',
+      );
+    });
+
+    it('should handle missing split result with nullish coalescing', () => {
+      // Mock the toString() to return a string that when split, results in an empty array
+      const mockPlainTime = {
+        toString: vi.fn().mockReturnValue('no-dots-here'),
+      };
+
+      const mockDhakaTime = {
+        toPlainTime: vi.fn().mockReturnValue(mockPlainTime),
+      };
+
+      const mockInstant = {
+        toZonedDateTimeISO: vi.fn().mockReturnValue(mockDhakaTime),
+      };
+
+      // Create a mock implementation where split returns an empty array
+      vi.spyOn(String.prototype, 'split').mockReturnValue([]);
+
+      vi.spyOn(Temporal.Instant, 'fromEpochNanoseconds').mockReturnValue(
+        mockInstant as unknown as Temporal.Instant,
+      );
+
+      expect(() => convertToDhakaTime(1710000000)).toThrowError(
+        'Invalid time format generated',
+      );
+
+      // Restore the original implementations
+      vi.restoreAllMocks();
+    });
+
+    it('should handle invalid time format', () => {
+      // Mock the Temporal API to return an invalid time format
+      const mockPlainTime = {
+        toString: vi.fn().mockReturnValue('invalid'),
+      };
+
+      const mockDhakaTime = {
+        toPlainTime: vi.fn().mockReturnValue(mockPlainTime),
+      };
+
+      const mockInstant = {
+        toZonedDateTimeISO: vi.fn().mockReturnValue(mockDhakaTime),
+      };
+
+      // Fix the type safety issues with a proper type assertion
+      vi.spyOn(Temporal.Instant, 'fromEpochNanoseconds').mockReturnValue(
+        mockInstant as unknown as Temporal.Instant,
+      );
+
+      expect(() => convertToDhakaTime(1710000000)).toThrowError(
+        'Invalid time format generated',
+      );
+
+      // Restore the original implementation
+      vi.restoreAllMocks();
+    });
   });
 });

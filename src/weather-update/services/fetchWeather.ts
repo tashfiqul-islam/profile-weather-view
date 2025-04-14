@@ -2,14 +2,13 @@ import { z } from 'zod';
 import { Temporal } from '@js-temporal/polyfill';
 
 /**
- * OpenWeather API Constants
- * - Latitude and Longitude for Uttara, Dhaka.
+ * Geographic coordinates for location tracking.
  */
 const LAT = '23.8759';
 const LON = '90.3795';
 
 /**
- * Zod Schema for API Response Validation
+ * Response validation schema for weather data.
  */
 const WeatherSchema = z.object({
   current: z.object({
@@ -30,26 +29,47 @@ const WeatherSchema = z.object({
 
 export type WeatherData = z.infer<typeof WeatherSchema>;
 
-/**
- * Converts a UTC timestamp to Dhaka time using Temporal API.
- *
- * @param utcSeconds - UNIX timestamp in seconds
- * @returns Formatted time string in HH:mm:ss format
- */
-export function convertToDhakaTime(utcSeconds: number): string {
-  return Temporal.Instant.fromEpochSeconds(utcSeconds)
-    .toZonedDateTimeISO('Asia/Dhaka')
-    .toPlainTime()
-    .toString()
-    .replace(/\.\d+/, ''); // Remove fractional seconds
-}
+type TimeString = `${number}:${number}:${number}`;
 
 /**
- * Fetches current weather data from OpenWeather API.
+ * Converts UTC timestamp to local time.
  *
- * @returns Pipe-delimited string with weather information:
- *          weatherDescription|temperature|sunrise|sunset|humidity|iconCode
- * @throws Error if API key is missing or API request fails
+ * @param {number} utcSeconds - UNIX timestamp in seconds
+ * @throws {RangeError} When timestamp is outside valid range
+ * @throws {TypeError} When input is not a valid number
+ * @returns {TimeString} Time in HH:mm:ss format
+ */
+export const convertToDhakaTime = (utcSeconds: number): TimeString => {
+  if (!Number.isFinite(utcSeconds)) {
+    throw new TypeError('UTC seconds must be a finite number');
+  }
+
+  if (utcSeconds < 0 || utcSeconds > Number.MAX_SAFE_INTEGER) {
+    throw new RangeError(
+      'UTC seconds must be between 0 and Number.MAX_SAFE_INTEGER',
+    );
+  }
+
+  const epochNanoseconds = BigInt(utcSeconds) * BigInt(1_000_000_000);
+  const instant = Temporal.Instant.fromEpochNanoseconds(epochNanoseconds);
+  const dhakaTime = instant.toZonedDateTimeISO('Asia/Dhaka');
+  const plainTime = dhakaTime.toPlainTime();
+  const rawTimeString = plainTime.toString();
+  const timeString = rawTimeString.split('.')[0] ?? '';
+
+  if (!/^\d{2}:\d{2}:\d{2}$/.test(timeString)) {
+    throw new Error('Invalid time format generated');
+  }
+
+  return timeString as TimeString;
+};
+
+/**
+ * Retrieves current weather information.
+ *
+ * @returns {Promise<string>} Weather data in pipe-delimited format:
+ * weatherDescription|temperature|sunrise|sunset|humidity|iconCode
+ * @throws {Error} On missing API key or failed request
  */
 export async function fetchWeatherData(): Promise<string> {
   const API_KEY = Bun.env['OPEN_WEATHER_KEY']?.trim();
