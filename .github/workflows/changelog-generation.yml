@@ -53,11 +53,11 @@ permissions:
 # ============================================================
 
 env:
-  BUN_VERSION: "latest"                                          # Using specific version instead of wildcard for stability
+  BUN_VERSION: "package.json"                                    # Bun version from package.json
   CHANGELOG_PATH: "CHANGELOG.md"                                 # Default path to the changelog file
   TIMEZONE: "UTC"                                                # Default timezone for logging
-  FORCE_REGENERATE: ${{ github.event.inputs.force == true }}    # Flag for full regeneration
-  DEBUG_MODE: ${{ github.event.inputs.debug == true }}          # Flag to enable debug mode
+  FORCE_REGENERATE: ${{ github.event.inputs.force == 'true' }}   # Flag for full regeneration
+  DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}         # Flag to enable debug mode
   NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
 
 jobs:

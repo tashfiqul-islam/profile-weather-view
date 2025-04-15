@@ -60,7 +60,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "latest"
+  BUN_VERSION: "package.json"  # Bun version from package.json
   CACHE_KEY_PREFIX: "v3-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
