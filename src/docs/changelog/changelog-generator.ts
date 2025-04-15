@@ -23,13 +23,44 @@ interface ChangelogEntry {
   hash: string;
 }
 
+/**
+ * Parse git date string to handle various formats
+ * Specifically handles the ISO format from git log: "YYYY-MM-DD HH:MM:SS +ZZZZ"
+ */
+function parseGitDate(dateString: string): Date {
+  try {
+    // Split the date string into components
+    const [datePart, timePart, timezonePart] = dateString.split(' ');
+
+    if (!datePart || !timePart) {
+      throw new Error(`Invalid date format: ${dateString}`);
+    }
+
+    // Format it to an ISO 8601 string that JavaScript can reliably parse
+    const isoString = `${datePart}T${timePart}${timezonePart ? timezonePart.replace(/(\+|-)(\d{2})(\d{2})/, '$1$2:$3') : ''}`;
+    const date = new Date(isoString);
+
+    if (isNaN(date.getTime())) {
+      throw new Error(`Resulting date is invalid: ${isoString}`);
+    }
+
+    return date;
+  } catch (error) {
+    console.error(`Error parsing date "${dateString}":`, error);
+    // Return current date as fallback to avoid breaking the changelog generation
+    return new Date();
+  }
+}
+
 class ChangelogGenerator {
   private changelogPath: string;
   private repoRoot: string;
+  private debug: boolean;
 
-  constructor(changelogPath: string, repoRoot: string) {
+  constructor(changelogPath: string, repoRoot: string, debug = false) {
     this.changelogPath = changelogPath;
     this.repoRoot = repoRoot;
+    this.debug = debug;
   }
 
   /**
@@ -69,6 +100,16 @@ class ChangelogGenerator {
 
         try {
           const parsedCommit = await parse(message);
+
+          // Use our improved date parser
+          const parsedDate = parseGitDate(date);
+
+          if (this.debug) {
+            console.log(
+              `Successfully parsed date: ${date} → ${parsedDate.toISOString()}`,
+            );
+          }
+
           return {
             type: parsedCommit.type || 'chore',
             scope: parsedCommit.scope,
@@ -77,11 +118,11 @@ class ChangelogGenerator {
             breaking: parsedCommit.notes.some((note) =>
               note.title.toLowerCase().includes('breaking'),
             ),
-            date: new Date(date).toISOString(),
+            date: parsedDate.toISOString(),
             hash,
           };
         } catch (error) {
-          console.warn(`Parsing commit failed: ${message}`, error);
+          console.warn(`Parsing commit failed: ${date}\n${message}`, error);
           return null;
         }
       }),
@@ -165,6 +206,11 @@ class ChangelogGenerator {
   async generateChangelog(version: string) {
     try {
       const commits = await this.fetchCommitHistory();
+
+      if (this.debug) {
+        console.log(`Processed ${commits.length} valid commits`);
+      }
+
       const groupedEntries = this.groupChangelogEntries(commits);
       const newChangelogContent = this.renderChangelog(groupedEntries, version);
 
@@ -191,11 +237,39 @@ class ChangelogGenerator {
 
 // CLI interface
 async function main() {
-  const version = process.argv[2] || 'unreleased';
+  const args = process.argv.slice(2);
+
+  // Basic argument parsing
+  const version = args[0] || 'unreleased';
+  const options = {
+    debug: args.includes('--debug'),
+    force: args.includes('--force'),
+    repoState: 'standard', // Default value
+  };
+
+  // Parse repo-state if provided
+  const repoStateArg = args.find((arg) => arg.startsWith('--repo-state='));
+  if (repoStateArg) {
+    const splitResult = repoStateArg.split('=');
+    // Ensure we have a value after the equals sign
+    if (splitResult.length > 1) {
+      options.repoState = splitResult[1] || 'standard';
+    }
+  }
+
+  if (options.debug) {
+    console.log('Debug mode enabled');
+    console.log('Options:', options);
+  }
+
   const changelogPath = path.resolve(process.cwd(), 'src/docs/CHANGELOG.md');
   const repoRoot = process.cwd();
 
-  const generator = new ChangelogGenerator(changelogPath, repoRoot);
+  const generator = new ChangelogGenerator(
+    changelogPath,
+    repoRoot,
+    options.debug,
+  );
   await generator.generateChangelog(version);
 }
 
