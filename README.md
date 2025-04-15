@@ -226,7 +226,7 @@ const weatherTemplate = `
 Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
 
 <div align="center">
-  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/architecture.png" alt="Architecture Diagram" width="700">
+  <img src="./image/architecture.png" alt="Architecture Diagram" width="700">
 </div>
 
 ## 🏗️ Core Components
