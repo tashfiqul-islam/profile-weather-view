@@ -25,8 +25,9 @@ import { parse } from '@commitlint/parse';
  */
 const CONSTANTS = {
   COMMIT_DELIMITERS: {
-    START: 'COMMIT_START',
-    END: 'COMMIT_END',
+    // Using boundary markers with UUIDs to make accidental collision nearly impossible
+    START: '###CHANGELOG_ENTRY_BEGIN_5f9c4a88-2f9c-4f26-a67b-17a18d984324###',
+    END: '###CHANGELOG_ENTRY_END_7e29cb5c-6d83-43c7-ab8b-b56fa9d3b968###',
   },
   REPO_STATES: {
     MINIMAL: 'minimal',
@@ -173,7 +174,7 @@ class ChangelogGenerator {
    * @private
    */
   private async fetchCommitHistory(): Promise<ChangelogEntry[]> {
-    // Use custom format with clear separator to avoid parsing issues
+    // Use custom format with unique boundary markers to avoid parsing issues
     const { START, END } = CONSTANTS.COMMIT_DELIMITERS;
     const gitLogCommand = Bun.spawn(
       [
@@ -190,27 +191,49 @@ class ChangelogGenerator {
 
     const output = await new Response(gitLogCommand.stdout).text();
 
-    // Use more reliable commit separators
-    const commits = output
-      .split(START)
-      .filter((commit) => commit.includes(END))
-      .map((commit) => {
-        const endIndex = commit.indexOf(END);
-        return commit.substring(0, endIndex).trim();
-      })
-      .filter(Boolean);
+    // Process the output with more robust parsing
+    const commitEntries: string[] = [];
+    let currentPosition = 0;
+
+    while (true) {
+      // Find the start of the next commit
+      const startPos = output.indexOf(START, currentPosition);
+      if (startPos === -1) break; // No more commits
+
+      // Find the end of this commit
+      const endPos = output.indexOf(END, startPos + START.length);
+      if (endPos === -1) {
+        // Missing end marker - this shouldn't happen with our boundary approach
+        // but we'll handle it gracefully
+        if (this.debug) {
+          console.warn('Found commit start without matching end marker');
+        }
+        break;
+      }
+
+      // Extract the commit content (excluding the markers)
+      const commitContent = output
+        .substring(startPos + START.length, endPos)
+        .trim();
+      if (commitContent) {
+        commitEntries.push(commitContent);
+      }
+
+      // Move position past this commit
+      currentPosition = endPos + END.length;
+    }
 
     if (this.debug) {
-      console.log(`Found ${commits.length} commits in the git history`);
+      console.log(`Found ${commitEntries.length} commits in the git history`);
       // Debug the first commit to see its format
-      if (commits.length > 0) {
+      if (commitEntries.length > 0) {
         console.log('First commit format sample:');
-        console.log(commits[0]?.substring(0, 200) + '...');
+        console.log(commitEntries[0]?.substring(0, 200) + '...');
       }
     }
 
     return Promise.all(
-      commits.map(async (commitText) => {
+      commitEntries.map(async (commitText) => {
         const lines = commitText.split('\n');
 
         // Need at least 2 lines (hash and date)
@@ -532,4 +555,5 @@ export {
   parseGitDate,
   parseCommandLineArgs,
   validateRepoState,
+  CONSTANTS,
 };
