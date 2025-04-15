@@ -99,7 +99,7 @@ jobs:
           for file in "${REQUIRED_FILES[@]}"; do
             if [[ ! -f "$file" ]]; then
               MISSING_FILES+=("$file")
-            }
+            fi
           done
           if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
             echo "::error::Missing critical files: ${MISSING_FILES[*]}"
@@ -225,7 +225,7 @@ jobs:
         id: generate
         run: |
           echo "::group::Changelog Generation Process"
-          TIMESTAMP=$(date +%s)
+          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP here for monitoring
           OUTPUT_LOG="/tmp/changelog-generator-$TIMESTAMP.log"
           DEBUG_FLAG=""
           if [[ "${{ env.DEBUG_MODE }}" == "true" ]]; then DEBUG_FLAG="--debug"; fi
@@ -331,6 +331,7 @@ jobs:
       - name: "📊 Generation Report"
         run: |
           END_TIME=$(date +%s)
+          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP for elapsed time calculation
           START_TIME=${{ steps.start-timer.outputs.start_time }}
           DURATION=$((END_TIME - START_TIME))
 
