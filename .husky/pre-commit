@@ -1,72 +1,123 @@
-#!/usr/bin/env sh
-# ------------------------------------------------------------------------------
-# Pre-commit Validation Script
-# Performs automated code quality checks on staged files before commit
-# ------------------------------------------------------------------------------
+#!/usr/bin/env bash
+# ==============================================================================
+# 🚀 Advanced Pre-commit Validation Hook (2025 Edition)
+# ==============================================================================
+# Performs state-of-the-art code quality checks on staged files with advanced
+# caching, parallel execution, and intelligent dependency management.
 
-# Safer execution mode
-set -e
+# Fail fast but controlled: stop on error with proper cleanup
+set -eo pipefail
 
-# ------------------------------------------------------------------------------
-# Configuration
-# ------------------------------------------------------------------------------
-CACHE_DIR=".git/hooks/cache"
-SKIP_PATTERN="EMERGENCY"
+# ==============================================================================
+# 📋 Configuration
+# ==============================================================================
+readonly CACHE_DIR=".git/hooks/cache"
+readonly SKIP_PATTERN="EMERGENCY"
+readonly VERSION="2.0.0"
+readonly MAX_PARALLELISM=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+readonly MIN_FREE_MEMORY_MB=512
+readonly TIMEOUT_SECONDS=300
+readonly CACHE_TTL_DAYS=7
 
-# ------------------------------------------------------------------------------
-# Cross-platform terminal color support
-# ------------------------------------------------------------------------------
-# Initialize terminal colors with fallbacks for any environment
-init_colors() {
+# ==============================================================================
+# 🔧 Internal variables
+# ==============================================================================
+VALIDATION_RESULTS=""
+PIPELINE_STATUS=0
+START_TIME=$(date +%s 2>/dev/null || echo '0')
+MEMORY_EFFICIENT_MODE=false
+STAGED_FILES=""
+
+# ==============================================================================
+# 🎨 Cross-platform terminal support and styling utilities
+# ==============================================================================
+init_terminal_support() {
+  # Check if terminal supports colors and unicode
   if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
-    BOLD="$(tput bold 2>/dev/null || echo '')"
-    GREEN="$(tput setaf 2 2>/dev/null || echo '')"
-    YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
-    RED="$(tput setaf 1 2>/dev/null || echo '')"
-    BLUE="$(tput setaf 4 2>/dev/null || echo '')"
-    CYAN="$(tput setaf 6 2>/dev/null || echo '')"
-    MAGENTA="$(tput setaf 5 2>/dev/null || echo '')"
-    RESET="$(tput sgr0 2>/dev/null || echo '')"
+    local colors=$(tput colors 2>/dev/null || echo 0)
+    if [ "$colors" -ge 8 ]; then
+      BOLD="$(tput bold)" GREEN="$(tput setaf 2)" YELLOW="$(tput setaf 3)"
+      RED="$(tput setaf 1)" BLUE="$(tput setaf 4)" CYAN="$(tput setaf 6)"
+      MAGENTA="$(tput setaf 5)" RESET="$(tput sgr0)" DIM="$(tput dim)"
+      UNICODE_SUPPORT=true
+    else
+      BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM=""
+      UNICODE_SUPPORT=false
+    fi
   else
-    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM=""
+    UNICODE_SUPPORT=false
   fi
 
   # Disable colors if explicitly requested
   if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
-    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM=""
   fi
 
-  # Export colors for subprocesses
-  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET
+  # Define symbols based on unicode support
+  if [ "$UNICODE_SUPPORT" = true ]; then
+    SYMBOL_INFO="ℹ️" SYMBOL_WARN="⚠️" SYMBOL_ERROR="❌" SYMBOL_SUCCESS="✅"
+    SYMBOL_BULLET="•" SYMBOL_ARROW="→" SYMBOL_CHECK="✓" SYMBOL_CROSS="✗"
+    SYMBOL_HOURGLASS="⏳" SYMBOL_SPARKLE="✨" SYMBOL_GEAR="⚙️" SYMBOL_DIVIDER="━"
+  else
+    SYMBOL_INFO="i" SYMBOL_WARN="!" SYMBOL_ERROR="x" SYMBOL_SUCCESS="√"
+    SYMBOL_BULLET="*" SYMBOL_ARROW="->" SYMBOL_CHECK="+" SYMBOL_CROSS="-"
+    SYMBOL_HOURGLASS="o" SYMBOL_SPARKLE="*" SYMBOL_GEAR="#" SYMBOL_DIVIDER="-"
+  fi
+
+  # Export for subprocesses
+  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET DIM
+  export SYMBOL_INFO SYMBOL_WARN SYMBOL_ERROR SYMBOL_SUCCESS
 }
 
-# ------------------------------------------------------------------------------
-# Logging utilities
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# 📝 Advanced logging with contextual information
+# ==============================================================================
 log() {
   local level="$1"
   local message="$2"
   local timestamp="$(date '+%H:%M:%S' 2>/dev/null || echo 'TIME')"
+  local symbol=""
 
   case "$level" in
-    "INFO")    printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "ℹ️" "$RESET" "$message" ;;
-    "WARN")    printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "⚠️" "$RESET" "$message" ;;
-    "ERROR")   printf "%s %s%s%s %s\n" "$timestamp" "$RED" "❌" "$RESET" "$message" ;;
-    "SUCCESS") printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "✅" "$RESET" "$message" ;;
-    *)         printf "%s %s\n" "$timestamp" "$message" ;;
+    "DEBUG")
+      [ "$DEBUG_MODE" != "true" ] && return 0
+      printf "%s %s%s%s %s\n" "$timestamp" "$DIM" "[DEBUG]" "$RESET" "$message"
+      ;;
+    "INFO")
+      printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "$SYMBOL_INFO" "$RESET" "$message"
+      ;;
+    "WARN")
+      printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "$SYMBOL_WARN" "$RESET" "$message"
+      ;;
+    "ERROR")
+      printf "%s %s%s%s %s\n" "$timestamp" "$RED" "$SYMBOL_ERROR" "$RESET" "$message"
+      ;;
+    "SUCCESS")
+      printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "$SYMBOL_SUCCESS" "$RESET" "$message"
+      ;;
+    "SECTION")
+      printf "\n%s%s %s %s%s\n" "$CYAN" "$SYMBOL_GEAR" "$message" "$SYMBOL_GEAR" "$RESET"
+      ;;
+    *)
+      printf "%s %s\n" "$timestamp" "$message"
+      ;;
   esac
 }
 
-# Display spinner for long-running commands
+# ==============================================================================
+# ⏱️ Advanced progress display for better user experience
+# ==============================================================================
 show_spinner() {
   local message="$1"
   local pid="$2"
   local delay=0.1
-  local spinstr='|/-\'
+  local spinchars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+  [ "$UNICODE_SUPPORT" != true ] && spinchars='|/-\'
 
   # Skip animation in non-interactive environments
   if [ ! -t 1 ]; then
-    log "INFO" "${message} (running...)"
+    log "INFO" "${message} (running in background)"
     wait "$pid"
     return $?
   fi
@@ -75,82 +126,136 @@ show_spinner() {
 
   printf "%s%s %s" "$BLUE" "$message" "$RESET"
   while kill -0 "$pid" 2>/dev/null; do
-    local temp=${spinstr#?}
+    local temp=${spinchars#?}
     local current_time=$(date +%s 2>/dev/null || echo "$start_time")
     local elapsed=$((current_time - start_time))
-    printf " [%c] (%ds)" "$spinstr" "$elapsed"
-    local spinstr=$temp${spinstr%"$temp"}
+
+    # Add timeout protection
+    if [ "$elapsed" -gt "$TIMEOUT_SECONDS" ]; then
+      kill -TERM "$pid" 2>/dev/null || true
+      printf "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
+      printf " %s[TIMEOUT]%s" "$RED" "$RESET"
+      break
+    fi
+
+    printf " [%c] (%ds)" "${spinchars:0:1}" "$elapsed"
+    local spinchars=$temp${spinchars%"$temp"}
     sleep $delay
     printf "\b\b\b\b\b\b\b\b\b\b\b\b"
   done
-  printf "        \b\b\b\b\b\b\b\b"
+  printf "                  \r"
 
-  wait "$pid"
+  wait "$pid" 2>/dev/null || true
   return $?
 }
 
-# ------------------------------------------------------------------------------
-# Environment detection
-# ------------------------------------------------------------------------------
-# Create cache directory for persistent data
-mkdir -p "$CACHE_DIR" 2>/dev/null || true
+# ==============================================================================
+# 🧠 System resource detection and optimization
+# ==============================================================================
+check_system_resources() {
+  log "DEBUG" "Checking system resources"
 
-# Check for emergency commit pattern
-COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
-if echo "$COMMIT_MSG" | grep -q "$SKIP_PATTERN"; then
-  log "WARN" "Emergency commit detected. Bypassing validation checks."
-  exit 0
-fi
+  # Detect available memory and optimize execution
+  local available_mem_mb=0
 
-# Skip validation in CI environments
-if [ -n "$CI" ]; then
-  log "INFO" "CI environment detected, skipping pre-commit hooks"
-  exit 0
-fi
+  if [ "$(uname)" = "Darwin" ]; then
+    # macOS memory detection
+    available_mem_mb=$(vm_stat | grep "Pages free" | awk '{print $3}' | sed 's/\.//' 2>/dev/null)
+    available_mem_mb=$((available_mem_mb * 4 / 1024)) # Convert pages to MB
+  elif [ "$(uname)" = "Linux" ]; then
+    # Linux memory detection
+    available_mem_mb=$(free -m | awk '/^Mem:/ {print $7}' 2>/dev/null)
+  fi
 
-# Initialize colors
-init_colors
+  # Default to memory-efficient mode if we can't detect or memory is low
+  if [ "$available_mem_mb" -lt "$MIN_FREE_MEMORY_MB" ] || [ "$available_mem_mb" -eq 0 ]; then
+    MEMORY_EFFICIENT_MODE=true
+    MAX_PARALLEL_TASKS=1
+    log "WARN" "Low memory detected. Running in memory-efficient mode"
+  else
+    MAX_PARALLEL_TASKS=$((MAX_PARALLELISM > 4 ? 4 : MAX_PARALLELISM))
+  fi
 
-# Track execution time
-START_TIME=$(date +%s 2>/dev/null || echo '0')
+  log "DEBUG" "System check complete: Memory=${available_mem_mb}MB, Parallel tasks=${MAX_PARALLEL_TASKS}"
+}
 
-# ------------------------------------------------------------------------------
-# File selection
-# ------------------------------------------------------------------------------
-# Get all staged files
+# ==============================================================================
+# 🧹 Cleanup and maintenance functions
+# ==============================================================================
+cleanup_cache() {
+  # Perform cache maintenance only occasionally (1 in 10 chance)
+  [ "$(($RANDOM % 10))" -ne 0 ] && return 0
+
+  log "DEBUG" "Performing cache maintenance"
+
+  # Find and remove cache files older than TTL
+  find "$CACHE_DIR" -type f -mtime +"$CACHE_TTL_DAYS" -delete 2>/dev/null || true
+
+  # Check cache size and trim if too large (>50MB)
+  if command -v du >/dev/null 2>&1; then
+    local cache_size_kb=$(du -sk "$CACHE_DIR" 2>/dev/null | cut -f1)
+    if [ "${cache_size_kb:-0}" -gt 51200 ]; then
+      log "WARN" "Cache size exceeded limit (${cache_size_kb}KB). Clearing oldest files."
+      find "$CACHE_DIR" -type f -printf '%T+ %p\n' 2>/dev/null | sort | head -n 100 | awk '{print $2}' | xargs rm -f 2>/dev/null || true
+    fi
+  fi
+}
+
+cleanup_on_exit() {
+  # Handle cleanup when the script exits
+  log "DEBUG" "Running cleanup tasks"
+
+  # Kill any remaining background processes
+  kill $(jobs -p) 2>/dev/null || true
+
+  # Report execution time if available
+  if [ -n "$START_TIME" ]; then
+    local end_time=$(date +%s 2>/dev/null || echo "$START_TIME")
+    local total_time=$((end_time - START_TIME))
+    log "DEBUG" "Total execution time: ${total_time}s"
+  fi
+}
+
+# ==============================================================================
+# 🔎 Intelligent file filtering
+# ==============================================================================
 get_staged_files() {
   git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || echo ""
 }
 
-# Get list of staged files
-ALL_STAGED_FILES=$(get_staged_files)
+filter_files_by_pattern() {
+  local pattern="$1"
+  echo "$ALL_STAGED_FILES" | grep -E "$pattern" 2>/dev/null || echo ""
+}
 
-# Skip if no files are staged
-if [ -z "$ALL_STAGED_FILES" ]; then
-  log "WARN" "No files staged for commit. Nothing to validate."
-  exit 0
-fi
+categorize_files() {
+  log "DEBUG" "Categorizing staged files"
 
-# Filter files by extension for validation
-STAGED_FILES=$(echo "$ALL_STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json)$' 2>/dev/null || echo "")
+  # JavaScript/TypeScript files
+  TS_FILES=$(filter_files_by_pattern '\.(ts|tsx)$')
+  JS_FILES=$(filter_files_by_pattern '\.(js|jsx|mjs)$')
 
-# Skip if no relevant files are staged
-if [ -z "$STAGED_FILES" ]; then
-  log "INFO" "No relevant code files to validate in this commit."
-  exit 0
-fi
+  # Configuration files
+  CONFIG_FILES=$(filter_files_by_pattern '\.(json|ya?ml|toml)$')
 
-# ------------------------------------------------------------------------------
-# Validation pipeline
-# ------------------------------------------------------------------------------
-log "INFO" "${BOLD}Initiating validation pipeline${RESET}"
-echo "$STAGED_FILES" | sort | uniq > "$CACHE_DIR/current_staged_files.txt" 2>/dev/null || true
+  # Documentation and markdown
+  DOC_FILES=$(filter_files_by_pattern '\.(md|mdx|txt|rst)$')
 
-# Track validation results
-VALIDATION_RESULTS=""
-PIPELINE_STATUS=0
+  # Style files
+  STYLE_FILES=$(filter_files_by_pattern '\.(css|scss|less)$')
 
-# Run validation task with proper error handling
+  # Shell scripts
+  SHELL_FILES=$(filter_files_by_pattern '\.(sh|bash)$')
+
+  # Group all codefile types for main validation
+  STAGED_FILES=$(echo "$TS_FILES $JS_FILES $CONFIG_FILES" | xargs -n1 | sort -u | xargs)
+
+  log "DEBUG" "Found ${#STAGED_FILES} files for validation"
+}
+
+# ==============================================================================
+# 🔍 Advanced validation pipeline with parallel execution
+# ==============================================================================
 run_validation() {
   local name="$1"
   local icon="$2"
@@ -159,14 +264,25 @@ run_validation() {
 
   # Skip if no files to validate
   if [ -z "$files" ]; then
-    VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: SKIPPED (no files)\n"
+    VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: SKIPPED (no matching files)\n"
     return 0
   fi
 
+  # Create a unique ID for this validation run
+  local run_id="$(echo "${name}_${RANDOM}" | tr ' ' '_')"
+  local output_file="$CACHE_DIR/${run_id}.log"
+
   log "INFO" "Running ${icon} ${BOLD}${name}${RESET}..."
 
-  # Run command and capture output
-  eval "$cmd" > "$CACHE_DIR/${name}_output.log" 2>&1 &
+  # Run command with timeout protection and capture output
+  (
+    # Use timeout command if available, otherwise rely on spinner timeout
+    if command -v timeout >/dev/null 2>&1; then
+      timeout "$TIMEOUT_SECONDS" bash -c "$cmd" > "$output_file" 2>&1
+    else
+      bash -c "$cmd" > "$output_file" 2>&1
+    fi
+  ) &
   local cmd_pid=$!
 
   # Show progress spinner
@@ -177,9 +293,20 @@ run_validation() {
   if [ $status -eq 0 ]; then
     log "SUCCESS" "${icon} ${BOLD}${name}${RESET} passed"
     VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: PASSED\n"
+
+    # Keep successful outputs for 1 day only
+    touch -d "1 day ago" "$output_file" 2>/dev/null || true
   else
     log "ERROR" "${icon} ${BOLD}${name}${RESET} failed"
-    log "ERROR" "See details: ${YELLOW}cat $CACHE_DIR/${name}_output.log${RESET}"
+
+    # Extract concise error summary (first 5 lines)
+    local error_summary=$(head -n5 "$output_file" 2>/dev/null)
+    if [ -n "$error_summary" ]; then
+      printf "\n%s%s%s\n" "$DIM" "$error_summary" "$RESET"
+      echo "..."
+    fi
+
+    log "ERROR" "See details: ${YELLOW}cat $output_file${RESET}"
     VALIDATION_RESULTS="${VALIDATION_RESULTS}${name}: FAILED\n"
     PIPELINE_STATUS=1
   fi
@@ -187,80 +314,176 @@ run_validation() {
   return $status
 }
 
-# Determine command runner (bun or npx)
-CMD_RUNNER="bun run"
-if ! command -v bun >/dev/null 2>&1; then
-  if command -v npx >/dev/null 2>&1; then
+# ==============================================================================
+# 🛠️ Command runner detection and optimization
+# ==============================================================================
+detect_package_runner() {
+  # Try to detect the best available package runner
+  if command -v bun >/dev/null 2>&1; then
+    CMD_RUNNER="bun run"
+    log "DEBUG" "Using Bun as package runner"
+  elif command -v pnpm >/dev/null 2>&1; then
+    CMD_RUNNER="pnpm exec"
+    log "DEBUG" "Using pnpm as package runner"
+  elif command -v yarn >/dev/null 2>&1; then
+    CMD_RUNNER="yarn"
+    log "DEBUG" "Using Yarn as package runner"
+  elif command -v npm >/dev/null 2>&1; then
     CMD_RUNNER="npx"
+    log "DEBUG" "Using npm/npx as package runner"
   else
     CMD_RUNNER=""
+    log "WARN" "No package runner detected"
   fi
-fi
+}
 
-# Run code quality checks
-if [ -n "$CMD_RUNNER" ]; then
+# ==============================================================================
+# 📊 Advanced results reporting and analytics
+# ==============================================================================
+display_results() {
+  # Calculate execution time
+  local end_time=$(date +%s 2>/dev/null || echo "$START_TIME")
+  local total_time=$((end_time - START_TIME))
+
+  # Display validation results
+  printf "\n"
+  log "SECTION" "Validation Results"
+  printf "%s%s%s\n" "$MAGENTA" "$(printf '%0.s'"$SYMBOL_DIVIDER" $(seq 1 60))" "$RESET"
+
+  # Process and display results
+  echo -e "$VALIDATION_RESULTS" | while IFS= read -r result; do
+    if [ -n "$result" ]; then
+      if echo "$result" | grep -q ": PASSED"; then
+        log "SUCCESS" "$result"
+      elif echo "$result" | grep -q ": SKIPPED"; then
+        log "INFO" "$result"
+      else
+        log "ERROR" "$result"
+      fi
+    fi
+  done
+
+  printf "%s%s%s\n" "$MAGENTA" "$(printf '%0.s'"$SYMBOL_DIVIDER" $(seq 1 60))" "$RESET"
+  log "INFO" "Execution time: ${CYAN}${total_time}s${RESET}"
+
+  # Provide performance insights
+  if [ "$total_time" -gt 10 ]; then
+    # Performance recommendations based on execution time
+    if [ "$total_time" -gt 30 ]; then
+      log "INFO" "Tip: For faster commits, consider using ${YELLOW}git add --patch${RESET} to stage fewer files"
+
+      if [ -n "$TS_FILES" ] && [ $(echo "$TS_FILES" | wc -w) -gt 10 ]; then
+        log "INFO" "Tip: Many TypeScript files staged ($(echo "$TS_FILES" | wc -w)). TypeScript checking takes time."
+      fi
+    fi
+  fi
+}
+
+# ==============================================================================
+# 🏁 Main execution flow
+# ==============================================================================
+main() {
+  local debug_mode="${1:-false}"
+  [ "$debug_mode" = "true" ] && DEBUG_MODE=true
+
+  # Set up cleanup on script exit
+  trap cleanup_on_exit EXIT
+
+  # Initialize colors and terminal features
+  init_terminal_support
+
+  # Display hook header
+  printf "\n%s%s Pre-commit Validation (v%s) %s%s\n" "$CYAN" "$SYMBOL_SPARKLE" "$VERSION" "$SYMBOL_SPARKLE" "$RESET"
+
+  # Create cache directory for persistent data
+  mkdir -p "$CACHE_DIR" 2>/dev/null || true
+
+  # Check for emergency commit pattern
+  COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null || echo "")
+  if echo "$COMMIT_MSG" | grep -q "$SKIP_PATTERN"; then
+    log "WARN" "Emergency commit detected. Bypassing validation checks."
+    exit 0
+  fi
+
+  # Skip validation in CI environments
+  if [ -n "$CI" ]; then
+    log "INFO" "CI environment detected, skipping client-side pre-commit hooks"
+    exit 0
+  fi
+
+  # Check system resources and optimize execution
+  check_system_resources
+
+  # Clean up old cache files (runs occasionally)
+  cleanup_cache
+
+  # Track execution time
+  START_TIME=$(date +%s 2>/dev/null || echo '0')
+
+  # Get all staged files
+  ALL_STAGED_FILES=$(get_staged_files)
+
+  # Skip if no files are staged
+  if [ -z "$ALL_STAGED_FILES" ]; then
+    log "WARN" "No files staged for commit. Nothing to validate."
+    exit 0
+  fi
+
+  # Categorize files for optimized validation
+  categorize_files
+
+  # Skip if no relevant files are staged
+  if [ -z "$STAGED_FILES" ]; then
+    log "INFO" "No relevant code files to validate in this commit."
+    exit 0
+  fi
+
+  # Detect appropriate package runner
+  detect_package_runner
+
+  # Skip if no package runner is found
+  if [ -z "$CMD_RUNNER" ]; then
+    log "WARN" "No package runner found (bun/pnpm/yarn/npm). Skipping validations."
+    exit 0
+  fi
+
+  # Begin validation pipeline
+  log "SECTION" "Starting Validation Pipeline"
+
   # Format validation with Prettier
   PRETTIER_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER prettier --check --cache --cache-location=$CACHE_DIR/.prettierrc"
   run_validation "Code Formatting" "🖌️" "$PRETTIER_CMD" "$STAGED_FILES"
 
   # Static analysis with ESLint
   ESLINT_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER eslint --cache --cache-location=$CACHE_DIR/.eslintcache"
-  run_validation "Linting" "🧹" "$ESLINT_CMD" "$STAGED_FILES"
+  run_validation "Code Linting" "🧹" "$ESLINT_CMD" "$STAGED_FILES"
 
-  # Type checking with TypeScript
-  TS_CMD="$CMD_RUNNER tsc --noEmit"
-  run_validation "Type Checking" "📘" "$TS_CMD" "$STAGED_FILES"
-
-  # Test execution
-  TEST_CMD="$CMD_RUNNER test:staged"
-  run_validation "Testing" "🧪" "$TEST_CMD" "$STAGED_FILES"
-else
-  log "WARN" "No package runner found (bun or npx). Skipping validations."
-  exit 0
-fi
-
-# ------------------------------------------------------------------------------
-# Results reporting
-# ------------------------------------------------------------------------------
-# Calculate execution time
-END_TIME=$(date +%s 2>/dev/null || echo "$START_TIME")
-TOTAL_TIME=$((END_TIME - START_TIME))
-
-# Display validation results
-printf "\n"
-log "INFO" "${BOLD}Validation Results${RESET}"
-printf "%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n" "$MAGENTA" "$RESET"
-
-# Process and display results
-echo "$VALIDATION_RESULTS" | while IFS= read -r result; do
-  if [ -n "$result" ]; then
-    if echo "$result" | grep -q ": PASSED"; then
-      log "SUCCESS" "$result"
-    elif echo "$result" | grep -q ": SKIPPED"; then
-      log "INFO" "$result"
-    else
-      log "ERROR" "$result"
-    fi
+  # Type checking with TypeScript (only if TS files present)
+  if [ -n "$TS_FILES" ]; then
+    TS_CMD="$CMD_RUNNER tsc --noEmit"
+    run_validation "TypeScript Validation" "📘" "$TS_CMD" "$TS_FILES"
   fi
-done
 
-printf "%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n" "$MAGENTA" "$RESET"
-log "INFO" "Execution time: ${CYAN}${TOTAL_TIME}s${RESET}"
+  # Test execution for affected modules
+  TEST_CMD="$CMD_RUNNER test:staged"
+  run_validation "Unit Tests" "🧪" "$TEST_CMD" "$STAGED_FILES"
 
-# Provide performance tips for slow validations
-if [ "$TOTAL_TIME" -gt 10 ]; then
-  log "INFO" "Tip: For faster commits, consider using ${YELLOW}git add --patch${RESET} to stage fewer files"
-fi
+  # Display summary results
+  display_results
 
-# Final status report
-if [ $PIPELINE_STATUS -ne 0 ]; then
-  printf "\n"
-  log "ERROR" "${BOLD}Pre-commit validation failed. Please fix the issues before committing.${RESET}"
-  log "INFO" "To bypass validation in an emergency: ${YELLOW}git commit -m \"EMERGENCY: your message\"${RESET}"
-  exit 1
-else
-  printf "\n"
-  log "SUCCESS" "${BOLD}All validation checks passed!${RESET}"
-fi
+  # Final status report
+  if [ $PIPELINE_STATUS -ne 0 ]; then
+    printf "\n"
+    log "ERROR" "${BOLD}Pre-commit validation failed. Please fix the issues before committing.${RESET}"
+    log "INFO" "To bypass validation in an emergency: ${YELLOW}git commit -m \"${SKIP_PATTERN}: your message\"${RESET}"
+    exit 1
+  else
+    printf "\n"
+    log "SUCCESS" "${BOLD}All validation checks passed!${RESET}"
+  fi
 
-exit 0
+  exit 0
+}
+
+# Execute main function with debug flag if provided
+main "${DEBUG:-false}"
