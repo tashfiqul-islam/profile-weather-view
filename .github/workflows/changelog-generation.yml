@@ -53,11 +53,11 @@ permissions:
 # ============================================================
 
 env:
-  BUN_VERSION: "1.x"                                             # Pinned to major version 1 for stability with latest patches
+  BUN_VERSION: "package.json"                                    # Bun version from package.json
   CHANGELOG_PATH: "CHANGELOG.md"                                 # Default path to the changelog file
   TIMEZONE: "UTC"                                                # Default timezone for logging
-  FORCE_REGENERATE: ${{ github.event.inputs.force == true }}    # Flag for full regeneration
-  DEBUG_MODE: ${{ github.event.inputs.debug == true }}          # Flag to enable debug mode
+  FORCE_REGENERATE: ${{ github.event.inputs.force == 'true' }}   # Flag for full regeneration
+  DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}         # Flag to enable debug mode
   NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
 
 jobs:
@@ -152,6 +152,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Step to extract Bun version from package.json
+      - name: "📋 Extract Bun Version"
+        id: extract-bun-version
+        run: |
+          BUN_VERSION=$(node -e "const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.9')")
+          echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
+          echo "::notice::Using Bun version $BUN_VERSION from package.json"
 
       # Step to set up Bun runtime for executing changelog generation scripts
       - name: "🧰 Setup Bun Runtime"

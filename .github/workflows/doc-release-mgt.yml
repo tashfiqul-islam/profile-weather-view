@@ -12,10 +12,10 @@ on:
       - main
       - master
     paths:
-      - 'src/docs/**'            # Documentation source files
-      - 'release-please-config.json'  # Release configuration
-      - '.release-please-manifest.json'  # Version manifest
-      - 'meta.json'              # Site metadata
+      - 'src/docs/**'                              # Documentation source files
+      - 'release-please-config.json'               # Release configuration
+      - '.release-please-manifest.json'            # Version manifest
+      - 'meta.json'                                # Site metadata
 
   # Manual workflow dispatch for immediate releases
   workflow_dispatch:
@@ -40,17 +40,17 @@ concurrency:
 # 🔒 Explicit permissions (Principle of least privilege)
 # ============================================================
 permissions:
-  contents: write     # For Release Please to create releases and tags
-  pull-requests: write # For Release Please to create PRs
-  pages: write        # For GitHub Pages deployment
-  id-token: write     # For Pages authentication
-  issues: read        # For linking issues in release notes
+  contents: write                                 # For Release Please to create releases and tags
+  pull-requests: write                            # For Release Please to create PRs
+  pages: write                                    # For GitHub Pages deployment
+  id-token: write                                 # For Pages authentication
+  issues: read                                    # For linking issues in release notes
 
 # ============================================================
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "1.x"              # Pin to major version 1 for stability with latest patches
+  BUN_VERSION: "package.json"  # Bun version from package.json
   DOCS_SOURCE_DIR: "src/docs"
   DOCS_OUTPUT_DIR: "src/docs/.vitepress/dist"
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
@@ -237,6 +237,13 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.tag_name }}
           fetch-depth: 1  # Only need the latest commit for building
+
+      - name: "📋 Extract Bun Version"
+        id: extract-bun-version
+        run: |
+          BUN_VERSION=$(node -e "const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.9')")
+          echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
+          echo "::notice::Using Bun version $BUN_VERSION from package.json"
 
       - name: "🧰 Setup Bun Runtime"
         uses: oven-sh/setup-bun@v2
