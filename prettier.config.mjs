@@ -39,9 +39,6 @@ const prettierConfig = {
     },
     {
       files: ['*.ts', '*.tsx'],
-      options: {
-        // TypeScript-specific options
-      },
     },
   ],
 };
