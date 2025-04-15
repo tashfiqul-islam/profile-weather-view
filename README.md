@@ -72,7 +72,7 @@ Profile Weather View automatically updates your GitHub profile README with real-
 <summary><b>Full Table of Contents</b></summary>
 <br>
 
-- [� Overview](#-overview)
+- [📋 Overview](#-overview)
 - [✨ Key Features](#-key-features)
 - [🚀 Quick Start](#-quick-start)
   - [One-Minute Setup](#one-minute-setup)
