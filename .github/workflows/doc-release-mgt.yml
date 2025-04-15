@@ -238,6 +238,13 @@ jobs:
           ref: ${{ needs.release.outputs.tag_name }}
           fetch-depth: 1  # Only need the latest commit for building
 
+      - name: "📋 Extract Bun Version"
+        id: extract-bun-version
+        run: |
+          BUN_VERSION=$(node -e "const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.9')")
+          echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
+          echo "::notice::Using Bun version $BUN_VERSION from package.json"
+
       - name: "🧰 Setup Bun Runtime"
         uses: oven-sh/setup-bun@v2
         with:

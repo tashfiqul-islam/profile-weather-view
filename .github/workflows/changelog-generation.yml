@@ -153,6 +153,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Step to extract Bun version from package.json
+      - name: "📋 Extract Bun Version"
+        id: extract-bun-version
+        run: |
+          BUN_VERSION=$(node -e "const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.9')")
+          echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
+          echo "::notice::Using Bun version $BUN_VERSION from package.json"
+
       # Step to set up Bun runtime for executing changelog generation scripts
       - name: "🧰 Setup Bun Runtime"
         uses: oven-sh/setup-bun@v2
