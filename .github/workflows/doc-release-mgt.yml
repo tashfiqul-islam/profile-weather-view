@@ -50,7 +50,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "1.x"              # Pin to major version 1 for stability with latest patches
+  BUN_VERSION: "latest"              # Pin to major version 1 for stability with latest patches
   DOCS_SOURCE_DIR: "src/docs"
   DOCS_OUTPUT_DIR: "src/docs/.vitepress/dist"
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}

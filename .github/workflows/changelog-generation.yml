@@ -53,7 +53,7 @@ permissions:
 # ============================================================
 
 env:
-  BUN_VERSION: "1.x"                                             # Pinned to major version 1 for stability with latest patches
+  BUN_VERSION: "latest"                                          # Using specific version instead of wildcard for stability
   CHANGELOG_PATH: "CHANGELOG.md"                                 # Default path to the changelog file
   TIMEZONE: "UTC"                                                # Default timezone for logging
   FORCE_REGENERATE: ${{ github.event.inputs.force == true }}    # Flag for full regeneration
