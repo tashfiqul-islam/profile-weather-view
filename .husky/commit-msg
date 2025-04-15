@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🔒 Advanced Commit Message Validation Hook (2025 Edition)
+# 🔒 Advanced Commit Message Validation Hook
 # ==============================================================================
 # Ensures commit messages follow Conventional Commits specification with
 # advanced validation, clear feedback, and intelligent assistance.

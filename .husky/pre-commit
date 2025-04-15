@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🚀 Advanced Pre-commit Validation Hook (2025 Edition)
+# 🚀 Advanced Pre-commit Validation Hook
 # ==============================================================================
 # Performs state-of-the-art code quality checks on staged files with advanced
 # caching, parallel execution, and intelligent dependency management.
