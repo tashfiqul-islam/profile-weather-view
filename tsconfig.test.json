@@ -1,0 +1,37 @@
+{
+  /**
+   * Extends the base TypeScript configuration
+   */
+  "extends": "./tsconfig.json",
+
+  /**
+   * Test-specific compiler options
+   */
+  "compilerOptions": {
+    "types": ["bun", "node", "vitest/globals"],
+    "isolatedModules": true,
+    "preserveConstEnums": true,
+    "noEmit": true
+  },
+
+  /**
+   * Files to include in test compilation
+   */
+  "include": [
+    "src/__tests__/**/*.ts",
+    "src/__tests__/**/*.test.ts",
+    "src/__tests__/**/*.spec.ts",
+    "src/__tests__/**/*.bench.ts"
+  ],
+
+  /**
+   * Files to exclude from test compilation
+   */
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tmp",
+    "coverage",
+    ".git"
+  ]
+}

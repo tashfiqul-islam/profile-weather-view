@@ -1,0 +1,176 @@
+#!/usr/bin/env sh
+# ------------------------------------------------------------------------------
+# Commit Message Validation Hook
+# Ensures commit messages follow the Conventional Commits specification
+# ------------------------------------------------------------------------------
+
+# Safer execution mode
+set -e
+
+# ------------------------------------------------------------------------------
+# Cross-platform terminal color support
+# ------------------------------------------------------------------------------
+# Initialize terminal colors with fallbacks for any environment
+init_colors() {
+  if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
+    BOLD="$(tput bold 2>/dev/null || echo '')"
+    GREEN="$(tput setaf 2 2>/dev/null || echo '')"
+    YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
+    RED="$(tput setaf 1 2>/dev/null || echo '')"
+    BLUE="$(tput setaf 4 2>/dev/null || echo '')"
+    CYAN="$(tput setaf 6 2>/dev/null || echo '')"
+    MAGENTA="$(tput setaf 5 2>/dev/null || echo '')"
+    RESET="$(tput sgr0 2>/dev/null || echo '')"
+  else
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+  fi
+
+  # Disable colors if explicitly requested
+  if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+  fi
+
+  # Export colors for subprocesses
+  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET
+}
+
+# ------------------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------------------
+COMMIT_MSG_FILE="$1"
+CACHE_DIR=".git/hooks/cache"
+MIN_LENGTH=10
+MAX_LENGTH=100
+
+# Ensure cache directory exists
+mkdir -p "$CACHE_DIR" 2>/dev/null || true
+
+# ------------------------------------------------------------------------------
+# Logging utilities
+# ------------------------------------------------------------------------------
+log() {
+  local level="$1"
+  local message="$2"
+  local timestamp="$(date '+%H:%M:%S' 2>/dev/null || echo 'TIME')"
+
+  case "$level" in
+    "INFO")    printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "ℹ️" "$RESET" "$message" ;;
+    "WARN")    printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "⚠️" "$RESET" "$message" ;;
+    "ERROR")   printf "%s %s%s%s %s\n" "$timestamp" "$RED" "❌" "$RESET" "$message" ;;
+    "SUCCESS") printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "✅" "$RESET" "$message" ;;
+    *)         printf "%s %s\n" "$timestamp" "$message" ;;
+  esac
+}
+
+# Display message in a box for better readability
+box_message() {
+  local message="$1"
+  printf "╭───────────────────────────────────────────\n"
+  printf "│ %s%s%s\n" "$YELLOW" "$message" "$RESET"
+  printf "╰───────────────────────────────────────────\n"
+}
+
+# ------------------------------------------------------------------------------
+# Main execution
+# ------------------------------------------------------------------------------
+# Initialize colors first
+init_colors
+
+# Display execution step
+printf "%s%s📝 Validating commit message format...%s\n" "$BLUE" "$BOLD" "$RESET"
+
+# Check if in CI environment
+if [ -n "$CI" ]; then
+  log "WARN" "CI environment detected, performing simplified validation"
+fi
+
+# Verify commit message file exists
+if [ ! -f "$COMMIT_MSG_FILE" ]; then
+  log "ERROR" "Cannot find commit message file: $COMMIT_MSG_FILE"
+  exit 1
+fi
+
+# Extract the commit message safely (cross-platform)
+COMMIT_MSG="$(sed -e '/^#/d' < "$COMMIT_MSG_FILE" 2>/dev/null | tr -d '\r' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+COMMIT_MSG_LENGTH="${#COMMIT_MSG}"
+
+# Skip empty messages
+if [ -z "$COMMIT_MSG" ]; then
+  log "ERROR" "Empty commit message not allowed"
+  exit 1
+fi
+
+# Skip system-generated commits
+if echo "$COMMIT_MSG" | grep -q "^Merge " || echo "$COMMIT_MSG" | grep -q "^Auto-merge "; then
+  log "INFO" "System commit detected. Skipping validation."
+  exit 0
+fi
+
+# Allow emergency commits
+if echo "$COMMIT_MSG" | grep -q "^EMERGENCY: "; then
+  log "WARN" "Emergency commit detected. Bypassing validation."
+  exit 0
+fi
+
+# Run initial quick validation
+if [ "$COMMIT_MSG_LENGTH" -lt "$MIN_LENGTH" ]; then
+  log "ERROR" "Commit message is too short (${COMMIT_MSG_LENGTH} chars)"
+  printf "%sA good commit message should describe what changes were made%s\n" "$YELLOW" "$RESET"
+  exit 1
+fi
+
+if [ "$COMMIT_MSG_LENGTH" -gt "$MAX_LENGTH" ]; then
+  log "WARN" "Commit message is quite long (${COMMIT_MSG_LENGTH} chars). Consider keeping it under ${MAX_LENGTH} characters."
+fi
+
+# Display the commit message for visibility
+printf "%sCommit message (%s chars):%s\n" "$BLUE" "$COMMIT_MSG_LENGTH" "$RESET"
+box_message "$COMMIT_MSG"
+
+# Run commitlint validation
+printf "%sRunning commitlint validation...%s\n" "$BLUE" "$RESET"
+
+# Save the output to a temporary file for better error handling
+TMP_OUTPUT="$CACHE_DIR/commitlint-output.log"
+
+# Determine commitlint command based on environment
+if command -v bunx >/dev/null 2>&1; then
+  COMMITLINT_CMD="bunx commitlint"
+elif command -v npx >/dev/null 2>&1; then
+  COMMITLINT_CMD="npx commitlint"
+else
+  COMMITLINT_CMD="commitlint"
+fi
+
+# Run commitlint validation
+if $COMMITLINT_CMD --color --verbose --edit "$COMMIT_MSG_FILE" > "$TMP_OUTPUT" 2>&1; then
+  log "SUCCESS" "${BOLD}Commit message format is valid!${RESET}"
+else
+  COMMITLINT_STATUS=$?
+  log "ERROR" "Commit message validation failed"
+  cat "$TMP_OUTPUT" 2>/dev/null || echo "Failed to read output file"
+
+  # Show examples of valid commit messages
+  printf "\n%s%sExamples of valid commit messages:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "%s✓ feat(weather): add temperature unit conversion%s\n" "$GREEN" "$RESET"
+  printf "%s✓ fix(ui): correct alignment in weather display%s\n" "$GREEN" "$RESET"
+  printf "%s✓ docs(readme): update installation instructions%s\n" "$GREEN" "$RESET"
+  printf "%s✓ chore(deps): update dependencies%s\n" "$GREEN" "$RESET"
+
+  # Show available scopes from commitlint config
+  printf "\n%s%sAvailable scopes:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "- docs      (Documentation changes)\n"
+  printf "- config    (Configuration changes)\n"
+  printf "- weather   (Weather-related functionality)\n"
+  printf "- ui        (User interface)\n"
+  printf "- test      (Testing infrastructure)\n"
+  printf "- deps      (Dependencies)\n"
+  printf "- ci        (Continuous integration)\n"
+
+  printf "\n%sFor more information on commit conventions:%s\n" "$YELLOW" "$RESET"
+  printf "https://github.com/conventional-changelog/commitlint/#what-is-commitlint\n"
+
+  exit "$COMMITLINT_STATUS"
+fi
+
+exit 0

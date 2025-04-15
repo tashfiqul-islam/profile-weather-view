@@ -1,0 +1,106 @@
+# 🚀 Bun Configuration for profile-weather-view
+
+# ================================
+# Core Runtime Configuration
+# ================================
+
+# Performance optimization
+smol = false
+
+# Runtime debugging and observability
+logLevel = "warn"
+errorStackTraces = true
+defaultRuntimeSafety = true
+
+# Preload critical modules for fast startup
+preload = [
+    "./src/weather-update/utils/preload.ts",
+    "./src/weather-update/services/fetchWeather.ts"
+]
+
+# ================================
+# Runtime Execution
+# ================================
+
+[run]
+# Node.js compatibility layer
+bun = true
+node_modules = true
+
+# Enable runtime hardening
+allowUserCode = true
+experimentalLifecycleHooks = true
+experimentalWorkerThreads = true
+
+# Resource limits for production safety
+maxConcurrency = 8
+readableByteLimit = "512MB"
+maxEventLoopUtilization = 0.85
+
+# ================================
+# File Loading & Handling
+# ================================
+
+[loader]
+# TypeScript and modern formats
+".ts" = "ts"
+".tsx" = "tsx"
+".mts" = "ts"
+".json" = "json"
+".toml" = "toml"
+
+# ================================
+# Package Management
+# ================================
+
+[install]
+# Dependency handling configuration
+optional = true
+dev = true
+peer = true
+production = false
+exact = false
+auto = "fallback"
+frozenLockfile = false
+saveTextLockfile = false
+esm = true
+
+# Registry sources
+registry = "https://registry.npmjs.org"
+enableGlobalCache = true
+
+# Security settings
+verifySignatures = true
+allowInsecureDependencies = false
+integrityCheck = true
+
+# ================================
+# Web Server Configuration
+# ================================
+
+[server]
+# Development server settings
+port = 3000
+hostname = "localhost"
+development = true
+staticDir = "./public"
+cors = true
+certificateMode = "auto"
+
+# Compression and response optimization
+compression = true
+http2 = true
+etag = true
+staticCompression = true
+maxRequestBodySize = "50MB"
+
+# ================================
+# Testing Configuration
+# ================================
+
+[test]
+# Core Testing setup
+coverage = true
+includeSource = true
+environment = "node"
+watchMode = true
