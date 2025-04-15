@@ -8,7 +8,6 @@ name: "📋 Changelog Generation"
 # 🚀 Workflow triggers for automatic and manual execution
 # ============================================================
 
-
 on:
   push:
     branches:
@@ -35,6 +34,13 @@ on:
         default: false
 
 # ============================================================
+# 🔒 Prevent redundant executions (Ensures single execution)
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
 # 🔒 Workflow permissions (Least privilege principle)
 # ============================================================
 
@@ -47,11 +53,12 @@ permissions:
 # ============================================================
 
 env:
-  BUN_VERSION: "latest"                                         # The version of Bun runtime to use
-  CHANGELOG_PATH: "CHANGELOG.md"                                # Default path to the changelog file
-  TIMEZONE: "UTC"                                               # Default timezone for logging
+  BUN_VERSION: "1.x"                                             # Pinned to major version 1 for stability with latest patches
+  CHANGELOG_PATH: "CHANGELOG.md"                                 # Default path to the changelog file
+  TIMEZONE: "UTC"                                                # Default timezone for logging
   FORCE_REGENERATE: ${{ github.event.inputs.force == true }}    # Flag for full regeneration
   DEBUG_MODE: ${{ github.event.inputs.debug == true }}          # Flag to enable debug mode
+  NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
 
 jobs:
   # ============================================================
@@ -102,19 +109,22 @@ jobs:
           echo "::notice::All prerequisite files are present"
           echo "should_proceed=true" >> $GITHUB_OUTPUT
 
-      # Step to evaluate the repository state (based on commit history and branch count)
+      # Step to evaluate the repository state (based on commit history, branch count, and file count)
       - name: "🔄 Evaluate Repository State"
         id: repo-state
         if: steps.check-requirements.outputs.should_proceed == 'true'
         run: |
           COMMIT_COUNT=$(git rev-list --count HEAD)
           BRANCH_COUNT=$(git branch -r | wc -l)
+          FILE_COUNT=$(git ls-files | wc -l)
+
+          # Combined complexity assessment
           if [[ $COMMIT_COUNT -lt 5 ]]; then
             echo "state=minimal" >> $GITHUB_OUTPUT
             echo "::notice::Repository has minimal history ($COMMIT_COUNT commits)"
-          elif [[ $BRANCH_COUNT -gt 10 ]]; then
+          elif [[ $BRANCH_COUNT -gt 10 || $FILE_COUNT -gt 1000 ]]; then
             echo "state=complex" >> $GITHUB_OUTPUT
-            echo "::notice::Repository has complex branching structure ($BRANCH_COUNT remote branches)"
+            echo "::notice::Repository has complex structure ($BRANCH_COUNT branches, $FILE_COUNT files)"
           else
             echo "state=standard" >> $GITHUB_OUTPUT
             echo "::notice::Repository has standard structure"
@@ -149,6 +159,14 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
+      # Step to cache Bun dependencies to speed up workflow execution
+      - name: "💾 Cache Bun Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
       # Step to verify that the Bun runtime is installed and configured correctly
       - name: "🔍 Verify Bun Installation"
         run: |
@@ -157,13 +175,19 @@ jobs:
           BUN_VERSION=$(echo "$RAW_VERSION" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
           echo "🔹 Raw Bun Version: $RAW_VERSION"
           echo "🔹 Parsed Bun Version: $BUN_VERSION"
+
+          # Validate version format with improved error message
           if [[ ! "$BUN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Invalid Bun version format"
+            echo "::error::Invalid Bun version format: $RAW_VERSION. Expected semver format (e.g., 1.0.0)."
             exit 1
           fi
+
+          # Parse version parts and check minimum required version
           IFS='.' read -r MAJOR MINOR PATCH <<< "$BUN_VERSION"
           if (( MAJOR < 1 )); then
-            echo "::warning::Bun version is below 1.0.0"
+            echo "::warning::Bun version is below recommended minimum (1.0.0). Current: $BUN_VERSION"
+          else
+            echo "🔹 Bun version $BUN_VERSION meets minimum requirements"
           fi
           echo "::endgroup::"
 
@@ -184,16 +208,15 @@ jobs:
           fi
           echo "::notice::Detected Version: $VERSION (Source: $SOURCE)"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "source=$SOURCE" >> $GITHUB_OUTPUT
 
       # Step to prepare the environment for changelog generation (install dependencies)
       - name: "📦 Prepare Environment"
         run: |
           echo "::group::Environment Preparation"
-          bun add @commitlint/parse
+          bun add --exact @commitlint/parse --no-save
           mkdir -p src/docs/changelog
           if [[ ! -f "${{ env.CHANGELOG_PATH }}" ]]; then
-            echo "# Changelog\n\nAll notable changes to this project will be documented in this file.\n" > ${{ env.CHANGELOG_PATH }}
+            echo -e "# Changelog\n\nAll notable changes to this project will be documented in this file." > "${{ env.CHANGELOG_PATH }}"
           fi
           echo "::endgroup::"
 
@@ -202,7 +225,7 @@ jobs:
         id: generate
         run: |
           echo "::group::Changelog Generation Process"
-          TIMESTAMP=$(date +%s)
+          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP here for monitoring
           OUTPUT_LOG="/tmp/changelog-generator-$TIMESTAMP.log"
           DEBUG_FLAG=""
           if [[ "${{ env.DEBUG_MODE }}" == "true" ]]; then DEBUG_FLAG="--debug"; fi
@@ -210,20 +233,63 @@ jobs:
           if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then FORCE_FLAG="--force"; fi
           REPO_STATE="${{ needs.validate-prerequisites.outputs.repo_state }}"
           echo "🔹 Repository state: $REPO_STATE"
+
+          # Set timeout monitoring
+          MAX_DURATION=540  # 9 minutes (slightly under the 10-minute job timeout)
+          (
+            # Background process to monitor execution time
+            while true; do
+              sleep 30
+              CURRENT=$(date +%s)
+              ELAPSED=$((CURRENT - TIMESTAMP))
+              if [[ $ELAPSED -gt $MAX_DURATION ]]; then
+                echo "::warning::Changelog generation approaching timeout limit ($ELAPSED seconds). Process may be terminated."
+                break
+              elif [[ $ELAPSED -gt 300 ]]; then
+                # After 5 minutes, show a warning
+                echo "::warning::Changelog generation running for $ELAPSED seconds. This is longer than expected."
+                break
+              fi
+            done
+          ) &
+          MONITOR_PID=$!
+
+          # Run the actual changelog generation
           bun run src/docs/changelog/changelog-generator.ts \
             "${{ steps.version-validation.outputs.version }}" \
             $FORCE_FLAG $DEBUG_FLAG \
             --repo-state=$REPO_STATE \
             2>&1 | tee $OUTPUT_LOG
           GENERATION_STATUS=$?
-          CHANGE_COUNT=$(grep -c "Added commit" $OUTPUT_LOG || echo "0")
+
+          # Kill the monitoring process
+          kill $MONITOR_PID 2>/dev/null || true
+
+          # Safely check for successful commit parsing count and status output
+          CHANGE_COUNT=0
+          GEN_STATUS="failed"
+
+          if [[ -f "$OUTPUT_LOG" ]]; then
+            CHANGE_COUNT=$(grep -c "Successfully parsed commit:" $OUTPUT_LOG || echo "0")
+            # Check for success status from the updated generator script
+            if grep -q "status=success" $OUTPUT_LOG; then
+              GEN_STATUS="success"
+            fi
+          fi
+
           echo "::endgroup::"
           if [[ $GENERATION_STATUS -ne 0 ]]; then
-            echo "::error::Changelog generation failed"
+            echo "::error::Changelog generation failed with exit code: $GENERATION_STATUS"
             exit $GENERATION_STATUS
           fi
+
+          if [[ "$GEN_STATUS" != "success" ]]; then
+            echo "::warning::Changelog generation did not report explicit success"
+          fi
+
           echo "::notice::Successfully processed $CHANGE_COUNT commit entries"
           echo "change_count=$CHANGE_COUNT" >> $GITHUB_OUTPUT
+          echo "gen_status=$GEN_STATUS" >> $GITHUB_OUTPUT
 
       # Step to commit and push the changelog updates if any changes were detected
       - name: "📤 Commit Changelog Updates"
@@ -232,16 +298,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "::group::Git Operations"
-          git config user.name 'Profile Weather View Bot'
-          git config user.email 'bot@profile-weather-view.dev'
+          # Set up git configuration with better traceability
+          git config user.name 'github-actions[bot]'
+          git config user.email '${{ github.actor }}@users.noreply.github.com'
+
           if [[ -n "$(git status --porcelain ${{ env.CHANGELOG_PATH }})" ]]; then
             git add ${{ env.CHANGELOG_PATH }}
-            COMMIT_MSG="docs(changelog): update for v${{ steps.version-validation.outputs.version }}"
 
-            if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then COMMIT_MSG="$COMMIT_MSG (full regeneration)"; fi
-            if [[ "${{ steps.version-validation.outputs.source }}" == "manual input" ]]; then COMMIT_MSG="$COMMIT_MSG [manual]"; fi
+            # Build commit message with proper suffixes
+            MSG_SUFFIX=""
+            if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then MSG_SUFFIX="$MSG_SUFFIX (full regeneration)"; fi
+            if [[ "${{ steps.version-validation.outputs.source }}" == "manual input" ]]; then MSG_SUFFIX="$MSG_SUFFIX [manual]"; fi
+            COMMIT_MSG="docs(changelog): update for v${{ steps.version-validation.outputs.version }}$MSG_SUFFIX"
+
             git commit -m "$COMMIT_MSG"
             echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT  # Capture the commit message
+
             if git push; then
               echo "::notice::Successfully pushed changelog updates"
               echo "changes_committed=true" >> $GITHUB_OUTPUT
@@ -259,6 +331,7 @@ jobs:
       - name: "📊 Generation Report"
         run: |
           END_TIME=$(date +%s)
+          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP for elapsed time calculation
           START_TIME=${{ steps.start-timer.outputs.start_time }}
           DURATION=$((END_TIME - START_TIME))
 
@@ -279,3 +352,15 @@ jobs:
             echo "::warning::Changelog generation took more than 3 minutes ($DURATION seconds). Please review the logs for any issues."
           else
             echo "::notice::Changelog generation completed successfully within $DURATION seconds."
+          fi
+
+      # Step to save logs as artifacts for debugging
+      - name: "📁 Save Logs as Artifacts"
+        if: always() && env.DEBUG_MODE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog-generation-logs-${{ github.run_id }}
+          path: /tmp/changelog-generator-*.log
+          retention-days: 7
+          if-no-files-found: ignore
+          compression-level: 9  # Maximum compression

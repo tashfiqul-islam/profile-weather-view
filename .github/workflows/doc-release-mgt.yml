@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - master
     paths:
       - 'src/docs/**'            # Documentation source files
       - 'release-please-config.json'  # Release configuration
@@ -49,13 +50,14 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "latest"
+  BUN_VERSION: "1.x"              # Pin to major version 1 for stability with latest patches
   DOCS_SOURCE_DIR: "src/docs"
   DOCS_OUTPUT_DIR: "src/docs/.vitepress/dist"
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
   DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
   EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
   TIMESTAMP: ${{ github.event.repository.updated_at }}
+  NODE_OPTIONS: "--max-old-space-size=4096"  # Prevents memory issues with large documentation builds
 
 # ============================================================
 # 📌 JOB: PREFLIGHT (Validates repository configuration)
@@ -174,7 +176,7 @@ jobs:
 
       - name: "🔄 Run Release Please"
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: google-github-actions/release-please-action@v4
         env:
           # Conditionally set DEBUG for release-please CLI if debug mode is enabled
           DEBUG: ${{ env.DEBUG_MODE == 'true' && 'true' || '' }}
@@ -183,7 +185,7 @@ jobs:
           release-type: manifest
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          skip-github-release: ${{ env.DRY_RUN == 'true' }} # Skip creating the release object in dry run
+          skip-github-release: ${{ env.DRY_RUN == 'true' }}
 
       - name: "🏷️ Extract Version Information"
         id: version
@@ -252,6 +254,17 @@ jobs:
             echo "::warning::Bun version $BUN_VERSION is below recommended version 1.0.0"
           fi
           echo "::endgroup::"
+
+      # Step to cache dependencies for faster builds
+      - name: "💾 Cache Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: "📦 Install Dependencies"
         run: |
@@ -444,16 +457,34 @@ jobs:
           git tag -fa "$MINOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}.x documentation release"
           git tag -fa "$LATEST_TAG" -m "Latest documentation release (v${{ needs.release.outputs.version }})"
 
-          # Push tags to remote with proper error handling
+          # Push tags to remote with proper error handling and retry logic
+          TAG_PUSH_SUCCESS=true
           for TAG in "$MAJOR_TAG" "$MINOR_TAG" "$LATEST_TAG"; do
-            if git push origin "$TAG" --force; then
-              echo "🔹 Successfully pushed tag: $TAG"
-            else
-              echo "::warning::Failed to push tag: $TAG"
-            fi
+            # Try up to 3 times for each tag with exponential backoff
+            for ATTEMPT in {1..3}; do
+              echo "🔹 Pushing tag: $TAG (attempt $ATTEMPT of 3)"
+              if git push origin "$TAG" --force; then
+                echo "🔹 Successfully pushed tag: $TAG"
+                break
+              else
+                if [[ $ATTEMPT -eq 3 ]]; then
+                  echo "::warning::Failed to push tag after 3 attempts: $TAG"
+                  TAG_PUSH_SUCCESS=false
+                else
+                  echo "::warning::Failed to push tag, retrying in $((ATTEMPT * 5)) seconds: $TAG"
+                  sleep $((ATTEMPT * 5))
+                fi
+              fi
+            done
           done
 
-          echo "tags_created=true" >> $GITHUB_OUTPUT
+          if [[ "$TAG_PUSH_SUCCESS" == "true" ]]; then
+            echo "tags_created=true" >> $GITHUB_OUTPUT
+            echo "::notice::Successfully created and pushed all version tags"
+          else
+            echo "tags_created=partial" >> $GITHUB_OUTPUT
+            echo "::warning::Some tags failed to push. Check the logs for details."
+          fi
           echo "::endgroup::"
 
       - name: "🏷️ Simulate Tag Creation (Dry Run)"
