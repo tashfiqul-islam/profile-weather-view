@@ -1,4 +1,4 @@
-name: "Profile Weather Update"
+name: "🌦️ Profile Weather Update"
 
 # ============================================================
 # 🚀 Optimized triggers for reliability and performance
@@ -35,9 +35,9 @@ on:
         type: boolean
         default: false
 
-  # Self-healing mechanism (Triggers on failure)
+  # Self-healing mechanism - Re-enabled after fixing concurrency issues
   workflow_run:
-    workflows: ["Profile Weather Update"]
+    workflows: ["🌦️ Profile Weather Update"]
     types: [completed]
     branches: [master]
 
@@ -45,8 +45,8 @@ on:
 # 🚀 Prevent redundant executions (Ensures single execution)
 # ============================================================
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 # ============================================================
 # 🔒 Explicit permissions (Principle of least privilege)
@@ -66,12 +66,13 @@ env:
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
   EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-  CODE_REPO: "tashfiqul-islam/profile-weather-view"
-  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"
+  CODE_REPO: "${{ github.repository }}"  # Use the current repository
+  PROFILE_REPO: "${{ github.repository_owner }}/${{ github.repository_owner }}"  # Use owner's username as the profile repo
   BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
   NODE_ENV: "production"
   FORCE_UPDATE: ${{ github.event.inputs.force_update == true }}
   SKIP_TESTS: ${{ github.event.inputs.skip_tests == true }}
+  WORKFLOW_DEBUG: "true" # Debug info to help troubleshoot startup issues
 
 # ============================================================
 # 📌 JOB: PREFLIGHT (Checks environment & dependencies)
@@ -556,3 +557,65 @@ jobs:
 
           echo "::notice title=Automatic Retry::Scheduled in ${DELAY_MINUTES} minutes (at approximately ${NEXT_RETRY})"
           echo "- **Next automatic retry:** in ${DELAY_MINUTES} minutes (at ${NEXT_RETRY})" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # 📌 JOB: DEBUG (For troubleshooting workflow triggering issues)
+  # ============================================================
+  debug:
+    name: "🔍 Workflow Diagnostics"
+    runs-on: ubuntu-latest
+    # This job always runs regardless of other conditions
+    timeout-minutes: 2
+
+    steps:
+      - name: "📋 Workflow Trigger Diagnostics"
+        run: |
+          echo "::group::Trigger Analysis"
+          echo "## Workflow Trigger Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event Name:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event Path:** ${{ github.event_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ref:** ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **SHA:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run Attempt:** ${{ github.run_attempt }}" >> $GITHUB_STEP_SUMMARY
+          echo "::endgroup::"
+
+          # Dump environment variables for debugging
+          echo "::group::Environment Variables"
+          env | sort
+          echo "::endgroup::"
+
+          # Dump event context
+          echo "::group::Event Context"
+          cat $GITHUB_EVENT_PATH || echo "Unable to read event context"
+          echo "::endgroup::"
+
+          # Check for secrets availability (without revealing them)
+          echo "::group::Secrets Availability Check"
+          if [[ -n "${{ secrets.OPEN_WEATHER_KEY }}" ]]; then
+            echo "OPEN_WEATHER_KEY: Available ✅"
+          else
+            echo "OPEN_WEATHER_KEY: Missing ❌"
+          fi
+
+          if [[ -n "${{ secrets.GITHUB_TOKEN }}" ]]; then
+            echo "GITHUB_TOKEN: Available ✅"
+          else
+            echo "GITHUB_TOKEN: Missing ❌"
+          fi
+          echo "::endgroup::"
+
+      - name: "🌐 Test External Access"
+        run: |
+          echo "::group::Network Connectivity Test"
+          # Test GitHub API access
+          echo "Testing GitHub API connectivity..."
+          curl -s -o /dev/null -w "GitHub API: HTTP %{http_code}\n" https://api.github.com/zen
+
+          # Test OpenWeather API access with a dummy key
+          echo "Testing OpenWeather API connectivity..."
+          curl -s -o /dev/null -w "OpenWeather API: HTTP %{http_code}\n" "https://api.openweathermap.org/data/2.5/weather?q=London&appid=test"
+          echo "::endgroup::"

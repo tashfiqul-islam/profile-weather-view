@@ -1,176 +1,470 @@
-#!/usr/bin/env sh
-# ------------------------------------------------------------------------------
-# Commit Message Validation Hook
-# Ensures commit messages follow the Conventional Commits specification
-# ------------------------------------------------------------------------------
+#!/usr/bin/env bash
+# ==============================================================================
+# 🔒 Advanced Commit Message Validation Hook
+# ==============================================================================
+# Ensures commit messages follow Conventional Commits specification with
+# advanced validation, clear feedback, and intelligent assistance.
 
-# Safer execution mode
-set -e
+# Fail fast but controlled and with proper cleanup
+set -eo pipefail
 
-# ------------------------------------------------------------------------------
-# Cross-platform terminal color support
-# ------------------------------------------------------------------------------
-# Initialize terminal colors with fallbacks for any environment
-init_colors() {
+# ==============================================================================
+# 📋 Configuration Variables
+# ==============================================================================
+readonly SCRIPT_VERSION="2.0.0"
+readonly COMMIT_MSG_FILE="${1:-}"
+readonly CACHE_DIR=".git/hooks/cache"
+readonly STATS_FILE="$CACHE_DIR/commit_stats.json"
+readonly MIN_LENGTH=10
+readonly MAX_LENGTH=100
+readonly AUTOFIX_ENABLED=true  # Enable minor automatic fixes
+readonly INTERACTIVE_TIMEOUT=300  # Seconds before interactive mode times out
+readonly DEBUG_MODE="${DEBUG:-false}"
+
+# ==============================================================================
+# 🔧 Internal variables
+# ==============================================================================
+COMMIT_MSG=""
+COMMIT_MSG_LENGTH=0
+VALIDATION_START_TIME=$(date +%s 2>/dev/null || echo '0')
+UNICODE_SUPPORT=true
+VALIDATION_RESULT=0
+
+# ==============================================================================
+# 🎨 Cross-platform terminal support and styling utilities
+# ==============================================================================
+init_terminal_support() {
+  # Check if terminal supports colors and unicode
   if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
-    BOLD="$(tput bold 2>/dev/null || echo '')"
-    GREEN="$(tput setaf 2 2>/dev/null || echo '')"
-    YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
-    RED="$(tput setaf 1 2>/dev/null || echo '')"
-    BLUE="$(tput setaf 4 2>/dev/null || echo '')"
-    CYAN="$(tput setaf 6 2>/dev/null || echo '')"
-    MAGENTA="$(tput setaf 5 2>/dev/null || echo '')"
-    RESET="$(tput sgr0 2>/dev/null || echo '')"
+    local colors=$(tput colors 2>/dev/null || echo 0)
+    if [ "$colors" -ge 8 ]; then
+      BOLD="$(tput bold)" GREEN="$(tput setaf 2)" YELLOW="$(tput setaf 3)"
+      RED="$(tput setaf 1)" BLUE="$(tput setaf 4)" CYAN="$(tput setaf 6)"
+      MAGENTA="$(tput setaf 5)" RESET="$(tput sgr0)" DIM="$(tput dim)"
+      ITALIC="$(tput sitm 2>/dev/null || echo '')"
+      UNICODE_SUPPORT=true
+    else
+      BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM="" ITALIC=""
+      UNICODE_SUPPORT=false
+    fi
   else
-    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM="" ITALIC=""
+    UNICODE_SUPPORT=false
   fi
 
   # Disable colors if explicitly requested
   if [ -n "$NO_COLOR" ] || [ -n "$TERM" ] && [ "$TERM" = "dumb" ]; then
-    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET=""
+    BOLD="" GREEN="" YELLOW="" RED="" BLUE="" CYAN="" MAGENTA="" RESET="" DIM="" ITALIC=""
   fi
 
-  # Export colors for subprocesses
-  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET
+  # Define symbols based on unicode support
+  if [ "$UNICODE_SUPPORT" = true ]; then
+    SYMBOL_INFO="ℹ️" SYMBOL_WARN="⚠️" SYMBOL_ERROR="❌" SYMBOL_SUCCESS="✅"
+    SYMBOL_BULLET="•" SYMBOL_ARROW="→" SYMBOL_CHECK="✓" SYMBOL_CROSS="✗"
+    SYMBOL_SPARKLE="✨" SYMBOL_GEAR="⚙️" SYMBOL_DIVIDER="━"
+  else
+    SYMBOL_INFO="i" SYMBOL_WARN="!" SYMBOL_ERROR="x" SYMBOL_SUCCESS="√"
+    SYMBOL_BULLET="*" SYMBOL_ARROW="->" SYMBOL_CHECK="+" SYMBOL_CROSS="-"
+    SYMBOL_SPARKLE="*" SYMBOL_GEAR="#" SYMBOL_DIVIDER="-"
+  fi
+
+  # Export for subprocesses
+  export BOLD GREEN YELLOW RED BLUE CYAN MAGENTA RESET DIM ITALIC
+  export SYMBOL_INFO SYMBOL_WARN SYMBOL_ERROR SYMBOL_SUCCESS
+  export SYMBOL_BULLET SYMBOL_ARROW SYMBOL_CHECK SYMBOL_CROSS
 }
 
-# ------------------------------------------------------------------------------
-# Configuration
-# ------------------------------------------------------------------------------
-COMMIT_MSG_FILE="$1"
-CACHE_DIR=".git/hooks/cache"
-MIN_LENGTH=10
-MAX_LENGTH=100
-
-# Ensure cache directory exists
-mkdir -p "$CACHE_DIR" 2>/dev/null || true
-
-# ------------------------------------------------------------------------------
-# Logging utilities
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# 📝 Advanced logging with contextual information
+# ==============================================================================
 log() {
   local level="$1"
   local message="$2"
   local timestamp="$(date '+%H:%M:%S' 2>/dev/null || echo 'TIME')"
 
   case "$level" in
-    "INFO")    printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "ℹ️" "$RESET" "$message" ;;
-    "WARN")    printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "⚠️" "$RESET" "$message" ;;
-    "ERROR")   printf "%s %s%s%s %s\n" "$timestamp" "$RED" "❌" "$RESET" "$message" ;;
-    "SUCCESS") printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "✅" "$RESET" "$message" ;;
-    *)         printf "%s %s\n" "$timestamp" "$message" ;;
+    "DEBUG")
+      [ "$DEBUG_MODE" != "true" ] && return 0
+      printf "%s %s%s%s %s\n" "$timestamp" "$DIM" "[DEBUG]" "$RESET" "$message"
+      ;;
+    "INFO")
+      printf "%s %s%s%s %s\n" "$timestamp" "$BLUE" "$SYMBOL_INFO" "$RESET" "$message"
+      ;;
+    "WARN")
+      printf "%s %s%s%s %s\n" "$timestamp" "$YELLOW" "$SYMBOL_WARN" "$RESET" "$message"
+      ;;
+    "ERROR")
+      printf "%s %s%s%s %s\n" "$timestamp" "$RED" "$SYMBOL_ERROR" "$RESET" "$message"
+      ;;
+    "SUCCESS")
+      printf "%s %s%s%s %s\n" "$timestamp" "$GREEN" "$SYMBOL_SUCCESS" "$RESET" "$message"
+      ;;
+    "SECTION")
+      printf "\n%s%s %s %s%s\n" "$CYAN" "$SYMBOL_GEAR" "$message" "$SYMBOL_GEAR" "$RESET"
+      ;;
+    *)
+      printf "%s %s\n" "$timestamp" "$message"
+      ;;
   esac
 }
 
-# Display message in a box for better readability
+# Display message in a styled box for better readability
 box_message() {
   local message="$1"
-  printf "╭───────────────────────────────────────────\n"
-  printf "│ %s%s%s\n" "$YELLOW" "$message" "$RESET"
-  printf "╰───────────────────────────────────────────\n"
+  local width=60
+  local style="${2:-normal}"  # normal, success, error, warning
+  local color=""
+  local divider=""
+
+  # Set color based on style
+  case "$style" in
+    "success") color="$GREEN" ;;
+    "error")   color="$RED" ;;
+    "warning") color="$YELLOW" ;;
+    *)         color="$BLUE" ;;
+  esac
+
+  # Create divider line
+  divider=$(printf '%*s' "$width" | tr ' ' "$SYMBOL_DIVIDER")
+
+  printf "\n%s%s%s\n" "$color" "$divider" "$RESET"
+  printf "%s%s %s%s\n" "$color" "$SYMBOL_BULLET" "$message" "$RESET"
+  printf "%s%s%s\n" "$color" "$divider" "$RESET"
 }
 
-# ------------------------------------------------------------------------------
-# Main execution
-# ------------------------------------------------------------------------------
-# Initialize colors first
-init_colors
+# ==============================================================================
+# 🧹 Cleanup and maintenance functions
+# ==============================================================================
+cleanup_on_exit() {
+  log "DEBUG" "Running cleanup tasks"
 
-# Display execution step
-printf "%s%s📝 Validating commit message format...%s\n" "$BLUE" "$BOLD" "$RESET"
+  # Report execution time if available
+  if [ -n "$VALIDATION_START_TIME" ]; then
+    local end_time=$(date +%s 2>/dev/null || echo "$VALIDATION_START_TIME")
+    local total_time=$((end_time - VALIDATION_START_TIME))
+    log "DEBUG" "Total validation time: ${total_time}s"
+  fi
 
-# Check if in CI environment
-if [ -n "$CI" ]; then
-  log "WARN" "CI environment detected, performing simplified validation"
-fi
+  # Clean up temporary files
+  rm -f "/tmp/commit-msg-$$"* 2>/dev/null || true
+}
 
-# Verify commit message file exists
-if [ ! -f "$COMMIT_MSG_FILE" ]; then
-  log "ERROR" "Cannot find commit message file: $COMMIT_MSG_FILE"
-  exit 1
-fi
+# ==============================================================================
+# 📊 Statistics tracking for quality improvement
+# ==============================================================================
+update_stats() {
+  local result="$1"
 
-# Extract the commit message safely (cross-platform)
-COMMIT_MSG="$(sed -e '/^#/d' < "$COMMIT_MSG_FILE" 2>/dev/null | tr -d '\r' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-COMMIT_MSG_LENGTH="${#COMMIT_MSG}"
+  # Skip in CI environment
+  [ -n "$CI" ] && return 0
 
-# Skip empty messages
-if [ -z "$COMMIT_MSG" ]; then
-  log "ERROR" "Empty commit message not allowed"
-  exit 1
-fi
+  # Create stats file if it doesn't exist
+  if [ ! -f "$STATS_FILE" ]; then
+    echo '{"total":0,"success":0,"failures":0,"fixed":0,"avg_length":0,"commits_by_type":{}}' > "$STATS_FILE"
+  fi
 
-# Skip system-generated commits
-if echo "$COMMIT_MSG" | grep -q "^Merge " || echo "$COMMIT_MSG" | grep -q "^Auto-merge "; then
-  log "INFO" "System commit detected. Skipping validation."
-  exit 0
-fi
+  # Extract commit type if validation succeeded
+  local commit_type=""
+  if [ "$result" = "success" ]; then
+    commit_type=$(echo "$COMMIT_MSG" | grep -oE '^[a-z]+(\([a-z-]+\))?:' | sed 's/(.*)://' | sed 's/://')
+  fi
 
-# Allow emergency commits
-if echo "$COMMIT_MSG" | grep -q "^EMERGENCY: "; then
-  log "WARN" "Emergency commit detected. Bypassing validation."
-  exit 0
-fi
+  # Update stats using temporary file to avoid race conditions
+  local tmp_file="$CACHE_DIR/stats_tmp_$$"
 
-# Run initial quick validation
-if [ "$COMMIT_MSG_LENGTH" -lt "$MIN_LENGTH" ]; then
-  log "ERROR" "Commit message is too short (${COMMIT_MSG_LENGTH} chars)"
-  printf "%sA good commit message should describe what changes were made%s\n" "$YELLOW" "$RESET"
-  exit 1
-fi
+  # Use jq if available for proper JSON manipulation
+  if command -v jq >/dev/null 2>&1; then
+    jq --arg result "$result" \
+       --arg length "$COMMIT_MSG_LENGTH" \
+       --arg type "$commit_type" \
+       '.total += 1 |
+        if $result == "success" then .success += 1 else . end |
+        if $result == "fixed" then .fixed += 1 else . end |
+        if $result == "failure" then .failures += 1 else . end |
+        .avg_length = ((.avg_length * (.total - 1) + ($length | tonumber)) / .total) |
+        if $type != "" then .commits_by_type[$type] = (.commits_by_type[$type] // 0) + 1 else . end' \
+        "$STATS_FILE" > "$tmp_file" && mv "$tmp_file" "$STATS_FILE"
+  else
+    # Fallback to simple increment if jq is not available
+    echo '{"total":0,"success":0,"failures":0,"fixed":0}' > "$STATS_FILE"
+  fi
+}
 
-if [ "$COMMIT_MSG_LENGTH" -gt "$MAX_LENGTH" ]; then
-  log "WARN" "Commit message is quite long (${COMMIT_MSG_LENGTH} chars). Consider keeping it under ${MAX_LENGTH} characters."
-fi
+# ==============================================================================
+# 🔧 Message parsing and validation utilities
+# ==============================================================================
+parse_commit_message() {
+  log "DEBUG" "Parsing commit message from: $COMMIT_MSG_FILE"
 
-# Display the commit message for visibility
-printf "%sCommit message (%s chars):%s\n" "$BLUE" "$COMMIT_MSG_LENGTH" "$RESET"
-box_message "$COMMIT_MSG"
+  # Verify commit message file exists
+  if [ ! -f "$COMMIT_MSG_FILE" ]; then
+    log "ERROR" "Cannot find commit message file: $COMMIT_MSG_FILE"
+    exit 1
+  fi
 
-# Run commitlint validation
-printf "%sRunning commitlint validation...%s\n" "$BLUE" "$RESET"
+  # Extract the commit message safely (cross-platform compatibility)
+  # - Remove comments that start with #
+  # - Remove carriage returns for Windows compatibility
+  # - Join lines with spaces
+  # - Trim leading/trailing whitespace
+  COMMIT_MSG="$(sed -e '/^#/d' < "$COMMIT_MSG_FILE" 2>/dev/null | tr -d '\r' | tr '\n' ' ' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  COMMIT_MSG_LENGTH="${#COMMIT_MSG}"
 
-# Save the output to a temporary file for better error handling
-TMP_OUTPUT="$CACHE_DIR/commitlint-output.log"
+  log "DEBUG" "Parsed commit message: '$COMMIT_MSG' ($COMMIT_MSG_LENGTH chars)"
+}
 
-# Determine commitlint command based on environment
-if command -v bunx >/dev/null 2>&1; then
-  COMMITLINT_CMD="bunx commitlint"
-elif command -v npx >/dev/null 2>&1; then
-  COMMITLINT_CMD="npx commitlint"
-else
-  COMMITLINT_CMD="commitlint"
-fi
+# Custom validation rules with intelligent assistance
+validate_commit_structure() {
+  log "DEBUG" "Validating commit message structure"
+  local errors=0
 
-# Run commitlint validation
-if $COMMITLINT_CMD --color --verbose --edit "$COMMIT_MSG_FILE" > "$TMP_OUTPUT" 2>&1; then
-  log "SUCCESS" "${BOLD}Commit message format is valid!${RESET}"
-else
-  COMMITLINT_STATUS=$?
-  log "ERROR" "Commit message validation failed"
-  cat "$TMP_OUTPUT" 2>/dev/null || echo "Failed to read output file"
+  # Empty message validation
+  if [ -z "$COMMIT_MSG" ]; then
+    log "ERROR" "Empty commit message not allowed"
+    return 1
+  fi
 
-  # Show examples of valid commit messages
-  printf "\n%s%sExamples of valid commit messages:%s\n" "$CYAN" "$BOLD" "$RESET"
-  printf "%s✓ feat(weather): add temperature unit conversion%s\n" "$GREEN" "$RESET"
-  printf "%s✓ fix(ui): correct alignment in weather display%s\n" "$GREEN" "$RESET"
-  printf "%s✓ docs(readme): update installation instructions%s\n" "$GREEN" "$RESET"
-  printf "%s✓ chore(deps): update dependencies%s\n" "$GREEN" "$RESET"
+  # Skip validation for specific system commits
+  if echo "$COMMIT_MSG" | grep -qE "^(Merge |Auto-merge |Revert |fixup! |squash! )"; then
+    log "INFO" "System commit detected. Skipping validation."
+    return 0
+  fi
 
-  # Show available scopes from commitlint config
-  printf "\n%s%sAvailable scopes:%s\n" "$CYAN" "$BOLD" "$RESET"
-  printf "- docs      (Documentation changes)\n"
-  printf "- config    (Configuration changes)\n"
-  printf "- weather   (Weather-related functionality)\n"
-  printf "- ui        (User interface)\n"
-  printf "- test      (Testing infrastructure)\n"
-  printf "- deps      (Dependencies)\n"
-  printf "- ci        (Continuous integration)\n"
+  # Allow emergency commits
+  if echo "$COMMIT_MSG" | grep -q "^EMERGENCY: "; then
+    log "WARN" "Emergency commit detected. Bypassing validation."
+    return 0
+  fi
 
-  printf "\n%sFor more information on commit conventions:%s\n" "$YELLOW" "$RESET"
-  printf "https://github.com/conventional-changelog/commitlint/#what-is-commitlint\n"
+  # Length validation
+  if [ "$COMMIT_MSG_LENGTH" -lt "$MIN_LENGTH" ]; then
+    log "ERROR" "Commit message is too short (${COMMIT_MSG_LENGTH} chars). Minimum is $MIN_LENGTH."
+    errors=$((errors + 1))
+  elif [ "$COMMIT_MSG_LENGTH" -gt "$MAX_LENGTH" ]; then
+    log "WARN" "Commit message is quite long (${COMMIT_MSG_LENGTH} chars). Consider keeping it under ${MAX_LENGTH} characters."
+  fi
 
-  exit "$COMMITLINT_STATUS"
-fi
+  return $errors
+}
 
-exit 0
+# Perform auto-fixes for common issues if enabled
+auto_fix_commit_message() {
+  [ "$AUTOFIX_ENABLED" != "true" ] && return 1
+  log "DEBUG" "Attempting to auto-fix commit message"
+
+  local original_msg="$COMMIT_MSG"
+  local fixed=false
+
+  # Auto-fix 1: Proper casing for type (lowercase)
+  if echo "$COMMIT_MSG" | grep -qE "^[A-Z]+(\([a-zA-Z-]+\))?:"; then
+    COMMIT_MSG=$(echo "$COMMIT_MSG" | sed -E 's/^([A-Z]+)(\([a-zA-Z-]+\))?:/\L\1\E\2:/')
+    fixed=true
+  fi
+
+  # Auto-fix 2: Add space after colon if missing
+  if echo "$COMMIT_MSG" | grep -qE "^[a-z]+(\([a-zA-Z-]+\))?:[^ ]"; then
+    COMMIT_MSG=$(echo "$COMMIT_MSG" | sed -E 's/^([a-z]+(\([a-zA-Z-]+\))?:)([^ ])/\1 \3/')
+    fixed=true
+  fi
+
+  # Auto-fix 3: Fix scope format if malformed (e.g., missing parentheses)
+  if echo "$COMMIT_MSG" | grep -qE "^[a-z]+ [a-zA-Z-]+:"; then
+    COMMIT_MSG=$(echo "$COMMIT_MSG" | sed -E 's/^([a-z]+) ([a-zA-Z-]+):/\1(\2):/')
+    fixed=true
+  fi
+
+  # Auto-fix 4: Remove trailing period from subject
+  if echo "$COMMIT_MSG" | grep -qE "^[a-z]+(\([a-zA-Z-]+\))?: [^.]+\.$"; then
+    COMMIT_MSG=$(echo "$COMMIT_MSG" | sed -E 's/^([a-z]+(\([a-zA-Z-]+\))?: [^.]+)\./\1/')
+    fixed=true
+  fi
+
+  # Apply fixes if changes were made
+  if [ "$fixed" = true ]; then
+    if [ "$COMMIT_MSG" != "$original_msg" ]; then
+      log "WARN" "Auto-fixed commit message format issues"
+      echo "$COMMIT_MSG" > "$COMMIT_MSG_FILE"
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+# Get dynamic list of available scopes from commitlint config
+get_available_scopes() {
+  local scope_list=""
+
+  # Try to extract scopes from commitlint config
+  if [ -f "commitlint.config.js" ] || [ -f "commitlint.config.mjs" ]; then
+    if command -v grep >/dev/null 2>&1; then
+      scope_list=$(grep -A30 "scope-enum" commitlint.config.* 2>/dev/null | grep -oE "'[a-zA-Z-]+'" | tr -d "'" | tr '\n' ' ' || echo "")
+    fi
+  fi
+
+  # Fallback to default scopes if none found
+  if [ -z "$scope_list" ]; then
+    scope_list="docs config weather ui test deps ci build perf"
+  fi
+
+  echo "$scope_list"
+}
+
+# Run commitlint with proper error handling
+run_commitlint_validation() {
+  log "DEBUG" "Running commitlint validation"
+
+  # Save output to temporary file for parsing
+  local tmp_output="$CACHE_DIR/commitlint-output-$$.log"
+
+  # Determine the appropriate commitlint command based on environment
+  local commitlint_cmd=""
+  if command -v bunx >/dev/null 2>&1; then
+    commitlint_cmd="bunx commitlint"
+  elif command -v npx >/dev/null 2>&1; then
+    commitlint_cmd="npx commitlint"
+  elif command -v pnpm >/dev/null 2>&1; then
+    commitlint_cmd="pnpm exec commitlint"
+  elif command -v yarn >/dev/null 2>&1; then
+    commitlint_cmd="yarn commitlint"
+  elif command -v commitlint >/dev/null 2>&1; then
+    commitlint_cmd="commitlint"
+  else
+    log "WARN" "commitlint not found. Falling back to basic validation."
+    return $?  # Return result of basic validation
+  fi
+
+  # Run commitlint with proper options
+  if $commitlint_cmd --color --verbose --edit "$COMMIT_MSG_FILE" > "$tmp_output" 2>&1; then
+    log "SUCCESS" "${BOLD}Commit message format is valid!${RESET}"
+    cat "$tmp_output" | grep -v "Running commitlint" | grep -v "^$" || true
+    return 0
+  else
+    local status=$?
+    log "ERROR" "Commit message validation failed"
+    cat "$tmp_output" 2>/dev/null || echo "Failed to read output file"
+    return $status
+  fi
+}
+
+# ==============================================================================
+# 📋 Display help and examples to assist users
+# ==============================================================================
+show_commit_help() {
+  local scopes=$(get_available_scopes)
+
+  box_message "Conventional Commit Format Guide" "warning"
+
+  printf "\n%s%sFormat:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "  %s<type>(<scope>): <description>%s\n\n" "$YELLOW" "$RESET"
+  printf "  %s[optional body]%s\n\n" "$YELLOW" "$RESET"
+  printf "  %s[optional footer(s)]%s\n" "$YELLOW" "$RESET"
+
+  printf "\n%s%sTypes:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "  %sfeat%s:     A new feature (correlates with MINOR in semantic versioning)\n" "$GREEN" "$RESET"
+  printf "  %sfix%s:      A bug fix (correlates with PATCH in semantic versioning)\n" "$GREEN" "$RESET"
+  printf "  %sdocs%s:     Documentation only changes\n" "$GREEN" "$RESET"
+  printf "  %sstyle%s:    Changes that do not affect the meaning of the code\n" "$GREEN" "$RESET"
+  printf "  %srefactor%s: A code change that neither fixes a bug nor adds a feature\n" "$GREEN" "$RESET"
+  printf "  %sperf%s:     A code change that improves performance\n" "$GREEN" "$RESET"
+  printf "  %stest%s:     Adding missing tests or correcting existing tests\n" "$GREEN" "$RESET"
+  printf "  %sbuild%s:    Changes that affect the build system or external dependencies\n" "$GREEN" "$RESET"
+  printf "  %sci%s:       Changes to CI configuration files and scripts\n" "$GREEN" "$RESET"
+  printf "  %schore%s:    Other changes that don't modify src or test files\n" "$GREEN" "$RESET"
+
+  printf "\n%s%sAvailable Scopes:%s\n" "$CYAN" "$BOLD" "$RESET"
+  for scope in $scopes; do
+    printf "  %s%s%s\n" "$MAGENTA" "$scope" "$RESET"
+  done
+
+  printf "\n%s%sExamples:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "  %s✓ feat(weather): add temperature unit conversion%s\n" "$GREEN" "$RESET"
+  printf "  %s✓ fix(ui): correct alignment in weather display%s\n" "$GREEN" "$RESET"
+  printf "  %s✓ docs(readme): update installation instructions%s\n" "$GREEN" "$RESET"
+  printf "  %s✓ chore(deps): update dependencies%s\n" "$GREEN" "$RESET"
+
+  printf "\n%s%sBreaking Changes:%s\n" "$CYAN" "$BOLD" "$RESET"
+  printf "  %s✓ feat(api)!: send an email to the customer when a product is shipped%s\n" "$GREEN" "$RESET"
+  printf "  %s✓ feat(api): send an email to the customer when a product is shipped\n\nBREAKING CHANGE: customers now receive emails%s\n" "$GREEN" "$RESET"
+
+  printf "\n%sFor more information:%s %shttps://www.conventionalcommits.org/%s\n" "$YELLOW" "$RESET" "$BLUE$ITALIC" "$RESET"
+}
+
+# ==============================================================================
+# 🏁 Main execution flow
+# ==============================================================================
+main() {
+  # Set up cleanup on script exit
+  trap cleanup_on_exit EXIT
+
+  # Initialize colors and terminal features
+  init_terminal_support
+
+  # Create cache directory for persistent data
+  mkdir -p "$CACHE_DIR" 2>/dev/null || true
+
+  # Track execution time
+  VALIDATION_START_TIME=$(date +%s 2>/dev/null || echo '0')
+
+  # Check for required arguments
+  if [ -z "$COMMIT_MSG_FILE" ]; then
+    log "ERROR" "No commit message file specified"
+    exit 1
+  fi
+
+  # Skip validation in CI environments (optional)
+  if [ -n "$CI" ]; then
+    log "WARN" "CI environment detected, performing simplified validation"
+  fi
+
+  # Parse the commit message
+  parse_commit_message
+
+  # Run initial quick structural validation
+  validate_commit_structure
+  BASIC_VALIDATION_RESULT=$?
+
+  # Display the commit message for reference
+  if [ "$BASIC_VALIDATION_RESULT" -eq 0 ]; then
+    log "SECTION" "Commit Message Validation"
+    printf "%sCommit message (%s chars):%s\n" "$BLUE" "$COMMIT_MSG_LENGTH" "$RESET"
+    box_message "$COMMIT_MSG" "normal"
+  fi
+
+  # Try to auto-fix common issues if basic validation failed
+  if [ "$BASIC_VALIDATION_RESULT" -ne 0 ] && auto_fix_commit_message; then
+    log "INFO" "Auto-fixed commit message format issues"
+    parse_commit_message # Re-parse after auto-fix
+    validate_commit_structure
+    BASIC_VALIDATION_RESULT=$?
+
+    if [ "$BASIC_VALIDATION_RESULT" -eq 0 ]; then
+      log "SECTION" "Auto-fixed Commit Message"
+      box_message "$COMMIT_MSG" "success"
+      update_stats "fixed"
+    fi
+  fi
+
+  # Proceed with detailed validation if basic validation passes
+  if [ "$BASIC_VALIDATION_RESULT" -eq 0 ]; then
+    # Run commitlint validation if available
+    if run_commitlint_validation; then
+      update_stats "success"
+      exit 0
+    else
+      VALIDATION_RESULT=$?
+      # Show helpful information for failed validation
+      show_commit_help
+      update_stats "failure"
+      exit $VALIDATION_RESULT
+    fi
+  else
+    # Show help for basic structure issues
+    show_commit_help
+    update_stats "failure"
+    exit $BASIC_VALIDATION_RESULT
+  fi
+}
+
+# Execute main function
+main

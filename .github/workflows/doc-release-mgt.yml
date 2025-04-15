@@ -33,8 +33,8 @@ on:
 # 🔒 Prevent redundant executions (Ensures single execution)
 # ============================================================
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 # ============================================================
 # 🔒 Explicit permissions (Principle of least privilege)
@@ -176,7 +176,7 @@ jobs:
 
       - name: "🔄 Run Release Please"
         id: release
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         env:
           # Conditionally set DEBUG for release-please CLI if debug mode is enabled
           DEBUG: ${{ env.DEBUG_MODE == 'true' && 'true' || '' }}
@@ -269,9 +269,11 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-v4-${{ hashFiles('**/bun.lockb', '**/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-bun-
+            ${{ runner.os }}-bun-v4-
+          enableCrossOsArchive: false
+          fail-on-cache-miss: false
 
       - name: "📦 Install Dependencies"
         run: |

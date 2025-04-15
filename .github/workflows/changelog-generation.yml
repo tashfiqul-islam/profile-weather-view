@@ -37,8 +37,8 @@ on:
 # 🔒 Prevent redundant executions (Ensures single execution)
 # ============================================================
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 # ============================================================
 # 🔒 Workflow permissions (Least privilege principle)
@@ -59,6 +59,7 @@ env:
   FORCE_REGENERATE: ${{ github.event.inputs.force == 'true' }}   # Flag for full regeneration
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}         # Flag to enable debug mode
   NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
+  ACTIONS_CACHE_KEY_PREFIX: "v2"                                 # Cache key prefix for new cache service
 
 jobs:
   # ============================================================
@@ -67,7 +68,7 @@ jobs:
 
   validate-prerequisites:
     name: "🔍 Preflight Validation"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Using latest runner version to ensure compatibility with new cache service
     outputs:
       should_proceed: ${{ steps.check-requirements.outputs.should_proceed }}
       repo_state: ${{ steps.repo-state.outputs.state }}
@@ -138,7 +139,7 @@ jobs:
     name: "🚀 Changelog Generation"
     needs: validate-prerequisites
     if: needs.validate-prerequisites.outputs.should_proceed == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Using latest runner version to ensure compatibility with new cache service
     timeout-minutes: 10
 
     steps:
@@ -166,14 +167,29 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+        continue-on-error: false  # Fail the workflow if Bun setup fails - this is critical
 
       # Step to cache Bun dependencies to speed up workflow execution
       - name: "💾 Cache Bun Dependencies"
+        id: cache-bun-deps
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: ${{ runner.os }}-bun-
+          key: ${{ runner.os }}-bun-v2-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-v2-
+          enableCrossOsArchive: false
+          fail-on-cache-miss: false
+
+      # Fallback in case cache fails
+      - name: "📦 Cache Status Check"
+        run: |
+          if [ "${{ steps.cache-bun-deps.outcome }}" != "success" ]; then
+            echo "::warning::Bun dependency cache operation failed or was skipped. Using fresh install."
+            echo "CACHE_HIT=false" >> $GITHUB_ENV
+          else
+            echo "::notice::Bun dependencies cache ${{ steps.cache-bun-deps.outputs.cache-hit == 'true' && 'hit' || 'miss' }}"
+            echo "CACHE_HIT=${{ steps.cache-bun-deps.outputs.cache-hit }}" >> $GITHUB_ENV
+          fi
 
       # Step to verify that the Bun runtime is installed and configured correctly
       - name: "🔍 Verify Bun Installation"
