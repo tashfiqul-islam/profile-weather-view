@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/tashfiqul-islam/profile-weather-view/blob/profile-weather-view-v2/image/readme_cover.png" alt="Profile Weather View Cover Image" width="700">
+  <img src="/image/readme_cover.png" alt="Profile Weather View Cover Image" width="900" height="500">
 </div>
 
 <br>
