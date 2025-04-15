@@ -278,9 +278,13 @@ jobs:
           GEN_STATUS="failed"
 
           if [[ -f "$OUTPUT_LOG" ]]; then
-            CHANGE_COUNT=$(grep -c "Successfully parsed commit:" $OUTPUT_LOG || echo "0")
+            # Fixed parsing to handle both zero and non-zero commit counts properly
+            CHANGE_COUNT=$(grep -c "Successfully parsed commit:" "$OUTPUT_LOG" || echo "0")
+            # Make sure CHANGE_COUNT is treated as a number using arithmetic expansion
+            CHANGE_COUNT=$((CHANGE_COUNT))
+
             # Check for success status from the updated generator script
-            if grep -q "status=success" $OUTPUT_LOG; then
+            if grep -q "status=success" "$OUTPUT_LOG"; then
               GEN_STATUS="success"
             fi
           fi
@@ -296,8 +300,9 @@ jobs:
           fi
 
           echo "::notice::Successfully processed $CHANGE_COUNT commit entries"
-          echo "change_count=$CHANGE_COUNT" >> $GITHUB_OUTPUT
-          echo "gen_status=$GEN_STATUS" >> $GITHUB_OUTPUT
+          # Ensure proper output format with quoted GITHUB_OUTPUT for safety
+          echo "change_count=$CHANGE_COUNT" >> "$GITHUB_OUTPUT"
+          echo "gen_status=$GEN_STATUS" >> "$GITHUB_OUTPUT"
 
       # Step to commit and push the changelog updates if any changes were detected
       - name: "📤 Commit Changelog Updates"
