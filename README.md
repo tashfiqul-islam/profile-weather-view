@@ -136,10 +136,6 @@ Profile Weather View automatically updates your GitHub profile README with real-
 
 ## 🚀 Quick Start
 
-<div align="center">
-  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/setup-animation.gif" alt="Setup Animation" width="680">
-</div>
-
 ### One-Minute Setup
 
 ```bash
@@ -232,18 +228,6 @@ Profile Weather View follows a clean, modular architecture designed for maintain
 <div align="center">
   <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/architecture.png" alt="Architecture Diagram" width="700">
 </div>
-
-```mermaid
-graph TD
-    A[GitHub Actions] -->|Triggers| B[index.ts]
-    B -->|Calls| C[fetchWeather.ts]
-    C -->|Uses| D[OpenWeather API]
-    D -->|Returns| C
-    C -->|Returns| B
-    B -->|Passes data to| E[updateReadme.ts]
-    E -->|Updates| F[README.md]
-    G[preload.ts] -->|Configures| B
-```
 
 ## 🏗️ Core Components
 
@@ -424,10 +408,6 @@ The application uses GitHub Actions for automated deployment with the following 
 ## 🧪 Testing
 
 The project has comprehensive test coverage to ensure reliability:
-
-<div align="center">
-  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/test-coverage.png" alt="Test Coverage" width="700">
-</div>
 
 ```
 % Coverage report from v8
