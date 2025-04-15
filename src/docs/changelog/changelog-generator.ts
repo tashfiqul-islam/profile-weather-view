@@ -471,19 +471,24 @@ class ChangelogGenerator {
       }
     } catch (error) {
       console.error('❌ Changelog generation failed:', error);
-      process.exit(1);
+      // Instead of process.exit(1) which creates side effects in class methods,
+      // throw the error to be handled by the caller
+      throw new Error(
+        `Failed to generate changelog: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }
 
 /**
- * Parse command line arguments with type safety
+ * Parse command line arguments with type safety and validation
  *
  * @param args - Command line arguments
  * @returns Tuple of version and options
+ * @throws Error if required parameters are missing or invalid
  */
 function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
-  // Default options
+  // Default options with explicit typing
   const options: ChangelogOptions = {
     debug: false,
     force: false,
@@ -497,13 +502,13 @@ function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
   options.debug = args.includes('--debug');
   options.force = args.includes('--force');
 
-  // Parse repo-state option with validation
+  // Parse repo-state option with validation using improved pattern matching
   const repoStateArg = args.find((arg) => arg.startsWith('--repo-state='));
   if (repoStateArg) {
-    const splitResult = repoStateArg.split('=');
-    if (splitResult.length > 1 && splitResult[1]) {
+    const [, value] = repoStateArg.split('=');
+    if (value) {
       // Validate against allowed states
-      options.repoState = validateRepoState(splitResult[1]);
+      options.repoState = validateRepoState(value);
     }
   }
 
@@ -515,29 +520,68 @@ function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
  * Parses arguments and invokes the ChangelogGenerator
  */
 async function main(): Promise<void> {
-  const startTime = performance.now();
-  const args = process.argv.slice(2);
-  const [version, options] = parseCommandLineArgs(args);
+  try {
+    const startTime = performance.now();
+    const args = process.argv.slice(2);
+    const [version, options] = parseCommandLineArgs(args);
 
-  if (options.debug) {
-    console.log('==== Changelog Generator v2.0.0 ====');
-    console.log('Debug mode enabled');
-    console.log('Command line arguments:', args);
-    console.log('Parsed options:', options);
-  }
+    if (options.debug) {
+      console.log('==== Changelog Generator v2.x.x ====');
+      console.log('Debug mode enabled');
+      console.log('Command line arguments:', args);
+      console.log('Parsed options:', options);
+    }
 
-  // Define paths
-  const changelogPath = path.resolve(process.cwd(), 'src/docs/CHANGELOG.md');
-  const repoRoot = process.cwd();
+    // Define paths
+    const changelogPath = path.resolve(process.cwd(), 'CHANGELOG.md');
+    const repoRoot = process.cwd();
 
-  // Initialize and run generator
-  const generator = new ChangelogGenerator(changelogPath, repoRoot, options);
-  await generator.generateChangelog(version);
+    // Initialize and run generator
+    const generator = new ChangelogGenerator(changelogPath, repoRoot, options);
+    await generator.generateChangelog(version);
 
-  if (options.debug) {
-    const endTime = performance.now();
-    const duration = ((endTime - startTime) / 1000).toFixed(2);
-    console.log(`==== Changelog generation completed in ${duration}s ====`);
+    if (options.debug) {
+      const endTime = performance.now();
+      const duration = ((endTime - startTime) / 1000).toFixed(2);
+      console.log(`==== Changelog generation completed in ${duration}s ====`);
+    }
+
+    // Set GitHub Actions output if running in GitHub Actions
+    if (process.env['GITHUB_ACTIONS'] === 'true') {
+      // Use GITHUB_OUTPUT environment file instead of deprecated set-output command
+      const githubOutput = process.env['GITHUB_OUTPUT'];
+      if (githubOutput) {
+        const fs = require('fs');
+        fs.appendFileSync(githubOutput, `version=${version}\n`);
+        fs.appendFileSync(githubOutput, `status=success\n`);
+      } else {
+        // Fallback for older GitHub Actions versions
+        console.log(`::set-output name=version::${version}`);
+        console.log(`::set-output name=status::success`);
+      }
+    }
+  } catch (error) {
+    console.error('Fatal error in changelog generator:', error);
+
+    // Set error output for GitHub Actions
+    if (process.env['GITHUB_ACTIONS'] === 'true') {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      // Use new error syntax
+      console.log(`::error::Changelog generation failed: ${errorMessage}`);
+
+      // Update status output using environment file
+      const githubOutput = process.env['GITHUB_OUTPUT'];
+      if (githubOutput) {
+        const fs = require('fs');
+        fs.appendFileSync(githubOutput, `status=failed\n`);
+      } else {
+        // Fallback for older GitHub Actions versions
+        console.log(`::set-output name=status::failed`);
+      }
+    }
+
+    process.exit(1);
   }
 }
 
