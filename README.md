@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/tashfiqul-islam/profile-weather-view/blob/profile-weather-view-v2/image/readme_cover.png" alt="Profile Weather View Cover Image" width="700" height ="400">
+  <img src="https://github.com/tashfiqul-islam/profile-weather-view/blob/profile-weather-view-v2/image/readme_cover.png" alt="Profile Weather View Cover Image" width="700">
 </div>
 
 <br>
@@ -21,6 +21,14 @@
 <p align="center">
   Profile Weather View integrates real-time weather data into your GitHub profile README using OpenWeather API and GitHub Actions automation. Built with TypeScript and Bun, it delivers accurate weather information that updates automatically every 8 hours.
 </p>
+
+<hr>
+
+[📋 Overview](#-overview) • [✨ Features](#-key-features) • [🚀 Quick Start](#-quick-start) • [⚙️ Configuration](#️-configuration) • [🧩 Architecture](#-architecture) • [🛠️ Development](#️-development) • [📚 Documentation](#-documentation)
+
+<hr>
+
+</div>
 
 <details>
 <summary><b>📊 Example Weather Display</b></summary>
@@ -65,7 +73,7 @@ Profile Weather View automatically updates your GitHub profile README with real-
     - [Manual Installation](#manual-installation)
   - [⚙️ Configuration](#️-configuration)
     - [Environment Variables](#environment-variables)
-    - [Location Settings (in fetchWeather.ts)](#location-settings-in-fetchweatherts)
+    - [Location Settings](#location-settings)
     - [Display Customization](#display-customization)
   - [🧩 Architecture](#-architecture)
   - [🏗️ Core Components](#️-core-components)
@@ -128,6 +136,10 @@ Profile Weather View automatically updates your GitHub profile README with real-
 
 ## 🚀 Quick Start
 
+<div align="center">
+  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/setup-animation.gif" alt="Setup Animation" width="680">
+</div>
+
 ### One-Minute Setup
 
 ```bash
@@ -176,11 +188,15 @@ Profile Weather View is highly configurable to meet your specific needs.
 
 ### Environment Variables
 
-| Variable           | Description             | Example         |
-|--------------------|-------------------------|-----------------|
-| `OPEN_WEATHER_KEY` | API key for OpenWeather | `a1b2c3d4e5...` |
+| Variable           | Description             | Required | Default         |
+|--------------------|-------------------------|----------|-----------------|
+| `OPEN_WEATHER_KEY` | API key for OpenWeather | Yes      | -               |
+| `LOG_LEVEL`        | Logging verbosity       | No       | `"warn"`        |
+| `FORCE_UPDATE`     | Force README update     | No       | `"false"`       |
 
-### Location Settings (in fetchWeather.ts)
+### Location Settings
+
+Edit these values in `src/weather-update/services/fetchWeather.ts`:
 
 | Setting    | Description          | Default                   |
 |------------|----------------------|---------------------------|
@@ -190,11 +206,32 @@ Profile Weather View is highly configurable to meet your specific needs.
 
 ### Display Customization
 
-You can customize how the weather data appears in your README by modifying the update template in `updateReadme.ts`. See the [theme integration guide](./src/docs/guide/theme-integration.md) for detailed examples.
+You can customize the weather display by modifying the template in `updateReadme.ts`:
+
+```typescript
+// Change this template to customize your weather display
+const weatherTemplate = `
+### Current Weather in ${location}
+
+|                                   Weather                                    | Temperature | Sunrise  |  Sunset  | Humidity |
+|:----------------------------------------------------------------------------:|:-----------:|:--------:|:--------:|:--------:|
+| ${condition} <img width="15" src="${iconUrl}" alt=""> |    ${temperature}     | ${sunrise} | ${sunset} |   ${humidity}    |
+
+<div align="center">
+  <h6>
+    <em>Last refresh: ${formattedDate}</em>
+  </h6>
+</div>
+`;
+```
 
 ## 🧩 Architecture
 
 Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
+
+<div align="center">
+  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/architecture.png" alt="Architecture Diagram" width="700">
+</div>
 
 ```mermaid
 graph TD
@@ -229,6 +266,20 @@ Profile Weather View is built around four specialized modules, each with a disti
 ## ⚡ Technology Stack
 
 <div align="center">
+  <a href="https://bun.sh"><img src="https://user-images.githubusercontent.com/709451/182802334-d9c42afe-f35d-4a7b-86ea-9985f73f20c3.png" alt="Bun" height="60" /></a>
+  &nbsp;&nbsp;
+  <a href="https://www.typescriptlang.org/"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/512px-Typescript_logo_2020.svg.png" alt="TypeScript" height="60" /></a>
+  &nbsp;&nbsp;
+  <a href="https://openweathermap.org/api"><img src="https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png" alt="OpenWeather API" height="60" /></a>
+  &nbsp;&nbsp;
+  <a href="https://zod.dev"><img src="https://zod.dev/logo.svg" alt="Zod" height="60" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/features/actions"><img src="https://github.githubassets.com/images/modules/site/features/actions-icon-actions.svg" alt="GitHub Actions" height="60" /></a>
+</div>
+
+<br>
+
+<div align="center">
 
 [![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh) [![TypeScript](https://img.shields.io/badge/language-typescript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/) [![OpenWeather API](https://img.shields.io/badge/api-openweather-eb6e4b?style=flat-square&logo=openweathermap)](https://openweathermap.org/api) [![Temporal API](https://img.shields.io/badge/datetime-temporal_api-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/) [![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=flat-square&logo=zod)](https://zod.dev) [![GitHub Actions](https://img.shields.io/badge/ci%2Fcd-github_actions-2088FF?style=flat-square&logo=github-actions)](https://github.com/features/actions) [![Vitest](https://img.shields.io/badge/testing-vitest-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev) [![ESLint v9](https://img.shields.io/badge/linting-eslint_v9-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
 
@@ -244,59 +295,97 @@ Profile Weather View is built around four specialized modules, each with a disti
 
 ### Available Scripts
 
-```bash
-# Development
-bun run dev              # Run development mode
-bun run start            # Build and run
-
-# Build
-bun run build            # Standard build
-bun run build:prod       # Production build with minification
-
-# Testing
-bun run test             # Run all tests
-bun run test:ci          # Run tests in CI mode
-bun run test:watch       # Run tests in watch mode
-bun run test:coverage    # Generate coverage report
-
-# Quality
-bun run lint             # Run ESLint and fix issues
-bun run format           # Run Prettier and fix formatting
-bun run type-check       # Check TypeScript types
-bun run check-all        # Run all quality checks
-
-# Documentation
-bun run docs:dev         # Develop documentation
-bun run docs:build       # Build documentation
-bun run docs:preview     # Preview built documentation
-```
+<div align="center">
+  <table>
+    <tr>
+      <th align="center">Category</th>
+      <th align="center">Command</th>
+      <th align="center">Description</th>
+    </tr>
+    <tr>
+      <td rowspan="2" align="center"><b>Development</b></td>
+      <td><code>bun run dev</code></td>
+      <td>Run app in development mode</td>
+    </tr>
+    <tr>
+      <td><code>bun run start</code></td>
+      <td>Build and run the app in one go</td>
+    </tr>
+    <tr>
+      <td rowspan="2" align="center"><b>Build</b></td>
+      <td><code>bun run build</code></td>
+      <td>Compile project to ./dist</td>
+    </tr>
+    <tr>
+      <td><code>bun run build:prod</code></td>
+      <td>Compile with minification for production</td>
+    </tr>
+    <tr>
+      <td rowspan="5" align="center"><b>Testing</b></td>
+      <td><code>bun run test</code></td>
+      <td>Run all tests using Vitest</td>
+    </tr>
+    <tr>
+      <td><code>bun run test:ci</code></td>
+      <td>Run tests once (for CI/CD)</td>
+    </tr>
+    <tr>
+      <td><code>bun run test:watch</code></td>
+      <td>Watch mode (re-run on file change)</td>
+    </tr>
+    <tr>
+      <td><code>bun run test:coverage</code></td>
+      <td>Generate coverage report (V8)</td>
+    </tr>
+    <tr>
+      <td><code>bun run test:staged</code></td>
+      <td>Test only staged test files (git diff-based)</td>
+    </tr>
+    <tr>
+      <td rowspan="3" align="center"><b>Quality</b></td>
+      <td><code>bun run lint</code></td>
+      <td>Run ESLint with auto-fix</td>
+    </tr>
+    <tr>
+      <td><code>bun run format</code></td>
+      <td>Format codebase using Prettier</td>
+    </tr>
+    <tr>
+      <td><code>bun run check-all</code></td>
+      <td>Type-check + Lint + Format + Test (CI-safe)</td>
+    </tr>
+    <tr>
+      <td rowspan="2" align="center"><b>Security</b></td>
+      <td><code>bun run security</code></td>
+      <td>Run Biome security + style checks with auto-fix</td>
+    </tr>
+    <tr>
+      <td><code>bun run audit</code></td>
+      <td>Check for vulnerabilities in dependencies</td>
+    </tr>
+  </table>
+</div>
 
 ### Project Structure
 
 ```
 profile-weather-view/
-├── .github/
-│   └── workflows/              # GitHub Actions automation
-│       └── profile-weather-update.yml
-├── .husky/                     # Git hooks for code quality
+├── .github/workflows/           # GitHub Actions workflows
 ├── src/
-│   ├── __tests__/              # Comprehensive test suite
-│   ├── config/                 # Configuration modules
-│   ├── docs/                   # Documentation files
-│   └── weather-update/         # Core application
+│   ├── __tests__/               # Unit and integration tests
+│   ├── docs/                    # Documentation files
+│   └── weather-update/
 │       ├── services/
-│       │   ├── fetchWeather.ts # Weather API integration
-│       │   └── updateReadme.ts # README file manipulation
+│       │   ├── fetchWeather.ts  # Weather API service
+│       │   └── updateReadme.ts  # README update service
 │       ├── utils/
-│       │   └── preload.ts      # Environment validation
-│       └── index.ts            # Entry point
-├── .env                        # Environment variables (gitignored)
-├── bunfig.toml                 # Bun runtime configuration
-├── eslint.config.mjs           # ESLint flat configuration (v9)
-├── prettier.config.mjs         # Prettier configuration
-├── tsconfig.json               # TypeScript configuration
-├── commitlint.config.mjs       # Commit message validation
-└── vitest.config.ts            # Test runner configuration
+│       │   └── preload.ts       # Environment validator
+│       └── index.ts             # Application entry point
+├── .env                         # Local environment variables
+├── bunfig.toml                  # Bun runtime configuration
+├── eslint.config.mjs            # ESLint configuration
+├── tsconfig.json                # TypeScript configuration
+└── vitest.config.ts             # Vitest test configuration
 ```
 
 ## 🔄 CI/CD Pipeline
@@ -335,6 +424,10 @@ The application uses GitHub Actions for automated deployment with the following 
 ## 🧪 Testing
 
 The project has comprehensive test coverage to ensure reliability:
+
+<div align="center">
+  <img src="https://github.com/tashfiqul-islam/profile-weather-view/raw/main/image/test-coverage.png" alt="Test Coverage" width="700">
+</div>
 
 ```
 % Coverage report from v8
@@ -382,17 +475,13 @@ Comprehensive documentation is available in the [`src/docs/`](./src/docs/) direc
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help:
+Contributions are welcome and appreciated! See our [Contributing Guide](.github/contributing.md) for details on how to help improve Profile Weather View.
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes**
-4. **Run tests**: `bun test`
-5. **Commit changes**: Use conventional commit format
-6. **Push to your fork**: `git push origin feature/amazing-feature`
-7. **Open a pull request**
-
-For detailed contribution guidelines, please refer to the [Contributing Guide](.github/contributing.md).
+<div align="center">
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=tashfiqul-islam/profile-weather-view" alt="Contributors" />
+  </a>
+</div>
 
 ## 📜 License
 
