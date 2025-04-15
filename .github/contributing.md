@@ -2,33 +2,49 @@
 
 <div align="center">
 
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
-[![Bun](https://img.shields.io/badge/powered%20by-Bun-black?style=flat-square&logo=bun)](https://bun.sh)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
-[![ESLint v9](https://img.shields.io/badge/ESLint-v9-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
-[![Vitest](https://img.shields.io/badge/tested%20with-Vitest-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org) [![Bun](https://img.shields.io/badge/powered%20by-Bun-black?style=flat-square&logo=bun)](https://bun.sh) [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org) [![ESLint v9](https://img.shields.io/badge/ESLint-v9-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/) [![Vitest](https://img.shields.io/badge/tested%20with-Vitest-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev)
 
 <p align="center">
-  <i>Thank you for considering contributing to Profile Weather View!</i>
+  <i>Thank you for considering contributing to Profile Weather View!</i><br>
+  <small>This guide will help you get started and make the contribution process smooth for everyone.</small>
 </p>
 
 </div>
 
-## Contents
+<div align="center">
 
-- [Development Philosophy](#development-philosophy)
-- [Getting Started](#getting-started)
-- [Development Environment](#development-environment)
-- [Development Workflow](#development-workflow)
-- [Code Architecture](#code-architecture)
-- [Quality Standards](#quality-standards)
-- [Pull Request Process](#pull-request-process)
-- [Continuous Integration](#continuous-integration)
-- [Documentation](#documentation)
-- [Community Guidelines](#community-guidelines)
+[Development Philosophy](#development-philosophy) • [Getting Started](#getting-started) • [Workflow](#development-workflow) • [Architecture](#code-architecture) • [Quality Standards](#quality-standards) • [Pull Requests](#pull-request-process)
+
+</div>
 
 ## Development Philosophy
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center">
+      <h3>🔒</h3>
+      <b>Type Safety</b><br>
+      <small>Strong typing throughout</small>
+    </td>
+    <td align="center">
+      <h3>🧩</h3>
+      <b>Modularity</b><br>
+      <small>Decoupled components</small>
+    </td>
+    <td align="center">
+      <h3>🧪</h3>
+      <b>Test-Driven</b><br>
+      <small>100% test coverage</small>
+    </td>
+    <td align="center">
+      <h3>⚡</h3>
+      <b>Performance</b><br>
+      <small>Speed and efficiency</small>
+    </td>
+  </tr>
+</table>
+</div>
 
 Profile Weather View embraces these core principles:
 
@@ -44,61 +60,92 @@ Profile Weather View embraces these core principles:
 
 ### Prerequisites
 
-- **Bun**: ≥ 1.1.0 (required)
-- **Node.js**: ≥ 20.0.0 (optional fallback)
-- **Git**: Latest version
-- **GitHub Account**: For pull requests
-- **OpenWeather API Key**: For local testing
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| **Bun** | ≥ 1.1.0 | Required |
+| **Node.js** | ≥ 20.0.0 | Optional fallback |
+| **Git** | Latest | For version control |
+| **GitHub Account** | N/A | For pull requests |
+| **OpenWeather API Key** | N/A | For local testing |
 
 ### First-Time Setup
 
-1. **Fork & Clone**
+<details>
+<summary><b>Step 1: Fork & Clone</b></summary>
 
-   ```bash
-   git clone https://github.com/your-username/profile-weather-view.git
-   cd profile-weather-view
-   ```
+```bash
+git clone https://github.com/your-username/profile-weather-view.git
+cd profile-weather-view
+```
+</details>
 
-2. **Setup Git Remote**
+<details>
+<summary><b>Step 2: Setup Git Remote</b></summary>
 
-   ```bash
-   git remote add upstream https://github.com/tashfiqul-islam/profile-weather-view.git
-   ```
+```bash
+git remote add upstream https://github.com/tashfiqul-islam/profile-weather-view.git
+```
+</details>
 
-3. **Install Dependencies**
+<details>
+<summary><b>Step 3: Install Dependencies</b></summary>
 
-   ```bash
-   bun install
-   ```
+```bash
+bun install
+```
+</details>
 
-4. **Configure Environment**
+<details>
+<summary><b>Step 4: Configure Environment</b></summary>
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your OpenWeather API key
-   ```
+```bash
+cp .env.example .env
+# Edit .env with your OpenWeather API key
+```
+</details>
 
-5. **Verify Installation**
+<details>
+<summary><b>Step 5: Verify Installation</b></summary>
 
-   ```bash
-   bun run check-all
-   ```
+```bash
+bun run check-all
+```
+</details>
 
 ## Development Environment
 
 ### Recommended Tools
 
-- **VS Code** with extensions:
-  - ESLint
-  - Prettier
-  - TypeScript Error Translator
-  - Code Spell Checker
-  - GitLens
-  - GitHub Copilot
+<div align="center">
+<table>
+  <tr>
+    <th align="center">Editor</th>
+    <th align="center">Extensions</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://code.visualstudio.com/">
+        <img src="https://code.visualstudio.com/assets/images/code-stable.png" width="40" alt="VS Code"/><br>
+        <b>VS Code</b>
+      </a>
+    </td>
+    <td>
+      <ul>
+        <li>ESLint</li>
+        <li>Prettier</li>
+        <li>TypeScript Error Translator</li>
+        <li>Code Spell Checker</li>
+        <li>GitLens</li>
+        <li>GitHub Copilot</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+</div>
 
 ### Editor Configuration
 
-A `.vscode/settings.json` file is provided with the repository to ensure consistent settings across contributors:
+`.vscode/settings.json` file with the repository to ensure consistent settings:
 
 ```json
 {
@@ -120,9 +167,11 @@ A `.vscode/settings.json` file is provided with the repository to ensure consist
 
 The project uses [Husky](https://typicode.github.io/husky/) and [Commitlint](https://commitlint.js.org/) to enforce quality standards:
 
-- **pre-commit**: Runs `format`, `lint`, and `type-check`
-- **commit-msg**: Validates commit messages follow Conventional Commits
-- **pre-push**: Runs tests
+| Hook | Action |
+|------|--------|
+| **pre-commit** | Runs `format`, `lint`, and `type-check` |
+| **commit-msg** | Validates commit messages follow Conventional Commits |
+| **pre-push** | Runs tests |
 
 Git hooks are automatically installed when you run `bun install`.
 
@@ -141,6 +190,10 @@ main                 # Production-ready code
 ```
 
 ### Development Cycle
+
+<div align="center">
+<img src="https://mermaid.ink/img/pako:eNptkU1rwzAMhv-K0GmDdXSXHQbZoWyMXXbaJdRqGzCxg-3QUfp_n9NQRtrlJPTx6JUEe-KJEtKZfzm3R9_BQ9c1xgwAzYeHYVrAqKTFYLc32w0sUCkfYbdv4bOTsn0a1rW9aWbA7NYCNVawV3CJ5cHbDmYKdPfRFaAx4Feg1Wiq1C3g6r5WULQBkR88LWrTTlEb2z5hDzPEOdDkXIbOkYJjYa-VVXhuNBuZtb9BKVWxv6yVMkuJT0fJCzivOKrU4f8PKKOsKzVSbvTHzrDRXCjl_OXIIz6hM9wVo0JT9Gz5DcJmKjHdwJDNZb8nD3bWF1Kdj9gnFDJilBJFR0nm2SXvqXcxpaosJ4oGvV6FzP-20cRUNgXUMoX6B4VWkK8" alt="Development Workflow" width="600" />
+</div>
 
 1. **Sync Your Fork**
 
@@ -189,13 +242,30 @@ main                 # Production-ready code
 
 ### Core Design Patterns
 
-Profile Weather View follows these architectural patterns:
-
-- **Services Architecture**: Core functionality is organized into service modules
-- **Dependency Injection**: Dependencies are passed explicitly
-- **Command Pattern**: Operations are encapsulated in reusable commands
-- **Repository Pattern**: Data access is abstracted through repositories
-- **Validator Pattern**: Input validation is handled through schemas
+<div align="center">
+<table>
+  <tr>
+    <td><b>Services Architecture</b></td>
+    <td>Core functionality is organized into service modules</td>
+  </tr>
+  <tr>
+    <td><b>Dependency Injection</b></td>
+    <td>Dependencies are passed explicitly</td>
+  </tr>
+  <tr>
+    <td><b>Command Pattern</b></td>
+    <td>Operations are encapsulated in reusable commands</td>
+  </tr>
+  <tr>
+    <td><b>Repository Pattern</b></td>
+    <td>Data access is abstracted through repositories</td>
+  </tr>
+  <tr>
+    <td><b>Validator Pattern</b></td>
+    <td>Input validation is handled through schemas</td>
+  </tr>
+</table>
+</div>
 
 ### Directory Structure
 
@@ -221,7 +291,8 @@ src/
 - Use type guards for runtime type checking
 - Leverage `zod` schemas for API responses
 
-Example:
+<details>
+<summary><b>Example</b></summary>
 
 ```typescript
 /**
@@ -260,18 +331,22 @@ const WeatherSchema = z.object({
   }),
 });
 ```
+</details>
 
 ## Quality Standards
 
 ### TypeScript Guidelines
 
-- **Strict Mode**: All files must use TypeScript's strict mode
-- **No `any`**: Use proper type definitions or `unknown` with type guards
-- **Documentation**: All exported functions require JSDoc comments
-- **Immutability**: Use `readonly` and `const` wherever possible
-- **Type Guards**: Implement type guards for runtime validation
+| Guideline | Description |
+|-----------|-------------|
+| **Strict Mode** | All files must use TypeScript's strict mode |
+| **No `any`** | Use proper type definitions or `unknown` with type guards |
+| **Documentation** | All exported functions require JSDoc comments |
+| **Immutability** | Use `readonly` and `const` wherever possible |
+| **Type Guards** | Implement type guards for runtime validation |
 
-Example:
+<details>
+<summary><b>Example</b></summary>
 
 ```typescript
 /**
@@ -294,18 +369,41 @@ export function convertToDhakaTime(utcSeconds: number): string {
     .replace(/\.\d+/, ''); // HH:MM:SS format
 }
 ```
+</details>
 
 ### Testing Requirements
 
-We follow a test-driven development approach:
+I follow a test-driven development approach:
 
-- **Unit Tests**: All functions must have unit tests
-- **Integration Tests**: All services must have integration tests
-- **Edge Cases**: Handle boundary conditions and error states
-- **Coverage**: Maintain 100% code coverage
-- **Mocking**: Use explicit mocks for external dependencies
+<div align="center">
+<table>
+  <tr>
+    <td align="center">
+      <h3>🧪</h3>
+      <b>Unit Tests</b><br>
+      <small>For all functions</small>
+    </td>
+    <td align="center">
+      <h3>🔄</h3>
+      <b>Integration Tests</b><br>
+      <small>For all services</small>
+    </td>
+    <td align="center">
+      <h3>🧮</h3>
+      <b>Edge Cases</b><br>
+      <small>Boundary conditions</small>
+    </td>
+    <td align="center">
+      <h3>📊</h3>
+      <b>Coverage</b><br>
+      <small>100% code coverage</small>
+    </td>
+  </tr>
+</table>
+</div>
 
-Example:
+<details>
+<summary><b>Example</b></summary>
 
 ```typescript
 describe('fetchWeatherData()', () => {
@@ -341,6 +439,7 @@ describe('fetchWeatherData()', () => {
   });
 });
 ```
+</details>
 
 ### Code Style
 
@@ -352,7 +451,6 @@ describe('fetchWeatherData()', () => {
 - **Function Size**: Keep functions under 30 lines when possible
 
 Our ESLint configuration enforces:
-
 - SonarJS quality rules
 - Security best practices
 - Performance optimizations
@@ -360,31 +458,85 @@ Our ESLint configuration enforces:
 
 ### Commit Standards
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) with the following types:
+I use [conventional commits](https://www.conventionalcommits.org/) with the following types:
 
-- `feat`: New features
-- `fix`: Bug fixes
-- `docs`: Documentation changes
-- `style`: Formatting changes
-- `refactor`: Code restructuring
-- `perf`: Performance improvements
-- `test`: Test updates
-- `chore`: Build process or tooling changes
-- `ci`: CI configuration changes
-- `build`: Changes affecting build system
+<div align="center">
+<table>
+  <tr>
+    <td><code>feat</code></td>
+    <td>New features</td>
+    <td><code>fix</code></td>
+    <td>Bug fixes</td>
+  </tr>
+  <tr>
+    <td><code>docs</code></td>
+    <td>Documentation changes</td>
+    <td><code>style</code></td>
+    <td>Formatting changes</td>
+  </tr>
+  <tr>
+    <td><code>refactor</code></td>
+    <td>Code restructuring</td>
+    <td><code>perf</code></td>
+    <td>Performance improvements</td>
+  </tr>
+  <tr>
+    <td><code>test</code></td>
+    <td>Test updates</td>
+    <td><code>chore</code></td>
+    <td>Build/tool changes</td>
+  </tr>
+  <tr>
+    <td><code>ci</code></td>
+    <td>CI configuration changes</td>
+    <td><code>build</code></td>
+    <td>Build system changes</td>
+  </tr>
+</table>
+</div>
 
 Format: `type(scope): description`
 
-Example:
+<details>
+<summary><b>Examples</b></summary>
+
 ```
 feat(weather): add multi-timezone support
 fix(api): handle network timeouts gracefully
 perf(readme): optimize image loading performance
 ```
+</details>
 
 ## Pull Request Process
 
 ### PR Guidelines
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center">
+      <h3>🎯</h3>
+      <b>Focused Changes</b><br>
+      <small>One feature per PR</small>
+    </td>
+    <td align="center">
+      <h3>📝</h3>
+      <b>Documentation</b><br>
+      <small>Complete PR template</small>
+    </td>
+    <td align="center">
+      <h3>👀</h3>
+      <b>Reviews</b><br>
+      <small>Address all comments</small>
+    </td>
+    <td align="center">
+      <h3>✅</h3>
+      <b>CI Validation</b><br>
+      <small>All checks must pass</small>
+    </td>
+  </tr>
+</table>
+</div>
 
 1. **Keep PRs Focused**
    - One feature or bug fix per PR
@@ -410,16 +562,24 @@ perf(readme): optimize image loading performance
    - PR title becomes the commit message
    - Linked issues are automatically closed
 
-### Continuous Integration
+## Continuous Integration
 
 All PRs are automatically validated with:
 
-- TypeScript type checking
-- ESLint code quality verification
-- Prettier formatting validation
-- Vitest test execution
-- Code coverage enforcement (100%)
-- Dependency vulnerability scanning
+<div align="center">
+<table>
+  <tr>
+    <td align="center">🔍 <b>Type checking</b></td>
+    <td align="center">🧹 <b>ESLint</b></td>
+    <td align="center">✨ <b>Prettier</b></td>
+  </tr>
+  <tr>
+    <td align="center">🧪 <b>Test execution</b></td>
+    <td align="center">📊 <b>Code coverage</b></td>
+    <td align="center">🔒 <b>Security scanning</b></td>
+  </tr>
+</table>
+</div>
 
 ## Documentation
 
@@ -427,15 +587,32 @@ Documentation is a critical component of our project:
 
 ### Code Documentation
 
-- **JSDoc Comments**: All exported functions
-- **Inline Comments**: Complex logic
-- **Type Definitions**: Clear interface descriptions
-- **Examples**: Practical usage examples
+<div align="center">
+<table>
+  <tr>
+    <td><b>JSDoc Comments</b></td>
+    <td>All exported functions</td>
+  </tr>
+  <tr>
+    <td><b>Inline Comments</b></td>
+    <td>Complex logic</td>
+  </tr>
+  <tr>
+    <td><b>Type Definitions</b></td>
+    <td>Clear interface descriptions</td>
+  </tr>
+  <tr>
+    <td><b>Examples</b></td>
+    <td>Practical usage examples</td>
+  </tr>
+</table>
+</div>
 
 ### Project Documentation
 
 - **README.md**: Project overview and quick start
 - **CONTRIBUTING.md**: Contribution guidelines (this document)
+- **PULL_REQUEST_TEMPLATE.md**: PR template for contributors
 - **User Guides**: In `src/docs/`
 - **Architecture Docs**: System design documents
 - **API References**: Function and service documentation
@@ -487,5 +664,18 @@ Contributors are recognized in several ways:
   </p>
   <p>
     <small>Your contributions directly improve the experience for all users of this project.</small>
+  </p>
+  <p>
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">
+      <img src="https://img.shields.io/badge/report-bug-red.svg?style=flat-square" alt="Report Bug" />
+    </a>
+    &nbsp;
+    <a href="https://github.com/tashfiqul-islam/profile-weather-view/discussions">
+      <img src="https://img.shields.io/badge/join-discussions-blue.svg?style=flat-square" alt="Join Discussions" />
+    </a>
+    &nbsp;
+    <a href="https://github.com/sponsors/tashfiqul-islam">
+      <img src="https://img.shields.io/badge/sponsor-project-orange.svg?style=flat-square" alt="Sponsor Project" />
+    </a>
   </p>
 </div>
