@@ -21,6 +21,22 @@ import * as path from 'path';
 import { parse } from '@commitlint/parse';
 
 /**
+ * Constants for commit parsing and application configuration
+ */
+const CONSTANTS = {
+  COMMIT_DELIMITERS: {
+    START: 'COMMIT_START',
+    END: 'COMMIT_END',
+  },
+  REPO_STATES: {
+    MINIMAL: 'minimal',
+    STANDARD: 'standard',
+    COMPLEX: 'complex',
+  },
+  DEFAULT_REPO_STATE: 'standard',
+};
+
+/**
  * Type definitions for the changelog entries
  */
 interface ChangelogEntry {
@@ -98,6 +114,17 @@ function parseGitDate(dateString: string): Date {
 }
 
 /**
+ * Validates that the provided repo state is in the list of allowed values
+ *
+ * @param state - The repository state to validate
+ * @returns Valid repo state or default if invalid
+ */
+function validateRepoState(state: string): string {
+  const validStates = Object.values(CONSTANTS.REPO_STATES);
+  return validStates.includes(state) ? state : CONSTANTS.DEFAULT_REPO_STATE;
+}
+
+/**
  * Changelog Generator class for creating and updating changelogs
  * based on git commit history following conventional commit standards
  */
@@ -122,13 +149,18 @@ class ChangelogGenerator {
     this.changelogPath = changelogPath;
     this.repoRoot = repoRoot;
     this.debug = options.debug;
-    this.options = options;
+
+    // Ensure that repoState is valid
+    this.options = {
+      ...options,
+      repoState: validateRepoState(options.repoState),
+    };
 
     if (this.debug) {
       console.log('ChangelogGenerator initialized with options:', {
         changelogPath,
         repoRoot,
-        options,
+        options: this.options,
       });
     }
   }
@@ -142,11 +174,12 @@ class ChangelogGenerator {
    */
   private async fetchCommitHistory(): Promise<ChangelogEntry[]> {
     // Use custom format with clear separator to avoid parsing issues
+    const { START, END } = CONSTANTS.COMMIT_DELIMITERS;
     const gitLogCommand = Bun.spawn(
       [
         'git',
         'log',
-        '--pretty=format:COMMIT_START%n%H%n%aI%n%s%n%b%nCOMMIT_END',
+        `--pretty=format:${START}%n%H%n%aI%n%s%n%b%n${END}`,
         '--no-merges',
       ],
       {
@@ -159,10 +192,10 @@ class ChangelogGenerator {
 
     // Use more reliable commit separators
     const commits = output
-      .split('COMMIT_START')
-      .filter((commit) => commit.includes('COMMIT_END'))
+      .split(START)
+      .filter((commit) => commit.includes(END))
       .map((commit) => {
-        const endIndex = commit.indexOf('COMMIT_END');
+        const endIndex = commit.indexOf(END);
         return commit.substring(0, endIndex).trim();
       })
       .filter(Boolean);
@@ -431,7 +464,7 @@ function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
   const options: ChangelogOptions = {
     debug: false,
     force: false,
-    repoState: 'standard',
+    repoState: CONSTANTS.DEFAULT_REPO_STATE,
   };
 
   // Get version from first positional argument or use default
@@ -441,12 +474,13 @@ function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
   options.debug = args.includes('--debug');
   options.force = args.includes('--force');
 
-  // Parse repo-state option with proper error handling
+  // Parse repo-state option with validation
   const repoStateArg = args.find((arg) => arg.startsWith('--repo-state='));
   if (repoStateArg) {
     const splitResult = repoStateArg.split('=');
     if (splitResult.length > 1 && splitResult[1]) {
-      options.repoState = splitResult[1];
+      // Validate against allowed states
+      options.repoState = validateRepoState(splitResult[1]);
     }
   }
 
@@ -493,4 +527,9 @@ if (import.meta.main) {
 }
 
 // Export for testing and module usage
-export { ChangelogGenerator, parseGitDate, parseCommandLineArgs };
+export {
+  ChangelogGenerator,
+  parseGitDate,
+  parseCommandLineArgs,
+  validateRepoState,
+};
