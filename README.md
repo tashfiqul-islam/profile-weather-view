@@ -57,6 +57,8 @@
 </div>
 </details>
 
+<br>
+
 ## 📋 Overview
 
 Profile Weather View automatically updates your GitHub profile README with real-time weather data for your location. Built with TypeScript and modern web technologies, it leverages GitHub Actions for fully automated updates every 8 hours.
@@ -92,6 +94,8 @@ Profile Weather View automatically updates your GitHub profile README with real-
   - [🙏 Acknowledgements](#-acknowledgements)
 
 </details>
+
+<br>
 
 ## ✨ Key Features
 
@@ -133,6 +137,8 @@ Profile Weather View automatically updates your GitHub profile README with real-
   </tr>
 </table>
 </div>
+
+<br>
 
 ## 🚀 Quick Start
 
@@ -178,6 +184,8 @@ echo "OPEN_WEATHER_KEY=your_api_key_here" > .env
     - Add your OpenWeather API key as a repository secret named `OPEN_WEATHER_KEY`
     - The workflow will automatically run every 8 hours
 
+<br>
+
 ## ⚙️ Configuration
 
 Profile Weather View is highly configurable to meet your specific needs.
@@ -221,6 +229,8 @@ const weatherTemplate = `
 `;
 ```
 
+<br>
+
 ## 🧩 Architecture
 
 Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
@@ -228,6 +238,8 @@ Profile Weather View follows a clean, modular architecture designed for maintain
 <div align="center">
   <img src="./image/architecture.png" alt="Architecture Diagram" width="700">
 </div>
+
+<br>
 
 ## 🏗️ Core Components
 
@@ -247,6 +259,8 @@ Profile Weather View is built around four specialized modules, each with a disti
 3. **Display**: Update README with formatted weather information
 4. **Completion**: Report success or provide troubleshooting details
 
+<br>
+
 ## ⚡ Technology Stack
 
 <div align="center">
@@ -265,9 +279,11 @@ Profile Weather View is built around four specialized modules, each with a disti
 
 <div align="center">
 
-[![Bun](https://img.shields.io/badge/runtime-bun-black?style=flat-square&logo=bun)](https://bun.sh) [![TypeScript](https://img.shields.io/badge/language-typescript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/) [![OpenWeather API](https://img.shields.io/badge/api-openweather-eb6e4b?style=flat-square&logo=openweathermap)](https://openweathermap.org/api) [![Temporal API](https://img.shields.io/badge/datetime-temporal_api-ff69b4?style=flat-square)](https://tc39.es/proposal-temporal/docs/) [![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=flat-square&logo=zod)](https://zod.dev) [![GitHub Actions](https://img.shields.io/badge/ci%2Fcd-github_actions-2088FF?style=flat-square&logo=github-actions)](https://github.com/features/actions) [![Vitest](https://img.shields.io/badge/testing-vitest-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev) [![ESLint v9](https://img.shields.io/badge/linting-eslint_v9-4B32C3?style=flat-square&logo=eslint)](https://eslint.org/)
+[![Bun](https://img.shields.io/badge/runtime-bun-black?style=for-the-badge&logo=bun)](https://bun.sh) [![TypeScript](https://img.shields.io/badge/language-typescript-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/) [![OpenWeather API](https://img.shields.io/badge/api-openweather-eb6e4b?style=for-the-badge&logo=openweathermap)](https://openweathermap.org/api) [![Temporal API](https://img.shields.io/badge/datetime-temporal_api-ff69b4?style=for-the-badge)](https://tc39.es/proposal-temporal/docs/) [![Zod](https://img.shields.io/badge/validation-zod-3068B7?style=for-the-badge&logo=zod)](https://zod.dev) [![GitHub Actions](https://img.shields.io/badge/ci%2Fcd-github_actions-2088FF?style=for-the-badge&logo=github-actions)](https://github.com/features/actions) [![Vitest](https://img.shields.io/badge/testing-vitest-6E9F18?style=for-the-badge&logo=vitest)](https://vitest.dev) [![ESLint v9](https://img.shields.io/badge/linting-eslint_v9-4B32C3?style=for-the-badge&logo=eslint)](https://eslint.org/)
 
 </div>
+
+<br>
 
 ## 🛠️ Development
 
@@ -372,6 +388,8 @@ profile-weather-view/
 └── vitest.config.ts             # Vitest test configuration
 ```
 
+<br>
+
 ## 🔄 CI/CD Pipeline
 
 The application uses GitHub Actions for automated deployment with the following key features:
@@ -405,6 +423,8 @@ The application uses GitHub Actions for automated deployment with the following 
   </table>
 </div>
 
+<br>
+
 ## 🧪 Testing
 
 The project has comprehensive test coverage to ensure reliability:
@@ -432,6 +452,8 @@ All files         |     100 |      100 |     100 |     100 |
 - **Mocks**: Simulation of external dependencies
 - **Performance Benchmarks**: Measure execution speed
 
+<br>
+
 ## 📚 Documentation
 
 Comprehensive documentation is available in the [`src/docs/`](./src/docs/) directory, including:
@@ -453,6 +475,8 @@ Comprehensive documentation is available in the [`src/docs/`](./src/docs/) direc
   </table>
 </div>
 
+<br>
+
 ## 🤝 Contributing
 
 Contributions are welcome and appreciated! See our [Contributing Guide](.github/contributing.md) for details on how to help improve Profile Weather View.
@@ -470,6 +494,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```
 Copyright (c) 2025 Tashfiqul Islam
 ```
+
+<br>
 
 ## 🙏 Acknowledgements
 
