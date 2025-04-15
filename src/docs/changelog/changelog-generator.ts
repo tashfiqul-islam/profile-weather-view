@@ -2,17 +2,27 @@
 
 /**
  * Changelog Generation Utility
+ * ============================
  *
  * Next-generation changelog management for Profile Weather View
  * Designed for modern, automated documentation workflows
  *
- * @fileoverview Generates and maintains comprehensive changelogs
+ * @fileoverview Generates and maintains comprehensive changelogs based on
+ * conventional commit messages. Supports semantic versioning and categorized
+ * change entries. Built for modern TypeScript and Bun environments.
+ *
  * @module changelog-generator
+ * @version 2.0.0
+ * @license MIT
+ * @copyright 2025 Profile Weather View Contributors
  */
 
 import * as path from 'path';
 import { parse } from '@commitlint/parse';
 
+/**
+ * Type definitions for the changelog entries
+ */
 interface ChangelogEntry {
   type: string;
   scope?: string;
@@ -24,27 +34,62 @@ interface ChangelogEntry {
 }
 
 /**
- * Parse git date string to handle various formats
- * Specifically handles the ISO format from git log: "YYYY-MM-DD HH:MM:SS +ZZZZ"
+ * Options for the changelog generator
+ */
+interface ChangelogOptions {
+  debug: boolean;
+  force: boolean;
+  repoState: string;
+}
+
+/**
+ * Changelog section mapping interface
+ */
+interface ChangelogSections {
+  [key: string]: ChangelogEntry[];
+}
+
+/**
+ * Parse and format dates from git commit logs
+ * Handles ISO 8601 format and provides fallbacks for invalid dates
+ *
+ * @param dateString - The date string from git log
+ * @returns Parsed date object or current date as fallback
  */
 function parseGitDate(dateString: string): Date {
   try {
-    // Split the date string into components
-    const [datePart, timePart, timezonePart] = dateString.split(' ');
+    // Direct parsing for ISO 8601 format from git log
+    const date = new Date(dateString);
 
-    if (!datePart || !timePart) {
-      throw new Error(`Invalid date format: ${dateString}`);
+    // Validate the parsed date
+    if (!isNaN(date.getTime())) {
+      return date;
     }
 
-    // Format it to an ISO 8601 string that JavaScript can reliably parse
-    const isoString = `${datePart}T${timePart}${timezonePart ? timezonePart.replace(/(\+|-)(\d{2})(\d{2})/, '$1$2:$3') : ''}`;
-    const date = new Date(isoString);
+    // If direct parsing fails, try manual parsing for various formats
+    // Format expected from git log with --date=iso: "YYYY-MM-DD HH:MM:SS +ZZZZ"
+    const parts = dateString.split(' ');
+    if (parts.length >= 2) {
+      const datePart = parts[0]; // YYYY-MM-DD
+      const timePart = parts[1]; // HH:MM:SS
+      const timezonePart = parts[2]; // +ZZZZ
 
-    if (isNaN(date.getTime())) {
-      throw new Error(`Resulting date is invalid: ${isoString}`);
+      if (datePart && timePart) {
+        // Construct ISO 8601 compatible string
+        const isoString = `${datePart}T${timePart}${
+          timezonePart
+            ? timezonePart.replace(/(\+|-)(\d{2})(\d{2})/, '$1$2:$3')
+            : ''
+        }`;
+
+        const parsedDate = new Date(isoString);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
     }
 
-    return date;
+    throw new Error(`Could not parse date string: ${dateString}`);
   } catch (error) {
     console.error(`Error parsing date "${dateString}":`, error);
     // Return current date as fallback to avoid breaking the changelog generation
@@ -52,27 +97,56 @@ function parseGitDate(dateString: string): Date {
   }
 }
 
+/**
+ * Changelog Generator class for creating and updating changelogs
+ * based on git commit history following conventional commit standards
+ */
 class ChangelogGenerator {
-  private changelogPath: string;
-  private repoRoot: string;
-  private debug: boolean;
+  private readonly changelogPath: string;
+  private readonly repoRoot: string;
+  private readonly debug: boolean;
+  private readonly options: ChangelogOptions;
 
-  constructor(changelogPath: string, repoRoot: string, debug = false) {
+  /**
+   * Create a new ChangelogGenerator instance
+   *
+   * @param changelogPath - Path to the changelog file
+   * @param repoRoot - Path to the repository root
+   * @param options - Generator options
+   */
+  constructor(
+    changelogPath: string,
+    repoRoot: string,
+    options: ChangelogOptions,
+  ) {
     this.changelogPath = changelogPath;
     this.repoRoot = repoRoot;
-    this.debug = debug;
+    this.debug = options.debug;
+    this.options = options;
+
+    if (this.debug) {
+      console.log('ChangelogGenerator initialized with options:', {
+        changelogPath,
+        repoRoot,
+        options,
+      });
+    }
   }
 
   /**
    * Fetch git commit history with comprehensive parsing
+   * Uses ISO 8601 date format and handles parsing errors gracefully
+   *
+   * @returns Array of parsed changelog entries
+   * @private
    */
   private async fetchCommitHistory(): Promise<ChangelogEntry[]> {
+    // Use custom format with clear separator to avoid parsing issues
     const gitLogCommand = Bun.spawn(
       [
         'git',
         'log',
-        '--pretty=format:%H%n%ad%n%s%n%b%n---COMMIT_SEPARATOR---',
-        '--date=iso',
+        '--pretty=format:COMMIT_START%n%H%n%aI%n%s%n%b%nCOMMIT_END',
         '--no-merges',
       ],
       {
@@ -82,47 +156,104 @@ class ChangelogGenerator {
     );
 
     const output = await new Response(gitLogCommand.stdout).text();
+
+    // Use more reliable commit separators
     const commits = output
-      .split('---COMMIT_SEPARATOR---')
-      .filter((commit) => commit.trim());
+      .split('COMMIT_START')
+      .filter((commit) => commit.includes('COMMIT_END'))
+      .map((commit) => {
+        const endIndex = commit.indexOf('COMMIT_END');
+        return commit.substring(0, endIndex).trim();
+      })
+      .filter(Boolean);
+
+    if (this.debug) {
+      console.log(`Found ${commits.length} commits in the git history`);
+      // Debug the first commit to see its format
+      if (commits.length > 0) {
+        console.log('First commit format sample:');
+        console.log(commits[0]?.substring(0, 200) + '...');
+      }
+    }
 
     return Promise.all(
       commits.map(async (commitText) => {
-        const [hash, date, ...messageParts] = commitText.split('\n');
+        const lines = commitText.split('\n');
 
-        // Enhanced error handling for missing date
-        if (!date) {
-          console.warn(`Skipping commit: Missing date for hash ${hash}`);
+        // Need at least 2 lines (hash and date)
+        if (lines.length < 2) {
+          console.warn(
+            `Skipping malformed commit: ${commitText.substring(0, 50)}...`,
+          );
           return null;
         }
 
-        const message = messageParts.join('\n').trim();
+        const hash = lines[0]?.trim() || '';
+        const dateString = lines[1]?.trim() || '';
+        const subject = lines[2]?.trim() || '';
+        const body = lines.slice(3).join('\n').trim();
+
+        if (!dateString || !hash) {
+          console.warn(`Skipping commit: Missing hash or date`);
+          return null;
+        }
 
         try {
-          const parsedCommit = await parse(message);
+          // Parse the date
+          let date: Date;
+          try {
+            date = parseGitDate(dateString);
 
-          // Use our improved date parser
-          const parsedDate = parseGitDate(date);
-
-          if (this.debug) {
-            console.log(
-              `Successfully parsed date: ${date} → ${parsedDate.toISOString()}`,
-            );
+            if (this.debug) {
+              console.log(
+                `Successfully parsed date: ${dateString} → ${date.toISOString()}`,
+              );
+            }
+          } catch (dateError) {
+            console.warn(`Error parsing date "${dateString}":`, dateError);
+            date = new Date();
           }
 
-          return {
-            type: parsedCommit.type || 'chore',
-            scope: parsedCommit.scope,
-            subject: parsedCommit.subject || '',
-            body: parsedCommit.body,
-            breaking: parsedCommit.notes.some((note) =>
-              note.title.toLowerCase().includes('breaking'),
-            ),
-            date: parsedDate.toISOString(),
-            hash,
-          };
+          // Parse the commit message
+          try {
+            const parsedCommit = await parse(
+              subject + (body ? '\n\n' + body : ''),
+            );
+
+            if (this.debug) {
+              console.log(
+                `Successfully parsed commit: ${hash.substring(0, 8)} - ${subject.substring(0, 30)}`,
+              );
+            }
+
+            return {
+              type: parsedCommit.type || 'chore',
+              scope: parsedCommit.scope,
+              subject: parsedCommit.subject || subject, // Fallback to the original subject
+              body: parsedCommit.body || body, // Fallback to the original body
+              breaking: parsedCommit.notes.some((note) =>
+                note.title.toLowerCase().includes('breaking'),
+              ),
+              date: date.toISOString(),
+              hash,
+            };
+          } catch (parseError) {
+            // If commit message parsing fails, still include it with default values
+            console.warn(
+              `Error parsing commit message: ${subject}`,
+              parseError,
+            );
+            return {
+              type: 'chore',
+              subject: subject,
+              body: body,
+              breaking: false,
+              date: date.toISOString(),
+              hash,
+            };
+          }
         } catch (error) {
-          console.warn(`Parsing commit failed: ${date}\n${message}`, error);
+          console.warn(`Failed to process commit: ${hash}`, error);
           return null;
         }
       }),
@@ -130,10 +261,14 @@ class ChangelogGenerator {
   }
 
   /**
-   * Generate structured changelog sections with type safety
+   * Group changelog entries by type for structured output
+   *
+   * @param entries - Array of changelog entries
+   * @returns Grouped entries by section
+   * @private
    */
-  private groupChangelogEntries(entries: ChangelogEntry[]) {
-    const sections: { [key: string]: ChangelogEntry[] } = {
+  private groupChangelogEntries(entries: ChangelogEntry[]): ChangelogSections {
+    const sections: ChangelogSections = {
       '✨ Features': [],
       '🐛 Bug Fixes': [],
       '📚 Documentation': [],
@@ -173,14 +308,20 @@ class ChangelogGenerator {
 
   /**
    * Render changelog in modern, readable markdown with enhanced formatting
+   *
+   * @param groupedEntries - Grouped changelog entries
+   * @param version - Version to generate changelog for
+   * @returns Formatted changelog content
+   * @private
    */
   private renderChangelog(
-    groupedEntries: ReturnType<typeof this.groupChangelogEntries>,
+    groupedEntries: ChangelogSections,
     version: string,
-  ) {
+  ): string {
+    const releaseDate = new Date().toISOString().split('T')[0];
     let changelogContent = `# Changelog
 
-## [${version}] - ${new Date().toISOString().split('T')[0]}
+## [${version}] - ${releaseDate}
 
 `;
 
@@ -201,14 +342,30 @@ class ChangelogGenerator {
 
   /**
    * Main changelog generation workflow
-   * @param version Version to generate changelog for
+   * Fetches commit history, groups entries, renders markdown,
+   * and saves to the changelog file
+   *
+   * @param version - Version to generate changelog for
+   * @returns Promise that resolves when changelog is generated
    */
-  async generateChangelog(version: string) {
+  async generateChangelog(version: string): Promise<void> {
     try {
+      if (this.debug) {
+        console.log(`Generating changelog for version ${version}...`);
+        console.log(`Repository state: ${this.options.repoState}`);
+        console.log(`Force regeneration: ${this.options.force}`);
+      }
+
       const commits = await this.fetchCommitHistory();
 
       if (this.debug) {
         console.log(`Processed ${commits.length} valid commits`);
+      }
+
+      // Skip changelog generation if no commits found
+      if (commits.length === 0) {
+        console.warn('No valid commits found, skipping changelog generation');
+        return;
       }
 
       const groupedEntries = this.groupChangelogEntries(commits);
@@ -220,14 +377,42 @@ class ChangelogGenerator {
         existingContent = await Bun.file(this.changelogPath).text();
       } catch (error) {
         console.warn(`No existing changelog found: ${error}`);
+        // Ensure parent directories exist
+        try {
+          const dirPath = path.dirname(this.changelogPath);
+          await Bun.spawn(['mkdir', '-p', dirPath], {
+            stdio: ['inherit', 'inherit', 'inherit'],
+          });
+        } catch (mkdirError) {
+          console.warn(`Failed to create directory: ${mkdirError}`);
+        }
       }
 
       const finalChangelogContent =
         newChangelogContent + '\n' + existingContent;
 
-      // Bun.write automatically creates parent directories if they don't exist.
-      await Bun.write(this.changelogPath, finalChangelogContent);
-      console.log(`✅ Changelog generated for version ${version}`);
+      // Write the changelog with proper error handling
+      try {
+        await Bun.write(this.changelogPath, finalChangelogContent);
+        console.log(`✅ Changelog generated for version ${version}`);
+
+        // Log additional information in debug mode
+        if (this.debug) {
+          console.log(`Changelog saved to: ${this.changelogPath}`);
+          console.log(
+            `Changelog size: ${finalChangelogContent.length} characters`,
+          );
+
+          // Count entries by type
+          const entryCounts = Object.entries(groupedEntries)
+            .map(([section, entries]) => `${section}: ${entries.length}`)
+            .join(', ');
+          console.log(`Entry distribution: ${entryCounts}`);
+        }
+      } catch (writeError) {
+        console.error(`❌ Failed to write changelog: ${writeError}`);
+        throw writeError;
+      }
     } catch (error) {
       console.error('❌ Changelog generation failed:', error);
       process.exit(1);
@@ -235,44 +420,77 @@ class ChangelogGenerator {
   }
 }
 
-// CLI interface
-async function main() {
-  const args = process.argv.slice(2);
-
-  // Basic argument parsing
-  const version = args[0] || 'unreleased';
-  const options = {
-    debug: args.includes('--debug'),
-    force: args.includes('--force'),
-    repoState: 'standard', // Default value
+/**
+ * Parse command line arguments with type safety
+ *
+ * @param args - Command line arguments
+ * @returns Tuple of version and options
+ */
+function parseCommandLineArgs(args: string[]): [string, ChangelogOptions] {
+  // Default options
+  const options: ChangelogOptions = {
+    debug: false,
+    force: false,
+    repoState: 'standard',
   };
 
-  // Parse repo-state if provided
+  // Get version from first positional argument or use default
+  const version = args[0] || 'unreleased';
+
+  // Parse flag options
+  options.debug = args.includes('--debug');
+  options.force = args.includes('--force');
+
+  // Parse repo-state option with proper error handling
   const repoStateArg = args.find((arg) => arg.startsWith('--repo-state='));
   if (repoStateArg) {
     const splitResult = repoStateArg.split('=');
-    // Ensure we have a value after the equals sign
-    if (splitResult.length > 1) {
-      options.repoState = splitResult[1] || 'standard';
+    if (splitResult.length > 1 && splitResult[1]) {
+      options.repoState = splitResult[1];
     }
   }
 
+  return [version, options];
+}
+
+/**
+ * Main CLI interface for the changelog generator
+ * Parses arguments and invokes the ChangelogGenerator
+ */
+async function main(): Promise<void> {
+  const startTime = performance.now();
+  const args = process.argv.slice(2);
+  const [version, options] = parseCommandLineArgs(args);
+
   if (options.debug) {
+    console.log('==== Changelog Generator v2.0.0 ====');
     console.log('Debug mode enabled');
-    console.log('Options:', options);
+    console.log('Command line arguments:', args);
+    console.log('Parsed options:', options);
   }
 
+  // Define paths
   const changelogPath = path.resolve(process.cwd(), 'src/docs/CHANGELOG.md');
   const repoRoot = process.cwd();
 
-  const generator = new ChangelogGenerator(
-    changelogPath,
-    repoRoot,
-    options.debug,
-  );
+  // Initialize and run generator
+  const generator = new ChangelogGenerator(changelogPath, repoRoot, options);
   await generator.generateChangelog(version);
+
+  if (options.debug) {
+    const endTime = performance.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    console.log(`==== Changelog generation completed in ${duration}s ====`);
+  }
 }
 
+// Run main function if this is the entry point
 if (import.meta.main) {
-  main().catch(console.error);
+  main().catch((error) => {
+    console.error('Fatal error in changelog generator:', error);
+    process.exit(1);
+  });
 }
+
+// Export for testing and module usage
+export { ChangelogGenerator, parseGitDate, parseCommandLineArgs };

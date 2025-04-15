@@ -216,7 +216,7 @@ jobs:
             --repo-state=$REPO_STATE \
             2>&1 | tee $OUTPUT_LOG
           GENERATION_STATUS=$?
-          CHANGE_COUNT=$(grep -c "Added commit" $OUTPUT_LOG || echo "0")
+          CHANGE_COUNT=$(grep -c "Successfully parsed commit" $OUTPUT_LOG || echo "0")
           echo "::endgroup::"
           if [[ $GENERATION_STATUS -ne 0 ]]; then
             echo "::error::Changelog generation failed"
