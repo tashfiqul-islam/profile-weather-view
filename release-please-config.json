@@ -132,5 +132,5 @@
   "bootstrap-sha": "main",
   "release-search-depth": 20,
   "commit-search-depth": 50,
-  "plugins": ["sentence-case", "conventional-commits"]
+  "plugins": ["sentence-case"]
 }
