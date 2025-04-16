@@ -64,8 +64,8 @@ env:
   PROFILE_REPO: "${{ github.repository_owner }}/${{ github.repository_owner }}"  # Use owner's username as the profile repo
   BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
   NODE_ENV: "production"
-  FORCE_UPDATE: ${{ github.event.inputs.force_update == true }}
-  SKIP_TESTS: ${{ github.event.inputs.skip_tests == true }}
+  FORCE_UPDATE: ${{ github.event.inputs.force_update == 'true' }}  # Fixed boolean comparison
+  SKIP_TESTS: ${{ github.event.inputs.skip_tests == 'true' }}
   WORKFLOW_DEBUG: "true" # Debug info to help troubleshoot startup issues
 
 # ============================================================
@@ -74,7 +74,7 @@ env:
 jobs:
   preflight:
     name: "🚀 Preflight Checks"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     outputs:
       api_status: ${{ steps.api-check.outputs.status }}
@@ -83,6 +83,12 @@ jobs:
       node_modules_hash: ${{ steps.hash-check.outputs.node_modules_hash }}
 
     steps:
+      - name: Check Runner Version
+        run: |
+          if [[ "${ACTIONS_RUNNER_VERSION}" < "2.320.1" ]]; then
+            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum (2.320.1) for the new cache service"
+          fi
+
       - name: "🔍 Log Execution Context"
         run: |
           echo "::group::Execution Context"
@@ -177,7 +183,7 @@ jobs:
     name: "🌦️ Update Weather Data"
     needs: preflight
     if: needs.preflight.outputs.env_valid == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
@@ -191,7 +197,7 @@ jobs:
       - name: "⬇️ Checkout Profile Repository"
         uses: actions/checkout@v4
         with:
-          repository: ${{ env.PROFILE_REPO }}
+          repository: "tashfiqul-islam/tashfiqul-islam"  # Explicit repo path rather than using env vars
           path: profile-repo
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
@@ -241,6 +247,7 @@ jobs:
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ needs.preflight.outputs.node_modules_hash }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
+          enableCrossOsArchive: false
 
       - name: "🔄 Install Dependencies"
         if: steps.bun-cache.outputs.cache-hit != 'true'
@@ -336,14 +343,40 @@ jobs:
         run: |
           echo "::group::Weather Update Process"
 
+          # Debug message about force update status
+          echo "Force update status: ${{ env.FORCE_UPDATE }}"
+
+          # Log the README path to verify it's correct
+          echo "README path: $PROFILE_README_PATH"
+          if [[ -f "$PROFILE_README_PATH" ]]; then
+            echo "README file exists at path"
+            echo "README content preview:"
+            head -n 20 "$PROFILE_README_PATH"
+          else
+            echo "::error::README file not found at specified path"
+            exit 1
+          fi
+
+          # Make sure FORCE_UPDATE environment variable is properly set
+          FORCE_FLAG=""
+          if [[ "${{ env.FORCE_UPDATE }}" == "true" ]]; then
+            FORCE_FLAG="--force"
+            echo "Force update enabled via flag: $FORCE_FLAG"
+          fi
+
           # Execute the TypeScript code to fetch weather and update README
+          echo "Running weather update script with command: bun run src/weather-update/index.ts $FORCE_FLAG"
           OUTPUT=$(OPEN_WEATHER_KEY="$OPEN_WEATHER_KEY" \
                   GITHUB_ACTIONS="true" \
-                  PROFILE_README_PATH="../profile-repo/README.md" \
+                  PROFILE_README_PATH="$PROFILE_README_PATH" \
                   LOG_LEVEL="${{ env.LOG_LEVEL }}" \
                   BUN_RUNTIME_SAFETY="${{ env.BUN_RUNTIME_SAFETY }}" \
                   FORCE_UPDATE="${{ env.FORCE_UPDATE }}" \
-                  bun run src/weather-update/index.ts)
+                  bun run src/weather-update/index.ts $FORCE_FLAG)
+
+          # Echo the full output for debugging
+          echo "Full script output:"
+          echo "$OUTPUT"
 
           # Capture the execution status
           EXECUTION_STATUS=$?
@@ -359,12 +392,24 @@ jobs:
             echo "changes_detected=true" >> $GITHUB_OUTPUT
             echo "::notice::README changes detected by TypeScript code"
           else
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-            echo "::notice::No README changes needed"
+            # Override to force commit if force_update was requested
+            if [[ "${{ env.FORCE_UPDATE }}" == "true" ]]; then
+              echo "::notice::Force update requested - will commit README even without detected changes"
+              echo "changes_detected=true" >> $GITHUB_OUTPUT
+            else
+              echo "changes_detected=false" >> $GITHUB_OUTPUT
+              echo "::notice::No README changes needed"
+            fi
           fi
 
           # Log key output lines for monitoring
           echo "$OUTPUT" | grep -E '✅|⚠️|❌|🌍|📝|🎉' || true
+
+          # Verify README contents after update
+          if [[ -f "$PROFILE_README_PATH" ]]; then
+            echo "README content after update (preview):"
+            grep -A 5 -B 5 "Hourly Weather Update" "$PROFILE_README_PATH" || echo "Weather section not found"
+          fi
 
           echo "::endgroup::"
 
@@ -412,11 +457,9 @@ jobs:
         working-directory: profile-repo
         run: |
           echo "::group::Git Operations"
+          # Use the same git configuration as your old workflow
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Enable commit signing with GitHub Actions token
-          git config --global commit.gpgsign true
 
           # Apply correct commit timestamp in Dhaka timezone
           export GIT_AUTHOR_DATE="$(TZ='${{ env.TIMEZONE }}' date)"
@@ -425,29 +468,26 @@ jobs:
           # Format the last updated time for commit message
           FORMATTED_DATE=$(TZ="${{ env.TIMEZONE }}" date "+%Y-%m-%d %H:%M:%S %Z")
 
-          git add README.md
-          git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
-
-          # Optimized push with intelligent handling of failures
-          if ! git push origin master; then
-            echo "::warning::Initial push failed. Checking if upstream has changes..."
-
-            # Fetch latest changes to compare
-            git fetch origin
-
-            # Check if our local branch differs from remote
-            if git diff --quiet HEAD origin/master; then
-              # No difference found, try force push
-              echo "::notice::No upstream changes detected. Force pushing..."
-              git push --force-with-lease origin master && echo "::notice::Force push successful"
+          # Check if README actually has changes before committing
+          if git diff --quiet -- README.md; then
+            echo "No actual changes detected in README.md by git diff"
+            # Force a commit anyway if we're in force mode
+            if [[ "${{ env.FORCE_UPDATE }}" == "true" ]]; then
+              echo "Force update requested - committing anyway"
+              git add README.md
+              git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
+              git push origin master
+              echo "::notice::Changes pushed successfully (forced)"
             else
-              # There are upstream changes, rebase and push
-              echo "::notice::Upstream changes detected. Rebasing..."
-              git pull --rebase origin master
-              git push origin master && echo "::notice::Push after rebase successful"
+              echo "::notice::No changes to commit (skipped push)"
             fi
           else
-            echo "::notice::Changes pushed successfully on first attempt"
+            echo "Changes detected in README.md by git diff"
+            git add README.md
+            git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
+
+            # Simple push to master, like in the old workflow
+            git push origin master && echo "::notice::Changes pushed successfully"
           fi
           echo "::endgroup::"
 
@@ -458,7 +498,7 @@ jobs:
     name: "✅ Verify & Report"
     needs: [preflight, update-weather]
     if: always() && needs.preflight.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
 
     steps:
@@ -511,7 +551,7 @@ jobs:
     name: "🔄 Recovery Actions"
     needs: [preflight, update-weather, verify]
     if: always() && (needs.update-weather.result == 'failure' || needs.verify.result == 'failure')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
 
     steps:
@@ -562,7 +602,7 @@ jobs:
   # ============================================================
   debug:
     name: "🔍 Workflow Diagnostics"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # This job always runs regardless of other conditions
     timeout-minutes: 2
 
