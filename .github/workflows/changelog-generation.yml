@@ -384,9 +384,9 @@ jobs:
           kill $MONITOR_PID 2>/dev/null || true
 
           # Parse script output
-          CHANGE_COUNT=$(echo "$SCRIPT_OUTPUT" | grep "CHANGE_COUNT=" | cut -d= -f2)
-          GEN_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GEN_STATUS=" | cut -d= -f2)
-          GENERATION_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GENERATION_STATUS=" | cut -d= -f2)
+          CHANGE_COUNT=$(echo "$SCRIPT_OUTPUT" | grep "CHANGE_COUNT=" | cut -d= -f2 || echo "0")
+          GEN_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GEN_STATUS=" | cut -d= -f2 || echo "unknown")
+          GENERATION_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GENERATION_STATUS=" | cut -d= -f2 || echo "1")
 
           echo "change_count=${CHANGE_COUNT:-0}" >> $GITHUB_OUTPUT
           echo "gen_status=${GEN_STATUS:-unknown}" >> $GITHUB_OUTPUT
