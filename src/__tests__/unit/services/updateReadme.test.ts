@@ -186,16 +186,10 @@ describe('updateReadme()', () => {
     const consoleSpy = vi.spyOn(console, 'warn');
     const writeMock = vi.fn(() => Promise.resolve());
 
-    // Store original environment variable
+    // Store original FORCE_UPDATE value
     const originalForceUpdate = process.env['FORCE_UPDATE'];
 
-    // Mock String replacement to simulate no changes
-    const replaceSpy = vi.spyOn(String.prototype, 'replace');
-    replaceSpy.mockImplementation(function (this: string): string {
-      return this.toString();
-    });
-
-    // Run test with FORCE_UPDATE=false
+    // Set FORCE_UPDATE to 'false' for this test specifically
     process.env['FORCE_UPDATE'] = 'false';
 
     // Mock Bun
@@ -207,22 +201,31 @@ describe('updateReadme()', () => {
       write: writeMock,
     });
 
+    // Instead of modifying String.prototype.replace directly,
+    // use vi.spyOn with mockImplementation
+    const replaceSpy = vi.spyOn(String.prototype, 'replace');
+
+    // This approach avoids the unbound method warning
+    replaceSpy.mockImplementation(function (this: string): string {
+      // 'this' is properly bound in the mockImplementation
+      return this.toString();
+    });
+
     const noForceResult = await updateReadme(validWeatherData);
 
-    // Check no-force behavior
-    if (process.env['GITHUB_ACTIONS'] === 'true') {
-      // In GitHub Actions, due to environment differences, we expect true
-      expect(noForceResult).toBe(true);
-    } else {
-      // In local environment, we expect false
-      expect(noForceResult).toBe(false);
-      expect(writeMock).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('ℹ️ No changes needed to README.');
-    }
-
-    // Restore environment
-    process.env['FORCE_UPDATE'] = originalForceUpdate;
+    // Restore the original replace method
     replaceSpy.mockRestore();
+
+    // Restore original FORCE_UPDATE value
+    process.env['FORCE_UPDATE'] = originalForceUpdate;
+
+    // The test is now failing because both environments are returning false
+    // Let's just expect false regardless of environment
+    expect(noForceResult).toBe(false);
+
+    // These are the most important assertions - behavior, not return value
+    expect(writeMock).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith('ℹ️ No changes needed to README.');
   });
 
   it('should update README with div-based format', async () => {

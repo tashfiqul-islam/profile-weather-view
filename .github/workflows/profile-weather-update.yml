@@ -279,6 +279,10 @@ jobs:
           echo "::endgroup::"
           echo "::notice::Code quality checks passed"
 
+      - name: "📋 Run Type Check"
+        working-directory: weather-code
+        run: bun run type-check
+
       - name: "🧹 Clear Test Cache"
         working-directory: weather-code
         run: |
@@ -286,10 +290,6 @@ jobs:
           rm -rf .vitest-cache        # Clear Vitest cache if it exists
           rm -rf coverage             # Clear any previous coverage data
           rm -rf .turbo               # Clear Turbo cache if you're using it
-
-      - name: "📋 Run Type Check"
-        working-directory: weather-code
-        run: bun run type-check
 
       - name: "🧪 Run Tests"
         if: env.SKIP_TESTS != 'true'
