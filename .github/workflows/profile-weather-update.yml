@@ -35,12 +35,6 @@ on:
         type: boolean
         default: false
 
-  # Self-healing mechanism - Re-enabled after fixing concurrency issues
-  workflow_run:
-    workflows: ["🌦️ Profile Weather Update"]
-    types: [completed]
-    branches: [master]
-
 # ============================================================
 # 🚀 Prevent redundant executions (Ensures single execution)
 # ============================================================
