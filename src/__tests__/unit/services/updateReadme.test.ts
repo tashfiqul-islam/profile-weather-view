@@ -186,6 +186,12 @@ describe('updateReadme()', () => {
     const consoleSpy = vi.spyOn(console, 'warn');
     const writeMock = vi.fn(() => Promise.resolve());
 
+    // Store original FORCE_UPDATE value
+    const originalForceUpdate = process.env['FORCE_UPDATE'];
+
+    // Set FORCE_UPDATE to 'false' for this test specifically
+    process.env['FORCE_UPDATE'] = 'false';
+
     // Mock Bun
     vi.stubGlobal('Bun', {
       file: vi.fn(() => ({
@@ -210,10 +216,14 @@ describe('updateReadme()', () => {
     // Restore the original replace method
     replaceSpy.mockRestore();
 
+    // Restore original FORCE_UPDATE value
+    process.env['FORCE_UPDATE'] = originalForceUpdate;
+
+    // Check expected behavior based on FORCE_UPDATE being 'false'
     expect(result).toBe(false);
     expect(writeMock).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith('ℹ️ No changes needed to README.');
-  });
+});
 
   it('should update README with div-based format', async () => {
     const writeMock = vi.fn().mockResolvedValue(undefined);
