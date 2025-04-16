@@ -1,16 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "manifest",
-  "include-component-in-tag": true,
-  "include-v-in-tag": true,
-  "separate-pull-requests": true,
-  "bootstrap-sha": "main",
-  "release-search-depth": 20,
-  "commit-search-depth": 50,
-  "always-link-local": true,
-  "plugins": ["sentence-case", "conventional-commits"],
-  "group-pull-request-title-pattern": "chore: release ${version}",
-
   "packages": {
     "docs": {
       "component": "docs",
@@ -208,5 +198,14 @@
       "path": ".",
       "exclude-paths": ["src/docs/**"]
     }
-  }
+  },
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "separate-pull-requests": true,
+  "bootstrap-sha": "master",
+  "release-search-depth": 20,
+  "commit-search-depth": 50,
+  "always-link-local": true,
+  "plugins": ["sentence-case", "conventional-commits"],
+  "group-pull-request-title-pattern": "chore: release ${version}"
 }

@@ -182,10 +182,11 @@ jobs:
           DEBUG: ${{ env.DEBUG_MODE == 'true' && 'true' || '' }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: manifest
+          release-type: "manifest"
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           skip-github-release: ${{ env.DRY_RUN == 'true' }}
+          path: "src/docs"
 
       - name: "🏷️ Extract Version Information"
         id: version
