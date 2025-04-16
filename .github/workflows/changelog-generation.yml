@@ -421,6 +421,8 @@ jobs:
           # Set up git configuration with better traceability
           git config user.name 'github-actions[bot]'
           git config user.email '${{ github.actor }}@users.noreply.github.com'
+          # Skip hooks for GitHub Actions
+          git config --local core.hooksPath /dev/null
 
           if [[ -n "$(git status --porcelain ${{ env.CHANGELOG_PATH }})" ]]; then
             git add ${{ env.CHANGELOG_PATH }}
