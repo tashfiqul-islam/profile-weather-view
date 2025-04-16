@@ -64,7 +64,7 @@ env:
   PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # Use owner's username as the profile repo
   BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
   NODE_ENV: "production"
-  FORCE_UPDATE: ${{ github.event.inputs.force_update == 'true' }}  # Fixed boolean comparison
+  FORCE_UPDATE: ${{ github.event.inputs.force_update == 'false' }}
   SKIP_TESTS: ${{ github.event.inputs.skip_tests == 'true' }}
   WORKFLOW_DEBUG: "true" # Debug info to help troubleshoot startup issues
 
