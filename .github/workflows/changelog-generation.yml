@@ -187,8 +187,7 @@ jobs:
             echo "::warning::Bun dependency cache operation failed or was skipped. Using fresh install."
             echo "CACHE_HIT=false" >> $GITHUB_ENV
           else
-            echo "::notice::Bun dependencies cache ${{ steps.cache-bun-deps.outputs.cache-hit == 'true' && 'miss' }}"
-            echo "CACHE_HIT=${{ steps.cache-bun-deps.outputs.cache-hit }}" >> $GITHUB_ENV
+            echo "::notice::Bun dependencies cache ${{ steps.cache-bun-deps.outputs.cache-hit == 'true' && 'hit' || 'miss' }}"
           fi
 
       # Step to verify that the Bun runtime is installed and configured correctly
