@@ -11,7 +11,7 @@ name: "📋 Changelog Generation"
 on:
   push:
     branches:
-      - main                                                    # Changed from 'master' to 'main' for consistency
+      - master                                                   # Trigger on push to master branch
     paths:
       - 'src/**'                                                 # Trigger on changes in source code
       - 'package.json'                                           # Trigger on changes to dependencies

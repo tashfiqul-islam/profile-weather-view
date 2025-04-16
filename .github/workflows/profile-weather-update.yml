@@ -37,7 +37,7 @@ on:
 
   # For recovery purposes, use a different mechanism like scheduled runs or manual triggers
   push:
-    branches: [master]
+    branches: [master] # Only trigger on master branch
     paths:
       - 'src/weather-update/**'
       - 'package.json'
