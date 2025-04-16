@@ -129,7 +129,7 @@
   },
   "include-component-in-tag": true,
   "include-v-in-tag": true,
-  "bootstrap-sha": "main",
+  "bootstrap-sha": "master",
   "release-search-depth": 20,
   "commit-search-depth": 50,
   "plugins": ["sentence-case"]
