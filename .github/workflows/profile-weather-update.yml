@@ -55,7 +55,7 @@ permissions:
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v3-profile-weather"
+  CACHE_KEY_PREFIX: "v4-profile-weather" # Updated from v3 to v4 for new cache service
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
