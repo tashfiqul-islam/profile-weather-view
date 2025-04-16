@@ -82,9 +82,9 @@ jobs:
 
       - name: Check Runner Version
         run: |
-          if [[ "${ACTIONS_RUNNER_VERSION}" < "2.320.1" ]]; then
-            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum (2.320.1) for the new cache service"
-          fi
+          MIN_VERSION="2.320.1"
+          if [[ "$(printf "%s\n%s" "$MIN_VERSION" "$ACTIONS_RUNNER_VERSION" | sort -V | head -n 1)" != "$MIN_VERSION" ]]; then
+            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum ($MIN_VERSION) for the new cache service"
 
       # Step to log the execution context for debugging and tracking purposes
       - name: "🔍 Log Execution Context"
