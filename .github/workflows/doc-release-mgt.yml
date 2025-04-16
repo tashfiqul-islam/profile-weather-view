@@ -80,7 +80,7 @@ jobs:
   # ============================================================
   preflight:
     name: "🔍 Preflight Checks"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
     outputs:
       proceed: ${{ steps.validation.outputs.proceed }}
@@ -108,6 +108,12 @@ jobs:
             echo "🔹 Custom Version: ${{ env.CUSTOM_VERSION }}"
           fi
           echo "::endgroup::"
+
+      - name: Check Runner Version
+        run: |
+          MIN_VERSION="2.320.1"
+          if [[ "$(printf "%s\n%s" "$MIN_VERSION" "$ACTIONS_RUNNER_VERSION" | sort -V | head -n 1)" != "$MIN_VERSION" ]]; then
+            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum ($MIN_VERSION) for the new cache service"
 
       - name: "📑 Validate Required Files"
         id: validation
@@ -192,7 +198,7 @@ jobs:
     name: "🚀 Create Custom Release"
     needs: preflight
     if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.is_custom_release == 'true' && needs.preflight.outputs.existing_release == 'false'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       version: ${{ env.CUSTOM_VERSION }}
@@ -364,7 +370,7 @@ jobs:
     name: "🚀 Release Please"
     needs: preflight
     if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true' && needs.preflight.outputs.is_custom_release != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
@@ -419,7 +425,7 @@ jobs:
     if: |
       (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
       (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       deployment_url: ${{ steps.deployment.outputs.page_url }}
@@ -559,7 +565,7 @@ jobs:
     if: |
       (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
       (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
 
     steps:
@@ -642,7 +648,7 @@ jobs:
         (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
         (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
 
     steps:
