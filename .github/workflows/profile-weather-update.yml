@@ -55,7 +55,7 @@ permissions:
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v4-profile-weather" # Updated from v3 to v4 for new cache service
+  CACHE_KEY_PREFIX: "v5-profile-weather" # Prefix for cache keys
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
@@ -278,6 +278,14 @@ jobs:
           bun run format --check || { echo "::error::Prettier check failed"; exit 1; }
           echo "::endgroup::"
           echo "::notice::Code quality checks passed"
+
+      - name: "🧹 Clear Test Cache"
+        working-directory: weather-code
+        run: |
+          echo "::notice::Ensuring latest test files are used"
+          rm -rf .vitest-cache        # Clear Vitest cache if it exists
+          rm -rf coverage             # Clear any previous coverage data
+          rm -rf .turbo               # Clear Turbo cache if you're using it
 
       - name: "📋 Run Type Check"
         working-directory: weather-code
