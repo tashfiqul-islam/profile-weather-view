@@ -1,12 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "release-type": "manifest",
   "packages": {
     "docs": {
       "component": "docs",
       "package-name": "profile-weather-view-docs",
       "release-type": "node",
-      "changelog-path": "src/docs/CHANGELOG.md",
+      "changelog-path": "CHANGELOG.md",
       "draft": false,
       "prerelease": false,
       "bump-minor-pre-major": true,
@@ -14,7 +13,6 @@
       "pull-request-title-pattern": "chore(release): documentation ${version}",
       "pull-request-header": "# Documentation Release ${version}\n\nThis release updates the documentation website for profile-weather-view.",
       "tag-separator": "/",
-
       "extra-files": [
         {
           "type": "json",
@@ -34,35 +32,9 @@
         {
           "type": "json",
           "path": "meta.json",
-          "jsonpath": "$.releases[?(@.type=='docs')].version"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.releases[?(@.type=='docs')].date"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.releases[?(@.type=='docs')].timestamp"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.metadata.lastUpdated"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
           "jsonpath": "$.metadata.lastUpdatedTimestamp"
-        },
-        {
-          "type": "json",
-          "path": "src/docs/.vitepress/meta.json",
-          "jsonpath": "$.docsVersion"
         }
       ],
-
       "changelog-sections": [
         { "type": "docs", "section": "Documentation", "hidden": false },
         { "type": "feat", "section": "Features", "hidden": false },
@@ -78,7 +50,6 @@
         { "type": "build", "section": "Build System", "hidden": false },
         { "type": "chore", "section": "Miscellaneous", "hidden": true }
       ],
-
       "changelog-types": [
         {
           "type": "docs",
@@ -153,59 +124,13 @@
           "display-order": 9
         }
       ],
-
-      "path": "src/docs",
-      "exclude-paths": ["src/weather-update/**"]
-    },
-
-    "codebase": {
-      "component": "codebase",
-      "package-name": "profile-weather-view",
-      "release-type": "node",
-      "changelog-path": "CHANGELOG.md",
-      "draft": false,
-      "prerelease": false,
-      "skip-github-release": true,
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true,
-      "pull-request-title-pattern": "chore(release): codebase ${version}",
-      "pull-request-header": "# Codebase Release ${version}\n\nThis release updates the core functionality of profile-weather-view.",
-      "tag-separator": "/",
-
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.codebaseVersion"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.channels.codebase.latest"
-        },
-        {
-          "type": "json",
-          "path": "meta.json",
-          "jsonpath": "$.channels.codebase.stable"
-        },
-        {
-          "type": "json",
-          "path": "package.json",
-          "jsonpath": "$.version"
-        }
-      ],
-
-      "path": ".",
-      "exclude-paths": ["src/docs/**"]
+      "path": "src/docs"
     }
   },
   "include-component-in-tag": true,
   "include-v-in-tag": true,
-  "separate-pull-requests": true,
-  "bootstrap-sha": "master",
+  "bootstrap-sha": "main",
   "release-search-depth": 20,
   "commit-search-depth": 50,
-  "always-link-local": true,
-  "plugins": ["sentence-case", "conventional-commits"],
-  "group-pull-request-title-pattern": "chore: release ${version}"
+  "plugins": ["sentence-case", "conventional-commits"]
 }

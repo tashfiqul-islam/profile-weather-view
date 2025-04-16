@@ -1,16 +1,10 @@
 {
   "schemaVersion": "1.1.0",
-  "codebaseVersion": "2.0.0",
   "docsVersion": "1.0.0",
   "channels": {
     "docs": {
       "latest": "1.0.0",
       "stable": "1.0.0",
-      "previous": []
-    },
-    "codebase": {
-      "latest": "2.0.0",
-      "stable": "2.0.0",
       "previous": []
     }
   },
@@ -18,9 +12,9 @@
     {
       "type": "docs",
       "version": "1.0.0",
-      "date": "March 30, 2025",
-      "timestamp": "2025-03-30T00:00:00Z",
-      "formattedDate": "March 30, 2025",
+      "date": "April 16, 2025",
+      "timestamp": "2025-04-16T00:00:00Z",
+      "formattedDate": "April 16, 2025",
       "major": "1",
       "minor": "0",
       "patch": "0",
@@ -29,25 +23,10 @@
       "isLatest": true,
       "isStable": true,
       "displayOrder": 0
-    },
-    {
-      "type": "codebase",
-      "version": "2.0.0",
-      "date": "March 30, 2025",
-      "timestamp": "2025-03-30T00:00:00Z",
-      "formattedDate": "March 30, 2025",
-      "major": "2",
-      "minor": "0",
-      "patch": "0",
-      "channel": "stable",
-      "path": "/v2.0/",
-      "isLatest": true,
-      "isStable": true,
-      "displayOrder": 0
     }
   ],
   "metadata": {
-    "lastUpdatedTimestamp": "2025-03-30T00:00:00Z",
+    "lastUpdatedTimestamp": "2025-04-16T00:00:00Z",
     "generatedBy": "release-management-workflow",
     "versionRetention": {
       "limit": 3,

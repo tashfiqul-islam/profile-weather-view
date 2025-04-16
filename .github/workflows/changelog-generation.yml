@@ -11,7 +11,7 @@ name: "📋 Changelog Generation"
 on:
   push:
     branches:
-      - master                                                   # Trigger on push to the master branch
+      - main                                                    # Changed from 'master' to 'main' for consistency
     paths:
       - 'src/**'                                                 # Trigger on changes in source code
       - 'package.json'                                           # Trigger on changes to dependencies
@@ -59,7 +59,8 @@ env:
   FORCE_REGENERATE: ${{ github.event.inputs.force == 'true' }}   # Flag for full regeneration
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}         # Flag to enable debug mode
   NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
-  ACTIONS_CACHE_KEY_PREFIX: "v2"                                 # Cache key prefix for new cache service
+  ACTIONS_CACHE_KEY_PREFIX: "v3"                                 # Updated cache key prefix for new cache service
+  WORKFLOW_TIMESTAMP: ${{ github.run_id }}                       # Using run_id as a timestamp alternative
 
 jobs:
   # ============================================================
@@ -89,6 +90,7 @@ jobs:
           echo "🔹 Repository: ${{ github.repository }}"
           echo "🔹 Trigger: ${{ github.event_name }}"
           echo "🔹 Debug Mode: ${{ env.DEBUG_MODE == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "🔹 Started At: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "::endgroup::"
 
       # Step to check for required files (critical for changelog generation)
@@ -141,6 +143,11 @@ jobs:
     if: needs.validate-prerequisites.outputs.should_proceed == 'true'
     runs-on: ubuntu-latest # Using latest runner version to ensure compatibility with new cache service
     timeout-minutes: 10
+    outputs:
+      change_count: ${{ steps.generate.outputs.change_count }}
+      gen_status: ${{ steps.generate.outputs.gen_status }}
+      changes_committed: ${{ steps.commit.outputs.changes_committed }}
+      commit_message: ${{ steps.commit.outputs.commit_message }}
 
     steps:
       # Step to record the start time for measuring duration
@@ -169,14 +176,19 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
         continue-on-error: false  # Fail the workflow if Bun setup fails - this is critical
 
-      # Step to cache Bun dependencies to speed up workflow execution
+      # Step to cache Bun dependencies to speed up workflow execution - optimized caching strategy
       - name: "💾 Cache Bun Dependencies"
         id: cache-bun-deps
         uses: actions/cache@v4
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-v2-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: ${{ runner.os }}-bun-v2-
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            .bun
+          key: ${{ runner.os }}-bun-${{ env.ACTIONS_CACHE_KEY_PREFIX }}-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-${{ env.ACTIONS_CACHE_KEY_PREFIX }}-
+            ${{ runner.os }}-bun-
           enableCrossOsArchive: false
           fail-on-cache-miss: false
 
@@ -232,20 +244,19 @@ jobs:
               SOURCE="release manifest (codebase component)"
             else
               # Fallback to a default version if neither component is found
-              VERSION="0.1.0"
-              SOURCE="default fallback"
-              echo "::warning::No component versions found in release-please-manifest.json, using fallback version"
+              echo "::error::No component versions found in release-please-manifest.json"
+              exit 1
             fi
           fi
 
-          # Validate version format
+          # Validate version format - improved error handling
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.]+)?$ ]]; then
-            echo "::error::Invalid semantic version format: $VERSION"
-            echo "version=0.1.0" >> $GITHUB_OUTPUT
-            echo "::warning::Using fallback version 0.1.0 due to invalid version format"
+            echo "::error::Invalid semantic version format: $VERSION. Cannot proceed with changelog generation."
+            exit 1
           else
             echo "::notice::Detected Version: $VERSION (Source: $SOURCE)"
             echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "source=$SOURCE" >> $GITHUB_OUTPUT
           fi
 
       # Step to prepare the environment for changelog generation (install dependencies)
@@ -259,22 +270,85 @@ jobs:
           fi
           echo "::endgroup::"
 
-      # Step to generate the changelog based on the version and repo state
+      # Step to backup existing changelog if force regeneration is enabled
+      - name: "📑 Backup Existing Changelog"
+        id: backup-changelog
+        if: env.FORCE_REGENERATE == 'true' && hashFiles(env.CHANGELOG_PATH) != ''
+        run: |
+          BACKUP_PATH="${{ env.CHANGELOG_PATH }}.backup-$(date +%Y%m%d-%H%M%S)"
+          cp "${{ env.CHANGELOG_PATH }}" "$BACKUP_PATH"
+          echo "::notice::Created backup of existing changelog at $BACKUP_PATH"
+          echo "backup_path=$BACKUP_PATH" >> $GITHUB_OUTPUT
+
+      # Simplified changelog generation script - extracted complex logic to separate file
+      - name: "📝 Create Changelog Generation Script"
+        run: |
+          mkdir -p .github/scripts
+          cat > .github/scripts/generate-changelog.sh << 'EOL'
+          #!/bin/bash
+          set -e
+
+          # Input parameters
+          VERSION="$1"
+          REPO_STATE="$2"
+          FORCE_FLAG="$3"
+          DEBUG_FLAG="$4"
+          OUTPUT_LOG="/tmp/changelog-generator-$(date +%s).log"
+
+          # Execute with proper error handling
+          echo "Starting changelog generation for version $VERSION (repo state: $REPO_STATE)"
+
+          # Create fallback changelog with basic structure if needed
+          if [[ ! -f "CHANGELOG.MD" || "$FORCE_FLAG" == "--force" ]]; then
+            echo -e "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n## [$VERSION] - $(date +'%Y-%m-%d')\n\n### Added\n- Initial release\n" > "CHANGELOG.MD"
+            echo "Created fallback changelog file"
+          fi
+
+          # Run the generator
+          set +e
+          bun run src/docs/changelog/changelog-generator.ts \
+            "$VERSION" \
+            $FORCE_FLAG $DEBUG_FLAG \
+            --repo-state=$REPO_STATE \
+            2>&1 | tee $OUTPUT_LOG
+          GENERATION_STATUS=$?
+          set -e
+
+          # Process results
+          CHANGE_COUNT=0
+          GEN_STATUS="unknown"
+
+          if [[ -f "$OUTPUT_LOG" ]]; then
+            if grep -q "Successfully parsed commit:" "$OUTPUT_LOG"; then
+              CHANGE_COUNT=$(grep -c "Successfully parsed commit:" "$OUTPUT_LOG" || echo "0")
+              CHANGE_COUNT=$((CHANGE_COUNT))
+              GEN_STATUS="success"
+            elif grep -q "No new commits to process" "$OUTPUT_LOG"; then
+              CHANGE_COUNT=0
+              GEN_STATUS="success"
+            fi
+          fi
+
+          # Output results for parsing by parent workflow
+          echo "CHANGE_COUNT=$CHANGE_COUNT"
+          echo "GEN_STATUS=$GEN_STATUS"
+          echo "GENERATION_STATUS=$GENERATION_STATUS"
+
+          # Exit with original status code
+          exit $GENERATION_STATUS
+          EOL
+
+          chmod +x .github/scripts/generate-changelog.sh
+
+      # Step to generate the changelog based on the version and repo state - simplified using external script
       - name: "🔄 Generate Changelog"
         id: generate
         run: |
           echo "::group::Changelog Generation Process"
-          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP here for monitoring
-          OUTPUT_LOG="/tmp/changelog-generator-$TIMESTAMP.log"
-          DEBUG_FLAG=""
-          if [[ "${{ env.DEBUG_MODE }}" == "true" ]]; then DEBUG_FLAG="--debug"; fi
-          FORCE_FLAG=""
-          if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then FORCE_FLAG="--force"; fi
-          REPO_STATE="${{ needs.validate-prerequisites.outputs.repo_state }}"
-          echo "🔹 Repository state: $REPO_STATE"
 
-          # Set timeout monitoring
-          MAX_DURATION=540  # 9 minutes (slightly under the 10-minute job timeout)
+          # Setup timeout monitoring
+          TIMESTAMP=$(date +%s)
+          MAX_DURATION=540  # 9 minutes
           (
             # Background process to monitor execution time
             while true; do
@@ -293,58 +367,49 @@ jobs:
           ) &
           MONITOR_PID=$!
 
-          # Create fallback changelog with basic structure if needed
-          if [[ ! -f "${{ env.CHANGELOG_PATH }}" || "${{ env.FORCE_REGENERATE }}" == "true" ]]; then
-            echo -e "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\n## [${{ steps.version-validation.outputs.version }}] - $(date +'%Y-%m-%d')\n\n### Added\n- Initial release\n" > "${{ env.CHANGELOG_PATH }}"
-            echo "::notice::Created fallback changelog file"
-          fi
+          # Run script with proper parameters
+          FORCE_FLAG=""
+          if [[ "${{ env.FORCE_REGENERATE }}" == "true" ]]; then FORCE_FLAG="--force"; fi
+          DEBUG_FLAG=""
+          if [[ "${{ env.DEBUG_MODE }}" == "true" ]]; then DEBUG_FLAG="--debug"; fi
 
-          # Attempt to run the changelog generator with error handling
-          set +e  # Allow command to fail without exiting
-          bun run src/docs/changelog/changelog-generator.ts \
+          # Call the extracted script
+          SCRIPT_OUTPUT=$(.github/scripts/generate-changelog.sh \
             "${{ steps.version-validation.outputs.version }}" \
-            $FORCE_FLAG $DEBUG_FLAG \
-            --repo-state=$REPO_STATE \
-            2>&1 | tee $OUTPUT_LOG
-          GENERATION_STATUS=$?
-          set -e  # Re-enable exit on error
+            "${{ needs.validate-prerequisites.outputs.repo_state }}" \
+            "$FORCE_FLAG" \
+            "$DEBUG_FLAG")
 
           # Kill the monitoring process
           kill $MONITOR_PID 2>/dev/null || true
 
-          # Safely check for successful commit parsing count and status output
-          CHANGE_COUNT=0
-          GEN_STATUS="unknown"
+          # Parse script output
+          CHANGE_COUNT=$(echo "$SCRIPT_OUTPUT" | grep "CHANGE_COUNT=" | cut -d= -f2)
+          GEN_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GEN_STATUS=" | cut -d= -f2)
+          GENERATION_STATUS=$(echo "$SCRIPT_OUTPUT" | grep "GENERATION_STATUS=" | cut -d= -f2)
 
-          if [[ -f "$OUTPUT_LOG" ]]; then
-            # Fixed parsing to handle both zero and non-zero commit counts properly
-            if grep -q "Successfully parsed commit:" "$OUTPUT_LOG"; then
-              CHANGE_COUNT=$(grep -c "Successfully parsed commit:" "$OUTPUT_LOG" || echo "0")
-              # Make sure CHANGE_COUNT is treated as a number using arithmetic expansion
-              CHANGE_COUNT=$((CHANGE_COUNT))
-              GEN_STATUS="success"
-            elif grep -q "No new commits to process" "$OUTPUT_LOG"; then
-              CHANGE_COUNT=0
-              GEN_STATUS="success"
-            fi
-          fi
+          echo "change_count=${CHANGE_COUNT:-0}" >> $GITHUB_OUTPUT
+          echo "gen_status=${GEN_STATUS:-unknown}" >> $GITHUB_OUTPUT
 
-          echo "::endgroup::"
-          if [[ $GENERATION_STATUS -ne 0 ]]; then
+          if [[ "$GENERATION_STATUS" != "0" ]]; then
             echo "::warning::Changelog generation command exited with code: $GENERATION_STATUS"
+
             if [[ -f "${{ env.CHANGELOG_PATH }}" ]]; then
-              echo "::notice::Using existing changelog file"
-              GEN_STATUS="recovered"
+              echo "::notice::Existing changelog file is available"
+              # Attempt to restore from backup if available
+              if [[ "${{ steps.backup-changelog.outcome }}" == "success" && -n "${{ steps.backup-changelog.outputs.backup_path }}" ]]; then
+                echo "::notice::Restoring changelog from backup"
+                cp "${{ steps.backup-changelog.outputs.backup_path }}" "${{ env.CHANGELOG_PATH }}"
+              fi
+              echo "gen_status=recovered" >> $GITHUB_OUTPUT
             else
-              echo "::error::Failed to generate changelog"
+              echo "::error::Failed to generate changelog and no existing file available"
               exit 1
             fi
           fi
 
-          echo "::notice::Successfully processed $CHANGE_COUNT commit entries"
-          # Ensure proper output format with quoted GITHUB_OUTPUT for safety
-          echo "change_count=$CHANGE_COUNT" >> "$GITHUB_OUTPUT"
-          echo "gen_status=$GEN_STATUS" >> "$GITHUB_OUTPUT"
+          echo "::notice::Successfully processed ${CHANGE_COUNT:-0} commit entries"
+          echo "::endgroup::"
 
       # Step to commit and push the changelog updates if any changes were detected
       - name: "📤 Commit Changelog Updates"
@@ -367,7 +432,7 @@ jobs:
             COMMIT_MSG="docs(changelog): update for v${{ steps.version-validation.outputs.version }}$MSG_SUFFIX"
 
             git commit -m "$COMMIT_MSG"
-            echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT  # Capture the commit message
+            echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT  # Capture the commit message
 
             if git push; then
               echo "::notice::Successfully pushed changelog updates"
@@ -379,6 +444,7 @@ jobs:
           else
             echo "🔹 No changelog updates detected"
             echo "changes_committed=false" >> $GITHUB_OUTPUT
+            echo "commit_message=No changes" >> $GITHUB_OUTPUT
           fi
           echo "::endgroup::"
 
@@ -386,7 +452,6 @@ jobs:
       - name: "📊 Generation Report"
         run: |
           END_TIME=$(date +%s)
-          TIMESTAMP=$(date +%s)  # Initialize TIMESTAMP for elapsed time calculation
           START_TIME=${{ steps.start-timer.outputs.start_time }}
           DURATION=$((END_TIME - START_TIME))
 
@@ -409,13 +474,53 @@ jobs:
             echo "::notice::Changelog generation completed successfully within $DURATION seconds."
           fi
 
+          # Export metrics for monitoring
+          echo "workflow_duration=$DURATION" >> $GITHUB_ENV
+
       # Step to save logs as artifacts for debugging
       - name: "📁 Save Logs as Artifacts"
-        if: always() && env.DEBUG_MODE == 'true'
+        if: always() && (env.DEBUG_MODE == 'true' || failure())
         uses: actions/upload-artifact@v4
         with:
           name: changelog-generation-logs-${{ github.run_id }}
-          path: /tmp/changelog-generator-*.log
+          path: |
+            /tmp/changelog-generator-*.log
+            ${{ steps.backup-changelog.outputs.backup_path }}
           retention-days: 7
           if-no-files-found: ignore
           compression-level: 9  # Maximum compression
+
+  # ============================================================
+  # 📊 Job 3: Workflow Summary
+  # ============================================================
+  summary:
+    name: "📊 Workflow Summary"
+    needs: [validate-prerequisites, generate-changelog]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📑 Generate Workflow Summary"
+        run: |
+          echo "# Changelog Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Preflight Validation: ${{ needs.validate-prerequisites.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Changelog Generation: ${{ needs.generate-changelog.result }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.generate-changelog.result }}" == "success" ]]; then
+            echo "- Changes Processed: ${{ needs.generate-changelog.outputs.change_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Generation Status: ${{ needs.generate-changelog.outputs.gen_status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "${{ needs.generate-changelog.outputs.changes_committed }}" == "true" ]]; then
+              echo "- Commit Status: Changes committed and pushed" >> $GITHUB_STEP_SUMMARY
+              echo "- Commit Message: \`${{ needs.generate-changelog.outputs.commit_message }}\`" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Commit Status: No changes to commit" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository State: ${{ needs.validate-prerequisites.outputs.repo_state || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Force Regeneration: ${{ env.FORCE_REGENERATE == 'true' && 'Yes' || 'No' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Debug Mode: ${{ env.DEBUG_MODE == 'true' && 'Enabled' || 'Disabled' }}" >> $GITHUB_STEP_SUMMARY
