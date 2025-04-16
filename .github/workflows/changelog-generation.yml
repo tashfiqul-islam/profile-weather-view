@@ -83,6 +83,10 @@ jobs:
       - name: Check Runner Version
         run: |
           if ! printf "%s\n%s" "2.323.0" "${ACTIONS_RUNNER_VERSION}" | sort -V | head -n 1 | grep -q "2.323.0"; then
+            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is older than recommended minimum (2.323.0)"
+          else
+            echo "Runner version ${ACTIONS_RUNNER_VERSION} meets requirements"
+          fi
 
       # Step to log the execution context for debugging and tracking purposes
       - name: "🔍 Log Execution Context"
