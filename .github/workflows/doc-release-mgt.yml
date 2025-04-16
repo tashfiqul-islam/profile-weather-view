@@ -378,10 +378,19 @@ jobs:
           git tag -fa "$MINOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}.x documentation release"
           git tag -fa "$LATEST_TAG" -m "Latest documentation release (v${{ needs.release.outputs.version }})"
 
-          # Push tags to remote
-          git push origin "$MAJOR_TAG" --force
-          git push origin "$MINOR_TAG" --force
-          git push origin "$LATEST_TAG" --force
+          # Push tags to remote with retry logic
+          for attempt in {1..3}; do
+            git push origin "$MAJOR_TAG" --force && break || echo "Retrying push for $MAJOR_TAG (attempt $attempt)..."
+            sleep 5
+          done
+          for attempt in {1..3}; do
+            git push origin "$MINOR_TAG" --force && break || echo "Retrying push for $MINOR_TAG (attempt $attempt)..."
+            sleep 5
+          done
+          for attempt in {1..3}; do
+            git push origin "$LATEST_TAG" --force && break || echo "Retrying push for $LATEST_TAG (attempt $attempt)..."
+            sleep 5
+          done
 
           echo "tags_created=true" >> $GITHUB_OUTPUT
           echo "::endgroup::"

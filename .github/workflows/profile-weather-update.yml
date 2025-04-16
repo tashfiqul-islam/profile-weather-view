@@ -35,14 +35,6 @@ on:
         type: boolean
         default: false
 
-  # For recovery purposes, use a different mechanism like scheduled runs or manual triggers
-  push:
-    branches: [master] # Only trigger on master branch
-    paths:
-      - 'src/weather-update/**'
-      - 'package.json'
-      - 'bunfig.toml'
-
 # ============================================================
 # 🚀 Prevent redundant executions (Ensures single execution)
 # ============================================================
