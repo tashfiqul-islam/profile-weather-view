@@ -61,7 +61,7 @@ env:
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
   EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
   CODE_REPO: "${{ github.repository }}"  # Use the current repository
-  PROFILE_REPO: "${{ github.repository_owner }}/${{ github.repository_owner }}"  # Use owner's username as the profile repo
+  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # Use owner's username as the profile repo
   BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
   NODE_ENV: "production"
   FORCE_UPDATE: ${{ github.event.inputs.force_update == 'true' }}  # Fixed boolean comparison
@@ -85,9 +85,9 @@ jobs:
     steps:
       - name: Check Runner Version
         run: |
-          MIN_VERSION="2.320.1"
-          if [[ "$(printf "%s\n%s" "$MIN_VERSION" "$ACTIONS_RUNNER_VERSION" | sort -V | head -n 1)" != "$MIN_VERSION" ]]; then
-            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum ($MIN_VERSION) for the new cache service"
+          if [[ "${ACTIONS_RUNNER_VERSION}" < "2.320.1" ]]; then
+            echo "::warning::Runner version ${ACTIONS_RUNNER_VERSION} is below the recommended minimum (2.320.1) for the new cache service"
+          fi
 
       - name: "🔍 Log Execution Context"
         run: |
@@ -197,7 +197,7 @@ jobs:
       - name: "⬇️ Checkout Profile Repository"
         uses: actions/checkout@v4
         with:
-          repository: "tashfiqul-islam/tashfiqul-islam"  # Explicit repo path rather than using env vars
+          repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
