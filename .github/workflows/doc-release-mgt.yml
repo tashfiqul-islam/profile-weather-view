@@ -26,6 +26,19 @@ on:
         description: "Enable debug logging"
         type: boolean
         default: false
+      custom_release:
+        description: "Create a custom release (initial v1.0.0)"
+        type: boolean
+        default: false
+      version:
+        description: "Version for custom release (e.g., 1.0.0)"
+        type: string
+        required: false
+        default: "1.0.0"
+      release_notes:
+        description: "Custom release notes for initial release"
+        type: string
+        required: false
 
 # ============================================================
 # 🔒 Prevent redundant executions
@@ -53,6 +66,8 @@ env:
   DOCS_OUTPUT_DIR: "src/docs/.vitepress/dist"
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
   DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
+  CUSTOM_RELEASE: ${{ github.event.inputs.custom_release == 'true' }}
+  CUSTOM_VERSION: ${{ github.event.inputs.version }}
   EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
   NODE_OPTIONS: "--max-old-space-size=4096"       # Prevents memory issues with large builds
 
@@ -70,6 +85,8 @@ jobs:
     outputs:
       proceed: ${{ steps.validation.outputs.proceed }}
       config_valid: ${{ steps.config-validation.outputs.valid }}
+      is_custom_release: ${{ env.CUSTOM_RELEASE }}
+      existing_release: ${{ steps.check-existing-release.outputs.exists }}
 
     steps:
       - name: "⬇️ Checkout Repository"
@@ -86,6 +103,10 @@ jobs:
           echo "🔹 Trigger: ${{ github.event_name }}"
           echo "🔹 Debug Mode: ${{ env.DEBUG_MODE == 'true' && 'Enabled' || 'Disabled' }}"
           echo "🔹 Dry Run: ${{ env.DRY_RUN == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "🔹 Custom Release: ${{ env.CUSTOM_RELEASE == 'true' && 'Enabled' || 'Disabled' }}"
+          if [[ "${{ env.CUSTOM_RELEASE }}" == "true" ]]; then
+            echo "🔹 Custom Version: ${{ env.CUSTOM_VERSION }}"
+          fi
           echo "::endgroup::"
 
       - name: "📑 Validate Required Files"
@@ -143,13 +164,207 @@ jobs:
           fi
           echo "::endgroup::"
 
+      - name: "🔍 Check Existing Release"
+        id: check-existing-release
+        run: |
+          echo "::group::Release Tags Check"
+
+          # Check if we're doing a custom release
+          if [[ "${{ env.CUSTOM_RELEASE }}" == "true" ]]; then
+            # Check if the tag already exists
+            if git ls-remote --tags origin | grep -q "refs/tags/v${{ env.CUSTOM_VERSION }}"; then
+              echo "::warning::Tag v${{ env.CUSTOM_VERSION }} already exists"
+              echo "exists=true" >> $GITHUB_OUTPUT
+            else
+              echo "🔹 No existing release found for v${{ env.CUSTOM_VERSION }}"
+              echo "exists=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "🔹 Not a custom release, skipping existing tag verification"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+  # ============================================================
+  # Custom Release (Initial v1.0.0 Release)
+  # ============================================================
+  custom-release:
+    name: "🚀 Create Custom Release"
+    needs: preflight
+    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.is_custom_release == 'true' && needs.preflight.outputs.existing_release == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ env.CUSTOM_VERSION }}
+      tag_name: v${{ env.CUSTOM_VERSION }}
+      releases_created: true
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔧 Configure Git"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: "📝 Update Manifest and Meta"
+        run: |
+          echo "::group::Updating Version Information"
+          VERSION="${{ env.CUSTOM_VERSION }}"
+          TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          DATE=$(date '+%B %d, %Y')
+
+          # Update .release-please-manifest.json with custom version
+          jq --arg version "$VERSION" '.docs = $version' .release-please-manifest.json > .release-please-manifest.json.tmp && mv .release-please-manifest.json.tmp .release-please-manifest.json
+          echo "🔹 Updated release-please-manifest.json with version: $VERSION"
+
+          # Parse version components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Update meta.json for version tracking
+          jq --arg version "$VERSION" \
+             --arg timestamp "$TIMESTAMP" \
+             --arg date "$DATE" \
+             --arg major "$MAJOR" \
+             --arg minor "$MINOR" \
+             --arg patch "$PATCH" \
+             '.docsVersion = $version |
+              .channels.docs.latest = $version |
+              .channels.docs.stable = $version |
+              .metadata.lastUpdatedTimestamp = $timestamp |
+              .releases = (.releases | map(
+                 if .type == "docs" and .isLatest then
+                   .isLatest = false
+                 else
+                   .
+                 end
+              )) + [{
+                "type": "docs",
+                "version": $version,
+                "date": $date,
+                "timestamp": $timestamp,
+                "formattedDate": $date,
+                "major": $major,
+                "minor": $minor,
+                "patch": $patch,
+                "channel": "stable",
+                "path": "/v" + $major + "." + $minor + "/",
+                "isLatest": true,
+                "isStable": true,
+                "displayOrder": 0
+              }]' meta.json > meta.json.tmp && mv meta.json.tmp meta.json
+          echo "🔹 Updated meta.json with version information"
+          echo "::endgroup::"
+
+      - name: "📝 Create CHANGELOG Entry"
+        run: |
+          echo "::group::Updating CHANGELOG"
+          VERSION="${{ env.CUSTOM_VERSION }}"
+          DATE=$(date '+%Y-%m-%d')
+          RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
+
+          if [[ -z "$RELEASE_NOTES" ]]; then
+            # Default release notes if none provided
+            RELEASE_NOTES="Initial v$VERSION release of Profile Weather View documentation."
+          fi
+
+          # Create or update CHANGELOG.md
+          if [[ ! -f "CHANGELOG.md" ]]; then
+            # Create new changelog file with predefined content
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "## [$VERSION] - $DATE" >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "$RELEASE_NOTES" >> CHANGELOG.md
+          else
+            # Create a temporary changelog file
+            cp CHANGELOG.md changelog.tmp
+
+            # Write the new content to a temporary file
+            echo "# Changelog" > new.changelog
+            echo "" >> new.changelog
+            echo "## [$VERSION] - $DATE" >> new.changelog
+            echo "" >> new.changelog
+            echo "$RELEASE_NOTES" >> new.changelog
+            echo "" >> new.changelog
+
+            # Append the rest of the existing changelog (excluding the header)
+            tail -n +2 changelog.tmp >> new.changelog
+
+            # Replace the original with the new version
+            mv new.changelog CHANGELOG.md
+            rm changelog.tmp
+          fi
+
+          echo "🔹 Updated CHANGELOG.md with v$VERSION release notes"
+          echo "::endgroup::"
+
+      - name: "🏷️ Create Release Tag"
+        if: env.DRY_RUN != 'true'
+        run: |
+          echo "::group::Creating Release Tag"
+          VERSION="${{ env.CUSTOM_VERSION }}"
+          TAG="v$VERSION"
+
+          # Commit the version updates
+          git add .release-please-manifest.json meta.json CHANGELOG.md
+          git commit -m "chore(release): $TAG"
+
+          # Create annotated tag
+          git tag -a "$TAG" -m "Release v$VERSION"
+
+          # Push changes and tag with retries
+          PUSH_SUCCESS=false
+          for attempt in {1..3}; do
+            git push origin master && git push origin "$TAG" && PUSH_SUCCESS=true && break || echo "Retrying push for $TAG (attempt $attempt)..."
+            sleep 5
+          done
+
+          if [ "$PUSH_SUCCESS" = false ]; then
+            echo "::error::Failed to push changes and tag after 3 attempts."
+            exit 1
+          fi
+
+          echo "🔹 Successfully created and pushed tag: $TAG"
+          echo "::endgroup::"
+
+      - name: "🚀 Create GitHub Release"
+        if: env.DRY_RUN != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = process.env.CUSTOM_VERSION;
+            const releaseNotes = process.env.RELEASE_NOTES || `Initial v${version} release of Profile Weather View documentation.`;
+
+            console.log(`Creating release for tag v${version}`);
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${version}`,
+              name: `v${version}`,
+              body: releaseNotes,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: false
+            });
+
+            console.log(`Release created: ${release.data.html_url}`);
+        env:
+          CUSTOM_VERSION: ${{ env.CUSTOM_VERSION }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
+
   # ============================================================
   # Release Please
   # ============================================================
   release:
     name: "🚀 Release Please"
     needs: preflight
-    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true'
+    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true' && needs.preflight.outputs.is_custom_release != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -201,8 +416,10 @@ jobs:
   # ============================================================
   build-deploy:
     name: "📚 Build & Deploy Documentation"
-    needs: release
-    if: needs.release.outputs.releases_created == 'true'
+    needs: [preflight, release, custom-release]
+    if: |
+      (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
+      (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -212,7 +429,7 @@ jobs:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release.outputs.tag_name }}
+          ref: ${{ needs.preflight.outputs.is_custom_release == 'true' && format('v{0}', env.CUSTOM_VERSION) || needs.release.outputs.tag_name }}
           fetch-depth: 1
 
       - name: "📋 Extract Bun Version"
@@ -252,7 +469,7 @@ jobs:
         id: update-metadata
         run: |
           echo "::group::Metadata Update"
-          VERSION="${{ needs.release.outputs.version }}"
+          VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
           TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
           DATE=$(date '+%B %d, %Y')
 
@@ -303,7 +520,7 @@ jobs:
         run: |
           echo "::group::Documentation Build"
           # Set environment variables for build
-          export VITE_APP_VERSION="${{ needs.release.outputs.version }}"
+          export VITE_APP_VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
           export VITE_APP_BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
           # Execute build
@@ -339,8 +556,10 @@ jobs:
   # ============================================================
   version-tags:
     name: "🏷️ Create Version Tags"
-    needs: [release, build-deploy]
-    if: needs.release.outputs.releases_created == 'true'
+    needs: [preflight, release, custom-release, build-deploy]
+    if: |
+      (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
+      (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 3
 
@@ -358,7 +577,8 @@ jobs:
       - name: "🔢 Extract Version Components"
         id: version-parts
         run: |
-          IFS='.' read -r MAJOR MINOR PATCH <<< "${{ needs.release.outputs.version }}"
+          VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           echo "major=$MAJOR" >> $GITHUB_OUTPUT
           echo "minor=$MINOR" >> $GITHUB_OUTPUT
           echo "patch=$PATCH" >> $GITHUB_OUTPUT
@@ -376,7 +596,7 @@ jobs:
           # Create or update tags with annotations
           git tag -fa "$MAJOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.x documentation release"
           git tag -fa "$MINOR_TAG" -m "Latest v${{ steps.version-parts.outputs.major }}.${{ steps.version-parts.outputs.minor }}.x documentation release"
-          git tag -fa "$LATEST_TAG" -m "Latest documentation release (v${{ needs.release.outputs.version }})"
+          git tag -fa "$LATEST_TAG" -m "Latest documentation release (v${{ (needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION) || needs.release.outputs.version }})"
 
           # Push tags to remote with retry logic
           MAJOR_PUSH_SUCCESS=false
@@ -417,8 +637,12 @@ jobs:
   # ============================================================
   summary:
     name: "📊 Release Summary"
-    needs: [release, build-deploy, version-tags]
-    if: always() && needs.release.outputs.releases_created == 'true'
+    needs: [preflight, release, custom-release, build-deploy, version-tags]
+    if: |
+      always() && (
+        (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
+        (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
@@ -428,9 +652,19 @@ jobs:
           echo "# 📚 Documentation Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Release Details" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** v${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** ${{ needs.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release URL:** ${{ needs.release.outputs.release_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.preflight.outputs.is_custom_release }}" == "true" ]]; then
+            echo "- **Type:** 🎯 Custom Initial Release" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** v${{ env.CUSTOM_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag:** v${{ env.CUSTOM_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Type:** 🤖 Automated Release" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** v${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag:** ${{ needs.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Release URL:** ${{ needs.release.outputs.release_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR URL:** ${{ needs.release.outputs.pr_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "- **Release Mode:** ${{ env.DRY_RUN == 'true' && '🧪 Dry Run' || '🚀 Production' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 

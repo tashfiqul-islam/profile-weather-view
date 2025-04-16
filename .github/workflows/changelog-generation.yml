@@ -59,7 +59,6 @@ env:
   FORCE_REGENERATE: ${{ github.event.inputs.force == 'true' }}   # Flag for full regeneration
   DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}         # Flag to enable debug mode
   NODE_OPTIONS: "--max-old-space-size=4096"                      # Prevents memory issues with large repositories
-  ACTIONS_CACHE_KEY_PREFIX: "v3"                                 # Updated cache key prefix for new cache service
   WORKFLOW_TIMESTAMP: ${{ github.run_id }}                       # Using run_id as a timestamp alternative
 
 jobs:
@@ -69,7 +68,7 @@ jobs:
 
   validate-prerequisites:
     name: "🔍 Preflight Validation"
-    runs-on: ubuntu-latest # Using latest runner version to ensure compatibility with new cache service
+    runs-on: ubuntu-latest
     outputs:
       should_proceed: ${{ steps.check-requirements.outputs.should_proceed }}
       repo_state: ${{ steps.repo-state.outputs.state }}
@@ -141,7 +140,7 @@ jobs:
     name: "🚀 Changelog Generation"
     needs: validate-prerequisites
     if: needs.validate-prerequisites.outputs.should_proceed == 'true'
-    runs-on: ubuntu-latest # Using latest runner version to ensure compatibility with new cache service
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       change_count: ${{ steps.generate.outputs.change_count }}
@@ -176,7 +175,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
         continue-on-error: false  # Fail the workflow if Bun setup fails - this is critical
 
-      # Step to cache Bun dependencies to speed up workflow execution - optimized caching strategy
+      # Step to cache Bun dependencies - Updated to use the new cache service
       - name: "💾 Cache Bun Dependencies"
         id: cache-bun-deps
         uses: actions/cache@v4
@@ -185,11 +184,9 @@ jobs:
             ~/.bun/install/cache
             node_modules
             .bun
-          key: ${{ runner.os }}-bun-${{ env.ACTIONS_CACHE_KEY_PREFIX }}-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          key: ${{ runner.os }}-bun-deps-${{ hashFiles('**/bun.lockb', '**/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-bun-${{ env.ACTIONS_CACHE_KEY_PREFIX }}-
-            ${{ runner.os }}-bun-
-          enableCrossOsArchive: false
+            ${{ runner.os }}-bun-deps-
           fail-on-cache-miss: false
 
       # Fallback in case cache fails
@@ -201,6 +198,11 @@ jobs:
           else
             echo "::notice::Bun dependencies cache ${{ steps.cache-bun-deps.outputs.cache-hit == 'true' && 'hit' || 'miss' }}"
           fi
+
+      # Install dependencies if cache miss
+      - name: "📦 Install Dependencies"
+        if: steps.cache-bun-deps.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
 
       # Step to verify that the Bun runtime is installed and configured correctly
       - name: "🔍 Verify Bun Installation"
