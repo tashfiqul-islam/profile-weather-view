@@ -729,3 +729,4 @@ jobs:
           echo "Testing OpenWeather API connectivity..."
           curl -s -o /dev/null -w "OpenWeather API: HTTP %{http_code}\n" "https://api.openweathermap.org/data/2.5/weather?q=London&appid=test"
           echo "::endgroup::"
+          echo "::notice::Network connectivity tests completed"

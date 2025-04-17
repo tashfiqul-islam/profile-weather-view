@@ -2,7 +2,7 @@
 # 📋 Profile Weather View: Changelog Generation Workflow
 # ============================================================
 
-name: "📋 Changelog Generation"
+name: "📋 Changelog Generator"
 
 # ============================================================
 # 🚀 Workflow triggers for automatic and manual execution

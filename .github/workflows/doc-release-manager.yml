@@ -1,5 +1,5 @@
 # Documentation Release Management Workflow
-name: "📚 Documentation Release Management"
+name: "📚 Documentation Release Manager"
 
 # ============================================================
 # 🚀 Workflow triggers for documentation updates
@@ -26,16 +26,16 @@ on:
         description: "Enable debug logging"
         type: boolean
         default: false
-      create_tag:
-        description: "Create a tag with custom release notes"
-        type: boolean
-        default: true
-      deploy_docs:
-        description: "Build and deploy documentation site"
-        type: boolean
-        default: true
+      release_type:
+        description: "Choose what to generate"
+        type: choice
+        options:
+          - "both"
+          - "tag_only"
+          - "docs_only"
+        default: "both"
       custom_release:
-        description: "Create a custom release (initial v1.0.0)"
+        description: "Create a custom release"
         type: boolean
         default: false
       version:
@@ -44,7 +44,7 @@ on:
         required: false
         default: "1.0.0"
       release_notes:
-        description: "Custom release notes for initial release"
+        description: "Release notes for custom releases"
         type: string
         required: false
 
@@ -202,12 +202,16 @@ jobs:
           echo "::endgroup::"
 
   # ============================================================
-  # Custom Release (Initial v1.0.0 Release)
+  # Custom Release
   # ============================================================
   custom-release:
     name: "🚀 Create Custom Release"
     needs: preflight
-    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.is_custom_release == 'true' && needs.preflight.outputs.existing_release == 'false' && github.event.inputs.create_tag == 'true'
+    if: >
+      needs.preflight.outputs.proceed == 'true' &&
+      needs.preflight.outputs.is_custom_release == 'true' &&
+      needs.preflight.outputs.existing_release == 'false' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.release_type != 'docs_only')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -379,7 +383,11 @@ jobs:
   release:
     name: "🚀 Release Please"
     needs: preflight
-    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true' && needs.preflight.outputs.is_custom_release != 'true'
+    if: >
+      needs.preflight.outputs.proceed == 'true' &&
+      needs.preflight.outputs.config_valid == 'true' &&
+      needs.preflight.outputs.is_custom_release != 'true' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.release_type != 'docs_only')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -433,9 +441,11 @@ jobs:
     name: "📚 Build & Deploy Documentation"
     needs: [preflight, release, custom-release]
     if: |
-      ((needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
-       (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')) &&
-      github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_docs == 'true'
+      (
+        (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
+        (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'docs_only')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -657,7 +667,8 @@ jobs:
     if: |
       always() && (
         (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
-        (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
+        (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'docs_only' && needs.build-deploy.result == 'success')
       )
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -667,6 +678,23 @@ jobs:
         run: |
           echo "# 📚 Documentation Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.release_type }}" == "docs_only" ]]; then
+            echo "## Deployment Details" >> $GITHUB_STEP_SUMMARY
+            echo "- **Type:** 🔄 Documentation-Only Update" >> $GITHUB_STEP_SUMMARY
+            echo "- **Mode:** ${{ env.DRY_RUN == 'true' && '🧪 Dry Run' || '🚀 Production' }}" >> $GITHUB_STEP_SUMMARY
+
+            if [[ "${{ env.DRY_RUN }}" != "true" ]]; then
+              echo "- **Deployment URL:** [GitHub Pages](${{ needs.build-deploy.outputs.deployment_url }})" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- **Deployment URL:** 🧪 Dry run - no deployment" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "ℹ️ This was a documentation-only deployment without creating a new version tag." >> $GITHUB_STEP_SUMMARY
+            return
+          fi
+
           echo "## Release Details" >> $GITHUB_STEP_SUMMARY
 
           if [[ "${{ needs.preflight.outputs.is_custom_release }}" == "true" ]]; then
