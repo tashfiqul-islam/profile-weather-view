@@ -339,9 +339,9 @@ export default defineConfig({
         output: {
           // Split code into logical chunks
           manualChunks: {
-            theme: ['./theme/index.ts'],
+            theme: [resolve(__dirname, 'theme/index.ts')],
             vue: ['vue', 'vue-router'],
-            versions: ['./version.ts'],
+            versions: [resolve(__dirname, 'version.ts')],
           },
 
           // Consistent naming for better caching
