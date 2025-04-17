@@ -55,16 +55,16 @@ permissions:
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v6-profile-weather" # Updated cache key prefix to v6
+  CACHE_KEY_PREFIX: "v7-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
   EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-  CODE_REPO: "${{ github.repository }}"  # Use the current repository
-  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # Use owner's username as the profile repo
+  CODE_REPO: "${{ github.repository }}"  # Script repository
+  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
   BUN_RUNTIME_SAFETY: "true"  # Aligns with bunfig.toml defaultRuntimeSafety
   NODE_ENV: "production"
-  FORCE_UPDATE: ${{ github.event.inputs.force_update == 'true' }}
+  FORCE_UPDATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_update == 'true' || 'false' }}
   SKIP_TESTS: ${{ github.event.inputs.skip_tests == 'true' }}
   WORKFLOW_DEBUG: "true" # Debug info to help troubleshoot startup issues
 
@@ -74,7 +74,7 @@ env:
 jobs:
   preflight:
     name: "🚀 Preflight Checks"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
       api_status: ${{ steps.api-check.outputs.status }}
@@ -185,7 +185,7 @@ jobs:
     name: "🌦️ Update Weather Data"
     needs: preflight
     if: needs.preflight.outputs.env_valid == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
@@ -201,7 +201,7 @@ jobs:
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           fetch-depth: 1
           ref: master
 
@@ -374,6 +374,10 @@ jobs:
             echo "Force update enabled via flag: $FORCE_FLAG"
           fi
 
+          # Track API response time
+          echo "Starting API request timing: $(date +%s.%N)"
+          START_TIME=$(date +%s.%N)
+
           # Execute the TypeScript code to fetch weather and update README
           echo "Running weather update script with command: bun run src/weather-update/index.ts $FORCE_FLAG"
           OUTPUT=$(OPEN_WEATHER_KEY="$OPEN_WEATHER_KEY" \
@@ -383,6 +387,11 @@ jobs:
                   BUN_RUNTIME_SAFETY="${{ env.BUN_RUNTIME_SAFETY }}" \
                   FORCE_UPDATE="${{ env.FORCE_UPDATE }}" \
                   bun run src/weather-update/index.ts $FORCE_FLAG)
+
+          END_TIME=$(date +%s.%N)
+          ELAPSED_TIME=$(echo "$END_TIME - $START_TIME" | bc)
+          echo "API_RESPONSE_TIME=$ELAPSED_TIME" >> $GITHUB_OUTPUT
+          echo "API request completed in $ELAPSED_TIME seconds"
 
           # Echo the full output for debugging
           echo "Full script output:"
@@ -429,18 +438,70 @@ jobs:
         run: |
           if [[ -d "coverage" ]]; then
             echo "::group::Code Coverage Summary"
-            cat coverage/coverage-summary.json | jq '.total'
+            # Check if the coverage-summary.json file exists
+            if [[ -f "coverage/coverage-summary.json" ]]; then
+              # Output the raw JSON for debugging
+              echo "Raw coverage data:"
+              cat coverage/coverage-summary.json
+
+              # Make sure jq is installed
+              if ! command -v jq &> /dev/null; then
+                echo "Installing jq..."
+                sudo apt-get update && sudo apt-get install -y jq
+              fi
+
+              # Extract coverage metrics with fallbacks to 0 if they don't exist
+              STATEMENTS=$(jq -r '.total.statements.pct // 0' coverage/coverage-summary.json)
+              BRANCHES=$(jq -r '.total.branches.pct // 0' coverage/coverage-summary.json)
+              FUNCTIONS=$(jq -r '.total.functions.pct // 0' coverage/coverage-summary.json)
+              LINES=$(jq -r '.total.lines.pct // 0' coverage/coverage-summary.json)
+
+              echo "Coverage metrics extracted:"
+              echo "Statements: $STATEMENTS%"
+              echo "Branches: $BRANCHES%"
+              echo "Functions: $FUNCTIONS%"
+              echo "Lines: $LINES%"
+            else
+              echo "coverage-summary.json not found. Checking for lcov.info..."
+              if [[ -f "coverage/lcov.info" ]]; then
+                echo "Found lcov.info, converting to JSON summary..."
+                # Install lcov if needed and generate summary
+                sudo apt-get update && sudo apt-get install -y lcov
+                genhtml coverage/lcov.info --output-directory coverage/html
+                echo "Generated coverage summary from lcov.info"
+
+                # Use a default placeholder for metrics
+                STATEMENTS="See HTML report"
+                BRANCHES="See HTML report"
+                FUNCTIONS="See HTML report"
+                LINES="See HTML report"
+              else
+                echo "No coverage files found. Setting defaults."
+                STATEMENTS="No data"
+                BRANCHES="No data"
+                FUNCTIONS="No data"
+                LINES="No data"
+              fi
+            fi
             echo "::endgroup::"
 
+            # Generate GitHub Step Summary with the extracted metrics
             echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
             echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
             echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-            echo "| Statements | $(cat coverage/coverage-summary.json | jq -r '.total.statements.pct')% |" >> $GITHUB_STEP_SUMMARY
-            echo "| Branches | $(cat coverage/coverage-summary.json | jq -r '.total.branches.pct')% |" >> $GITHUB_STEP_SUMMARY
-            echo "| Functions | $(cat coverage/coverage-summary.json | jq -r '.total.functions.pct')% |" >> $GITHUB_STEP_SUMMARY
-            echo "| Lines | $(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | $STATEMENTS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | $BRANCHES |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | $FUNCTIONS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | $LINES |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "::notice::No coverage report found"
+            echo "::notice::No coverage directory found"
+            echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
+            echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: "📤 Upload Weather Output Artifact"
@@ -462,9 +523,11 @@ jobs:
           if-no-files-found: ignore
 
       - name: "💾 Commit and Push Changes with Verified Signature"
-        # Use step output instead of env var for reliable conditional execution
-        if: steps.update-weather-and-readme.outputs.changes_detected == 'true'
+        # In scheduled runs, always commit. In manual runs, respect the changes_detected output
+        if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
         working-directory: profile-repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           echo "::group::Git Operations"
           # Use the same git configuration as your old workflow
@@ -478,26 +541,24 @@ jobs:
           # Format the last updated time for commit message
           FORMATTED_DATE=$(TZ="${{ env.TIMEZONE }}" date "+%Y-%m-%d %H:%M:%S %Z")
 
-          # Check if README actually has changes before committing
-          if git diff --quiet -- README.md; then
-            echo "No actual changes detected in README.md by git diff"
-            # Force a commit anyway if we're in force mode
-            if [[ "${{ env.FORCE_UPDATE }}" == "true" ]]; then
-              echo "Force update requested - committing anyway"
-              git add README.md
-              git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
-              git push origin master
-              echo "::notice::Changes pushed successfully (forced)"
-            else
-              echo "::notice::No changes to commit (skipped push)"
-            fi
-          else
-            echo "Changes detected in README.md by git diff"
+          # For scheduled runs or force update, always commit regardless of git diff
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ env.FORCE_UPDATE }}" == "true" ]]; then
+            echo "Scheduled run or force update requested - committing README"
             git add README.md
             git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
-
-            # Simple push to master, like in the old workflow
-            git push origin master && echo "::notice::Changes pushed successfully"
+            git push origin master
+            echo "::notice::Changes pushed successfully (scheduled/forced)"
+          else
+            # For manual runs, check if there are actual git changes
+            if git diff --quiet -- README.md; then
+              echo "No actual changes detected in README.md by git diff"
+              echo "::notice::No changes to commit (skipped push)"
+            else
+              echo "Changes detected in README.md by git diff"
+              git add README.md
+              git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
+              git push origin master && echo "::notice::Changes pushed successfully"
+            fi
           fi
           echo "::endgroup::"
 
@@ -508,7 +569,7 @@ jobs:
     name: "✅ Verify & Report"
     needs: [preflight, update-weather]
     if: always() && needs.preflight.result == 'success'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 2
 
     steps:
@@ -518,7 +579,7 @@ jobs:
           echo "# Profile Weather Update Report" >> $GITHUB_STEP_SUMMARY
           echo "## Execution Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Run ID:** ${{ env.EXECUTION_ID }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Time:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %H:%M:%S %Z')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %Z')" >> $GITHUB_STEP_SUMMARY
           echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Target Repository:** ${{ env.PROFILE_REPO }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Execution Mode:** ${{ env.FORCE_UPDATE == 'true' && 'Force Update' || 'Normal' }}" >> $GITHUB_STEP_SUMMARY
@@ -561,7 +622,7 @@ jobs:
     name: "🔄 Recovery Actions"
     needs: [preflight, update-weather, verify]
     if: always() && (needs.update-weather.result == 'failure' || needs.verify.result == 'failure')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 3
 
     steps:
@@ -612,7 +673,7 @@ jobs:
   # ============================================================
   debug:
     name: "🔍 Workflow Diagnostics"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     # This job always runs regardless of other conditions
     timeout-minutes: 2
 

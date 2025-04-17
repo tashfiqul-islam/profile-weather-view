@@ -26,6 +26,14 @@ on:
         description: "Enable debug logging"
         type: boolean
         default: false
+      create_tag:
+        description: "Create a tag with custom release notes"
+        type: boolean
+        default: true
+      deploy_docs:
+        description: "Build and deploy documentation site"
+        type: boolean
+        default: true
       custom_release:
         description: "Create a custom release (initial v1.0.0)"
         type: boolean
@@ -80,7 +88,7 @@ jobs:
   # ============================================================
   preflight:
     name: "🔍 Preflight Checks"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       proceed: ${{ steps.validation.outputs.proceed }}
@@ -199,8 +207,8 @@ jobs:
   custom-release:
     name: "🚀 Create Custom Release"
     needs: preflight
-    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.is_custom_release == 'true' && needs.preflight.outputs.existing_release == 'false'
-    runs-on: ubuntu-24.04
+    if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.is_custom_release == 'true' && needs.preflight.outputs.existing_release == 'false' && github.event.inputs.create_tag == 'true'
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       version: ${{ env.CUSTOM_VERSION }}
@@ -372,7 +380,7 @@ jobs:
     name: "🚀 Release Please"
     needs: preflight
     if: needs.preflight.outputs.proceed == 'true' && needs.preflight.outputs.config_valid == 'true' && needs.preflight.outputs.is_custom_release != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
@@ -425,9 +433,10 @@ jobs:
     name: "📚 Build & Deploy Documentation"
     needs: [preflight, release, custom-release]
     if: |
-      (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
-      (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
-    runs-on: ubuntu-24.04
+      ((needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
+       (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')) &&
+      github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_docs == 'true'
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       deployment_url: ${{ steps.deployment.outputs.page_url }}
@@ -567,7 +576,7 @@ jobs:
     if: |
       (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
       (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 3
 
     steps:
@@ -650,7 +659,7 @@ jobs:
         (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
         (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true')
       )
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 2
 
     steps:

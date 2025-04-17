@@ -68,7 +68,7 @@ jobs:
 
   validate-prerequisites:
     name: "🔍 Preflight Validation"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       should_proceed: ${{ steps.check-requirements.outputs.should_proceed }}
       repo_state: ${{ steps.repo-state.outputs.state }}
@@ -148,7 +148,7 @@ jobs:
     name: "🚀 Changelog Generation"
     needs: validate-prerequisites
     if: needs.validate-prerequisites.outputs.should_proceed == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       change_count: ${{ steps.generate.outputs.change_count }}
@@ -509,7 +509,7 @@ jobs:
     name: "📊 Workflow Summary"
     needs: [validate-prerequisites, generate-changelog]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: "📑 Generate Workflow Summary"
         run: |
