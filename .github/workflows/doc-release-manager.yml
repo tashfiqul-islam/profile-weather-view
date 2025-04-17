@@ -1,4 +1,4 @@
-# Documentation Release Management Workflow
+# Documentation Release Manager Workflow
 name: "📚 Documentation Release Manager"
 
 # ============================================================
@@ -439,12 +439,13 @@ jobs:
   # ============================================================
   build-deploy:
     name: "📚 Build & Deploy Documentation"
-    needs: [preflight, release, custom-release]
+    needs: preflight
     if: |
+      needs.preflight.outputs.proceed == 'true' &&
       (
-        (needs.preflight.outputs.is_custom_release == 'true' && needs.custom-release.outputs.releases_created == 'true') ||
-        (needs.preflight.outputs.is_custom_release != 'true' && needs.release.outputs.releases_created == 'true') ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'docs_only')
+        (needs.preflight.outputs.is_custom_release == 'true' && github.event.inputs.release_type != 'docs_only') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'docs_only') ||
+        github.event_name != 'workflow_dispatch'
       )
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -455,7 +456,7 @@ jobs:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.preflight.outputs.is_custom_release == 'true' && format('v{0}', env.CUSTOM_VERSION) || needs.release.outputs.tag_name }}
+          ref: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'docs_only') && github.ref || (needs.preflight.outputs.is_custom_release == 'true' && format('v{0}', env.CUSTOM_VERSION)) || github.ref }}
           fetch-depth: 1
 
       - name: "📋 Extract Bun Version"
@@ -495,7 +496,21 @@ jobs:
         id: update-metadata
         run: |
           echo "::group::Metadata Update"
-          VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
+          # Set VERSION based on workflow mode
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.release_type }}" == "docs_only" ]]; then
+            # For docs_only mode, use current version from meta.json
+            VERSION=$(jq -r '.docsVersion' meta.json)
+            echo "Using existing version $VERSION from meta.json for docs-only update"
+          elif [[ "${{ needs.preflight.outputs.is_custom_release }}" == "true" ]]; then
+            # For custom release
+            VERSION="${{ env.CUSTOM_VERSION }}"
+            echo "Using version $VERSION from custom release"
+          else
+            # For automated release via release-please, use meta.json as fallback to avoid context access issues
+            VERSION=$(jq -r '.docsVersion' meta.json)
+            echo "Using version $VERSION from meta.json"
+          fi
+
           TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
           DATE=$(date '+%B %d, %Y')
 
@@ -507,37 +522,48 @@ jobs:
           cp meta.json meta.json.bak
 
           # Update meta.json for version tracking
-          jq --arg version "$VERSION" \
-             --arg timestamp "$TIMESTAMP" \
-             --arg date "$DATE" \
-             --arg major "$MAJOR" \
-             --arg minor "$MINOR" \
-             --arg patch "$PATCH" \
-          '.docsVersion = $version |
-           .channels.docs.latest = $version |
-           .channels.docs.stable = $version |
-           .metadata.lastUpdatedTimestamp = $timestamp |
-           .releases = (.releases | map(
-              if .type == "docs" and .isLatest then
-                .isLatest = false
-              else
-                .
-              end
-           )) + [{
-             "type": "docs",
-             "version": $version,
-             "date": $date,
-             "timestamp": $timestamp,
-             "formattedDate": $date,
-             "major": $major,
-             "minor": $minor,
-             "patch": $patch,
-             "channel": "stable",
-             "path": "/v" + $major + "." + $minor + "/",
-             "isLatest": true,
-             "isStable": true,
-             "displayOrder": 0
-           }]' meta.json > meta.json.tmp && mv meta.json.tmp meta.json
+          # Only update version fields if NOT in docs_only mode
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.release_type }}" == "docs_only" ]]; then
+            # For docs_only, just update timestamp
+            jq --arg timestamp "$TIMESTAMP" \
+              '.metadata.lastUpdatedTimestamp = $timestamp' \
+              meta.json > meta.json.tmp && mv meta.json.tmp meta.json
+            echo "Updated metadata timestamp only for docs-only update"
+          else
+            # Full version update for normal releases
+            jq --arg version "$VERSION" \
+               --arg timestamp "$TIMESTAMP" \
+               --arg date "$DATE" \
+               --arg major "$MAJOR" \
+               --arg minor "$MINOR" \
+               --arg patch "$PATCH" \
+            '.docsVersion = $version |
+             .channels.docs.latest = $version |
+             .channels.docs.stable = $version |
+             .metadata.lastUpdatedTimestamp = $timestamp |
+             .releases = (.releases | map(
+                if .type == "docs" and .isLatest then
+                  .isLatest = false
+                else
+                  .
+                end
+             )) + [{
+               "type": "docs",
+               "version": $version,
+               "date": $date,
+               "timestamp": $timestamp,
+               "formattedDate": $date,
+               "major": $major,
+               "minor": $minor,
+               "patch": $patch,
+               "channel": "stable",
+               "path": "/v" + $major + "." + $minor + "/",
+               "isLatest": true,
+               "isStable": true,
+               "displayOrder": 0
+             }]' meta.json > meta.json.tmp && mv meta.json.tmp meta.json
+            echo "Updated metadata with new version information"
+          fi
 
           echo "::endgroup::"
 
@@ -546,7 +572,19 @@ jobs:
         run: |
           echo "::group::Documentation Build"
           # Set environment variables for build
-          export VITE_APP_VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.release_type }}" == "docs_only" ]]; then
+            # For docs_only, use version from meta.json
+            VERSION=$(jq -r '.docsVersion' meta.json)
+            export VITE_APP_VERSION="$VERSION"
+          elif [[ "${{ needs.preflight.outputs.is_custom_release }}" == "true" ]]; then
+            # For custom release
+            export VITE_APP_VERSION="${{ env.CUSTOM_VERSION }}"
+          else
+            # For automated release
+            # Store version in a variable first to avoid context access issues
+            export VITE_APP_VERSION=$(jq -r '.docsVersion' meta.json)
+          fi
+
           export VITE_APP_BUILD_TIMESTAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 
           # Execute build
@@ -603,11 +641,18 @@ jobs:
       - name: "🔢 Extract Version Components"
         id: version-parts
         run: |
-          VERSION="${{ needs.preflight.outputs.is_custom_release == 'true' && env.CUSTOM_VERSION || needs.release.outputs.version }}"
+          # Get version safely based on workflow path
+          if [[ "${{ needs.preflight.outputs.is_custom_release }}" == "true" ]]; then
+            VERSION="${{ env.CUSTOM_VERSION }}"
+          else
+            VERSION="${{ needs.release.outputs.version }}"
+          fi
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           echo "major=$MAJOR" >> $GITHUB_OUTPUT
           echo "minor=$MINOR" >> $GITHUB_OUTPUT
           echo "patch=$PATCH" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: "🏷️ Create Semantic Version Tags"
         id: create-tags
@@ -702,11 +747,16 @@ jobs:
             echo "- **Version:** v${{ env.CUSTOM_VERSION }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Tag:** v${{ env.CUSTOM_VERSION }}" >> $GITHUB_STEP_SUMMARY
           else
+            VERSION="${{ needs.release.outputs.version }}"
+            TAG="${{ needs.release.outputs.tag_name }}"
+            RELEASE_URL="${{ needs.release.outputs.release_url }}"
+            PR_URL="${{ needs.release.outputs.pr_url }}"
+
             echo "- **Type:** 🤖 Automated Release" >> $GITHUB_STEP_SUMMARY
-            echo "- **Version:** v${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Tag:** ${{ needs.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Release URL:** ${{ needs.release.outputs.release_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **PR URL:** ${{ needs.release.outputs.pr_url || 'Not available' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** v${VERSION:-Unknown}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tag:** ${TAG:-Unknown}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Release URL:** ${RELEASE_URL:-Not available}" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR URL:** ${PR_URL:-Not available}" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "- **Release Mode:** ${{ env.DRY_RUN == 'true' && '🧪 Dry Run' || '🚀 Production' }}" >> $GITHUB_STEP_SUMMARY
