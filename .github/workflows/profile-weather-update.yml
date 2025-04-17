@@ -55,7 +55,7 @@ permissions:
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v5-profile-weather" # Prefix for cache keys
+  CACHE_KEY_PREFIX: "v6-profile-weather" # Updated cache key prefix to v6
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
