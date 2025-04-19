@@ -519,26 +519,52 @@ jobs:
         run: |
           echo "::group::Git Operations"
           # Apply correct commit timestamp in Dhaka timezone
-          export GIT_AUTHOR_DATE="$(TZ='${{ env.TIMEZONE }}' date)"
+          export GIT_AUTHOR_DATE="$(TZ='Asia/Dhaka' date)"
           export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE"
 
           # Format the last updated time for commit message
-          FORMATTED_DATE=$(TZ="${{ env.TIMEZONE }}" date "+%Y-%m-%d %H:%M:%S %Z")
+          FORMATTED_DATE=$(TZ="Asia/Dhaka" date "+%Y-%m-%d %H:%M:%S %Z")
+
+          # Configure GPG for non-interactive environment
+          mkdir -p ~/.gnupg
+          echo 'allow-loopback-pinentry' > ~/.gnupg/gpg-agent.conf
+          echo 'use-agent' > ~/.gnupg/gpg.conf
+          echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+          echo 'no-tty' >> ~/.gnupg/gpg.conf
+          chmod 700 ~/.gnupg
+          gpgconf --kill gpg-agent
+
+          # Export passphrase env var for GPG to use
+          export GPG_TTY=$(tty)
+          export GNUPGHOME=~/.gnupg
+          export GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}"
+
+          # Create a script to provide the passphrase to GPG
+          cat > ~/.git-pass-helper.sh << 'EOF'
+          #!/bin/sh
+          echo "$GPG_PASSPHRASE"
+          EOF
+          chmod +x ~/.git-pass-helper.sh
+
+          # Configure Git to use our passphrase helper for signing
+          git config --global gpg.program gpg
+          git config --global commit.gpgsign true
+          git config --global gpg.passphrase "$GPG_PASSPHRASE"
 
           # For scheduled runs or force update, always commit regardless of git diff
           if [[ "${{ github.event_name }}" == "schedule" || "${{ env.FORCE_UPDATE }}" == "true" ]]; then
             git add README.md
-            git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
+            echo "$GPG_PASSPHRASE" | git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
             git push origin master
-            echo "::notice::Changes pushed successfully (scheduled/forced)"
+            echo "::notice::Changes pushed successfully with signed commit (scheduled/forced)"
           else
             # For manual runs, check if there are actual git changes
             if git diff --quiet -- README.md; then
               echo "No actual changes detected in README.md by git diff"
             else
               git add README.md
-              git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
-              git push origin master && echo "::notice::Changes pushed successfully"
+              echo "$GPG_PASSPHRASE" | git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
+              git push origin master && echo "::notice::Changes pushed successfully with signed commit"
             fi
           fi
           echo "::endgroup::"
