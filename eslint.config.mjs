@@ -10,7 +10,7 @@ import securityPlugin from 'eslint-plugin-security';
 import eslintCommentsPlugin from 'eslint-plugin-eslint-comments';
 
 // ✅ Importing modular rule configurations
-import { getParserProjects } from './src/config/parser.config.mjs';
+import { getParserProjects, getParserOptions } from './src/config/parser.config.mjs';
 import { getPrettierRules } from './src/config/eslint-prettier.config.mjs';
 import { getSortRules } from './src/config/sort.config.mjs';
 import { getStylisticRules } from './src/config/stylistic.config.mjs';
@@ -18,16 +18,9 @@ import { getUnicornRules } from './src/config/unicorn.config.mjs';
 import { getSecurityRules } from './src/config/security.config.mjs';
 import { getCommentsRules } from './src/config/comments.config.mjs';
 
-// ✅ TypeScript parser options
-const tsParserOptions = {
-  projectService: true,
-  tsconfigRootDir: process.cwd(),
-  project: getParserProjects(),
-};
-
 // ✅ ESLint Configuration
 export default tseslint.config(
-  { files: ['**/*.{ts,js}'] },
+  { files: ['**/*.{ts,js,mjs}'] },
   eslint.configs.recommended,
 
   // ✅ TypeScript Rules
@@ -35,7 +28,23 @@ export default tseslint.config(
   tseslint.configs.stylisticTypeChecked,
   {
     languageOptions: {
-      parserOptions: tsParserOptions,
+      parserOptions: getParserOptions(),
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
+  // ✅ Special handling for .releaserc.js and scripts files
+  {
+    files: ['.releaserc.js', 'scripts/**/*.js'],
+    ...eslint.configs.recommended,
+    languageOptions: {
+      // Use a simpler parsing configuration for these files
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
       globals: {
         ...globals.node,
       },
@@ -138,11 +147,14 @@ export default tseslint.config(
       'tsconfig.test.json',
       'prettier.config.mjs',
       'eslint.config.mjs',
+      '.releaserc.mjs',
       'src_old/',
       'vitest.config.ts',
       'commitlint.config.mjs',
       'postcss.config.mjs',
       '.vitepress/',
+      '.releaserc.js',
+      'scripts/**/*.js',
     ],
   },
 );

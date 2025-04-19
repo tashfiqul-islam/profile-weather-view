@@ -43,7 +43,8 @@
     "prepare": "husky",
     "commit": "bunx commit",
     "preinstall": "npx only-allow bun",
-    "postinstall": "bun run prepare"
+    "postinstall": "bun run prepare",
+    "semantic-release": "semantic-release"
   },
   "keywords": [
     "weather",
@@ -80,6 +81,7 @@
     "@eslint/js": "^9.25.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/bun": "^1.2.10",
     "@types/node": "^22.14.1",

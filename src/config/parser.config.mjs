@@ -18,3 +18,11 @@ export const getParserProjects = () => {
 
   return projectFiles;
 };
+
+// Add explicit ESLint parser options to handle .mjs files
+export const getParserOptions = () => ({
+  projectService: true,
+  tsconfigRootDir: process.cwd(),
+  project: getParserProjects(),
+  allowDefaultProject: true, // This allows files not included in tsconfig to be linted
+});

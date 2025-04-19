@@ -3,6 +3,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "allowArbitraryExtensions": true,
     "lib": [
       "ESNext",
       "DOM",
@@ -72,7 +74,8 @@
     "src/**/*.tsx",
     "src/**/*.mts",
     "src/**/*.d.ts",
-    "scripts/**/*.mjs"
+    ".releaserc.js",
+    "scripts/**/*.js"
   ],
 
   "exclude": [

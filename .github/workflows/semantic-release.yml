@@ -1,0 +1,284 @@
+name: "🚀 Semantic Release"
+
+# ============================================================
+# ⚡ Trigger Configuration
+# ============================================================
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'CHANGELOG.md'
+      - 'package.json'
+      - '*.md'
+
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: "Enable debug logging"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      dry_run:
+        description: "Run in dry-run mode (no actual release)"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions (Least Privilege Principle)
+# ============================================================
+permissions:
+  contents: write  # For repository updates, Git tags
+  issues: write    # For issue comments
+  pull-requests: write  # For PR comments
+  id-token: write  # For provenance generation (npm best practice)
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NODE_ENV: "production"
+  BUN_RUNTIME_SAFETY: "true"
+  DEBUG: ${{ github.event.inputs.debug == 'true' && 'semantic-release:*' || '' }}
+  DRY_RUN: ${{ github.event.inputs.dry_run == 'true' || 'false' }}
+  GIT_AUTHOR_NAME: "GitHub Actions"
+  GIT_AUTHOR_EMAIL: "github-actions@github.com"
+  GIT_COMMITTER_NAME: "GitHub Actions"
+  GIT_COMMITTER_EMAIL: "github-actions@github.com"
+
+# ============================================================
+# 🔄 Jobs
+# ============================================================
+jobs:
+  release:
+    name: "🚀 Release"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # -------------------------------------------------------
+      # 📋 Setup
+      # -------------------------------------------------------
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for correct versioning
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "🔍 Initialize Workflow"
+        id: init
+        run: |
+          echo "::group::Environment Information"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 Branch: ${{ github.ref_name }}"
+          echo "🔹 Trigger: ${{ github.event_name }}"
+          echo "🔹 Commit: ${{ github.sha }}"
+          echo "🔹 Mode: ${{ env.DRY_RUN == 'true' && 'Dry Run' || 'Release' }}"
+          echo "🔹 Debug: ${{ github.event.inputs.debug == 'true' && 'Enabled' || 'Disabled' }}"
+          echo "::endgroup::"
+
+          # Extract Bun version from package.json
+          BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.10'); } catch (e) { console.log('1.2.10'); }")
+          echo "bun_version=${BUN_VERSION}" >> $GITHUB_OUTPUT
+
+          # Check for an initial release (no tags)
+          if [ $(git tag -l "v*" | wc -l) -eq 0 ]; then
+            echo "first_release=true" >> $GITHUB_OUTPUT
+            echo "::notice::First release detected. Will create v1.0.0."
+          else
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            echo "last_tag=${LAST_TAG}" >> $GITHUB_OUTPUT
+            echo "first_release=false" >> $GITHUB_OUTPUT
+            echo "::notice::Previous release found: ${LAST_TAG}"
+          fi
+
+      # -------------------------------------------------------
+      # ⚙️ Runtime Setup
+      # -------------------------------------------------------
+      - name: "🧰 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.init.outputs.bun_version }}
+
+      - name: "📦 Install Dependencies"
+        id: deps
+        run: |
+          echo "::group::Dependency Installation"
+          bun install --frozen-lockfile
+          # Verify integrity
+          bun audit signatures
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🧪 Validation
+      # -------------------------------------------------------
+      - name: "🔍 Validate Project"
+        id: validate
+        if: ${{ env.DRY_RUN != 'true' }}
+        run: |
+          echo "::group::Project Validation"
+          echo "🔹 Running TypeScript checks..."
+          bun run type-check
+
+          echo "🔹 Running tests..."
+          bun run test:ci
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📝 Initial Release Commit (If Needed)
+      # -------------------------------------------------------
+      - name: "✨ Create Initial Release Commit"
+        id: initial-commit
+        if: ${{ steps.init.outputs.first_release == 'true' }}
+        run: |
+          echo "::group::Initial Release Setup"
+          echo "Creating initial release commit that consolidates previous work"
+
+          # Configure git user
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          # Create the initial release commit
+          echo "feat(profile-weather-view): initial release v1.0.0" > /tmp/commit_message
+          echo "" >> /tmp/commit_message
+          echo "The first official release of Profile Weather View." >> /tmp/commit_message
+          echo "" >> /tmp/commit_message
+          echo "This combines all previous development work into one release." >> /tmp/commit_message
+
+          git commit --allow-empty -F /tmp/commit_message
+          git push origin HEAD:master
+          echo "::endgroup::"
+
+          echo "::notice::Initial release commit created successfully"
+
+      # -------------------------------------------------------
+      # 🚀 Semantic Release
+      # -------------------------------------------------------
+      - name: "🚀 Run Semantic Release"
+        id: semantic-release
+        run: |
+          echo "::group::Semantic Release Process"
+
+          # Configure release flags based on inputs
+          FLAGS=""
+          if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
+            FLAGS="--dry-run"
+            echo "Running in dry-run mode (no actual release)"
+          fi
+
+          # Add debug flags if needed
+          if [[ "${{ github.event.inputs.debug }}" == "true" ]]; then
+            FLAGS="${FLAGS} --debug"
+            echo "Debug mode enabled"
+          fi
+
+          # Execute semantic-release with Bun
+          echo "Executing: bunx semantic-release ${FLAGS}"
+          OUTPUT=$(bunx semantic-release ${FLAGS})
+          STATUS=$?
+
+          # Store output for inspection
+          echo "$OUTPUT" > semantic-release-output.log
+
+          # Handle output
+          if [ $STATUS -eq 0 ]; then
+            echo "::notice::Semantic release completed successfully"
+
+            # Try to extract the released version from output
+            VERSION=$(echo "$OUTPUT" | grep -oP "(?:The next release version is|Published release )\K[0-9]+\.[0-9]+\.[0-9]+" || echo "")
+
+            if [[ -n "$VERSION" ]]; then
+              echo "version=${VERSION}" >> $GITHUB_OUTPUT
+              echo "::notice::Version ${VERSION} released!"
+            elif [[ "${{ env.DRY_RUN }}" == "true" ]]; then
+              echo "status=dry-run" >> $GITHUB_OUTPUT
+              echo "::notice::Dry run completed successfully"
+            else
+              echo "status=no-release" >> $GITHUB_OUTPUT
+              echo "::notice::No release required - no relevant changes detected"
+            fi
+          else
+            echo "::error::Semantic release failed with exit code $STATUS"
+            echo "$OUTPUT" | grep -E "ERR|Error|WARN|Warning" || echo "$OUTPUT" | tail -n 20
+            exit $STATUS
+          fi
+
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📊 Release Summary
+      # -------------------------------------------------------
+      - name: "📊 Generate Release Summary"
+        if: always()
+        run: |
+          echo "# Semantic Release Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # If we have version output, a release happened
+          if [[ "${{ steps.semantic-release.outputs.version }}" != "" ]]; then
+            echo "✅ **Version ${{ steps.semantic-release.outputs.version }} released successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Add changelog info if available
+            if [[ -f "CHANGELOG.md" ]]; then
+              echo "## Release Notes" >> $GITHUB_STEP_SUMMARY
+              echo "See [CHANGELOG.md](../blob/master/CHANGELOG.md) for detailed release notes." >> $GITHUB_STEP_SUMMARY
+
+              # Extract the latest release notes from CHANGELOG.md
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Latest Changes" >> $GITHUB_STEP_SUMMARY
+              echo "```" >> $GITHUB_STEP_SUMMARY
+              sed -n "/## \[${{ steps.semantic-release.outputs.version }}/,/## \[/p" CHANGELOG.md | sed '1p;/## \[/d' | head -n 15 >> $GITHUB_STEP_SUMMARY
+              echo "..." >> $GITHUB_STEP_SUMMARY
+              echo "```" >> $GITHUB_STEP_SUMMARY
+            fi
+
+          elif [[ "${{ steps.semantic-release.outputs.status }}" == "dry-run" ]]; then
+            echo "✅ **Dry run completed successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No changes were made to the repository." >> $GITHUB_STEP_SUMMARY
+
+          elif [[ "${{ steps.semantic-release.outputs.status }}" == "no-release" ]]; then
+            echo "ℹ️ **No new version released**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No changes that would trigger a semantic version bump were detected." >> $GITHUB_STEP_SUMMARY
+
+          elif [[ "${{ job.status }}" != "success" ]]; then
+            echo "❌ **Release process failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the workflow logs for more information." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Add execution stats
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Execution Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](../commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workflow Run:** [#${{ github.run_number }}](../actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      # -------------------------------------------------------
+      # 📦 Upload Artifacts
+      # -------------------------------------------------------
+      - name: "📤 Upload Release Output Artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-release-output-${{ github.run_id }}
+          path: |
+            semantic-release-output.log
+            CHANGELOG.md
+          retention-days: 7
+          if-no-files-found: ignore
