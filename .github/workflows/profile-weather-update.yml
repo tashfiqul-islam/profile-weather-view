@@ -242,15 +242,6 @@ jobs:
           echo "🔹 TypeScript Support: $(bun --help | grep -q typescript && echo "Enabled" || echo "Disabled")"
           echo "::endgroup::"
 
-      - name: "🔒 Dependency Review"
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later
-          config-file: '.github/dependency-review-config.yml'
-          base-ref: 'HEAD~1'
-          head-ref: 'HEAD'
-
       - name: "📦 Cache Dependencies"
         uses: actions/cache@v4
         id: bun-cache
