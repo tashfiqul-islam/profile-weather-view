@@ -1,12 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # ==============================================================================
 # 🔒 Advanced Commit Message Validation Hook
 # ==============================================================================
 # Ensures commit messages follow Conventional Commits specification with
 # advanced validation, clear feedback, and intelligent assistance.
 
-# Fail fast but controlled and with proper cleanup
-set -eo pipefail
+# Fail-safe option that works across all shells
+set -e
 
 # ==============================================================================
 # 📋 Configuration Variables
