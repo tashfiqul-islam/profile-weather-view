@@ -117,7 +117,7 @@
     }
   },
   "plugins": ["sentence-case"],
-  "bootstrap-sha": "3bc2a876f0d6673dcedd10cbb79949c19e76196f",
+  "bootstrap-sha": "12679c2d1fa842541034c4ff78a4ab712be3d2be",
   "release-search-depth": 1,
   "commit-search-depth": 1,
   "separate-pull-requests": false,

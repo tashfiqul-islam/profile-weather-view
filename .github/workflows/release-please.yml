@@ -178,7 +178,7 @@ jobs:
       - name: "📝 Generate PR Summary"
         if: steps.release.outputs.pr
         run: |
-          # Safe way to generate PR summary - avoid parsing complex JSON directly
+          # Extract specific output fields individually
           PR_NUMBER="${{ steps.release.outputs.pr }}"
           VERSION="${{ steps.release.outputs.version || 'Unknown' }}"
           PR_URL="${{ steps.release.outputs.pr_url }}"
