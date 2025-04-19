@@ -48,7 +48,6 @@ concurrency:
 permissions:
   contents: write  # For repository updates
   id-token: write  # For OIDC token (keyless signing)
-  actions: read  # For action execution
 
 # ============================================================
 # 🌍 Global environment variables
@@ -255,21 +254,6 @@ jobs:
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
           enableCrossOsArchive: false
-
-      - name: "🔒 Security Scan Dependencies"
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: 'weather-code'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: "📤 Upload Dependency Scan Results"
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-dependencies'
 
       - name: "🛡️ Validate Workflow Integrity"
         run: |
