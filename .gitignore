@@ -26,6 +26,7 @@ test-results/
 .env.production.local
 .env.*.local
 *.env.local
+script
 
 # Runtime Data
 pids

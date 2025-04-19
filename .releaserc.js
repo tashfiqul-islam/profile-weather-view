@@ -74,34 +74,84 @@ export default {
       {
         preset: 'angular',
         parserOpts: {
-          // Ensure consistent breaking change detection with analyzer
           noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
         },
         writerOpts: {
-          // Organize commits for readability
-          commitsSort: ['scope', 'subject'],
+          transform: (commit, context) => {
+            // Check if first release
+            const isFirstRelease = !context?.lastRelease?.gitTag;
 
-          // For first release only, we want to generate a single entry
-          // and ignore all the individual commits
-          generateOpts: {
-            // Add custom first release handling
-            mainTemplate: `{{> header}}
+            // For first release, completely override with custom format
+            if (isFirstRelease && context) {
+              context.isFirstRelease = true;
+
+              // Make the version available to the template
+              if (context.nextRelease && context.nextRelease.version) {
+                context.version = context.nextRelease.version;
+              }
+
+              return null; // Skip all normal commit processing
+            }
+
+            // For subsequent releases, properly format commit information
+            if (typeof commit.hash === 'string') {
+              commit.shortHash = commit.hash.substring(0, 7);
+            }
+
+            if (typeof commit.subject === 'string') {
+              commit.subject = commit.subject.trim();
+            }
+
+            // Add proper URL links
+            if (context.repository) {
+              if (commit.hash) {
+                const url = `${context.host}/${context.owner}/${context.repository}/commit/${commit.hash}`;
+                commit.commitUrl = url;
+              }
+            }
+
+            return commit;
+          },
+
+          // Main template with conditional for first release
+          mainTemplate: `{{> header}}
 
 {{#if isFirstRelease}}
-* Initial release of profile-weather-view
+## Feat
+
+- Initial release of Profile Weather View - v{{version}}
+
+## ✨ Key Features
+
+- 🌐 **Real-time Data**: OpenWeather API 3.0 integration with global coverage
+- 🔄 **Auto-Updates**: Updates every 8 hours via GitHub Actions
+- 🛠️ **Type Safety**: 100% TypeScript + Zod schema validation
+- ⚡ **High Performance**: Powered by Bun for ultra-fast execution
+- 🎨 **Customizable**: Multiple display formats and themes
+- 🧪 **Reliability**: 100% test coverage with comprehensive testing
 {{else}}
 {{#each commitGroups}}
 {{#if title}}
 ### {{title}}
 
-{{/if}}
 {{#each commits}}
 {{> commit root=@root}}
 {{/each}}
 
 {{/if}}
 {{/each}}
-{{#if noteGroups}}
+{{/if}}
+
+{{> footer}}`,
+
+          // Clean commit format template for subsequent releases
+          commitPartial: `{{#if @root.isFirstRelease}}
+{{else}}
+* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
+{{/if}}`,
+
+          // Custom footer
+          footerPartial: `{{#if noteGroups}}
 {{#each noteGroups}}
 
 ### {{title}}
@@ -110,32 +160,8 @@ export default {
 * {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{text}}
 {{/each}}
 {{/each}}
-{{/if}}
-`,
-          },
-          transform: (commit, context) => {
-            // Check if this is the first release
-            const isFirstRelease = !context.lastRelease.gitTag;
-
-            // For future reference in the template
-            context.isFirstRelease = isFirstRelease;
-
-            // If first release, only keep one commit representative of the whole release
-            if (isFirstRelease) {
-              const mainCommit = commit.type === 'feat' && commit.scope === 'weather' &&
-                commit.subject.includes('initial release');
-
-              // Skip all other commits for first release
-              if (!mainCommit) {
-                return null;
-              }
-            }
-
-            // Use default transformation for subsequent releases
-            const defaultTransform = context.writer.transform;
-            return defaultTransform(commit, context);
-          }
-        },
+{{/if}}`
+        }
       },
     ],
 
@@ -168,7 +194,7 @@ export default {
     /**
      * Step 5: Create GitHub release
      * Creates a tagged release on GitHub with generated notes
-     *
+     * Use PAT environment variable and allow dry-run mode
      */
     [
       '@semantic-release/github',
@@ -183,6 +209,12 @@ export default {
         // Custom release name format
         releaseNameTemplate: 'v${nextRelease.version}',
         // Use standard generated notes for the release body
+
+        // Skip GitHub token verification in dry-run mode
+        verifyConditions: process.env.DRY_RUN === 'true' ? false : undefined,
+
+        // Use GH_TOKEN for GitHub authentication
+        githubToken: process.env.GH_TOKEN,
       },
     ],
 

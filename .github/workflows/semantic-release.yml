@@ -47,7 +47,7 @@ permissions:
 # 🌍 Environment Variables
 # ============================================================
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.PAT }}
   NODE_ENV: "production"
   BUN_RUNTIME_SAFETY: "true"
   DEBUG: ${{ github.event.inputs.debug == 'true' && 'semantic-release:*' || '' }}
@@ -75,7 +75,7 @@ jobs:
         with:
           fetch-depth: 0  # Full history for correct versioning
           persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: "🔍 Initialize Workflow"
         id: init
@@ -170,6 +170,8 @@ jobs:
       # -------------------------------------------------------
       - name: "🚀 Run Semantic Release"
         id: semantic-release
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           echo "::group::Semantic Release Process"
 
