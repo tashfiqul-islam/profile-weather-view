@@ -1,33 +1,8 @@
 {
-  "schemaVersion": "1.1.0",
-  "docsVersion": "1.0.0",
-  "channels": {
-    "docs": {
-      "latest": "1.0.0",
-      "stable": "1.0.0",
-      "previous": []
-    }
-  },
-  "releases": [
-    {
-      "type": "docs",
-      "version": "1.0.0",
-      "date": "April 16, 2025",
-      "timestamp": "2025-04-16T00:00:00Z",
-      "formattedDate": "April 16, 2025",
-      "major": "1",
-      "minor": "0",
-      "patch": "0",
-      "channel": "stable",
-      "path": "/v1.0/",
-      "isLatest": true,
-      "isStable": true,
-      "displayOrder": 0
-    }
-  ],
+  "schemaVersion": "2.0.0",
   "metadata": {
     "lastUpdatedTimestamp": "2025-04-16T00:00:00Z",
-    "generatedBy": "release-management-workflow",
+    "generatedBy": "release-please",
     "versionRetention": {
       "limit": 3,
       "strategy": "keep-latest-and-previous-two",

@@ -53,7 +53,7 @@ concurrency:
 permissions:
   contents: write       # For creating releases and pushing tags
   pull-requests: write  # For creating release PRs
-  issues: read          # For referencing issues in release notes
+  issues: write         # For creating labels and referencing issues
   id-token: write       # For OIDC-based signing
 
 # ============================================================
@@ -157,6 +157,8 @@ jobs:
           manifest-file: .release-please-manifest.json
           # Handle release type options via release-type parameter
           release-type: ${{ github.event.inputs.release-type }}
+          # Skip label creation to avoid permission issues
+          skip-labeling: true
 
       - name: "🔄 Apply Manual Version Override"
         if: github.event.inputs.force-version != ''
