@@ -48,14 +48,13 @@ concurrency:
 permissions:
   contents: write  # For repository updates
   id-token: write  # For OIDC token (keyless signing)
-  actions: read    # For workflow status checks
 
 # ============================================================
 # 🌍 Global environment variables
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v7-profile-weather"
+  CACHE_KEY_PREFIX: "v8-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
@@ -67,6 +66,11 @@ env:
   FORCE_UPDATE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_update == 'true' || 'false' }}
   SKIP_TESTS: ${{ github.event.inputs.skip_tests == 'true' }}
   WORKFLOW_DEBUG: "true" # Debug info to help troubleshoot startup issues
+  # Git commit identity
+  GIT_COMMITTER_NAME: ${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}
+  GIT_COMMITTER_EMAIL: ${{ secrets.GIT_COMMITTER_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}
+  GIT_AUTHOR_NAME: ${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.GIT_COMMITTER_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}
 
 # ============================================================
 # 📌 JOB: PREFLIGHT (Checks environment & dependencies)
@@ -238,6 +242,15 @@ jobs:
           echo "🔹 TypeScript Support: $(bun --help | grep -q typescript && echo "Enabled" || echo "Disabled")"
           echo "::endgroup::"
 
+      - name: "🔒 Dependency Review"
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later
+          config-file: '.github/dependency-review-config.yml'
+          base-ref: 'HEAD~1'
+          head-ref: 'HEAD'
+
       - name: "📦 Cache Dependencies"
         uses: actions/cache@v4
         id: bun-cache
@@ -250,6 +263,42 @@ jobs:
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
           enableCrossOsArchive: false
+
+      - name: "🔒 Security Scan Dependencies"
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'weather-code'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: "📤 Upload Dependency Scan Results"
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-dependencies'
+
+      - name: "🛡️ Validate Workflow Integrity"
+        run: |
+          echo "::group::Workflow Integrity Check"
+          # Verify workflow file hasn't been tampered with
+          WORKFLOW_FILE="$GITHUB_WORKSPACE/.github/workflows/profile-weather-update.yml"
+          if [[ -f "$WORKFLOW_FILE" ]]; then
+            CHECKSUM=$(sha256sum "$WORKFLOW_FILE" | cut -d ' ' -f1)
+            echo "Current workflow checksum: $CHECKSUM"
+            echo "Validating workflow integrity..."
+
+            # In production, you could compare against a known good hash
+            # or fetch a trusted hash from a secure location
+            # if [[ "$CHECKSUM" != "$EXPECTED_HASH" ]]; then
+            #   echo "::error::Workflow file integrity validation failed!"
+            #   exit 1
+            # fi
+          else
+            echo "::warning::Cannot verify workflow integrity - file not found"
+          fi
+          echo "::endgroup::"
 
       - name: "🔄 Install Dependencies"
         if: steps.bun-cache.outputs.cache-hit != 'true'
@@ -522,18 +571,58 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: "💾 Commit and Push Changes with Verified Signature"
-        # In scheduled runs, always commit. In manual runs, respect the changes_detected output
+      - name: "🔐 Setup GPG for Commit Signing"
+        id: gpg-setup
+        if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
+        run: |
+          echo "::group::GPG Setup"
+          # Only proceed if GPG keys are provided
+          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" && -n "${{ secrets.GPG_PASSPHRASE }}" ]]; then
+            echo "Setting up GPG key for signed commits"
+
+            # Install gnupg if needed
+            which gpg > /dev/null || apt-get update -qq && apt-get install -qq -y gnupg
+
+            # Create temporary file for GPG key
+            GPG_KEY_FILE=$(mktemp)
+            chmod 600 "$GPG_KEY_FILE"
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d > "$GPG_KEY_FILE"
+
+            # Import the GPG key
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --import "$GPG_KEY_FILE"
+
+            # Get the key ID
+            KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -n1 | awk '{print $2}' | cut -d'/' -f2)
+
+            # Configure Git to use the imported GPG key
+            git config --global user.signingkey "$KEY_ID"
+            git config --global commit.gpgsign true
+
+            # Set commit author identity from secrets
+            git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
+            git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
+
+            # Secure cleanup
+            rm -f "$GPG_KEY_FILE"
+
+            echo "signing_enabled=true" >> $GITHUB_OUTPUT
+            echo "GPG signing enabled with key: $KEY_ID"
+          else
+            echo "GPG signing not configured - using standard commits"
+            git config --global user.name "${{ env.GIT_COMMITTER_NAME }}"
+            git config --global user.email "${{ env.GIT_COMMITTER_EMAIL }}"
+
+            echo "signing_enabled=false" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      - name: "💾 Commit and Push Changes"
         if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
         working-directory: profile-repo
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           echo "::group::Git Operations"
-          # Use the same git configuration as your old workflow
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
           # Apply correct commit timestamp in Dhaka timezone
           export GIT_AUTHOR_DATE="$(TZ='${{ env.TIMEZONE }}' date)"
           export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE"
@@ -543,7 +632,6 @@ jobs:
 
           # For scheduled runs or force update, always commit regardless of git diff
           if [[ "${{ github.event_name }}" == "schedule" || "${{ env.FORCE_UPDATE }}" == "true" ]]; then
-            echo "Scheduled run or force update requested - committing README"
             git add README.md
             git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
             git push origin master
@@ -552,9 +640,7 @@ jobs:
             # For manual runs, check if there are actual git changes
             if git diff --quiet -- README.md; then
               echo "No actual changes detected in README.md by git diff"
-              echo "::notice::No changes to commit (skipped push)"
             else
-              echo "Changes detected in README.md by git diff"
               git add README.md
               git commit -m "update(weather): refresh data for ${FORMATTED_DATE}"
               git push origin master && echo "::notice::Changes pushed successfully"

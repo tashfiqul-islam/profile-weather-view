@@ -133,7 +133,6 @@ export default tseslint.config(
       '*.lock',
       '*.log',
       'src/config/*.config.mjs',
-      'src/docs/',
       'package.json',
       'tsconfig.json',
       'tsconfig.test.json',

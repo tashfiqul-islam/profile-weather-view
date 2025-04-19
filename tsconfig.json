@@ -14,7 +14,6 @@
     "outDir": "dist",
     "paths": {
       "@/*": ["src/*"],
-      "@/docs/*": ["src/docs/*"],
       "@/tests/*": ["src/tests/*"],
       "@/weather-update/*": ["src/weather-update/*"]
     },
@@ -72,7 +71,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.mts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "scripts/**/*.mjs"
   ],
 
   "exclude": [

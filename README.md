@@ -91,8 +91,6 @@ Profile Weather View automatically updates your GitHub profile README with real-
   - [Project Structure](#project-structure)
 - [🔄 CI/CD Pipeline](#-cicd-pipeline)
 - [🧪 Testing](#-testing)
-  - [Testing Strategy](#testing-strategy)
-- [📚 Documentation](#-documentation)
 - [🤝 Contributing](#-contributing)
 - [📜 License](#-license)
 - [🙏 Acknowledgements](#-acknowledgements)
@@ -222,8 +220,6 @@ const weatherTemplate = `
 </div>
 `;
 ```
-
-> **Note**: See our [Theme Integration Guide](src/docs/guide/theme-integration.md) for more display options including cards, badges, SVGs and more.
 
 ## 🧩 Architecture
 
@@ -363,7 +359,6 @@ profile-weather-view/
 ├── .github/workflows/           # GitHub Actions workflows
 ├── src/
 │   ├── __tests__/               # Unit and integration tests
-│   ├── docs/                    # Documentation files
 │   └── weather-update/
 │       ├── services/
 │       │   ├── fetchWeather.ts  # Weather API service
@@ -437,27 +432,6 @@ All files         |     100 |      100 |     100 |     100 |
 - **Integration Tests**: Verify component interactions
 - **Mocks**: Simulation of external dependencies
 - **Performance Benchmarks**: Measure execution speed
-
-## 📚 Documentation
-
-Comprehensive documentation is available in the [`src/docs/`](./src/docs/) directory, including:
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><a href="src/docs/guide/introduction.md">🚀 Getting Started</a></td>
-      <td align="center"><a href="src/docs/guide/architecture.md">🏗️ Architecture</a></td>
-      <td align="center"><a href="src/docs/reference/api-reference.md">📋 API Reference</a></td>
-      <td align="center"><a href="src/docs/reference/configuration.md">⚙️ Configuration</a></td>
-    </tr>
-    <tr>
-      <td align="center"><a href="src/docs/guide/deployment.md">🚢 Deployment</a></td>
-      <td align="center"><a href="src/docs/guide/testing.md">🧪 Testing</a></td>
-      <td align="center"><a href="src/docs/guide/theme-integration.md">🎨 Theme Integration</a></td>
-      <td align="center"><a href="src/docs/guide/troubleshooting.md">🔧 Troubleshooting</a></td>
-    </tr>
-  </table>
-</div>
 
 ## 🤝 Contributing
 

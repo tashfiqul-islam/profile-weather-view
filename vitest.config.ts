@@ -54,7 +54,6 @@ const PATH_ALIASES = {
   '@': resolve(process.cwd(), 'src'),
   '@/tests': resolve(process.cwd(), 'src/__tests__'),
   '@/weather-update': resolve(process.cwd(), 'src/weather-update'),
-  '@/docs': resolve(process.cwd(), 'src/docs'),
 };
 
 export default defineConfig({

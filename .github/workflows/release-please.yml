@@ -427,7 +427,7 @@ jobs:
 
           # Update or create major and minor version tags
           git tag -d "v${MAJOR}" 2>/dev/null || true
-          git tag -d "v${MAJOR}.${MINOR}" 2>/dev/null || true
+          git tag -d "v${MAJOR}.${MINOR}" 2>/devnull || true
           git push origin ":v${MAJOR}" 2>/dev/null || true
           git push origin ":v${MAJOR}.${MINOR}" 2>/dev/null || true
 
@@ -464,7 +464,9 @@ jobs:
             echo "- Build & Test: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
             echo "- Release Publication: ${{ needs.publish-release.result }}" >> $GITHUB_STEP_SUMMARY
           elif [[ -n "${{ needs.release-please.outputs.pr }}" ]]; then
-            echo "- Release PR Updated: ✅ #${{ needs.release-please.outputs.pr }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Release PR Created/Updated: ✅ PR #${{ needs.release-please.outputs.pr }}" >> $GITHUB_STEP_SUMMARY
+            echo "- PR URL: ${{ needs.release-please.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Version: ${{ needs.release-please.outputs.version || 'Unknown' }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "- No Release or PR Created: Nothing to release" >> $GITHUB_STEP_SUMMARY
           fi

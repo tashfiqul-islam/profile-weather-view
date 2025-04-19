@@ -278,10 +278,9 @@ src/
 │   │   └── updateReadme.ts    # README update logic
 │   └── utils/                 # Shared utilities
 │       └── preload.ts         # Environment validation
-├── __tests__/                 # Test suite
-│   ├── unit/                  # Unit tests
-│   └── integration/           # Integration tests
-└── docs/                      # Documentation
+└── __tests__/                 # Test suite
+    ├── unit/                  # Unit tests
+    └── integration/           # Integration tests
 ```
 
 ### Type System
@@ -613,7 +612,6 @@ Documentation is a critical component of our project:
 - **README.md**: Project overview and quick start
 - **CONTRIBUTING.md**: Contribution guidelines (this document)
 - **PULL_REQUEST_TEMPLATE.md**: PR template for contributors
-- **User Guides**: In `src/docs/`
 - **Architecture Docs**: System design documents
 - **API References**: Function and service documentation
 
