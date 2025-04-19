@@ -54,7 +54,7 @@ permissions:
 # ============================================================
 env:
   BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
-  CACHE_KEY_PREFIX: "v8-profile-weather"
+  CACHE_KEY_PREFIX: "v9-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
   RETRY_STRATEGY: ${{ github.event.inputs.retry_strategy || 'exponential' }}
@@ -336,87 +336,6 @@ jobs:
           key: ${{ env.CACHE_KEY_PREFIX }}-test-${{ hashFiles('weather-code/src/**/*.ts') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-test-
-
-      - name: "📊 Generate Code Coverage Report"
-        if: env.SKIP_TESTS != 'true'
-        working-directory: weather-code
-        run: |
-          if [[ -d "coverage" ]]; then
-            echo "::group::Code Coverage Summary"
-            # Check if the coverage-summary.json file exists
-            if [[ -f "coverage/coverage-summary.json" ]]; then
-              # Output the raw JSON for debugging
-              echo "Raw coverage data:"
-              cat coverage/coverage-summary.json
-
-              # Make sure jq is installed
-              if ! command -v jq &> /dev/null; then
-                echo "Installing jq..."
-                sudo apt-get update && sudo apt-get install -y jq
-              fi
-
-              # Extract coverage metrics with fallbacks to 0 if they don't exist
-              STATEMENTS=$(jq -r '.total.statements.pct // 0' coverage/coverage-summary.json)
-              BRANCHES=$(jq -r '.total.branches.pct // 0' coverage/coverage-summary.json)
-              FUNCTIONS=$(jq -r '.total.functions.pct // 0' coverage/coverage-summary.json)
-              LINES=$(jq -r '.total.lines.pct // 0' coverage/coverage-summary.json)
-
-              echo "Coverage metrics extracted:"
-              echo "Statements: $STATEMENTS%"
-              echo "Branches: $BRANCHES%"
-              echo "Functions: $FUNCTIONS%"
-              echo "Lines: $LINES%"
-            else
-              echo "coverage-summary.json not found. Checking for lcov.info..."
-              if [[ -f "coverage/lcov.info" ]]; then
-                echo "Found lcov.info, converting to JSON summary..."
-                # Install lcov if needed and generate summary
-                sudo apt-get update && sudo apt-get install -y lcov
-                genhtml coverage/lcov.info --output-directory coverage/html
-                echo "Generated coverage summary from lcov.info"
-
-                # Use a default placeholder for metrics
-                STATEMENTS="See HTML report"
-                BRANCHES="See HTML report"
-                FUNCTIONS="See HTML report"
-                LINES="See HTML report"
-              else
-                echo "No coverage files found. Setting defaults."
-                STATEMENTS="No data"
-                BRANCHES="No data"
-                FUNCTIONS="No data"
-                LINES="No data"
-              fi
-            fi
-            echo "::endgroup::"
-
-            # Generate GitHub Step Summary with the extracted metrics
-            echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
-            echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
-            echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-            echo "| Statements | $STATEMENTS |" >> $GITHUB_STEP_SUMMARY
-            echo "| Branches | $BRANCHES |" >> $GITHUB_STEP_SUMMARY
-            echo "| Functions | $FUNCTIONS |" >> $GITHUB_STEP_SUMMARY
-            echo "| Lines | $LINES |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "::notice::No coverage directory found"
-            echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
-            echo "| Category | Percentage |" >> $GITHUB_STEP_SUMMARY
-            echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-            echo "| Statements | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
-            echo "| Branches | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
-            echo "| Functions | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
-            echo "| Lines | No data (coverage not generated) |" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: "📤 Upload Coverage Report"
-        if: env.SKIP_TESTS != 'true' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-${{ github.run_id }}
-          path: weather-code/coverage
-          retention-days: 3
-          if-no-files-found: ignore
 
       - name: "📝 Verify Profile README"
         id: readme-check
