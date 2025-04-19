@@ -80,9 +80,61 @@ export default {
         writerOpts: {
           // Organize commits for readability
           commitsSort: ['scope', 'subject'],
-          groupBy: 'scope',
-          commitGroupsSort: 'title',
-          // Removed custom mainTemplate and transform to use standard generation
+
+          // For first release only, we want to generate a single entry
+          // and ignore all the individual commits
+          generateOpts: {
+            // Add custom first release handling
+            mainTemplate: `{{> header}}
+
+{{#if isFirstRelease}}
+* Initial release of profile-weather-view
+{{else}}
+{{#each commitGroups}}
+{{#if title}}
+### {{title}}
+
+{{/if}}
+{{#each commits}}
+{{> commit root=@root}}
+{{/each}}
+
+{{/if}}
+{{/each}}
+{{#if noteGroups}}
+{{#each noteGroups}}
+
+### {{title}}
+
+{{#each notes}}
+* {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{text}}
+{{/each}}
+{{/each}}
+{{/if}}
+`,
+          },
+          transform: (commit, context) => {
+            // Check if this is the first release
+            const isFirstRelease = !context.lastRelease.gitTag;
+
+            // For future reference in the template
+            context.isFirstRelease = isFirstRelease;
+
+            // If first release, only keep one commit representative of the whole release
+            if (isFirstRelease) {
+              const mainCommit = commit.type === 'feat' && commit.scope === 'weather' &&
+                commit.subject.includes('initial release');
+
+              // Skip all other commits for first release
+              if (!mainCommit) {
+                return null;
+              }
+            }
+
+            // Use default transformation for subsequent releases
+            const defaultTransform = context.writer.transform;
+            return defaultTransform(commit, context);
+          }
         },
       },
     ],
@@ -129,7 +181,7 @@ export default {
         failComment: '❌ Release automation failed',
 
         // Custom release name format
-        releaseNameTemplate: 'v${version}',
+        releaseNameTemplate: 'v${nextRelease.version}',
         // Use standard generated notes for the release body
       },
     ],
