@@ -99,8 +99,8 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "include-v-in-tag": true,
-      "pull-request-title-pattern": "chore: release ${version}",
-      "pull-request-header": "${version} (${date})\n\n",
+      "pull-request-title-pattern": "chore: release v${version}",
+      "pull-request-header": "# Release v${version} (${date})\n\n",
       "extra-files": [
         {
           "type": "json",
@@ -122,5 +122,6 @@
   "commit-search-depth": 1,
   "separate-pull-requests": false,
   "changelog-host": "github.com",
-  "include-component-in-tag": false
+  "include-component-in-tag": false,
+  "release-type": "node"
 }
