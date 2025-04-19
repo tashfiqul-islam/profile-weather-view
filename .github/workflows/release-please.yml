@@ -155,8 +155,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          # Handle release type options via release-type parameter
-          release-type: ${{ github.event.inputs.release-type }}
+          release-as: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release-as != '' && github.event.inputs.release-as || '' }}
           # Skip label creation to avoid permission issues
           skip-labeling: true
 
