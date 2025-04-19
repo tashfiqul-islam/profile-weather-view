@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "profile-weather-view",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "description": "TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically",
   "main": "src/weather-update/index.ts",
@@ -18,18 +18,15 @@
     "// Development": "",
     "dev": "bun run src/weather-update/index.ts",
     "start": "bun run build && bun run src/weather-update/index.ts",
-
     "// Build": "",
     "build": "bun build src/weather-update/index.ts --outdir ./dist",
     "build:prod": "bun build src/weather-update/index.ts --outdir ./dist --minify",
-
     "// Testing": "",
     "test": "bunx vitest",
     "test:ci": "bunx vitest --run",
     "test:watch": "bunx vitest --watch",
     "test:coverage": "bunx vitest --coverage",
     "test:staged": "bunx vitest --run $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.test\\.(ts|js)$' || echo 'src')",
-
     "// Quality": "",
     "lint": "bunx eslint . --fix",
     "lint:check": "bunx eslint . --max-warnings=0",
@@ -39,18 +36,15 @@
     "check": "bun run lint && bun run format",
     "check-all": "bun run type-check && bun run test:ci && bun run lint:check && bun run format:check",
     "format-all": "bun run type-check && bun run test:ci && bun run format && bun run lint",
-
     "// Security": "",
     "security": "bunx biome check --apply",
     "audit": "bun audit",
-
     "// Documentation": "",
     "docs:dev": "vitepress dev src/docs",
     "docs:build": "vitepress build src/docs",
     "docs:preview": "vitepress preview src/docs",
     "docs:deploy": "bun run docs:build && bun scripts/deploy-docs.ts",
     "docs:serve": "bun run docs:build && bun serve src/docs/.vitepress/dist",
-
     "// Version Control & CI": "",
     "changelog": "bun run src/docs/changelog/changelog-generator.ts",
     "prepare": "husky",
