@@ -1,12 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # ==============================================================================
 # 🚀 Advanced Pre-commit Validation Hook
 # ==============================================================================
 # Performs state-of-the-art code quality checks on staged files with advanced
 # caching, parallel execution, and intelligent dependency management.
 
-# Fail fast but controlled: stop on error with proper cleanup
-set -eo pipefail
+# Fail-safe option that works across all shells
+set -e
 
 # ==============================================================================
 # 📋 Configuration
@@ -14,7 +14,7 @@ set -eo pipefail
 readonly CACHE_DIR=".git/hooks/cache"
 readonly SKIP_PATTERN="EMERGENCY"
 readonly VERSION="2.0.0"
-readonly MAX_PARALLELISM=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+readonly MAX_PARALLELISM=2
 readonly MIN_FREE_MEMORY_MB=512
 readonly TIMEOUT_SECONDS=300
 readonly CACHE_TTL_DAYS=7
