@@ -48,6 +48,7 @@ concurrency:
 permissions:
   contents: write  # For repository updates
   id-token: write  # For OIDC token (keyless signing)
+  actions: read  # For action execution
 
 # ============================================================
 # 🌍 Global environment variables
@@ -265,7 +266,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: "📤 Upload Dependency Scan Results"
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-dependencies'
