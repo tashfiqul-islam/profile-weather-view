@@ -150,12 +150,14 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-          # Create the initial release commit
-          echo "feat(profile-weather-view): initial release v1.0.0" > /tmp/commit_message
+          # Create the initial release commit with a valid scope
+          echo "feat(weather): initial release v1.0.0" > /tmp/commit_message
           echo "" >> /tmp/commit_message
           echo "The first official release of Profile Weather View." >> /tmp/commit_message
           echo "" >> /tmp/commit_message
           echo "This combines all previous development work into one release." >> /tmp/commit_message
+          echo "" >> /tmp/commit_message
+          echo "Closes #1" >> /tmp/commit_message
 
           git commit --allow-empty -F /tmp/commit_message
           git push origin HEAD:master

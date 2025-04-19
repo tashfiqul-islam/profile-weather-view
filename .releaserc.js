@@ -22,6 +22,7 @@ export default {
   /**
    * Release branches configuration
    * Only commits to these branches will trigger a release
+   *
    */
   branches: ['master'],
 
@@ -34,6 +35,7 @@ export default {
     /**
      * Step 1: Analyze commits to determine release type
      * Uses conventional commits to determine version bump (major/minor/patch)
+     *
      */
     [
       '@semantic-release/commit-analyzer',
@@ -65,6 +67,7 @@ export default {
     /**
      * Step 2: Generate release notes from commits
      * Creates structured, readable release notes from commit messages
+     *
      */
     [
       '@semantic-release/release-notes-generator',
@@ -132,21 +135,41 @@ export default {
            * Special handling for initial release to consolidate previous work
            */
           transform: (commit, context) => {
+            // Create a mutable copy of the commit object to avoid immutability errors
+            const mutableCommit = { ...commit };
+
             // Check if this is the first release (no previous tag)
             const isFirstRelease =
               !context.previousTag || context.previousTag === '';
 
             // Special handling for initial release
             if (isFirstRelease) {
-              commit.firstRelease = true;
+              mutableCommit.firstRelease = true;
+
+              // Ensure valid scope for warnings
+              if (mutableCommit.scope === 'profile-weather-view') {
+                mutableCommit.scope = 'weather';
+              }
+
+              // Add reference to initial commit to fix references-empty warning
+              if (!mutableCommit.references || mutableCommit.references.length === 0) {
+                mutableCommit.references = [{
+                  action: null,
+                  issue: '1',
+                  owner: null,
+                  repository: null,
+                  prefix: '#',
+                  raw: '#1',
+                }];
+              }
 
               // Only apply custom notes to feat commits with "initial release" text
               if (
-                commit.type === 'feat' &&
-                commit.subject.includes('initial release')
+                mutableCommit.type === 'feat' &&
+                mutableCommit.subject.includes('initial release')
               ) {
                 // Override notes with custom content for initial release
-                commit.notes = [
+                mutableCommit.notes = [
                   {
                     title: 'Initial Release',
                     text: 'Profile Weather View v1.0.0 - A TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically.',
@@ -154,7 +177,7 @@ export default {
                 ];
 
                 // Add custom feature sections for the initial release
-                commit.initialReleaseNotes = [
+                mutableCommit.initialReleaseNotes = [
                   {
                     title: '✨ Key Features',
                     items: [
@@ -171,13 +194,13 @@ export default {
             }
 
             // Apply conventional commit parsing
-            const conventionalCommitResult = context.writer.parseCommit(commit);
+            const conventionalCommitResult = context.writer.parseCommit(mutableCommit);
 
             if (conventionalCommitResult) {
-              Object.assign(commit, conventionalCommitResult);
+              Object.assign(mutableCommit, conventionalCommitResult);
             }
 
-            return commit;
+            return mutableCommit;
           },
 
           // Partial template for consistent commit formatting
@@ -189,6 +212,7 @@ export default {
     /**
      * Step 3: Create/update CHANGELOG.md file
      * Maintains a comprehensive history of changes in the project
+     *
      */
     [
       '@semantic-release/changelog',
@@ -202,6 +226,7 @@ export default {
     /**
      * Step 4: Update version in package.json
      * Updates version field without publishing to npm
+     *
      */
     [
       '@semantic-release/npm',
@@ -213,6 +238,7 @@ export default {
     /**
      * Step 5: Create GitHub release
      * Creates a tagged release on GitHub with generated notes
+     *
      */
     [
       '@semantic-release/github',
@@ -232,6 +258,7 @@ export default {
     /**
      * Step 6: Commit updated files back to repository
      * Ensures version changes in files are committed to the repo
+     *
      */
     [
       '@semantic-release/git',
