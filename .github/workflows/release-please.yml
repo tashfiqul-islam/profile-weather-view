@@ -180,27 +180,31 @@ jobs:
           # Install jq to handle JSON parsing properly
           sudo apt-get update -qq && sudo apt-get install -qq -y jq
 
-          # Extract specific output fields safely using json
-          PR_NUMBER="${{ steps.release.outputs.pr }}"
-          VERSION="${{ steps.release.outputs.version || 'Unknown' }}"
-          PR_URL="${{ steps.release.outputs.pr_url || '' }}"
+          # Extract specific output fields safely
+          # Use variables without direct assignment to avoid shell expansion issues
+          PR_JSON='${{ steps.release.outputs.pr }}'
+          VERSION='${{ steps.release.outputs.version || 'Unknown' }}'
+          PR_URL='${{ steps.release.outputs.pr_url || '' }}'
 
-          # Format PR number by extracting just the number if it's JSON
-          if [[ "$PR_NUMBER" == *"{"* ]]; then
-            # It's likely JSON, try to extract just the number with jq if possible
-            echo "Processing JSON PR data..."
-            echo "$PR_NUMBER" > pr_data.json
-            if jq -e '.number' pr_data.json > /dev/null 2>&1; then
-              PR_NUMBER=$(jq -r '.number' pr_data.json)
+          # Extract the PR number using a heredoc to avoid shell parsing issues
+          PR_NUMBER=""
+          if [[ "$PR_JSON" == *"{"* ]]; then
+            # It's JSON, extract with jq
+            PR_NUMBER=$(cat <<EOF | jq -r '.number'
+          $PR_JSON
+          EOF
+          )
+            else
+              # It's already a simple value
+              PR_NUMBER="$PR_JSON"
             fi
-          fi
 
-          echo "## Release PR Created/Updated" >> $GITHUB_STEP_SUMMARY
-          echo "- **PR Number:** #${PR_NUMBER}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL:** ${PR_URL}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Review and merge this PR to publish the release." >> $GITHUB_STEP_SUMMARY
+            echo "## Release PR Created/Updated" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR Number:** #${PR_NUMBER}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** ${VERSION}" >> $GITHUB_STEP_SUMMARY
+            echo "- **URL:** ${PR_URL}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Review and merge this PR to publish the release." >> $GITHUB_STEP_SUMMARY
 
   # ============================================================
   # 📌 JOB: ENHANCE-CHANGELOG (Custom changelog formatting)
