@@ -1,0 +1,478 @@
+name: "🚀 Release Automation"
+
+# ============================================================
+# 🚀 Optimized triggers for release workflows
+# ============================================================
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+      - '.vscode/**'
+      - 'image/**'
+
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: 'Release type (major, minor, patch)'
+        required: true
+        default: 'minor'
+        type: choice
+        options: [major, minor, patch]
+      release-as:
+        description: 'Specific version to release as (e.g., 1.2.3)'
+        required: false
+        type: string
+      force-version:
+        description: 'Force specific version (optional)'
+        required: false
+        type: string
+      custom-notes:
+        description: 'Custom release notes (optional)'
+        required: false
+        type: string
+      debug:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+        type: choice
+        options: [true, false]
+
+# ============================================================
+# 🔒 Prevent redundant executions (Ensures single execution)
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# ============================================================
+# 🔒 Explicit permissions (Principle of least privilege)
+# ============================================================
+permissions:
+  contents: write       # For creating releases and pushing tags
+  pull-requests: write  # For creating release PRs
+  issues: read          # For referencing issues in release notes
+  id-token: write       # For OIDC-based signing
+
+# ============================================================
+# 🌍 Global environment variables
+# ============================================================
+env:
+  BUN_VERSION: "package.json"  # Will be extracted from package.json
+  CACHE_KEY_PREFIX: "v1-release-please"
+  EXECUTION_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+  DEBUG_MODE: ${{ github.event.inputs.debug == 'true' }}
+  NODE_OPTIONS: "--max-old-space-size=4096"  # Prevents memory issues with large repositories
+
+# ============================================================
+# 📌 JOB: PREFLIGHT (Validate prerequisites)
+# ============================================================
+jobs:
+  preflight:
+    name: "🔍 Preflight Checks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      should_proceed: ${{ steps.check-requirements.outputs.should_proceed }}
+      node_modules_hash: ${{ steps.hash-check.outputs.node_modules_hash }}
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch complete history for accurate analysis
+
+      - name: "🔍 Log Execution Context"
+        run: |
+          echo "::group::Execution Context"
+          echo "🔹 Run ID: ${{ env.EXECUTION_ID }}"
+          echo "🔹 Workflow: ${{ github.workflow }}"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 Trigger: ${{ github.event_name }}"
+          echo "🔹 Debug Mode: ${{ env.DEBUG_MODE && 'Enabled' || 'Disabled' }}"
+          echo "🔹 Started At: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "::endgroup::"
+
+      - name: "📑 Check Required Files"
+        id: check-requirements
+        run: |
+          REQUIRED_FILES=( ".release-please-manifest.json" "release-please-config.json" "package.json" )
+          MISSING_FILES=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+
+          if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
+            echo "::error::Missing critical files: ${MISSING_FILES[*]}"
+            echo "should_proceed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "::notice::All prerequisite files are present"
+          echo "should_proceed=true" >> $GITHUB_OUTPUT
+
+      - name: "📦 Calculate Dependency Hashes"
+        id: hash-check
+        run: |
+          # Generate deterministic hash of package.json for cache key
+          PACKAGE_HASH=$(sha256sum package.json | cut -d ' ' -f1)
+          echo "node_modules_hash=$PACKAGE_HASH" >> $GITHUB_OUTPUT
+          echo "::notice::Dependency hash: $PACKAGE_HASH"
+
+  # ============================================================
+  # 📌 JOB: RELEASE-PLEASE (Release automation)
+  # ============================================================
+  release-please:
+    name: "🏷️ Process Release"
+    needs: preflight
+    if: needs.preflight.outputs.should_proceed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+      major: ${{ steps.release.outputs.major }}
+      minor: ${{ steps.release.outputs.minor }}
+      patch: ${{ steps.release.outputs.patch }}
+      pr: ${{ steps.release.outputs.pr }}
+      pr_url: ${{ steps.release.outputs.pr_url }}
+      upload_url: ${{ steps.release.outputs.upload_url }}
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Important for release-please to analyze commit history
+
+      - name: "🔄 Run Release Please"
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # Handle release type options via release-type parameter
+          release-type: ${{ github.event.inputs.release-type }}
+
+      - name: "🔄 Apply Manual Version Override"
+        if: github.event.inputs.force-version != ''
+        run: |
+          echo "::notice::Manual version override requested: ${{ github.event.inputs.force-version }}"
+          # Additional manual override logic would go here if needed
+
+      - name: "📝 Display Release Information"
+        if: steps.release.outputs.release_created
+        run: |
+          echo "::group::Release Information"
+          echo "🔖 Release tag: ${{ steps.release.outputs.tag_name }}"
+          echo "📝 Version: ${{ steps.release.outputs.version }}"
+          echo "🔗 URL: ${{ steps.release.outputs.html_url }}"
+          echo "::endgroup::"
+
+      - name: "📝 Generate PR Summary"
+        if: steps.release.outputs.pr
+        run: |
+          echo "## Release PR Created/Updated" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR Number:** #${{ steps.release.outputs.pr }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.release.outputs.version || 'Unknown' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** ${{ steps.release.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Review and merge this PR to publish the release." >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # 📌 JOB: ENHANCE-CHANGELOG (Custom changelog formatting)
+  # ============================================================
+  enhance-changelog:
+    name: "📝 Enhance Changelog"
+    needs: [preflight, release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          fetch-depth: 0
+
+      # Optional: Add custom formatting to the changelog
+      - name: "✨ Format Changelog"
+        run: |
+          echo "::group::Enhancing Changelog"
+
+          if [[ -f "CHANGELOG.md" ]]; then
+            # Add emojis to section headers if not already present
+            sed -i 's/### Features/### ✨ Features/g' CHANGELOG.md
+            sed -i 's/### Bug Fixes/### 🐛 Bug Fixes/g' CHANGELOG.md
+            sed -i 's/### Performance Improvements/### ⚡ Performance Improvements/g' CHANGELOG.md
+            sed -i 's/### Documentation/### 📚 Documentation/g' CHANGELOG.md
+
+            echo "✅ Changelog enhancement completed"
+          else
+            echo "⚠️ CHANGELOG.md not found"
+          fi
+          echo "::endgroup::"
+
+      - name: "📤 Commit Enhancements"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -n "$(git status --porcelain CHANGELOG.md)" ]]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add CHANGELOG.md
+            git commit -m "docs: enhance changelog formatting for v${{ needs.release-please.outputs.version }}"
+            git push origin HEAD
+            echo "✅ Pushed changelog improvements"
+          else
+            echo "ℹ️ No changes to commit"
+          fi
+
+  # ============================================================
+  # 📌 JOB: BUILD-AND-TEST (For release validation)
+  # ============================================================
+  build-and-test:
+    name: "🔧 Build & Test Release"
+    needs: [preflight, release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: "📋 Extract Bun Version"
+        id: extract-bun-version
+        run: |
+          if [[ -f "package.json" ]]; then
+            BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : 'latest'); } catch (e) { console.log('latest'); }")
+            echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
+            echo "::notice::Using Bun version $BUN_VERSION from package.json"
+          else
+            echo "::warning::package.json not found, using default Bun version: latest"
+            echo "BUN_VERSION=latest" >> $GITHUB_ENV
+          fi
+
+      - name: "🧰 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: "📦 Cache Dependencies"
+        uses: actions/cache@v4
+        id: bun-cache
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+            bun.lockb
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ needs.preflight.outputs.node_modules_hash }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
+          enableCrossOsArchive: false
+
+      - name: "🔄 Install Dependencies"
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::group::Bun Installation"
+          bun install --frozen-lockfile
+          echo "::endgroup::"
+
+      - name: "⚡ Install Dependencies (Fast Path)"
+        if: steps.bun-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "::notice::Using cached dependencies"
+          bun install --frozen-lockfile --no-summary
+
+      - name: "🧪 Run Tests"
+        run: |
+          # Check if test:ci script exists, otherwise run test
+          if grep -q '"test:ci":' package.json; then
+            bun run test:ci
+          else
+            bun run test
+          fi
+
+      - name: "🏗️ Build Project"
+        run: |
+          # Check if build script exists
+          if grep -q '"build":' package.json; then
+            bun run build
+          else
+            echo "No build script found, skipping build step"
+          fi
+
+      - name: "📦 Create Release Artifacts"
+        id: artifacts
+        run: |
+          # Create a directory for artifacts
+          mkdir -p release-artifacts
+
+          # Check if dist directory exists before creating tarball
+          if [[ -d "dist" ]]; then
+            tar -czf release-artifacts/profile-weather-view-v${{ needs.release-please.outputs.version }}.tar.gz dist/
+          else
+            # Create a simple tarball of the source code for projects without a build step
+            tar -czf release-artifacts/profile-weather-view-v${{ needs.release-please.outputs.version }}.tar.gz src/ package.json
+          fi
+
+          # Create a simple release info file
+          cat > release-artifacts/RELEASE.md << EOF
+          # Profile Weather View v${{ needs.release-please.outputs.version }}
+
+          **Released on:** $(date +'%B %d, %Y')
+
+          See the [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
+          EOF
+
+          echo "artifacts_path=release-artifacts" >> $GITHUB_OUTPUT
+
+      - name: "📤 Upload Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.release-please.outputs.version }}
+          path: ${{ steps.artifacts.outputs.artifacts_path }}
+          retention-days: 30
+
+  # ============================================================
+  # 📌 JOB: PUBLISH-RELEASE (Enhance GitHub release)
+  # ============================================================
+  publish-release:
+    name: "🚀 Publish Release"
+    needs: [release-please, build-and-test, enhance-changelog]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: "📥 Download Artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.release-please.outputs.version }}
+          path: ./release-artifacts
+
+      - name: "📝 Prepare Custom Notes"
+        if: github.event.inputs.custom-notes != ''
+        run: |
+          echo "${{ github.event.inputs.custom-notes }}" > custom-notes.md
+
+      - name: "🔖 Enhance Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          name: "v${{ needs.release-please.outputs.version }}"
+          body_path: ${{ github.event.inputs.custom-notes != '' && 'custom-notes.md' || 'release-artifacts/RELEASE.md' }}
+          files: |
+            release-artifacts/profile-weather-view-v${{ needs.release-please.outputs.version }}.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+
+      - name: "🏷️ Create Major/Minor Tags"
+        env:
+          GIT_COMMITTER_NAME: ${{ github.repository_owner }}
+          GIT_COMMITTER_EMAIL: ${{ secrets.GIT_COMMITTER_EMAIL || github.actor }}@users.noreply.github.com
+        run: |
+          git config user.name "$GIT_COMMITTER_NAME"
+          git config user.email "$GIT_COMMITTER_EMAIL"
+
+          # Configure GPG signing if keys are provided
+          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" && -n "${{ secrets.GPG_PASSPHRASE }}" ]]; then
+            echo "Setting up GPG key for signed tags"
+
+            # Install gnupg if needed
+            which gpg > /dev/null || apt-get update -qq && apt-get install -qq -y gnupg
+
+            # Create temporary file for GPG key
+            GPG_KEY_FILE=$(mktemp)
+            chmod 600 "$GPG_KEY_FILE"
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d > "$GPG_KEY_FILE"
+
+            # Import the GPG key
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --import "$GPG_KEY_FILE"
+
+            # Get the key ID
+            KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -n1 | awk '{print $2}' | cut -d'/' -f2)
+
+            # Configure Git to use the imported GPG key
+            git config --global user.signingkey "$KEY_ID"
+            git config --global commit.gpgsign true
+            git config --global tag.gpgsign true
+
+            # Secure cleanup
+            rm -f "$GPG_KEY_FILE"
+
+            echo "GPG signing enabled for tags"
+          else
+            echo "No GPG keys provided - tags will not be signed"
+          fi
+
+          # Extract version components from release-please outputs
+          MAJOR="${{ needs.release-please.outputs.major }}"
+          MINOR="${{ needs.release-please.outputs.minor }}"
+
+          # Update or create major and minor version tags
+          git tag -d "v${MAJOR}" 2>/dev/null || true
+          git tag -d "v${MAJOR}.${MINOR}" 2>/dev/null || true
+          git push origin ":v${MAJOR}" 2>/dev/null || true
+          git push origin ":v${MAJOR}.${MINOR}" 2>/dev/null || true
+
+          # Create new tags
+          git tag -a "v${MAJOR}" -m "Release v${MAJOR}"
+          git tag -a "v${MAJOR}.${MINOR}" -m "Release v${MAJOR}.${MINOR}"
+
+          # Push tags
+          git push origin "v${MAJOR}"
+          git push origin "v${MAJOR}.${MINOR}"
+
+          echo "✅ Created and pushed major tag v${MAJOR} and minor tag v${MAJOR}.${MINOR}"
+
+  # ============================================================
+  # 📌 JOB: WORKFLOW-SUMMARY (For overall workflow status)
+  # ============================================================
+  workflow-summary:
+    name: "📊 Workflow Summary"
+    needs: [preflight, release-please, enhance-changelog, build-and-test, publish-release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📑 Generate Workflow Summary"
+        run: |
+          echo "# Release Automation Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Preflight Checks: ${{ needs.preflight.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Release Please: ${{ needs.release-please.result }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.release-please.outputs.release_created }}" == "true" ]]; then
+            echo "- Release Created: ✅ v${{ needs.release-please.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Changelog Enhancement: ${{ needs.enhance-changelog.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Build & Test: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Release Publication: ${{ needs.publish-release.result }}" >> $GITHUB_STEP_SUMMARY
+          elif [[ -n "${{ needs.release-please.outputs.pr }}" ]]; then
+            echo "- Release PR Updated: ✅ #${{ needs.release-please.outputs.pr }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- No Release or PR Created: Nothing to release" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+
+          if [[ -n "${{ needs.release-please.outputs.pr_url }}" ]]; then
+            echo "- Review and merge the [Release PR](${{ needs.release-please.outputs.pr_url }})" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.release-please.outputs.release_created }}" == "true" ]]; then
+            echo "- Release v${{ needs.release-please.outputs.version }} has been published! 🎉" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Continue development and make conventional commits to trigger a future release" >> $GITHUB_STEP_SUMMARY
