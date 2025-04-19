@@ -193,11 +193,16 @@ export default {
               }
             }
 
-            // Apply conventional commit parsing
-            const conventionalCommitResult = context.writer.parseCommit(mutableCommit);
-
-            if (conventionalCommitResult) {
-              Object.assign(mutableCommit, conventionalCommitResult);
+            // Safely attempt to apply conventional commit parsing if writer is available
+            if (context.writer && typeof context.writer.parseCommit === 'function') {
+              try {
+                const conventionalCommitResult = context.writer.parseCommit(mutableCommit);
+                if (conventionalCommitResult) {
+                  Object.assign(mutableCommit, conventionalCommitResult);
+                }
+              } catch (error) {
+                console.warn('Warning: Failed to parse commit with conventional format', error);
+              }
             }
 
             return mutableCommit;
