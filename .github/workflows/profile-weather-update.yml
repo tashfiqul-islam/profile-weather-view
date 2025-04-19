@@ -557,7 +557,7 @@ jobs:
             echo "Setting up GPG key for signed commits"
 
             # Install gnupg if needed
-            which gpg > /dev/null || apt-get update -qq && apt-get install -qq -y gnupg
+            which gpg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -qq -y gnupg; }
 
             # Create temporary file for GPG key
             GPG_KEY_FILE=$(mktemp)
