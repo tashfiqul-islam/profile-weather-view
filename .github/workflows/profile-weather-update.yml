@@ -554,7 +554,7 @@ jobs:
           # For scheduled runs or force update, always commit regardless of git diff
           if [[ "${{ github.event_name }}" == "schedule" || "${{ env.FORCE_UPDATE }}" == "true" ]]; then
             git add README.md
-            echo "$GPG_PASSPHRASE" | git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
+            echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - && git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
             git push origin master
             echo "::notice::Changes pushed successfully with signed commit (scheduled/forced)"
           else
@@ -563,7 +563,7 @@ jobs:
               echo "No actual changes detected in README.md by git diff"
             else
               git add README.md
-              echo "$GPG_PASSPHRASE" | git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
+              echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - && git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
               git push origin master && echo "::notice::Changes pushed successfully with signed commit"
             fi
           fi
