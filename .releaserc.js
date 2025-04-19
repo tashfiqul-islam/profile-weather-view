@@ -82,134 +82,7 @@ export default {
           commitsSort: ['scope', 'subject'],
           groupBy: 'scope',
           commitGroupsSort: 'title',
-
-          // Custom Handlebars template for release notes
-          mainTemplate: `{{> header}}
-
-{{#if noteGroups}}
-{{#each noteGroups}}
-### {{title}}
-
-{{#each notes}}
-* {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{text}}
-{{/each}}
-{{/each}}
-{{/if}}
-
-{{#if commitsWithoutNotes}}
-{{#if @root.linkReferences}}
-### Features and Improvements
-
-{{#each commitsGroupedByScope}}
-{{#if scope}}
-#### {{scope}}
-
-{{/if}}
-{{#each commits}}
-{{#if firstRelease}}
-{{#if ../scope}}
-* {{subject}}{{else}}
-* **{{scope}}:** {{subject}}{{/if}}
-{{else}}
-* {{#if breaking}}💥 {{/if}}{{#if ../scope}}{{else}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrlFormat}})){{/if}}
-{{/if}}
-{{/each}}
-
-{{/each}}
-{{else}}
-### Features and Improvements
-
-{{#each commitsWithoutNotes}}
-{{#if firstRelease}}
-* {{subject}}{{else}}
-* {{#if breaking}}💥 {{/if}}{{subject}}
-{{/if}}
-{{/each}}
-{{/if}}
-{{/if}}
-
-{{> footer}}`,
-
-          /**
-           * Transform commit objects to enhance release notes
-           * Special handling for initial release to consolidate previous work
-           */
-          transform: (commit, context) => {
-            // Create a mutable copy of the commit object to avoid immutability errors
-            const mutableCommit = { ...commit };
-
-            // Check if this is the first release (no previous tag)
-            const isFirstRelease =
-              !context.previousTag || context.previousTag === '';
-
-            // Special handling for initial release
-            if (isFirstRelease) {
-              mutableCommit.firstRelease = true;
-
-              // Ensure valid scope for warnings
-              if (mutableCommit.scope === 'profile-weather-view') {
-                mutableCommit.scope = 'weather';
-              }
-
-              // Add reference to initial commit to fix references-empty warning
-              if (!mutableCommit.references || mutableCommit.references.length === 0) {
-                mutableCommit.references = [{
-                  action: null,
-                  issue: '1',
-                  owner: null,
-                  repository: null,
-                  prefix: '#',
-                  raw: '#1',
-                }];
-              }
-
-              // Only apply custom notes to feat commits with "initial release" text
-              if (
-                mutableCommit.type === 'feat' &&
-                mutableCommit.subject.includes('initial release')
-              ) {
-                // Override notes with custom content for initial release
-                mutableCommit.notes = [
-                  {
-                    title: 'Initial Release',
-                    text: 'Profile Weather View v1.0.0 - A TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically.',
-                  },
-                ];
-
-                // Add custom feature sections for the initial release
-                mutableCommit.initialReleaseNotes = [
-                  {
-                    title: '✨ Key Features',
-                    items: [
-                      'Real-time Weather Data: OpenWeather API 3.0 integration with global coverage',
-                      'Auto-Updates: Updates every 8 hours via GitHub Actions',
-                      'Type Safety: 100% TypeScript + Zod schema validation',
-                      'High Performance: Powered by Bun for ultra-fast execution',
-                      'Customizable: Multiple display formats and themes',
-                      'Reliability: 100% test coverage with comprehensive testing',
-                    ],
-                  },
-                ];
-              }
-            }
-
-            // Safely attempt to apply conventional commit parsing if writer is available
-            if (context.writer && typeof context.writer.parseCommit === 'function') {
-              try {
-                const conventionalCommitResult = context.writer.parseCommit(mutableCommit);
-                if (conventionalCommitResult) {
-                  Object.assign(mutableCommit, conventionalCommitResult);
-                }
-              } catch (error) {
-                console.warn('Warning: Failed to parse commit with conventional format', error);
-              }
-            }
-
-            return mutableCommit;
-          },
-
-          // Partial template for consistent commit formatting
-          commitPartial: `{{> commit }}`,
+          // Removed custom mainTemplate and transform to use standard generation
         },
       },
     ],
@@ -257,6 +130,7 @@ export default {
 
         // Custom release name format
         releaseNameTemplate: 'v${version}',
+        // Use standard generated notes for the release body
       },
     ],
 
@@ -275,9 +149,9 @@ export default {
           'bunfig.toml', // Bun-specific configuration
         ],
 
-        // Custom commit message for version bump
+        // Use a concise commit message that passes commitlint
         message:
-          'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+          'chore(release): ${nextRelease.version} [skip ci]\n\nRelease notes generated by semantic-release.',
       },
     ],
   ],

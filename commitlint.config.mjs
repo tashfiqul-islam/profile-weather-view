@@ -28,6 +28,7 @@ const PROJECT_SCOPES = [
   'hooks',    // Git hooks and automation
   'infra',    // Infrastructure and deployment
   'perf',     // Performance improvements
+  'release',  // Release automation commits (added)
   'security', // Security enhancements
   'test',     // Testing infrastructure and tests
   'types',    // TypeScript types and interfaces
@@ -111,18 +112,36 @@ export default {
     'subject-exclamation-mark': [WARNING, 'never'],
     'subject-min-length': [ERROR, 'always', 3],
 
-    // Body validations
+    // Body validations - Relaxed for release commits
     'body-leading-blank': [ERROR, 'always'],
-    'body-max-line-length': [ERROR, 'always', LIMITS.bodyMaxLineLength],
+    'body-max-line-length': (ctx) => {
+      // Safely check type and scope before disabling
+      if (ctx?.type === 'chore' && ctx?.scope === 'release') {
+        return [DISABLED];
+      }
+      return [ERROR, 'always', LIMITS.bodyMaxLineLength];
+    },
     'body-case': [WARNING, 'always', 'sentence-case'],
 
-    // Footer validations
+    // Footer validations - Relaxed for release commits
     'footer-leading-blank': [ERROR, 'always'],
-    'footer-max-line-length': [ERROR, 'always', LIMITS.footerMaxLineLength],
+    'footer-max-line-length': (ctx) => {
+      // Safely check type and scope before disabling
+      if (ctx?.type === 'chore' && ctx?.scope === 'release') {
+        return [DISABLED];
+      }
+      return [ERROR, 'always', LIMITS.footerMaxLineLength];
+    },
 
     // Custom rules
     'no-forbidden-patterns': [ERROR, 'always'],
-    'references-empty': [WARNING, 'never'],
+    'references-empty': (ctx) => {
+      // Safely check type and scope before disabling
+      if (ctx?.type === 'chore' && ctx?.scope === 'release') {
+        return [DISABLED];
+      }
+      return [WARNING, 'never'];
+    },
   },
 
   // Ignore conventional preset rules
