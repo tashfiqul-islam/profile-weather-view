@@ -1,0 +1,419 @@
+name: "🔍 Manual Dependency Check"
+
+# ============================================================
+# ⚡ Trigger Configuration (Manual only)
+# ============================================================
+on:
+  workflow_dispatch:
+    inputs:
+      package_type:
+        description: "Type of package updates to check"
+        type: choice
+        required: true
+        default: "all"
+        options:
+          - "all"
+          - "npm"
+          - "github-actions"
+          - "bun-runtime"
+      auto_merge:
+        description: "Auto-merge eligible updates"
+        type: boolean
+        default: true
+      only_security:
+        description: "Only check for security updates"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Dry run (don't actually create PRs)"
+        type: boolean
+        default: false
+      debug:
+        description: "Enable debug mode"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+# ============================================================
+# 🔒 Permissions (Least Privilege Principle)
+# ============================================================
+permissions:
+  contents: write  # For repository updates
+  pull-requests: write  # For PR creation and management
+  issues: read  # For reading repo issues
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  CHECK_TYPE: ${{ github.event.inputs.package_type || 'all' }}
+  AUTO_MERGE: ${{ github.event.inputs.auto_merge || 'true' }}
+  SECURITY_ONLY: ${{ github.event.inputs.only_security || 'false' }}
+  DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+  DEBUG: ${{ github.event.inputs.debug || 'false' }}
+
+# ============================================================
+# 🔄 Jobs
+# ============================================================
+jobs:
+  check-dependencies:
+    name: "🔍 Check Dependencies"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for correct versioning
+
+      - name: "🧰 Setup Tools"
+        run: |
+          echo "::group::Setting up tools"
+          # Install dependency update tools
+          npm install -g npm-check-updates@latest
+          sudo apt-get update && sudo apt-get install -y jq curl
+          echo "::endgroup::"
+
+      - name: "🔍 Analyze Dependency Configuration"
+        id: analyze-config
+        run: |
+          echo "::group::Analyzing dependencies"
+          echo "🔹 Checking for Dependabot config"
+          if [ -f ".github/dependabot.yml" ]; then
+            echo "✅ Dependabot configuration found"
+            DEPENDABOT_CONFIG_EXISTS="true"
+          else
+            echo "⚠️ No Dependabot configuration found"
+            DEPENDABOT_CONFIG_EXISTS="false"
+          fi
+          echo "dependabot_config_exists=$DEPENDABOT_CONFIG_EXISTS" >> $GITHUB_OUTPUT
+
+          echo "🔹 Reading package.json"
+          if [ -f "package.json" ]; then
+            echo "✅ package.json found"
+            PACKAGE_JSON_EXISTS="true"
+
+            # Count dependencies
+            DEPS_COUNT=$(jq '.dependencies | length' package.json)
+            DEV_DEPS_COUNT=$(jq '.devDependencies | length' package.json)
+            echo "📊 Found $DEPS_COUNT production dependencies and $DEV_DEPS_COUNT dev dependencies"
+
+            # Check if bun is used
+            if jq -e '.packageManager | startswith("bun@")' package.json > /dev/null; then
+              echo "✅ Bun detected as package manager"
+              BUN_VERSION=$(jq -r '.packageManager' package.json | sed 's/bun@//')
+              echo "📊 Bun version: $BUN_VERSION"
+              echo "bun_version=$BUN_VERSION" >> $GITHUB_OUTPUT
+              echo "uses_bun=true" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️ Bun not detected as package manager"
+              echo "uses_bun=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ package.json not found"
+            PACKAGE_JSON_EXISTS="false"
+            echo "uses_bun=false" >> $GITHUB_OUTPUT
+          fi
+          echo "package_json_exists=$PACKAGE_JSON_EXISTS" >> $GITHUB_OUTPUT
+
+          # Count GitHub Action workflows
+          WORKFLOW_COUNT=$(ls -1 .github/workflows/*.yml 2>/dev/null | wc -l)
+          echo "📊 Found $WORKFLOW_COUNT GitHub Action workflow files"
+
+          echo "::endgroup::"
+
+      - name: "🔍 Check npm Dependencies"
+        id: check-npm
+        if: env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'npm'
+        run: |
+          echo "::group::Checking npm dependencies"
+          if [ -f "package.json" ]; then
+            # Use npm-check-updates to identify available updates
+            echo "🔹 Scanning for available updates..."
+            if [ "${{ env.SECURITY_ONLY }}" == "true" ]; then
+              NCU_OUTPUT=$(npx npm-check-updates --upgrade --target newest --format json --loglevel silent --dep prod,dev --filter "/^(?!.*(bun|bun-types)$).*$/")
+              UPDATE_COUNT=$(echo $NCU_OUTPUT | jq 'length')
+              echo "🔹 Found $UPDATE_COUNT security-related package updates"
+            else
+              NCU_OUTPUT=$(npx npm-check-updates --format json --loglevel silent --dep prod,dev --filter "/^(?!.*(bun|bun-types)$).*$/")
+              UPDATE_COUNT=$(echo $NCU_OUTPUT | jq 'length')
+              echo "🔹 Found $UPDATE_COUNT package updates available"
+            fi
+
+            # Save the list of updates for later
+            echo "$NCU_OUTPUT" > npm-updates.json
+
+            if [ "$UPDATE_COUNT" -gt 0 ]; then
+              echo "updates_available=true" >> $GITHUB_OUTPUT
+              echo "update_count=$UPDATE_COUNT" >> $GITHUB_OUTPUT
+
+              # Extract some example updates for the summary
+              EXAMPLES=$(echo $NCU_OUTPUT | jq -r 'to_entries | sort_by(.value.from) | head -3 | map("\(.key): \(.value.from) -> \(.value.to)") | join(", ")')
+              echo "update_examples=$EXAMPLES" >> $GITHUB_OUTPUT
+
+              echo "✅ Updates available! Examples: $EXAMPLES"
+            else
+              echo "updates_available=false" >> $GITHUB_OUTPUT
+              echo "update_count=0" >> $GITHUB_OUTPUT
+              echo "⚠️ No npm dependency updates available"
+            fi
+          else
+            echo "⚠️ No package.json found, skipping npm dependency check"
+            echo "updates_available=false" >> $GITHUB_OUTPUT
+            echo "update_count=0" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      - name: "🔍 Check Bun Runtime"
+        id: check-bun
+        if: (env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'bun-runtime') && steps.analyze-config.outputs.uses_bun == 'true'
+        run: |
+          echo "::group::Checking Bun runtime"
+          # Get current Bun version from package.json
+          CURRENT_BUN_VERSION="${{ steps.analyze-config.outputs.bun_version }}"
+          echo "🔹 Current Bun version: $CURRENT_BUN_VERSION"
+
+          # Check latest Bun version from API
+          echo "🔹 Checking latest Bun version..."
+          LATEST_BUN_VERSION=$(curl -s https://api.github.com/repos/oven-sh/bun/releases/latest | jq -r '.tag_name' | sed 's/bun-v//')
+          echo "🔹 Latest Bun version: $LATEST_BUN_VERSION"
+
+          # Compare versions
+          if [ "$CURRENT_BUN_VERSION" != "$LATEST_BUN_VERSION" ]; then
+            echo "bun_update_available=true" >> $GITHUB_OUTPUT
+            echo "bun_current_version=$CURRENT_BUN_VERSION" >> $GITHUB_OUTPUT
+            echo "bun_latest_version=$LATEST_BUN_VERSION" >> $GITHUB_OUTPUT
+
+            # Check if this is a major, minor, or patch update
+            IFS='.' read -r -a CURRENT_PARTS <<< "$CURRENT_BUN_VERSION"
+            IFS='.' read -r -a LATEST_PARTS <<< "$LATEST_BUN_VERSION"
+
+            if [ "${LATEST_PARTS[0]}" -gt "${CURRENT_PARTS[0]}" ]; then
+              echo "bun_update_type=major" >> $GITHUB_OUTPUT
+              echo "✅ Major Bun update available: $CURRENT_BUN_VERSION -> $LATEST_BUN_VERSION"
+            elif [ "${LATEST_PARTS[1]}" -gt "${CURRENT_PARTS[1]}" ]; then
+              echo "bun_update_type=minor" >> $GITHUB_OUTPUT
+              echo "✅ Minor Bun update available: $CURRENT_BUN_VERSION -> $LATEST_BUN_VERSION"
+            else
+              echo "bun_update_type=patch" >> $GITHUB_OUTPUT
+              echo "✅ Patch Bun update available: $CURRENT_BUN_VERSION -> $LATEST_BUN_VERSION"
+            fi
+          else
+            echo "bun_update_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Bun is already at the latest version ($CURRENT_BUN_VERSION)"
+          fi
+          echo "::endgroup::"
+
+      - name: "🔍 Check GitHub Actions"
+        id: check-actions
+        if: env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'github-actions'
+        run: |
+          echo "::group::Checking GitHub Actions"
+          ACTION_UPDATES_AVAILABLE=false
+          ACTION_UPDATE_COUNT=0
+
+          # Function to check a single workflow file for outdated actions
+          check_workflow_file() {
+            local file="$1"
+            echo "🔹 Checking $file..."
+
+            # Extract all GitHub Actions uses statements
+            ACTIONS=$(grep -o "uses: [a-zA-Z0-9_\-\.\/]*@[a-zA-Z0-9_\-\.]\\+" "$file" || echo "")
+
+            if [ -z "$ACTIONS" ]; then
+              echo "  No actions found in $file"
+              return 0
+            fi
+
+            # Check each action
+            while IFS= read -r ACTION; do
+              # Extract name and version
+              ACTION_NAME=$(echo "$ACTION" | cut -d '@' -f 1 | sed 's/uses: //')
+              ACTION_VERSION=$(echo "$ACTION" | cut -d '@' -f 2)
+
+              # Skip if version is not a tag/version (e.g., using branch name)
+              if [[ ! "$ACTION_VERSION" =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
+                echo "  Skipping $ACTION_NAME@$ACTION_VERSION (not a versioned tag)"
+                continue
+              fi
+
+              echo "  Checking $ACTION_NAME@$ACTION_VERSION..."
+
+              # Get latest release through GitHub API
+              if [[ "$ACTION_NAME" =~ ^[a-zA-Z0-9_\-]+/[a-zA-Z0-9_\-]+$ ]]; then
+                # Handle standard GitHub repo format (owner/repo)
+                LATEST_VERSION=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/$ACTION_NAME/releases/latest | \
+                  jq -r '.tag_name // "not_found"' 2>/dev/null || echo "not_found")
+              else
+                # Handle other formats (might be GitHub Marketplace actions)
+                LATEST_VERSION="unknown"
+              fi
+
+              if [ "$LATEST_VERSION" != "not_found" ] && [ "$LATEST_VERSION" != "unknown" ] && [ "$LATEST_VERSION" != "$ACTION_VERSION" ]; then
+                echo "  ✅ Update available: $ACTION_NAME@$ACTION_VERSION -> $LATEST_VERSION"
+                ACTION_UPDATES_AVAILABLE=true
+                ACTION_UPDATE_COUNT=$((ACTION_UPDATE_COUNT + 1))
+
+                # Save update info to file for later processing
+                echo "$ACTION_NAME,$ACTION_VERSION,$LATEST_VERSION,$file" >> action_updates.csv
+              fi
+            done <<< "$ACTIONS"
+          }
+
+          # Create output file
+          touch action_updates.csv
+
+          # Check all workflow files
+          for FILE in .github/workflows/*.yml; do
+            [ -f "$FILE" ] && check_workflow_file "$FILE"
+          done
+
+          # Set outputs
+          echo "actions_update_available=$ACTION_UPDATES_AVAILABLE" >> $GITHUB_OUTPUT
+          echo "actions_update_count=$ACTION_UPDATE_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$ACTION_UPDATES_AVAILABLE" = true ]; then
+            echo "✅ Found $ACTION_UPDATE_COUNT GitHub Action updates available"
+
+            # Get some examples for the summary
+            if [ -f "action_updates.csv" ] && [ -s "action_updates.csv" ]; then
+              EXAMPLES=$(head -3 action_updates.csv | awk -F, '{print $1 "@" $2 " -> " $3}' | paste -sd ", " -)
+              echo "actions_update_examples=$EXAMPLES" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ No GitHub Action updates available"
+          fi
+          echo "::endgroup::"
+
+      - name: "📊 Generate Results Summary"
+        id: summary
+        run: |
+          echo "::group::Generating summary"
+
+          # Determine if any updates are available
+          NPM_UPDATES="${{ steps.check-npm.outputs.updates_available || 'false' }}"
+          BUN_UPDATES="${{ steps.check-bun.outputs.bun_update_available || 'false' }}"
+          ACTION_UPDATES="${{ steps.check-actions.outputs.actions_update_available || 'false' }}"
+
+          if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ]; then
+            echo "any_updates_available=true" >> $GITHUB_OUTPUT
+            echo "✅ Updates available!"
+          else
+            echo "any_updates_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No updates available"
+          fi
+
+          # Create a detailed summary
+          {
+            echo "# 📊 Dependency Update Summary"
+            echo ""
+            echo "## 🔍 Scan Results"
+            echo ""
+
+            if [ "$NPM_UPDATES" = "true" ]; then
+              echo "### 📦 NPM Packages"
+              echo "- ✅ **${steps.check-npm.outputs.update_count}** package updates available"
+              echo "- Examples: ${steps.check-npm.outputs.update_examples}"
+              echo ""
+            else
+              echo "### 📦 NPM Packages"
+              echo "- ⚠️ No updates available"
+              echo ""
+            fi
+
+            if [ "${{ steps.analyze-config.outputs.uses_bun }}" = "true" ]; then
+              echo "### 🏃 Bun Runtime"
+              if [ "$BUN_UPDATES" = "true" ]; then
+                echo "- ✅ **${steps.check-bun.outputs.bun_update_type}** update available: ${steps.check-bun.outputs.bun_current_version} → ${steps.check-bun.outputs.bun_latest_version}"
+              else
+                echo "- ⚠️ Already at latest version (${steps.analyze-config.outputs.bun_version})"
+              fi
+              echo ""
+            fi
+
+            echo "### 🔄 GitHub Actions"
+            if [ "$ACTION_UPDATES" = "true" ]; then
+              echo "- ✅ **${steps.check-actions.outputs.actions_update_count}** action updates available"
+              if [ -n "${steps.check-actions.outputs.actions_update_examples}" ]; then
+                echo "- Examples: ${steps.check-actions.outputs.actions_update_examples}"
+              fi
+            else
+              echo "- ⚠️ No updates available"
+            fi
+            echo ""
+
+            if [ "${{ env.DRY_RUN }}" = "true" ]; then
+              echo "## ℹ️ Dry Run Mode"
+              echo "No actual updates will be applied. This is just a scan."
+            else
+              if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ]; then
+                echo "## 🚀 Next Steps"
+                echo "Dependabot will be triggered to create PRs for these updates."
+              else
+                echo "## ℹ️ No Updates Required"
+                echo "All dependencies are already up to date."
+              fi
+            fi
+          } > dependency_summary.md
+
+          echo "::endgroup::"
+
+      - name: "📤 Upload Summary Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-scan-summary
+          path: dependency_summary.md
+          retention-days: 7
+
+      - name: "📃 Output Summary to Steps"
+        run: cat dependency_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: "🚀 Trigger Dependabot"
+        if: steps.summary.outputs.any_updates_available == 'true' && env.DRY_RUN != 'true'
+        run: |
+          echo "::group::Triggering Dependabot"
+
+          # Check if Dependabot is configured
+          if [ "${{ steps.analyze-config.outputs.dependabot_config_exists }}" != "true" ]; then
+            echo "⚠️ Cannot trigger Dependabot - No dependabot.yml configuration found"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Prepare API data
+          if [ "${{ env.CHECK_TYPE }}" = "all" ]; then
+            ECOSYSTEMS="npm,github-actions"
+          elif [ "${{ env.CHECK_TYPE }}" = "npm" ]; then
+            ECOSYSTEMS="npm"
+          elif [ "${{ env.CHECK_TYPE }}" = "github-actions" ]; then
+            ECOSYSTEMS="github-actions"
+          elif [ "${{ env.CHECK_TYPE }}" = "bun-runtime" ]; then
+            ECOSYSTEMS="npm"  # Bun updates come through npm ecosystem
+          fi
+
+          echo "🔹 Triggering dependency update check for: $ECOSYSTEMS"
+
+          # GitHub API call to trigger Dependabot
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/dependabot/scans \
+            -d '{"dependency-names":[],"directory":"/","package-ecosystem":"'"$ECOSYSTEMS"'"}'
+
+          echo "::endgroup::"
+
+          echo "✅ Dependabot update scan triggered successfully!"
+
+      - name: "📣 Notify No Updates Available"
+        if: steps.summary.outputs.any_updates_available != 'true' && env.DRY_RUN != 'true'
+        run: |
+          echo "::notice title=All dependencies up to date::No dependency updates are currently available. Everything is already on the latest version."

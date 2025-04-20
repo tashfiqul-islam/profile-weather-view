@@ -53,7 +53,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "1.2.9"  # Default Bun version (will be overridden if specified in package.json)
+  BUN_VERSION: "1.2.10"  # Default Bun version (will be overridden if specified in package.json)
   CACHE_KEY_PREFIX: "v9-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"

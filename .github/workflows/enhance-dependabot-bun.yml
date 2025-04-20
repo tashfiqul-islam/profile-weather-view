@@ -1,0 +1,242 @@
+name: "🔄 Enhance Dependabot Bun Updates"
+
+# ============================================================
+# ⚡ Trigger Configuration (Only on Dependabot PRs)
+# ============================================================
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'package.json'
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions (Least Privilege Principle)
+# ============================================================
+permissions:
+  contents: write  # For repository updates
+  pull-requests: write  # For PR comments
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+  WORKFLOW_VERSION: "1.2.0"  # For tracking workflow version
+
+# ============================================================
+# 🔄 Jobs
+# ============================================================
+jobs:
+  enhance-bun-updates:
+    name: "🔄 Update Bun References"
+    # Only run on Dependabot PRs that update package.json
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3  # Reduced timeout for faster execution
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: "🔍 Check for Bun Update"
+        id: check-bun-update
+        run: |
+          echo "::group::Checking for Bun updates"
+
+          # Extract PR title from GitHub API to check if it's a Bun update
+          PR_TITLE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}" \
+            | jq -r .title)
+
+          echo "PR Title: $PR_TITLE"
+
+          # Check if this is a Bun update PR - optimized regex check
+          if [[ "$PR_TITLE" =~ bump\ (bun|bun-types)\ from ]]; then
+            echo "is_bun_update=true" >> $GITHUB_OUTPUT
+
+            # Extract new version from PR title with improved regex
+            if [[ "$PR_TITLE" =~ from\ ([0-9]+\.[0-9]+\.[0-9]+)\ to\ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+              NEW_BUN_VERSION="${BASH_REMATCH[2]}"
+              OLD_BUN_VERSION="${BASH_REMATCH[1]}"
+              echo "new_bun_version=$NEW_BUN_VERSION" >> $GITHUB_OUTPUT
+              echo "old_bun_version=$OLD_BUN_VERSION" >> $GITHUB_OUTPUT
+              echo "::notice::Bun version update detected: $OLD_BUN_VERSION -> $NEW_BUN_VERSION"
+            else
+              echo "::warning::Could not extract version from PR title"
+              echo "is_bun_update=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "::notice::Not a Bun update PR"
+            echo "is_bun_update=false" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      - name: "🔄 Update packageManager in package.json"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Updating packageManager in package.json"
+          # Update the packageManager field
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+          # Check if current version format uses bun@x.y.z
+          if grep -q '"packageManager": "bun@' package.json; then
+            # Update with jq ensuring we preserve the exact format
+            jq --arg ver "$NEW_VERSION" '.packageManager = "bun@" + $ver' package.json > package.json.tmp
+            mv package.json.tmp package.json
+            echo "Updated packageManager to bun@$NEW_VERSION"
+          else
+            echo "::warning::packageManager format not recognized, skipping update"
+          fi
+          echo "::endgroup::"
+
+      - name: "🔄 Update BUN_VERSION in Workflow Files"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Updating BUN_VERSION in workflow files"
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+          # Find workflow files more efficiently
+          WORKFLOW_FILES=$(find .github/workflows -name "*.yml" -type f)
+
+          for file in $WORKFLOW_FILES; do
+            if grep -q "BUN_VERSION:" "$file"; then
+              echo "Updating BUN_VERSION in $file"
+              # Use more efficient sed command
+              sed -i -E "s/(BUN_VERSION: *\")[0-9]+\.[0-9]+\.[0-9]+(\" *#.*)/\1$NEW_VERSION\2/" "$file"
+            fi
+          done
+          echo "::endgroup::"
+
+      - name: "🔄 Update engines.bun in package.json (if exists)"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Checking for engines.bun field"
+          # Check if there's an engines.bun field to update
+          if grep -q '"engines":' package.json && grep -q '"bun":' package.json; then
+            NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+            MAJOR_MINOR=$(echo "$NEW_VERSION" | cut -d. -f1-2)
+
+            # Update engines.bun while preserving the format (>= or ^ prefix)
+            if grep -q '"bun": *">=' package.json; then
+              # For >= format (minimum version)
+              jq --arg ver "$MAJOR_MINOR.0" '.engines.bun = ">=" + $ver' package.json > package.json.tmp
+              mv package.json.tmp package.json
+              echo "Updated engines.bun to >=$MAJOR_MINOR.0"
+            elif grep -q '"bun": *"\\^' package.json; then
+              # For ^ format (compatible with)
+              jq --arg ver "$MAJOR_MINOR.0" '.engines.bun = "^" + $ver' package.json > package.json.tmp
+              mv package.json.tmp package.json
+              echo "Updated engines.bun to ^$MAJOR_MINOR.0"
+            else
+              echo "::warning::engines.bun format not recognized, keeping existing value"
+            fi
+          else
+            echo "No engines.bun field found in package.json"
+          fi
+          echo "::endgroup::"
+
+      - name: "📝 Commit Changes"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Committing changes"
+          # Configure git
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Check if there are changes to commit
+          if git diff --quiet; then
+            echo "::notice::No changes to commit"
+          else
+            # Create a meaningful commit message that follows commitlint format
+            NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+            # Show what's being changed
+            git diff --unified=1
+
+            # Commit and push changes
+            git add .
+            git commit -m "deps(bun): update bun references to $NEW_VERSION [skip ci]" \
+                     -m "Updates all Bun version references across project files for consistency."
+            git push
+            echo "::notice::Successfully updated all bun version references"
+          fi
+          echo "::endgroup::"
+
+      - name: "💬 Add PR Comment"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Adding PR comment"
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+          OLD_VERSION="${{ steps.check-bun-update.outputs.old_bun_version }}"
+
+          # Create a more detailed and formatted comment
+          COMMENT=$(cat <<EOF
+          ## 🤖 Enhanced Bun Update
+
+          I've detected a Bun update from \`$OLD_VERSION\` to \`$NEW_VERSION\` and automatically updated:
+
+          - ✅ \`packageManager\` field in package.json
+          - ✅ \`BUN_VERSION\` environment variables in workflow files
+          - ✅ \`engines.bun\` field in package.json (if present)
+
+          This ensures consistent Bun versioning across your entire project.
+
+          <details>
+          <summary>Enhancement workflow details</summary>
+
+          - **Workflow**: enhance-dependabot-bun v${{ env.WORKFLOW_VERSION }}
+          - **PR number**: #${{ env.PR_NUMBER }}
+          - **Updated on**: $(date -u "+%Y-%m-%d %H:%M:%S UTC")
+          </details>
+          EOF
+          )
+
+          # Post comment to PR
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -X POST -d "{\"body\": $(echo "$COMMENT" | jq -R -s .)}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments"
+
+          echo "::notice::Added explanation comment to PR"
+          echo "::endgroup::"
+
+      - name: "🧪 Verify Integration"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Verifying update consistency"
+          # Check that packageManager and BUN_VERSION are in sync
+          if [[ -f "package.json" ]]; then
+            # Extract values to verify
+            PKG_MGR_VERSION=$(grep -o '"packageManager": *"bun@[0-9.]*"' package.json | grep -o '[0-9][0-9.]*')
+
+            # Find a workflow file with BUN_VERSION
+            WORKFLOW_WITH_BUN=$(grep -l "BUN_VERSION:" .github/workflows/*.yml | head -1)
+            if [[ -n "$WORKFLOW_WITH_BUN" ]]; then
+              WORKFLOW_BUN_VERSION=$(grep "BUN_VERSION:" "$WORKFLOW_WITH_BUN" | grep -o '[0-9][0-9.]*')
+
+              # Compare versions
+              if [[ "$PKG_MGR_VERSION" == "$WORKFLOW_BUN_VERSION" ]]; then
+                echo "✅ Versions are in sync: package.json ($PKG_MGR_VERSION) matches workflow ($WORKFLOW_BUN_VERSION)"
+              else
+                echo "⚠️ Version mismatch: package.json ($PKG_MGR_VERSION) vs workflow ($WORKFLOW_BUN_VERSION)"
+              fi
+            else
+              echo "No workflow file with BUN_VERSION found for verification"
+            fi
+          else
+            echo "package.json not found for verification"
+          fi
+          echo "::endgroup::"

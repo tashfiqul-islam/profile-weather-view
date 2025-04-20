@@ -1,0 +1,172 @@
+# ============================================================
+# 🤖 Dependabot Configuration
+# ============================================================
+# Automated dependency updates with intelligent versioning control
+
+version: 2
+updates:
+  # -------------------------------------------------------
+  # 📦 npm Package Dependencies
+  # -------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Dhaka"
+    # Version control strategy
+    versioning-strategy: "auto"
+    # Target branch - same as your other workflows
+    target-branch: "master"
+    # PR Customization
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "-"
+    # Use custom PR template
+    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
+    # Labels for automated organization
+    labels:
+      - "dependencies"
+      - "npm"
+      - "security"
+      # Add release type labels
+      - "{{type}}"
+    # Auto-merge configuration - Only for non-major updates
+    auto-merge: true
+    # Only auto-merge non-major updates (patch & minor)
+    ignore:
+      # Ignore major version bumps that require manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # PR configuration with commitlint compatible format
+    commit-message:
+      # Using commitlint-compatible prefixes
+      prefix: "deps"
+      prefix-development: "chore"
+      include: "scope"
+    # Auto-assign maintainer for code review
+    assignees:
+      - "tashfiqul-islam"
+    # Limit concurrent updates to improve performance
+    groups:
+      # Group minor & patch dev dependencies
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+      # Group minor & patch eslint plugins
+      eslint-plugins:
+        patterns:
+          - "*eslint*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group minor & patch testing libraries
+      test-dependencies:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # -------------------------------------------------------
+  # 🤖 Bun Runtime Version (Custom Updater)
+  # -------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"  # Run shortly after main npm update
+      timezone: "Asia/Dhaka"
+    # Only look for bun package updates
+    allow:
+      - dependency-name: "bun"
+      - dependency-name: "bun-types"
+    # Version control strategy - use the same as in package.json
+    versioning-strategy: "auto"
+    # Target branch - same as your other workflows
+    target-branch: "master"
+    # PR Customization
+    open-pull-requests-limit: 2
+    pull-request-branch-name:
+      separator: "-"
+    # Use custom PR template
+    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
+    # Labels for better identification
+    labels:
+      - "dependencies"
+      - "npm"
+      - "bun-runtime"
+      # Add release type labels
+      - "{{type}}"
+    # Auto-merge configuration - Only for non-major updates
+    auto-merge: true
+    # Only auto-merge non-major updates (patch & minor)
+    ignore:
+      # Ignore major version bumps that require manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # PR configuration with commitlint compatible format
+    commit-message:
+      # Using commitlint-compatible prefixes
+      prefix: "deps"
+      prefix-development: "chore"
+      include: "scope"
+    # Auto-assign maintainer for code review
+    assignees:
+      - "tashfiqul-islam"
+
+  # -------------------------------------------------------
+  # 🔄 GitHub Actions
+  # -------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "Asia/Dhaka"
+    # Target branch - same as your other workflows
+    target-branch: "master"
+    # PR Customization
+    open-pull-requests-limit: 5
+    pull-request-branch-name:
+      separator: "-"
+    # Use custom PR template
+    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
+    # Labels for better organization
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+      # Add release type labels
+      - "{{type}}"
+    # Auto-merge configuration - Only for non-major updates
+    auto-merge: true
+    # Only auto-merge non-major updates (patch & minor)
+    ignore:
+      # Ignore major version bumps that require manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # PR configuration with commitlint compatible format
+    commit-message:
+      # Using commitlint-compatible prefixes
+      prefix: "ci"
+      include: "scope"
+    # Auto-assign maintainer for code review
+    assignees:
+      - "tashfiqul-islam"
+    # Group GitHub Actions updates to reduce PR noise
+    groups:
+      actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"

@@ -160,8 +160,8 @@ export default {
 * {{#if commit.scope}}**{{commit.scope}}:** {{/if}}{{text}}
 {{/each}}
 {{/each}}
-{{/if}}`
-        }
+{{/if}}`,
+        },
       },
     ],
 
