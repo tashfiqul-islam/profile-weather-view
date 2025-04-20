@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/image/readme_cover.png" alt="Profile Weather View" width="900" style="border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+  <img src="/image/readme_cover.png" alt="Profile Weather View" width="900">
 </div>
 
 <h1 align="center">🌦️ Profile Weather View</h1>
@@ -14,7 +14,8 @@
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript" alt="TypeScript"></a>
   <a href="https://bun.sh"><img src="https://img.shields.io/badge/powered%20by-bun-black?style=flat-square&logo=bun" alt="Powered by Bun"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog"></a>
+  <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/semantic--release-angular-e10079?style=flat-square&logo=semantic-release" alt="semantic-release: angular"></a> <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog">
 </p>
 
 <p align="center">
@@ -55,7 +56,7 @@
       <td align="center">65%</td>
     </tr>
   </table>
-  <small><em>Last refresh: Friday, March 29, 2025 14:30:22 UTC+6</em></small>
+  <small><em>Last refresh: Saturday, April 20, 2025 14:30:22 UTC+6</em></small>
 
   <br><br>
   <a href="https://github.com/tashfiqul-islam/profile-weather-view/generate">
@@ -66,7 +67,7 @@
 
 ## 📋 Overview
 
-Profile Weather View automatically updates your GitHub profile README with real-time weather data for your location. It leverages GitHub Actions for fully automated updates every 8 hours, ensuring your profile always shows current conditions with zero maintenance.
+Profile Weather View automatically updates your GitHub profile README with real-time weather data for your location. It leverages GitHub Actions for fully automated updates every 8 hours, ensuring your profile always shows current conditions with zero maintenance. The application is built with modern TypeScript and powered by the ultra-fast Bun runtime for optimal performance.
 
 <details>
 <summary><b>Full Table of Contents</b></summary>
@@ -91,7 +92,11 @@ Profile Weather View automatically updates your GitHub profile README with real-
   - [Project Structure](#project-structure)
 - [🔄 CI/CD Pipeline](#-cicd-pipeline)
 - [🧪 Testing](#-testing)
+  - [Coverage Report](#coverage-report)
+  - [Performance Benchmarks](#performance-benchmarks)
+  - [Testing Strategy](#testing-strategy)
 - [🤝 Contributing](#-contributing)
+  - [Commit Message Format](#commit-message-format)
 - [📜 License](#-license)
 - [🙏 Acknowledgements](#-acknowledgements)
 
@@ -99,37 +104,51 @@ Profile Weather View automatically updates your GitHub profile README with real-
 
 ## ✨ Key Features
 
-<div class="feature-grid">
-  <div class="feature-card">
-    <div class="feature-icon">🌐</div>
-    <div class="feature-title">Real-time Data</div>
-    <div class="feature-desc">OpenWeather API 3.0 integration with global coverage</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-icon">🔄</div>
-    <div class="feature-title">Auto-Updates</div>
-    <div class="feature-desc">Updates every 8 hours via GitHub Actions</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-icon">🛠️</div>
-    <div class="feature-title">Type Safety</div>
-    <div class="feature-desc">100% TypeScript + Zod schema validation</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-icon">⚡</div>
-    <div class="feature-title">High Performance</div>
-    <div class="feature-desc">Powered by Bun for ultra-fast execution</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-icon">🎨</div>
-    <div class="feature-title">Customizable</div>
-    <div class="feature-desc">Multiple display formats and themes</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-icon">🧪</div>
-    <div class="feature-title">Reliability</div>
-    <div class="feature-desc">100% test coverage with comprehensive testing</div>
-  </div>
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <h3>🌐 Real-time Data</h3>
+        <p>OpenWeather API 3.0 integration with global coverage</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🔄 Auto-Updates</h3>
+        <p>Updates every 8 hours via GitHub Actions</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🛠️ Type Safety</h3>
+        <p>100% TypeScript + Zod schema validation</p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="33%">
+        <h3>⚡ High Performance</h3>
+        <p>Powered by Bun for ultra-fast execution</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🎨 Customizable</h3>
+        <p>Multiple display formats and themes</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🧪 Reliability</h3>
+        <p>100% test coverage with comprehensive testing</p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="33%">
+        <h3>🤖 Dependabot</h3>
+        <p>Automated dependency updates and security fixes</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🔄 CI/CD</h3>
+        <p>Sophisticated GitHub Actions workflows</p>
+      </td>
+      <td align="center" width="33%">
+        <h3>🔒 Security-First</h3>
+        <p>Regular security audits and dependency scanning</p>
+      </td>
+    </tr>
+  </table>
 </div>
 
 ## 🚀 Quick Start
@@ -183,12 +202,13 @@ The application offers extensive customization options to fit your needs perfect
 
 ### Environment Variables
 
-| Variable           | Description                | Required | Default    |
-|--------------------|----------------------------|----------|------------|
-| `OPEN_WEATHER_KEY` | OpenWeather API key       | Yes      | -          |
-| `LOG_LEVEL`        | Logging verbosity         | No       | `"warn"`   |
-| `FORCE_UPDATE`     | Force README update       | No       | `"false"`  |
-| `PROFILE_README_PATH` | Custom README location | No       | `"./README.md"` |
+| Variable             | Description                | Required | Default         |
+|----------------------|----------------------------|----------|-----------------|
+| `OPEN_WEATHER_KEY`   | OpenWeather API key       | Yes      | -               |
+| `LOG_LEVEL`          | Logging verbosity         | No       | `"warn"`        |
+| `FORCE_UPDATE`       | Force README update       | No       | `"false"`       |
+| `PROFILE_README_PATH`| Custom README location    | No       | `"./README.md"` |
+| `BUN_RUNTIME_SAFETY` | Enable runtime safety     | No       | `"true"`        |
 
 ### Location Settings
 
@@ -226,7 +246,7 @@ const weatherTemplate = `
 Profile Weather View follows a clean, modular architecture designed for maintainability and extensibility.
 
 <div align="center">
-  <img src="./image/architecture.png" alt="Architecture Diagram" width="700" style="border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+  <img src="./image/architecture.png" alt="Architecture Diagram" width="700">
 </div>
 
 ## 🏗️ Core Components
@@ -275,9 +295,10 @@ Profile Weather View is built around four specialized modules, each with a disti
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) >= 1.0.0
+- [Bun](https://bun.sh) >= 1.2.0
 - [OpenWeather API Key](https://openweathermap.org/api)
 - [GitHub Account](https://github.com)
+- [Node.js](https://nodejs.org/) >= 22.0.0 (for some dev tools)
 
 ### Available Scripts
 
@@ -328,7 +349,7 @@ Profile Weather View is built around four specialized modules, each with a disti
       <td>Test only staged test files (git diff-based)</td>
     </tr>
     <tr>
-      <td rowspan="3" align="center"><b>Quality</b></td>
+      <td rowspan="4" align="center"><b>Quality</b></td>
       <td><code>bun run lint</code></td>
       <td>Run ESLint with auto-fix</td>
     </tr>
@@ -341,6 +362,10 @@ Profile Weather View is built around four specialized modules, each with a disti
       <td>Type-check + Lint + Format + Test (CI-safe)</td>
     </tr>
     <tr>
+      <td><code>bun run format-all</code></td>
+      <td>Type-check + Test + Format + Lint (with fixes)</td>
+    </tr>
+    <tr>
       <td rowspan="2" align="center"><b>Security</b></td>
       <td><code>bun run security</code></td>
       <td>Run Biome security + style checks with auto-fix</td>
@@ -349,6 +374,15 @@ Profile Weather View is built around four specialized modules, each with a disti
       <td><code>bun run audit</code></td>
       <td>Check for vulnerabilities in dependencies</td>
     </tr>
+    <tr>
+      <td rowspan="2" align="center"><b>Version Control</b></td>
+      <td><code>bun run commit</code></td>
+      <td>Create a commit using commitlint conventions</td>
+    </tr>
+    <tr>
+      <td><code>bun run semantic-release</code></td>
+      <td>Run semantic release process</td>
+    </tr>
   </table>
 </div>
 
@@ -356,26 +390,40 @@ Profile Weather View is built around four specialized modules, each with a disti
 
 ```
 profile-weather-view/
-├── .github/workflows/           # GitHub Actions workflows
-├── src/
-│   ├── __tests__/               # Unit and integration tests
-│   └── weather-update/
-│       ├── services/
-│       │   ├── fetchWeather.ts  # Weather API service
-│       │   └── updateReadme.ts  # README update service
-│       ├── utils/
-│       │   └── preload.ts       # Environment validator
+├── .github/                      # GitHub configuration
+│   ├── workflows/                # GitHub Actions workflows
+│   │   ├── profile-weather-update.yml  # Main weather update workflow
+│   │   ├── semantic-release.yml        # Release automation
+│   │   ├── enhance-dependabot-bun.yml  # Bun version sync workflow
+│   │   └── manual-dependency-check.yml # Manual dependency scanner
+│   ├── DEPENDABOT_TEMPLATE.md    # PR template for Dependabot
+│   └── dependabot.yml           # Dependabot configuration
+├── src/                         # Source code
+│   ├── __tests__/               # Test suites
+│   │   ├── benchmarks/          # Performance benchmarks
+│   │   └── unit/                # Unit tests
+│   ├── config/                  # Configuration modules
+│   ├── types/                   # TypeScript type definitions
+│   └── weather-update/          # Core application code
+│       ├── services/            # API and service integrations
+│       ├── utils/               # Utility functions
 │       └── index.ts             # Application entry point
-├── .env                         # Local environment variables
-├── bunfig.toml                  # Bun runtime configuration
+├── image/                       # Project images and assets
+├── script/                      # Automation scripts
+├── coverage/                    # Test coverage reports
+├── CHANGELOG.md                 # Automated changelog
+├── bunfig.toml                  # Bun configuration
+├── commitlint.config.mjs        # Commit message linting rules
 ├── eslint.config.mjs            # ESLint configuration
+├── prettier.config.mjs          # Code formatting rules
 ├── tsconfig.json                # TypeScript configuration
-└── vitest.config.ts             # Vitest test configuration
+├── vitest.config.ts             # Test runner configuration
+└── package.json                 # Project manifest
 ```
 
 ## 🔄 CI/CD Pipeline
 
-The application uses GitHub Actions for automated deployment with sophisticated features:
+The application utilizes sophisticated GitHub Actions workflows for seamless automation:
 
 <div align="center">
   <table>
@@ -403,12 +451,34 @@ The application uses GitHub Actions for automated deployment with sophisticated 
       <td align="center"><b>Manual Triggers</b></td>
       <td align="center">Custom workflow parameters for on-demand execution</td>
     </tr>
+    <tr>
+      <td align="center"><b>Automated Dependency Updates</b></td>
+      <td align="center">Dependabot integration with auto-merge for minor/patch updates</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Smart Bun Versioning</b></td>
+      <td align="center">Synchronized Bun version updates across all project files</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Custom PR Templates</b></td>
+      <td align="center">Standardized pull request formats for dependency updates</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Semantic Versioning</b></td>
+      <td align="center">Automated releases based on conventional commits</td>
+    </tr>
+    <tr>
+      <td align="center"><b>Changelog Generation</b></td>
+      <td align="center">Automatic updating of CHANGELOG.md on release</td>
+    </tr>
   </table>
 </div>
 
 ## 🧪 Testing
 
 The project has comprehensive test coverage to ensure reliability:
+
+### Coverage Report
 
 ```
 % Coverage report from v8
@@ -426,16 +496,37 @@ All files         |     100 |      100 |     100 |     100 |
 ------------------|---------|----------|---------|---------|-------------------
 ```
 
+### Performance Benchmarks
+
+The project includes performance benchmarks to ensure optimal execution speed:
+
+- **API Request Benchmarks**: Tests for network optimization
+- **Rendering Benchmarks**: Ensures template population is efficient
+- **Full Pipeline Benchmarks**: End-to-end performance testing
+
 ### Testing Strategy
 
 - **Unit Tests**: Isolated testing of functions and components
 - **Integration Tests**: Verify component interactions
 - **Mocks**: Simulation of external dependencies
 - **Performance Benchmarks**: Measure execution speed
+- **Continuous Integration**: Tests run on every commit and PR
 
 ## 🤝 Contributing
 
-Contributions are welcome and appreciated! See our [Contributing Guide](.github/contributing.md) for details on how to help improve Profile Weather View.
+Contributions are welcome and appreciated! This project follows semantic versioning and conventional commits to maintain a clear history and automate releases.
+
+### Commit Message Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+For more details, see [commitlint.config.mjs](commitlint.config.mjs).
 
 <div align="center">
   <a href="https://github.com/tashfiqul-islam/profile-weather-view/graphs/contributors">
@@ -518,52 +609,3 @@ Copyright (c) 2025 Tashfiqul Islam
     </small>
   </p>
 </div>
-
-<style>
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.feature-card {
-  text-align: center;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.feature-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-.feature-title {
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.feature-desc {
-  font-size: 14px;
-  color: #555;
-}
-
-@media (max-width: 768px) {
-  .feature-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
