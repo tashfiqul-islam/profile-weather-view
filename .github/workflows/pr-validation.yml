@@ -7,7 +7,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
-      - master
+      - 'master'
+      - 'main'
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'image/**'
   # Allow manual trigger for debugging
   workflow_dispatch:
     inputs:
@@ -191,7 +197,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: test-results/junit.xml
-          comment_mode: create
+          comment_mode: always
           comment_title: "📊 Test Results"
 
       # -------------------------------------------------------

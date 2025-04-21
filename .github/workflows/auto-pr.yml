@@ -1,13 +1,18 @@
-name: "🚀 Automated Release PR"
+name: "🚀 Release Automation"
 
 # ============================================================
 # ⚡ Trigger Configuration
 # ============================================================
 on:
-  # Trigger only on push to develop branch
+  # Trigger only on direct pushes to develop branch, not on PRs
   push:
     branches:
       - 'develop'
+    paths-ignore:
+      - '**.md'
+      - 'image/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
   # Allow manual trigger for urgent releases
   workflow_dispatch:
     inputs:
@@ -53,6 +58,9 @@ jobs:
     # Add SLSA provenance for CI/CD supply chain security
     outputs:
       sbom-generated: ${{ steps.generate-sbom.outputs.sbom_generated }}
+
+    # Skip this workflow for pull request events entirely
+    if: github.event_name != 'pull_request'
 
     steps:
       # -------------------------------------------------------
