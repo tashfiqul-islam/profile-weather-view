@@ -23,18 +23,13 @@ updates:
     open-pull-requests-limit: 10
     pull-request-branch-name:
       separator: "-"
-    # Use custom PR template
-    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
     # Labels for automated organization
     labels:
       - "dependencies"
       - "npm"
       - "security"
-      # Add release type labels
       - "{{type}}"
     # Auto-merge configuration - Only for non-major updates
-    auto-merge: true
-    # Only auto-merge non-major updates (patch & minor)
     ignore:
       # Ignore major version bumps that require manual review
       - dependency-name: "*"
@@ -100,23 +95,18 @@ updates:
       - dependency-name: "bun-types"
     # Version control strategy - use the same as in package.json
     versioning-strategy: "auto"
-    # Target branch - same as your other workflows
-    target-branch: "master"
+    # Target different branch to avoid configuration conflict
+    target-branch: "develop"
     # PR Customization
     open-pull-requests-limit: 2
     pull-request-branch-name:
       separator: "-"
-    # Use custom PR template
-    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
     # Labels for better identification
     labels:
       - "dependencies"
       - "npm"
       - "bun-runtime"
-      # Add release type labels
       - "{{type}}"
-    # Auto-merge configuration - Only for non-major updates
-    auto-merge: true
     # Only auto-merge non-major updates (patch & minor)
     ignore:
       # Ignore major version bumps that require manual review
@@ -152,17 +142,12 @@ updates:
     open-pull-requests-limit: 5
     pull-request-branch-name:
       separator: "-"
-    # Use custom PR template
-    pull-request-template: ".github/DEPENDABOT_TEMPLATE.md"
     # Labels for better organization
     labels:
       - "dependencies"
       - "github-actions"
       - "ci"
-      # Add release type labels
       - "{{type}}"
-    # Auto-merge configuration - Only for non-major updates
-    auto-merge: true
     # Only auto-merge non-major updates (patch & minor)
     ignore:
       # Ignore major version bumps that require manual review
