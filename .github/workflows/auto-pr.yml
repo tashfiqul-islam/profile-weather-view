@@ -1,4 +1,4 @@
-name: "🚀 Release Automation"
+name: "🚀 Automatic PR Creation"
 
 # ============================================================
 # ⚡ Trigger Configuration
@@ -83,12 +83,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history to get branch info
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "🔍 Check for Existing PR"
         id: check-pr
         run: |
           echo "::group::Checking for existing PRs"
-          # Use GitHub API to check for open PRs from develop to master
+          # Use GitHub CLI to check for open PRs from develop to master
           PR_EXISTS=$(gh pr list --head ${{ env.SOURCE_BRANCH }} --base ${{ env.TARGET_BRANCH }} --json number --jq 'length')
 
           # Check if we should force create a new PR
@@ -135,17 +136,11 @@ jobs:
 
           echo "📊 Found $COMMIT_COUNT commits to merge"
 
-          # Create PR body with escaped newlines
-          PR_BODY="## Release Changes\n\n${COMMIT_LIST}\n\n---\n\n🚀 *This release PR was automatically created from \`${{ env.SOURCE_BRANCH }}\` to merge changes into \`${{ env.TARGET_BRANCH }}\`.*\n\n📊 **Stats**\n- Commits: $COMMIT_COUNT\n- Last commit by: ${COMMITTER_NAME} (${COMMIT_DATE})\n- Latest commit: ${SHORT_SHA}\n\n⚠️ **Use the \"Squash and merge\" option to maintain a clean release history.**"
-
-          # Escape content for GitHub Actions
-          PR_BODY="${PR_BODY//'%'/'%25'}"
-          PR_BODY="${PR_BODY//$'\n'/'%0A'}"
-          PR_BODY="${PR_BODY//$'\r'/'%0D'}"
+          # Save PR body to a file for the creation step
+          echo -e "## Release Changes\n\n${COMMIT_LIST}\n\n---\n\n🚀 *This release PR was automatically created from \`${{ env.SOURCE_BRANCH }}\` to merge changes into \`${{ env.TARGET_BRANCH }}\`.*\n\n📊 **Stats**\n- Commits: $COMMIT_COUNT\n- Last commit by: ${COMMITTER_NAME} (${COMMIT_DATE})\n- Latest commit: ${SHORT_SHA}\n\n⚠️ **Use the \"Squash and merge\" option to maintain a clean release history.**" > pr_body.txt
 
           # Set outputs
           echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
-          echo "pr_body=${PR_BODY}" >> $GITHUB_OUTPUT
           echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
           echo "::endgroup::"
 
@@ -188,41 +183,53 @@ jobs:
           echo "::endgroup::"
 
       # -------------------------------------------------------
-      # 🔄 Create PR
+      # 🔄 Create PR using GitHub CLI
       # -------------------------------------------------------
       - name: "🚀 Create Pull Request"
         if: steps.check-pr.outputs.pr_exists != 'true'
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: ${{ steps.commit-info.outputs.pr_title }}
-          body: ${{ steps.commit-info.outputs.pr_body }}
-          branch: ${{ env.SOURCE_BRANCH }}
-          base: ${{ env.TARGET_BRANCH }}
-          draft: false
-          labels: |
-            ${{ env.PR_LABEL_AUTOMATED }}
-            ${{ env.PR_LABEL_RELEASE }}
-            ${{ env.PR_LABEL_REVIEW }}
+        run: |
+          echo "::group::Creating Pull Request"
+
+          # Labels as a comma-separated string
+          LABELS="${{ env.PR_LABEL_AUTOMATED }},${{ env.PR_LABEL_RELEASE }},${{ env.PR_LABEL_REVIEW }}"
+
+          # Create the PR using GitHub CLI
+          PR_URL=$(gh pr create \
+            --base ${{ env.TARGET_BRANCH }} \
+            --head ${{ env.SOURCE_BRANCH }} \
+            --title "${{ steps.commit-info.outputs.pr_title }}" \
+            --body-file pr_body.txt \
+            --label "${{ env.PR_LABEL_AUTOMATED }}" \
+            --label "${{ env.PR_LABEL_RELEASE }}" \
+            --label "${{ env.PR_LABEL_REVIEW }}")
+
+          PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
+
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "✅ Successfully created PR #$PR_NUMBER"
+          echo "::endgroup::"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # -------------------------------------------------------
       # 📊 Summary
       # -------------------------------------------------------
       - name: "📊 New PR Created Summary"
-        if: steps.check-pr.outputs.pr_exists != 'true' && steps.create-pr.outputs.pull-request-number
+        if: steps.check-pr.outputs.pr_exists != 'true' && steps.create-pr.outputs.pr_number
         run: |
           echo "::group::PR creation successful"
           echo "# 🚀 Release PR Created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **PR #${{ steps.create-pr.outputs.pull-request-number }} was successfully created**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **PR #${{ steps.create-pr.outputs.pr_number }} was successfully created**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Title:** ${{ steps.commit-info.outputs.pr_title }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Source:** `${{ env.SOURCE_BRANCH }}`" >> $GITHUB_STEP_SUMMARY
           echo "- **Target:** `${{ env.TARGET_BRANCH }}`" >> $GITHUB_STEP_SUMMARY
           echo "- **Changes:** ${{ steps.commit-info.outputs.commit_count }} commits" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL:** ${{ steps.create-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** ${{ steps.create-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
           echo "- **SBOM:** ${{ steps.generate-sbom.outputs.sbom_generated == 'true' && 'Generated ✅' || 'Failed ❌' }}" >> $GITHUB_STEP_SUMMARY
           echo "::endgroup::"
 

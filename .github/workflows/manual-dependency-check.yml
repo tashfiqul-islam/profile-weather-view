@@ -212,25 +212,29 @@ jobs:
           if [ -f "package.json" ]; then
             # Use npm-check-updates to identify available updates
             echo "🔹 Scanning for available updates..."
+
+            # Add error handling and ensure output is valid JSON
             if [ "${{ env.SECURITY_ONLY }}" == "true" ]; then
-              NCU_OUTPUT=$(npx npm-check-updates --upgrade --target newest --format json --loglevel silent --dep prod,dev --filter "/^(?!.*(bun|bun-types)$).*$/")
+              # For security updates only, use the target newest option
+              NCU_OUTPUT=$(npx npm-check-updates --jsonUpgraded --target newest --loglevel error 2>/dev/null || echo "{}")
               UPDATE_COUNT=$(echo $NCU_OUTPUT | jq 'length')
               echo "🔹 Found $UPDATE_COUNT security-related package updates"
             else
-              NCU_OUTPUT=$(npx npm-check-updates --format json --loglevel silent --dep prod,dev --filter "/^(?!.*(bun|bun-types)$).*$/")
+              # For all updates, use simpler options that are known to work
+              NCU_OUTPUT=$(npx npm-check-updates --jsonUpgraded --loglevel error 2>/dev/null || echo "{}")
               UPDATE_COUNT=$(echo $NCU_OUTPUT | jq 'length')
               echo "🔹 Found $UPDATE_COUNT package updates available"
             fi
 
-            # Save the list of updates for later
+            # Save the list of updates for later (only if valid)
             echo "$NCU_OUTPUT" > npm-updates.json
 
             if [ "$UPDATE_COUNT" -gt 0 ]; then
               echo "updates_available=true" >> $GITHUB_OUTPUT
               echo "update_count=$UPDATE_COUNT" >> $GITHUB_OUTPUT
 
-              # Extract some example updates for the summary
-              EXAMPLES=$(echo $NCU_OUTPUT | jq -r 'to_entries | sort_by(.value.from) | head -3 | map("\(.key): \(.value.from) -> \(.value.to)") | join(", ")')
+              # Extract some example updates for the summary with better error handling
+              EXAMPLES=$(echo $NCU_OUTPUT | jq -r 'to_entries | sort_by(.value) | head -3 | map("\(.key): \(.value)") | join(", ")' || echo "Details not available")
               echo "update_examples=$EXAMPLES" >> $GITHUB_OUTPUT
 
               echo "✅ Updates available! Examples: $EXAMPLES"

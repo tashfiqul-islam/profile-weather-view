@@ -37,6 +37,7 @@ permissions:
   checks: write      # For test results
   pull-requests: write  # For comments
   id-token: write    # For OIDC token
+  security-events: write  # For CodeQL results
 
 # ============================================================
 # 🌍 Environment Variables
@@ -51,6 +52,46 @@ env:
 # 🔄 Jobs
 # ============================================================
 jobs:
+  # Advanced CodeQL Analysis for security scanning
+  codeql-analysis:
+    name: "🔒 CodeQL Security Analysis"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript', 'typescript']
+        # CodeQL supports ['cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift']
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Initializes the CodeQL tools for scanning
+      - name: "🔍 Initialize CodeQL"
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Learn more about CodeQL queries: https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/creating-and-working-with-codeql-query-suites
+          queries: +security-extended,security-and-quality
+
+      # Autobuild attempts to build any compiled languages
+      - name: "🔨 Autobuild"
+        uses: github/codeql-action/autobuild@v3
+
+      - name: "🔍 Perform CodeQL Analysis"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
   quality-validation:
     name: "🧪 Quality Validation"
     runs-on: ubuntu-latest
