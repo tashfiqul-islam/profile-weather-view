@@ -81,7 +81,8 @@ export default {
             if (
               commit.message.startsWith('Merge branch') ||
               commit.message.startsWith('Merge pull request') ||
-              (commit.message.startsWith('chore(release)') && commit.message.includes('[skip ci]'))
+              (commit.message.startsWith('chore(release)') &&
+                commit.message.includes('[skip ci]'))
             ) {
               return null; // Skip this commit entirely
             }
@@ -107,8 +108,7 @@ export default {
           },
 
           // Clean commit format template
-          commitPartial:
-            `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
+          commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
 `,
 
           // Custom footer

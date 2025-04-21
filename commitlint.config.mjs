@@ -79,7 +79,7 @@ export default {
   rules: {
     // Header validations
     'header-max-length': [ERROR, 'always', LIMITS.headerMaxLength],
-    'header-case': [ERROR, 'always', 'lower-case'],
+    'header-case': [WARNING, 'never', ['upper-case']], // Changed to warning and allowing mixed case
     'header-full-stop': [ERROR, 'never', '.'],
 
     // Type validations
@@ -135,13 +135,7 @@ export default {
 
     // Custom rules
     'no-forbidden-patterns': [ERROR, 'always'],
-    'references-empty': (ctx) => {
-      // Safely check type and scope before disabling
-      if (ctx?.type === 'chore' && ctx?.scope === 'release') {
-        return [DISABLED];
-      }
-      return [WARNING, 'never'];
-    },
+    'references-empty': [WARNING, 'never'],
   },
 
   // Ignore conventional preset rules
