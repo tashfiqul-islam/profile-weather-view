@@ -93,16 +93,10 @@ jobs:
           BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.10'); } catch (e) { console.log('1.2.10'); }")
           echo "bun_version=${BUN_VERSION}" >> $GITHUB_OUTPUT
 
-          # Check for an initial release (no tags)
-          if [ $(git tag -l "v*" | wc -l) -eq 0 ]; then
-            echo "first_release=true" >> $GITHUB_OUTPUT
-            echo "::notice::First release detected. Will create v1.0.0."
-          else
-            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-            echo "last_tag=${LAST_TAG}" >> $GITHUB_OUTPUT
-            echo "first_release=false" >> $GITHUB_OUTPUT
-            echo "::notice::Previous release found: ${LAST_TAG}"
-          fi
+          # Get last tag for reference
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          echo "last_tag=${LAST_TAG}" >> $GITHUB_OUTPUT
+          echo "::notice::Last release tag: ${LAST_TAG}"
 
       # -------------------------------------------------------
       # ⚙️ Runtime Setup
@@ -135,35 +129,6 @@ jobs:
           echo "🔹 Running tests..."
           bun run test:ci
           echo "::endgroup::"
-
-      # -------------------------------------------------------
-      # 📝 Initial Release Commit (If Needed)
-      # -------------------------------------------------------
-      - name: "✨ Create Initial Release Commit"
-        id: initial-commit
-        if: ${{ steps.init.outputs.first_release == 'true' }}
-        run: |
-          echo "::group::Initial Release Setup"
-          echo "Creating initial release commit that consolidates previous work"
-
-          # Configure git user
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
-
-          # Create the initial release commit with a valid scope
-          echo "feat(weather): initial release v1.0.0" > /tmp/commit_message
-          echo "" >> /tmp/commit_message
-          echo "The first official release of Profile Weather View." >> /tmp/commit_message
-          echo "" >> /tmp/commit_message
-          echo "This combines all previous development work into one release." >> /tmp/commit_message
-          echo "" >> /tmp/commit_message
-          echo "Closes #1" >> /tmp/commit_message
-
-          git commit --allow-empty -F /tmp/commit_message
-          git push origin HEAD:master
-          echo "::endgroup::"
-
-          echo "::notice::Initial release commit created successfully"
 
       # -------------------------------------------------------
       # 🚀 Semantic Release
@@ -272,6 +237,7 @@ jobs:
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](../commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
           echo "- **Workflow Run:** [#${{ github.run_number }}](../actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Release:** ${{ steps.init.outputs.last_tag }}" >> $GITHUB_STEP_SUMMARY
 
       # -------------------------------------------------------
       # 📦 Upload Artifacts

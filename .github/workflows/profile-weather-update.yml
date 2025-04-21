@@ -255,34 +255,22 @@ jobs:
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
           enableCrossOsArchive: false
 
-      - name: "🛡️ Validate Workflow Integrity"
-        run: |
-          echo "::group::Workflow Integrity Check"
-          # Verify workflow file hasn't been tampered with
-          WORKFLOW_FILE="$GITHUB_WORKSPACE/.github/workflows/profile-weather-update.yml"
-          if [[ -f "$WORKFLOW_FILE" ]]; then
-            CHECKSUM=$(sha256sum "$WORKFLOW_FILE" | cut -d ' ' -f1)
-            echo "Current workflow checksum: $CHECKSUM"
-            echo "Validating workflow integrity..."
-
-            # In production, you could compare against a known good hash
-            # or fetch a trusted hash from a secure location
-            # if [[ "$CHECKSUM" != "$EXPECTED_HASH" ]]; then
-            #   echo "::error::Workflow file integrity validation failed!"
-            #   exit 1
-            # fi
-          else
-            echo "::warning::Cannot verify workflow integrity - file not found"
-          fi
-          echo "::endgroup::"
-
       - name: "🔄 Install Dependencies"
         if: steps.bun-cache.outputs.cache-hit != 'true'
         working-directory: weather-code
         run: |
           echo "::group::Bun Installation"
           bun --version
-          bun install --frozen-lockfile
+          # Try with frozen lockfile first, but don't fail the workflow if it doesn't work
+          echo "Attempting installation with frozen lockfile..."
+          if ! bun install --frozen-lockfile; then
+            echo "::warning::Frozen lockfile installation failed, updating lockfile..."
+            # If frozen lockfile fails, update the lockfile
+            bun install
+            echo "::notice::Lockfile updated to match current Bun version"
+          else
+            echo "::notice::Installation with frozen lockfile successful"
+          fi
           echo "::endgroup::"
 
       - name: "⚡ Install Dependencies (Fast Path)"

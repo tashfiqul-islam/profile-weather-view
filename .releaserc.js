@@ -5,11 +5,10 @@
  * This configuration defines the entire release pipeline for profile-weather-view:
  * - Versioning strategy based on conventional commits
  * - Release note generation with customized templates
- * - Special handling for initial releases
  * - CHANGELOG.md generation and formatting
  * - GitHub release creation with customized templates
  *
- * @version 1.1.0
+ * @version 1.2.0
  * @license MIT
  */
 
@@ -78,77 +77,39 @@ export default {
         },
         writerOpts: {
           transform: (commit, context) => {
-            // Check if first release
-            const isFirstRelease = !context?.lastRelease?.gitTag;
-
-            // For first release, completely override with custom format
-            if (isFirstRelease && context) {
-              context.isFirstRelease = true;
-
-              // Make the version available to the template
-              if (context.nextRelease && context.nextRelease.version) {
-                context.version = context.nextRelease.version;
-              }
-
-              return null; // Skip all normal commit processing
+            // Filter out merge commits and auto-generated release commits
+            if (
+              commit.message.startsWith('Merge branch') ||
+              commit.message.startsWith('Merge pull request') ||
+              (commit.message.startsWith('chore(release)') &&
+                commit.message.includes('[skip ci]'))
+            ) {
+              return null; // Skip this commit entirely
             }
 
-            // For subsequent releases, properly format commit information
+            // Create a new object instead of modifying the original commit object
+            const newCommit = { ...commit };
+
+            // Format commit information for consistent display
             if (typeof commit.hash === 'string') {
-              commit.shortHash = commit.hash.substring(0, 7);
+              newCommit.shortHash = commit.hash.substring(0, 7);
             }
 
             if (typeof commit.subject === 'string') {
-              commit.subject = commit.subject.trim();
+              newCommit.subject = commit.subject.trim();
             }
 
             // Add proper URL links
-            if (context.repository) {
-              if (commit.hash) {
-                const url = `${context.host}/${context.owner}/${context.repository}/commit/${commit.hash}`;
-                commit.commitUrl = url;
-              }
+            if (context.repository && commit.hash) {
+              newCommit.commitUrl = `${context.host}/${context.owner}/${context.repository}/commit/${commit.hash}`;
             }
 
-            return commit;
+            return newCommit;
           },
 
-          // Main template with conditional for first release
-          mainTemplate: `{{> header}}
-
-{{#if isFirstRelease}}
-## Feat
-
-- Initial release of Profile Weather View - v{{version}}
-
-## ✨ Key Features
-
-- 🌐 **Real-time Data**: OpenWeather API 3.0 integration with global coverage
-- 🔄 **Auto-Updates**: Updates every 8 hours via GitHub Actions
-- 🛠️ **Type Safety**: 100% TypeScript + Zod schema validation
-- ⚡ **High Performance**: Powered by Bun for ultra-fast execution
-- 🎨 **Customizable**: Multiple display formats and themes
-- 🧪 **Reliability**: 100% test coverage with comprehensive testing
-{{else}}
-{{#each commitGroups}}
-{{#if title}}
-### {{title}}
-
-{{#each commits}}
-{{> commit root=@root}}
-{{/each}}
-
-{{/if}}
-{{/each}}
-{{/if}}
-
-{{> footer}}`,
-
-          // Clean commit format template for subsequent releases
-          commitPartial: `{{#if @root.isFirstRelease}}
-{{else}}
-* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
-{{/if}}`,
+          // Clean commit format template
+          commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
+`,
 
           // Custom footer
           footerPartial: `{{#if noteGroups}}

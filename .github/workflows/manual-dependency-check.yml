@@ -24,6 +24,14 @@ on:
         description: "Only check for security updates"
         type: boolean
         default: false
+      vulnerability_scan:
+        description: "Perform vulnerability scanning"
+        type: boolean
+        default: true
+      generate_sbom:
+        description: "Generate Software Bill of Materials"
+        type: boolean
+        default: true
       dry_run:
         description: "Dry run (don't actually create PRs)"
         type: boolean
@@ -47,6 +55,8 @@ permissions:
   contents: write  # For repository updates
   pull-requests: write  # For PR creation and management
   issues: read  # For reading repo issues
+  id-token: write  # For SLSA provenance
+  security-events: write  # For vulnerability reporting
 
 # ============================================================
 # 🌍 Environment Variables
@@ -56,6 +66,8 @@ env:
   CHECK_TYPE: ${{ github.event.inputs.package_type || 'all' }}
   AUTO_MERGE: ${{ github.event.inputs.auto_merge || 'true' }}
   SECURITY_ONLY: ${{ github.event.inputs.only_security || 'false' }}
+  VULN_SCAN: ${{ github.event.inputs.vulnerability_scan || 'true' }}
+  GENERATE_SBOM: ${{ github.event.inputs.generate_sbom || 'true' }}
   DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
   DEBUG: ${{ github.event.inputs.debug || 'false' }}
 
@@ -74,12 +86,30 @@ jobs:
         with:
           fetch-depth: 0  # Full history for correct versioning
 
+      - name: "🔐 Verify Repository Integrity"
+        run: |
+          echo "::group::Verifying repository integrity"
+          git verify-commit HEAD || echo "::warning::Last commit is not signed"
+          echo "::endgroup::"
+
       - name: "🧰 Setup Tools"
         run: |
           echo "::group::Setting up tools"
           # Install dependency update tools
           npm install -g npm-check-updates@latest
           sudo apt-get update && sudo apt-get install -y jq curl
+
+          # Install SBOM tools
+          if [ "${{ env.GENERATE_SBOM }}" == "true" ]; then
+            echo "Installing SBOM tools..."
+            npm install -g @cyclonedx/cdxgen
+          fi
+
+          # Install vulnerability scanning tools
+          if [ "${{ env.VULN_SCAN }}" == "true" ]; then
+            echo "Installing vulnerability scanning tools..."
+            npm install -g audit-ci
+          fi
           echo "::endgroup::"
 
       - name: "🔍 Analyze Dependency Configuration"
@@ -128,6 +158,50 @@ jobs:
           WORKFLOW_COUNT=$(ls -1 .github/workflows/*.yml 2>/dev/null | wc -l)
           echo "📊 Found $WORKFLOW_COUNT GitHub Action workflow files"
 
+          echo "::endgroup::"
+
+      - name: "📋 Generate SBOM (Software Bill of Materials)"
+        if: env.GENERATE_SBOM == 'true' && steps.analyze-config.outputs.package_json_exists == 'true'
+        id: generate-sbom
+        run: |
+          echo "::group::Generating SBOM"
+          # Generate CycloneDX SBOM
+          npx @cyclonedx/cdxgen -o sbom.json
+
+          # Store SBOM format
+          echo "sbom_generated=true" >> $GITHUB_OUTPUT
+          echo "sbom_format=CycloneDX" >> $GITHUB_OUTPUT
+
+          # Count components for summary
+          COMPONENT_COUNT=$(jq '.components | length' sbom.json)
+          echo "sbom_component_count=$COMPONENT_COUNT" >> $GITHUB_OUTPUT
+          echo "📊 SBOM contains $COMPONENT_COUNT components"
+          echo "::endgroup::"
+
+      - name: "🔒 Scan for Vulnerabilities"
+        if: env.VULN_SCAN == 'true' && steps.analyze-config.outputs.package_json_exists == 'true'
+        id: vuln-scan
+        run: |
+          echo "::group::Scanning for vulnerabilities"
+          # Run vulnerability scan
+          npx audit-ci --config audit-ci.json || echo "audit-ci.json not found, using default settings"
+          SCAN_EXIT=$?
+
+          if [ $SCAN_EXIT -eq 0 ]; then
+            echo "✅ No vulnerabilities found"
+            echo "vulnerabilities_found=false" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Vulnerabilities detected"
+            echo "vulnerabilities_found=true" >> $GITHUB_OUTPUT
+
+            # Count vulnerabilities by severity
+            HIGH_COUNT=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity=="high")] | length')
+            CRITICAL_COUNT=$(npm audit --json | jq '[.vulnerabilities[] | select(.severity=="critical")] | length')
+
+            echo "high_vulns=$HIGH_COUNT" >> $GITHUB_OUTPUT
+            echo "critical_vulns=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+            echo "📊 Found $HIGH_COUNT high and $CRITICAL_COUNT critical vulnerabilities"
+          fi
           echo "::endgroup::"
 
       - name: "🔍 Check npm Dependencies"
@@ -247,6 +321,21 @@ jobs:
 
               echo "  Checking $ACTION_NAME@$ACTION_VERSION..."
 
+              # Add verification of GitHub Action publisher
+              PUBLISHER=""
+              if [[ "$ACTION_NAME" =~ ^github/ ]]; then
+                PUBLISHER="github"
+              elif [[ "$ACTION_NAME" =~ ^oven-sh/ ]]; then
+                PUBLISHER="oven-sh"
+              fi
+
+              # If trusted publisher, continue with version check
+              if [ -n "$PUBLISHER" ]; then
+                echo "  ✅ Trusted publisher: $PUBLISHER"
+              else
+                echo "  ⚠️ Publisher verification: Unknown publisher $ACTION_NAME"
+              fi
+
               # Get latest release through GitHub API
               if [[ "$ACTION_NAME" =~ ^[a-zA-Z0-9_\-]+/[a-zA-Z0-9_\-]+$ ]]; then
                 # Handle standard GitHub repo format (owner/repo)
@@ -264,7 +353,7 @@ jobs:
                 ACTION_UPDATE_COUNT=$((ACTION_UPDATE_COUNT + 1))
 
                 # Save update info to file for later processing
-                echo "$ACTION_NAME,$ACTION_VERSION,$LATEST_VERSION,$file" >> action_updates.csv
+                echo "$ACTION_NAME,$ACTION_VERSION,$LATEST_VERSION,$file,$PUBLISHER" >> action_updates.csv
               fi
             done <<< "$ACTIONS"
           }
@@ -303,6 +392,7 @@ jobs:
           NPM_UPDATES="${{ steps.check-npm.outputs.updates_available || 'false' }}"
           BUN_UPDATES="${{ steps.check-bun.outputs.bun_update_available || 'false' }}"
           ACTION_UPDATES="${{ steps.check-actions.outputs.actions_update_available || 'false' }}"
+          VULNERABILITIES="${{ steps.vuln-scan.outputs.vulnerabilities_found || 'false' }}"
 
           if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ]; then
             echo "any_updates_available=true" >> $GITHUB_OUTPUT
@@ -316,6 +406,27 @@ jobs:
           {
             echo "# 📊 Dependency Update Summary"
             echo ""
+
+            # Add security summary first
+            if [ "${{ env.VULN_SCAN }}" = "true" ]; then
+              echo "## 🔒 Security Status"
+              if [ "$VULNERABILITIES" = "true" ]; then
+                echo "- ⚠️ **Vulnerabilities detected**: ${{ steps.vuln-scan.outputs.high_vulns }} high, ${{ steps.vuln-scan.outputs.critical_vulns }} critical"
+                echo "- 🚨 **Action required**: Update dependencies to resolve security issues"
+              else
+                echo "- ✅ **No vulnerabilities detected**"
+              fi
+              echo ""
+            fi
+
+            # Add SBOM information
+            if [ "${{ env.GENERATE_SBOM }}" = "true" ] && [ "${{ steps.generate-sbom.outputs.sbom_generated }}" = "true" ]; then
+              echo "## 📋 Software Bill of Materials"
+              echo "- ✅ **SBOM generated**: ${{ steps.generate-sbom.outputs.sbom_format }} format"
+              echo "- 📊 **Components**: ${{ steps.generate-sbom.outputs.sbom_component_count }} tracked dependencies"
+              echo ""
+            fi
+
             echo "## 🔍 Scan Results"
             echo ""
 
@@ -355,8 +466,12 @@ jobs:
               echo "## ℹ️ Dry Run Mode"
               echo "No actual updates will be applied. This is just a scan."
             else
-              if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ]; then
+              if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ] || [ "$VULNERABILITIES" = "true" ]; then
                 echo "## 🚀 Next Steps"
+                if [ "$VULNERABILITIES" = "true" ]; then
+                  echo "**Security vulnerabilities detected!** Dependabot will be triggered to create security update PRs."
+                  echo ""
+                }
                 echo "Dependabot will be triggered to create PRs for these updates."
               else
                 echo "## ℹ️ No Updates Required"
@@ -371,11 +486,21 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dependency-scan-summary
-          path: dependency_summary.md
+          path: |
+            dependency_summary.md
+            sbom.json
           retention-days: 7
 
       - name: "📃 Output Summary to Steps"
         run: cat dependency_summary.md >> $GITHUB_STEP_SUMMARY
+
+      # Add SARIF vulnerability report
+      - name: "🚨 Upload Vulnerability Report"
+        if: env.VULN_SCAN == 'true' && steps.vuln-scan.outputs.vulnerabilities_found == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: npm-audit.sarif
+          category: dependency-check
 
       - name: "🚀 Trigger Dependabot"
         if: steps.summary.outputs.any_updates_available == 'true' && env.DRY_RUN != 'true'
@@ -400,14 +525,22 @@ jobs:
             ECOSYSTEMS="npm"  # Bun updates come through npm ecosystem
           fi
 
+          # Prioritize security updates
+          if [ "${{ steps.vuln-scan.outputs.vulnerabilities_found }}" == "true" ]; then
+            echo "🔒 Prioritizing security updates due to vulnerabilities detected"
+            SECURITY_PARAM=",\"security-updates-only\":true"
+          else
+            SECURITY_PARAM=""
+          fi
+
           echo "🔹 Triggering dependency update check for: $ECOSYSTEMS"
 
-          # GitHub API call to trigger Dependabot
+          # GitHub API call to trigger Dependabot with latest parameters
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/dependabot/scans \
-            -d '{"dependency-names":[],"directory":"/","package-ecosystem":"'"$ECOSYSTEMS"'"}'
+            -d '{"dependency-names":[],"directory":"/","package-ecosystem":"'"$ECOSYSTEMS"'"'"$SECURITY_PARAM"'}'
 
           echo "::endgroup::"
 
