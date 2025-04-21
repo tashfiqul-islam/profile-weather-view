@@ -2,6 +2,13 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## [1.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.1...v1.1.2) (2025-04-21)
+
+
+### fix
+
+* **ci:** fixed dependabot config issue (#22) ([0a5241f](https://github.com/tashfiqul-islam/profile-weather-view/commit/0a5241f0ff52063e96d4e3effc10b68a2053ad1a)), closes #22
+
 ## [1.1.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.0...v1.1.1) (2025-04-21)
 
 
