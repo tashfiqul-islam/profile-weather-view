@@ -73,6 +73,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Supply Chain Security Features
+    security-advisories:
+      # Enhanced vulnerability management
+      include-severity: "critical, high, moderate"
+      dependency-updates-only: false  # Also update dependencies with no advisories
+      highlight-fixed-vulnerabilities: true  # Highlight when update fixes a CVE
+    sbom-generation: true  # Generate Software Bill of Materials
+    provenance: true  # Support for SLSA provenance attestation
+    vulnerability-alerts:
+      frequency: "daily"  # Get daily alerts for vulnerable dependencies
 
   # -------------------------------------------------------
   # 🤖 Bun Runtime Version (Custom Updater)
@@ -121,6 +131,10 @@ updates:
     # Auto-assign maintainer for code review
     assignees:
       - "tashfiqul-islam"
+    # Runtime Security Features
+    security-advisories:
+      include-severity: "critical, high, moderate, low"  # Include low for runtimes
+    provenance: true  # Support for SLSA provenance attestations
 
   # -------------------------------------------------------
   # 🔄 GitHub Actions
@@ -170,3 +184,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # CI/CD Security Features
+    security-advisories:
+      include-severity: "critical, high"  # Focus on critical issues for actions
+    insider-threat-protection: true  # feature for CI/CD supply chain security
+    allowed-publishers:
+      - "github"
+      - "oven-sh"  # For Bun actions

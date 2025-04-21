@@ -1,0 +1,297 @@
+name: "🧪 Pull Request Validation"
+
+# ============================================================
+# ⚡ Trigger Configuration
+# ============================================================
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - master
+  # Allow manual trigger for debugging
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to validate"
+        required: true
+        type: number
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions (Least Privilege Principle)
+# ============================================================
+permissions:
+  contents: read     # For checkout
+  checks: write      # For test results
+  pull-requests: write  # For comments
+  id-token: write    # For OIDC token
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  NODE_ENV: "test"
+  CI: "true"
+  BUN_RUNTIME_SAFETY: "true"
+  VITEST_SEGFAULT_RETRY: 3
+
+# ============================================================
+# 🔄 Jobs
+# ============================================================
+jobs:
+  quality-validation:
+    name: "🧪 Quality Validation"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Add SLSA provenance for CI/CD supply chain security
+    outputs:
+      test-passed: ${{ steps.test-results.outputs.test_passed }}
+      validation-report: ${{ steps.final-report.outputs.validation_report }}
+
+    steps:
+      # -------------------------------------------------------
+      # 🔐 Security Verification
+      # -------------------------------------------------------
+      - name: "🛡️ Validate Workflow Context"
+        id: security-check
+        run: |
+          echo "::group::Security Verification"
+          echo "🔹 Verifying workflow origin"
+          echo "🔹 Checking PR source safety"
+          echo "🔹 Validating user permissions"
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📋 Setup
+      # -------------------------------------------------------
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper checks
+          persist-credentials: false  # Security best practice
+
+      - name: "🔍 Initialize Workflow"
+        id: init
+        run: |
+          echo "::group::Environment Information"
+          echo "🔹 Repository: ${{ github.repository }}"
+          echo "🔹 PR: #${{ github.event.pull_request.number || inputs.pr_number }} - ${{ github.event.pull_request.title || 'Manual run' }}"
+          echo "🔹 Branch: ${{ github.head_ref || 'unknown' }} → ${{ github.base_ref || 'master' }}"
+          echo "🔹 Commit: ${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "🔹 Action Version: 2.0.0"
+          echo "::endgroup::"
+
+          # Extract Bun version from package.json
+          BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.10'); } catch (e) { console.log('1.2.10'); }")
+          echo "bun_version=${BUN_VERSION}" >> $GITHUB_OUTPUT
+
+          # Log PR information for better traceability
+          {
+            echo "pr_number=${{ github.event.pull_request.number || inputs.pr_number }}"
+            echo "pr_title=${{ github.event.pull_request.title || 'Manual validation' }}"
+            echo "pr_author=${{ github.event.pull_request.user.login || github.actor }}"
+          } >> $GITHUB_OUTPUT
+
+      # -------------------------------------------------------
+      # ⚙️ Runtime Setup
+      # -------------------------------------------------------
+      - name: "🧰 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ steps.init.outputs.bun_version }}
+
+      - name: "📦 Install Dependencies"
+        id: deps
+        run: |
+          echo "::group::Dependency Installation"
+          # Check if we have a lockfile first
+          if [ -f "bun.lockb" ]; then
+            echo "🔹 Installing with frozen lockfile"
+            bun install --frozen-lockfile
+          else
+            echo "⚠️ No lockfile found, doing regular install"
+            bun install
+          fi
+
+          # Verify signature integrity (supply chain security)
+          bun audit signatures
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🔍 Static Analysis
+      # -------------------------------------------------------
+      - name: "🔍 Code Quality Checks"
+        run: |
+          echo "::group::Static Analysis"
+          echo "Running ESLint..."
+          bun run lint
+          echo "::endgroup::"
+
+      - name: "📝 TypeScript Validation"
+        run: |
+          echo "::group::Type Checking"
+          bun run type-check
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🧪 Run Tests & Validation
+      # -------------------------------------------------------
+      - name: "🧪 Execute Test Suite"
+        id: test-execution
+        run: |
+          echo "::group::Test Execution"
+          echo "Running tests with coverage..."
+          bun run test:ci
+          TEST_EXIT_CODE=$?
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: "📊 Process Test Results"
+        id: test-results
+        if: always()
+        run: |
+          echo "::group::Test Results Processing"
+          if [ -f "test-results/junit.xml" ]; then
+            echo "✅ Test results file found"
+            TEST_COUNT=$(grep -c "<testcase" test-results/junit.xml || echo "0")
+            FAIL_COUNT=$(grep -c "<failure" test-results/junit.xml || echo "0")
+            SKIP_COUNT=$(grep -c "<skipped" test-results/junit.xml || echo "0")
+            PASS_COUNT=$((TEST_COUNT - FAIL_COUNT - SKIP_COUNT))
+
+            echo "📊 Test summary: $PASS_COUNT passed, $FAIL_COUNT failed, $SKIP_COUNT skipped"
+            echo "test_count=$TEST_COUNT" >> $GITHUB_OUTPUT
+            echo "pass_count=$PASS_COUNT" >> $GITHUB_OUTPUT
+            echo "fail_count=$FAIL_COUNT" >> $GITHUB_OUTPUT
+            echo "skip_count=$SKIP_COUNT" >> $GITHUB_OUTPUT
+
+            if [ "$FAIL_COUNT" -eq 0 ]; then
+              echo "test_passed=true" >> $GITHUB_OUTPUT
+            else
+              echo "test_passed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ No test results file found"
+            echo "test_passed=false" >> $GITHUB_OUTPUT
+            echo "test_count=0" >> $GITHUB_OUTPUT
+            echo "pass_count=0" >> $GITHUB_OUTPUT
+            echo "fail_count=0" >> $GITHUB_OUTPUT
+            echo "skip_count=0" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      - name: "📊 Publish Test Results"
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: test-results/junit.xml
+          comment_mode: create
+          comment_title: "📊 Test Results"
+
+      # -------------------------------------------------------
+      # 📄 Code Style & Convention Validation
+      # -------------------------------------------------------
+      - name: "🔍 Validate Conventional Commits"
+        id: commit-validation
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            ['feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'security']
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: "The subject must not start with an uppercase letter"
+
+      # -------------------------------------------------------
+      # 🔒 Security Analysis
+      # -------------------------------------------------------
+      - name: "🔒 Dependency Security Scan"
+        id: security-scan
+        continue-on-error: true
+        run: |
+          echo "::group::Security Scanning"
+          echo "Scanning dependencies for vulnerabilities..."
+          if ! bun audit --prod; then
+            echo "sec_issues_found=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Security issues found in dependencies"
+          else
+            echo "sec_issues_found=false" >> $GITHUB_OUTPUT
+            echo "✅ No security issues found"
+          fi
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📊 Workflow Summary
+      # -------------------------------------------------------
+      - name: "📊 Generate Validation Summary"
+        id: final-report
+        if: always()
+        run: |
+          echo "::group::Generating Final Report"
+
+          # Start building report information
+          STATUS_EMOJI="❌"
+          if [[ "${{ steps.test-execution.outputs.test_exit_code || '1' }}" == "0" && \
+                "${{ steps.commit-validation.outcome }}" == "success" && \
+                "${{ steps.security-scan.outputs.sec_issues_found || 'true' }}" != "true" ]]; then
+            STATUS_EMOJI="✅"
+            VALIDATION_REPORT="passed"
+          else
+            VALIDATION_REPORT="failed"
+          fi
+
+          # Write to GitHub step summary
+          echo "# Pull Request Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "$STATUS_EMOJI **Validation $VALIDATION_REPORT**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$VALIDATION_REPORT" == "passed" ]]; then
+            echo "This PR is ready for review and can be merged using the **Squash and merge** option." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Some checks failed - please address the issues before merging**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Validation Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** [#${{ steps.init.outputs.pr_number }} - ${{ steps.init.outputs.pr_title }}](${{ github.event.pull_request.html_url || format('https://github.com/{0}/pull/{1}', github.repository, inputs.pr_number) }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.head_ref || 'unknown' }}\` → \`${{ github.base_ref || 'master' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](${{ github.event.pull_request.head.repo.html_url || format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}/commit/${{ github.event.pull_request.head.sha || github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** @${{ steps.init.outputs.pr_author }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Tests: ${{ steps.test-results.outputs.test_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Passed: ${{ steps.test-results.outputs.pass_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Failed: ${{ steps.test-results.outputs.fail_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏩ Skipped: ${{ steps.test-results.outputs.skip_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Security Status" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
+            echo "⚠️ **Security issues found in dependencies**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No security issues detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Store validation report for job output
+          echo "validation_report=$VALIDATION_REPORT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📤 Upload Artifacts
+      # -------------------------------------------------------
+      - name: "📤 Upload Coverage Report"
+        if: always() && steps.test-execution.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 14

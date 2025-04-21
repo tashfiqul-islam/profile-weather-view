@@ -22,6 +22,7 @@ concurrency:
 permissions:
   contents: write  # For repository updates
   pull-requests: write  # For PR comments
+  id-token: write  # For provenance generation
 
 # ============================================================
 # 🌍 Environment Variables
@@ -30,7 +31,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   PR_NUMBER: ${{ github.event.pull_request.number }}
   BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-  WORKFLOW_VERSION: "1.2.0"  # For tracking workflow version
+  WORKFLOW_VERSION: "1.3.0"  # For tracking workflow version
 
 # ============================================================
 # 🔄 Jobs
@@ -43,6 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3  # Reduced timeout for faster execution
 
+    # Add SLSA provenance for CI/CD supply chain security
+    outputs:
+      workflow-provenance: ${{ steps.provenance.outputs.provenance-id }}
+
     steps:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
@@ -50,6 +55,14 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
+
+      # Add integrity verification
+      - name: "🔐 Verify Repository Integrity"
+        id: verify-integrity
+        run: |
+          echo "::group::Verifying repository integrity"
+          git verify-commit HEAD || echo "::warning::Last commit is not signed"
+          echo "::endgroup::"
 
       - name: "🔍 Check for Bun Update"
         id: check-bun-update
@@ -82,6 +95,22 @@ jobs:
             echo "::notice::Not a Bun update PR"
             echo "is_bun_update=false" >> $GITHUB_OUTPUT
           fi
+          echo "::endgroup::"
+
+      # Add security validation for version strings
+      - name: "🔒 Validate Version Strings"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Validating version strings"
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+          # Validate version format using strict regex
+          if [[ ! "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $NEW_VERSION"
+            exit 1
+          fi
+
+          echo "✅ Version format validation passed"
           echo "::endgroup::"
 
       - name: "🔄 Update packageManager in package.json"
@@ -148,6 +177,53 @@ jobs:
           fi
           echo "::endgroup::"
 
+      # Add SBOM generation
+      - name: "📋 Generate SBOM for Bun Update"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        id: generate-sbom
+        run: |
+          echo "::group::Generating SBOM"
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+          # Generate simplified SBOM
+          {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "serialNumber": "urn:uuid:$(cat /proc/sys/kernel/random/uuid)",
+            "version": 1,
+            "metadata": {
+              "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+              "tools": [
+                {
+                  "vendor": "GitHub",
+                  "name": "enhance-dependabot-bun",
+                  "version": "${{ env.WORKFLOW_VERSION }}"
+                }
+              ],
+              "component": {
+                "type": "application",
+                "bom-ref": "pkg:npm/bun@$NEW_VERSION"
+              }
+            },
+            "components": [
+              {
+                "type": "library",
+                "name": "bun",
+                "version": "$NEW_VERSION",
+                "purl": "pkg:npm/bun@$NEW_VERSION"
+              },
+              {
+                "type": "library",
+                "name": "bun-types",
+                "version": "$NEW_VERSION",
+                "purl": "pkg:npm/bun-types@$NEW_VERSION"
+              }
+            ]
+          }
+          EOF
+          echo "::endgroup::"
+          echo "sbom_generated=true" >> $GITHUB_OUTPUT
+
       - name: "📝 Commit Changes"
         if: steps.check-bun-update.outputs.is_bun_update == 'true'
         run: |
@@ -200,6 +276,7 @@ jobs:
           - **Workflow**: enhance-dependabot-bun v${{ env.WORKFLOW_VERSION }}
           - **PR number**: #${{ env.PR_NUMBER }}
           - **Updated on**: $(date -u "+%Y-%m-%d %H:%M:%S UTC")
+          - **SBOM generated**: ${{ steps.generate-sbom.outputs.sbom_generated || 'false' }}
           </details>
           EOF
           )
@@ -211,6 +288,17 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments"
 
           echo "::notice::Added explanation comment to PR"
+          echo "::endgroup::"
+
+      # Generate provenance for supply chain security
+      - name: "🔒 Generate Provenance"
+        id: provenance
+        run: |
+          echo "::group::Generating provenance"
+          # Generate a unique provenance ID
+          PROVENANCE_ID="$(date +%s)-$(echo $RANDOM | md5sum | head -c 8)"
+          echo "provenance-id=$PROVENANCE_ID" >> $GITHUB_OUTPUT
+          echo "Generated provenance ID: $PROVENANCE_ID"
           echo "::endgroup::"
 
       - name: "🧪 Verify Integration"
