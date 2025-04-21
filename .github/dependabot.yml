@@ -15,37 +15,26 @@ updates:
       day: "monday"
       time: "06:00"
       timezone: "Asia/Dhaka"
-    # Version control strategy
     versioning-strategy: "auto"
-    # Target branch - same as your other workflows
     target-branch: "master"
-    # PR Customization
     open-pull-requests-limit: 10
     pull-request-branch-name:
       separator: "-"
-    # Labels for automated organization
     labels:
       - "dependencies"
       - "npm"
       - "security"
       - "{{type}}"
-    # Auto-merge configuration - Only for non-major updates
     ignore:
-      # Ignore major version bumps that require manual review
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-    # PR configuration with commitlint compatible format
     commit-message:
-      # Using commitlint-compatible prefixes
       prefix: "deps"
       prefix-development: "chore"
       include: "scope"
-    # Auto-assign maintainer for code review
     assignees:
       - "tashfiqul-islam"
-    # Limit concurrent updates to improve performance
     groups:
-      # Group minor & patch dev dependencies
       dev-dependencies:
         dependency-type: "development"
         update-types:
@@ -53,14 +42,12 @@ updates:
           - "patch"
         patterns:
           - "*"
-      # Group minor & patch eslint plugins
       eslint-plugins:
         patterns:
           - "*eslint*"
         update-types:
           - "minor"
           - "patch"
-      # Group minor & patch testing libraries
       test-dependencies:
         patterns:
           - "vitest"
@@ -77,38 +64,28 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "06:30"  # Run shortly after main npm update
+      time: "06:30"
       timezone: "Asia/Dhaka"
-    # Only look for bun package updates
     allow:
       - dependency-name: "bun"
       - dependency-name: "bun-types"
-    # Version control strategy - use the same as in package.json
     versioning-strategy: "auto"
-    # Target different branch to avoid configuration conflict
     target-branch: "develop"
-    # PR Customization
     open-pull-requests-limit: 2
     pull-request-branch-name:
       separator: "-"
-    # Labels for better identification
     labels:
       - "dependencies"
       - "npm"
       - "bun-runtime"
       - "{{type}}"
-    # Only auto-merge non-major updates (patch & minor)
     ignore:
-      # Ignore major version bumps that require manual review
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-    # PR configuration with commitlint compatible format
     commit-message:
-      # Using commitlint-compatible prefixes
       prefix: "deps"
       prefix-development: "chore"
       include: "scope"
-    # Auto-assign maintainer for code review
     assignees:
       - "tashfiqul-islam"
 
@@ -122,32 +99,23 @@ updates:
       day: "wednesday"
       time: "09:00"
       timezone: "Asia/Dhaka"
-    # Target branch - same as your other workflows
     target-branch: "master"
-    # PR Customization
     open-pull-requests-limit: 5
     pull-request-branch-name:
       separator: "-"
-    # Labels for better organization
     labels:
       - "dependencies"
       - "github-actions"
       - "ci"
       - "{{type}}"
-    # Only auto-merge non-major updates (patch & minor)
     ignore:
-      # Ignore major version bumps that require manual review
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-    # PR configuration with commitlint compatible format
     commit-message:
-      # Using commitlint-compatible prefixes
       prefix: "ci"
       include: "scope"
-    # Auto-assign maintainer for code review
     assignees:
       - "tashfiqul-islam"
-    # Group GitHub Actions updates to reduce PR noise
     groups:
       actions:
         patterns:
