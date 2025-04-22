@@ -80,6 +80,13 @@ jobs:
           BUN_RUNTIME_SAFETY: true
           CI: true
 
+      - name: "🔄 Transform Test Report for SonarQube"
+        run: |
+          echo "::group::Test Report Transformation"
+          echo "Transforming Vitest JUnit XML to SonarQube compatible format"
+          bun run transform-test-report
+          echo "::endgroup::"
+
       - name: "📊 Generate Enhanced Coverage Report"
         run: |
           echo "::group::Coverage Report Validation"
@@ -154,7 +161,7 @@ jobs:
             -Dsonar.projectName=profile-weather-view
             -Dsonar.organization=tashfiqul-islam
             -Dsonar.javascript.lcov.reportPaths=${{ github.workspace }}/coverage/lcov.info
-            -Dsonar.testExecutionReportPaths=${{ github.workspace }}/test-results/junit.xml
+            -Dsonar.testExecutionReportPaths=${{ github.workspace }}/test-results/sonar-junit.xml
             -Dsonar.working.directory=${{ github.workspace }}/.scannerwork
             -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/.scannerwork/report-task.txt
             -Dsonar.verbose=true
