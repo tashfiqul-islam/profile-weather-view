@@ -8,7 +8,6 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - 'master'
-      - 'main'
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
@@ -125,18 +124,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
-            -Dsonar.projectName=${{ github.repository_owner }}_${{ github.event.repository.name }}
-            -Dsonar.organization=${{ github.repository_owner }}
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.sources=src/
-            -Dsonar.tests=src/__tests__/
-            -Dsonar.exclusions=**/node_modules/**,**/*.test.ts,**/*.spec.ts,**/*.benchmark.ts,src/__tests__/**
-            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
-            -Dsonar.pullrequest.branch=${{ github.head_ref }}
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          SONAR_SCANNER_OPTS: "-Dproject.settings=./sonar-project.properties"
 
       - name: "📝 SonarQube Quality Gate Check"
         uses: SonarSource/sonarqube-quality-gate-action@v1
@@ -388,4 +377,187 @@ jobs:
           done
 
           if [ "$LICENSE_ISSUES" -gt 0 ]; then
-            echo "license
+            echo "license_issues_found=true" >> $GITHUB_OUTPUT
+            echo "license_issues_count=$LICENSE_ISSUES" >> $GITHUB_OUTPUT
+            echo "⚠️ License compliance issues found"
+          else
+            echo "license_issues_found=false" >> $GITHUB_OUTPUT
+            echo "license_issues_count=0" >> $GITHUB_OUTPUT
+            echo "✅ No license compliance issues found"
+          fi
+          echo "::endgroup::"
+
+      - name: "📤 Upload License Report"
+        if: always() && steps.license-check.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-compliance-report
+          path: license-report.json
+          retention-days: 14
+
+      # -------------------------------------------------------
+      # 📊 SBOM Generation
+      # -------------------------------------------------------
+      - name: "📊 Generate SBOM"
+        id: sbom-generation
+        run: |
+          echo "::group::Generating SBOM"
+          # Install CycloneDX tool for SBOM generation
+          bun install --no-save @cyclonedx/cdxgen
+
+          # Generate SBOM in CycloneDX format
+          npx @cyclonedx/cdxgen -o sbom.json -t javascript
+          echo "sbom_generated=true" >> $GITHUB_OUTPUT
+
+          # Output some stats about the SBOM
+          COMPONENT_COUNT=$(jq '.components | length' sbom.json)
+          echo "📊 SBOM contains $COMPONENT_COUNT components"
+          echo "sbom_component_count=$COMPONENT_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: "📤 Upload SBOM"
+        if: always() && steps.sbom-generation.outputs.sbom_generated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: software-bill-of-materials
+          path: sbom.json
+          retention-days: 30
+
+      # -------------------------------------------------------
+      # 📊 Workflow Summary
+      # -------------------------------------------------------
+      - name: "📊 Generate Validation Summary"
+        id: final-report
+        if: always()
+        run: |
+          echo "::group::Generating Final Report"
+
+          # Start building report information
+          STATUS_EMOJI="❌"
+          VALIDATION_ISSUES=0
+
+          # Check test execution
+          if [[ "${{ steps.test-execution.outputs.test_exit_code || '1' }}" != "0" ]]; then
+            VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+          fi
+
+          # Check commit validation
+          if [[ "${{ steps.commit-validation.outcome }}" != "success" ]]; then
+            VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+          fi
+
+          # Check security issues
+          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
+            VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+          fi
+
+          # Check secret scanning
+          if [[ "${{ steps.secret-scan.outcome }}" == "failure" ]]; then
+            VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+          fi
+
+          # Check license compliance
+          if [[ "${{ steps.license-check.outputs.license_issues_found || 'false' }}" == "true" ]]; then
+            VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
+          fi
+
+          # Determine overall validation status
+          if [[ "$VALIDATION_ISSUES" == "0" ]]; then
+            STATUS_EMOJI="✅"
+            VALIDATION_REPORT="passed"
+          else
+            VALIDATION_REPORT="failed"
+          fi
+
+          # Write to GitHub step summary
+          echo "# Pull Request Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "$STATUS_EMOJI **Validation $VALIDATION_REPORT**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$VALIDATION_REPORT" == "passed" ]]; then
+            echo "This PR is ready for review and can be merged using the **Squash and merge** option." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Some checks failed - please address the issues before merging**" >> $GITHUB_STEP_SUMMARY
+            echo "Issues found: $VALIDATION_ISSUES" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Validation Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** [#${{ steps.init.outputs.pr_number }} - ${{ steps.init.outputs.pr_title }}](${{ github.event.pull_request.html_url || format('https://github.com/{0}/pull/{1}', github.repository, inputs.pr_number) }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.head_ref || 'unknown' }}\` → \`${{ github.base_ref || 'master' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](${{ github.event.pull_request.head.repo.html_url || format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}/commit/${{ github.event.pull_request.head.sha || github.sha }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** @${{ steps.init.outputs.pr_author }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Tests: ${{ steps.test-results.outputs.test_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Passed: ${{ steps.test-results.outputs.pass_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ Failed: ${{ steps.test-results.outputs.fail_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏩ Skipped: ${{ steps.test-results.outputs.skip_count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Security Status" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
+            echo "⚠️ **Security issues found in dependencies**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No security issues detected in dependencies**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ steps.secret-scan.outcome }}" == "failure" ]]; then
+            echo "⚠️ **Potential secrets detected in code**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No secrets detected in code**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Compliance" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.license-check.outputs.license_issues_found || 'false' }}" == "true" ]]; then
+            echo "⚠️ **License compliance issues found: ${{ steps.license-check.outputs.license_issues_count || '0' }}**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No license compliance issues**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ steps.sbom-generation.outputs.sbom_generated || 'false' }}" == "true" ]]; then
+            echo "✅ **SBOM generated with ${{ steps.sbom-generation.outputs.sbom_component_count || '0' }} components**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **SBOM generation failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Store validation report for job output
+          echo "validation_report=$VALIDATION_REPORT" >> $GITHUB_OUTPUT
+          echo "validation_issues=$VALIDATION_ISSUES" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 📤 Upload Artifacts
+      # -------------------------------------------------------
+      - name: "📤 Upload Coverage Report"
+        if: always() && steps.test-execution.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 14
+
+      # -------------------------------------------------------
+      # ✅ Status Check Integration
+      # -------------------------------------------------------
+      - name: "✅ Validate PR Status"
+        if: always()
+        run: |
+          echo "::group::PR Validation Status Check"
+          VALIDATION_ISSUES="${{ steps.final-report.outputs.validation_issues }}"
+          VALIDATION_REPORT="${{ steps.final-report.outputs.validation_report }}"
+
+          echo "Validation report: $VALIDATION_REPORT (Issues: $VALIDATION_ISSUES)"
+
+          if [[ "$VALIDATION_REPORT" != "passed" ]]; then
+            echo "::error::PR validation failed with $VALIDATION_ISSUES issues - please address them before merging"
+            exit 1
+          else
+            echo "::notice::PR validation passed! This PR is ready for review."
+          fi
+          echo "::endgroup::"

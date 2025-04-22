@@ -14,7 +14,6 @@
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript" alt="TypeScript"></a>
   <a href="https://bun.sh"><img src="https://img.shields.io/badge/powered%20by-bun-black?style=flat-square&logo=bun" alt="Powered by Bun"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog"></a>
   <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/semantic--release-angular-e10079?style=flat-square&logo=semantic-release" alt="semantic-release: angular"></a> <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog">
 </p>
 
