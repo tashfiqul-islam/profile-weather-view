@@ -141,7 +141,7 @@ jobs:
       # 🔍 SonarQube Analysis
       # -------------------------------------------------------
       - name: "🔧 Setup SonarQube"
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: SonarSource/sonarqube-scan-action@v5
         if: steps.sonar-connection-test.outputs.connection_ok == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
