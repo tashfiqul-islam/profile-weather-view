@@ -32,8 +32,9 @@ concurrency:
 # 🔒 Permissions (Least Privilege Principle)
 # ============================================================
 permissions:
-  contents: read     # For checking the repo
+  contents: write    # For PR creation
   pull-requests: write  # For creating PRs
+  actions: write    # For workflow management
   id-token: write    # For OIDC token
 
 # ============================================================
@@ -124,8 +125,33 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           COMMIT_DATE=$(git log -1 --date=format:"%Y-%m-%d %H:%M:%S" --format=%cd)
 
-          # Format PR title based on latest commit
+          # Format PR title based on latest commit, ensuring it follows conventional commits format
           PR_TITLE="${COMMIT_MSG%%$'\n'*}" # First line of commit
+
+          # Check if PR title follows conventional commit format
+          if ! echo "$PR_TITLE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\([a-z0-9-]+\))?: .+$'; then
+            # If not conventional, try to determine the type from branch name
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+            if [[ $BRANCH_NAME == feature/* ]]; then
+              TYPE="feat"
+            elif [[ $BRANCH_NAME == fix/* ]]; then
+              TYPE="fix"
+            elif [[ $BRANCH_NAME == docs/* ]]; then
+              TYPE="docs"
+            elif [[ $BRANCH_NAME == refactor/* ]]; then
+              TYPE="refactor"
+            else
+              # Default to chore if we can't determine
+              TYPE="chore"
+            fi
+
+            # Create a valid conventional commit title
+            SCOPE="release"
+            PR_TITLE="$TYPE($SCOPE): $PR_TITLE"
+          fi
+
+          # Ensure the title isn't too long for GitHub
           if [[ ${#PR_TITLE} -gt 60 ]]; then
             PR_TITLE="${PR_TITLE:0:57}..."
           fi
@@ -135,9 +161,26 @@ jobs:
           COMMIT_COUNT=$(echo "$COMMIT_LIST" | wc -l)
 
           echo "📊 Found $COMMIT_COUNT commits to merge"
+          echo "🏷️ PR Title: $PR_TITLE"
+
+          # Load PR template file if it exists
+          PR_TEMPLATE=""
+          if [[ -f ".github/PULL_REQUEST_TEMPLATE.md" ]]; then
+            PR_TEMPLATE=$(cat .github/PULL_REQUEST_TEMPLATE.md)
+          fi
 
           # Save PR body to a file for the creation step
-          echo -e "## Release Changes\n\n${COMMIT_LIST}\n\n---\n\n🚀 *This release PR was automatically created from \`${{ env.SOURCE_BRANCH }}\` to merge changes into \`${{ env.TARGET_BRANCH }}\`.*\n\n📊 **Stats**\n- Commits: $COMMIT_COUNT\n- Last commit by: ${COMMITTER_NAME} (${COMMIT_DATE})\n- Latest commit: ${SHORT_SHA}\n\n⚠️ **Use the \"Squash and merge\" option to maintain a clean release history.**" > pr_body.txt
+          {
+            echo -e "## Release Changes\n\n${COMMIT_LIST}\n\n---\n"
+
+            if [[ -n "$PR_TEMPLATE" ]]; then
+              echo -e "$PR_TEMPLATE\n\n---\n"
+            fi
+
+            echo -e "🚀 *This release PR was automatically created from \`${{ env.SOURCE_BRANCH }}\` to merge changes into \`${{ env.TARGET_BRANCH }}\`.*"
+            echo -e "\n📊 **Stats**\n- Commits: $COMMIT_COUNT\n- Last commit by: ${COMMITTER_NAME} (${COMMIT_DATE})\n- Latest commit: ${SHORT_SHA}"
+            echo -e "\n⚠️ **Use the \"Squash and merge\" option to maintain a clean release history.**"
+          } > pr_body.txt
 
           # Set outputs
           echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
