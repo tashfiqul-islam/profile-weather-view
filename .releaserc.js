@@ -8,7 +8,7 @@
  * - CHANGELOG.md generation and formatting
  * - GitHub release creation with customized templates
  *
- * @version 1.4.0
+ * @version 1.2.0
  * @license MIT
  */
 
@@ -196,7 +196,7 @@ export default {
             releaseType = 'Minor';
           }
 
-          // Format: ## 1.1.4 (2025-04-22) — Patch (with em-dash)
+          // Format: ## 1.1.4 (2025-04-22) — Patch
           return `## ${version} (${new Date().toISOString().split('T')[0]}) — ${releaseType}`;
         },
       },
@@ -229,7 +229,7 @@ export default {
         failComment:
           '❌ Release automation failed with error: ${error.message}',
 
-        // Updated template for release name - just the version number with v prefix
+        // Use the Lodash template string format which is properly supported
         releaseNameTemplate: 'v<%= nextRelease.version %>',
 
         // Add labels to issues based on the type of pull request

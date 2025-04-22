@@ -2,6 +2,19 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## [1.1.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.4...v1.1.5) (2025-04-22)
+
+
+### ci
+
+* **workflows:** improve PR validation, dependency checks and documentation (#25) ([c8db69b](https://github.com/tashfiqul-islam/profile-weather-view/commit/c8db69bc517c0f4a0f1221a37a7acd67a1078185)), closes #25
+
+
+### fix
+
+* **ci:** simplify commit message format to resolve semantic-release failures (#27) ([dbc7647](https://github.com/tashfiqul-islam/profile-weather-view/commit/dbc7647871f1273598603d7582b51e747df32658)), closes #27
+* **ci:** update config file to fix release issues (#26) ([7819adb](https://github.com/tashfiqul-islam/profile-weather-view/commit/7819adb5f3d3fb3a18979bf7ccf90154cbac0329)), closes #26
+
 ## [1.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.3...v1.1.4) (2025-04-22)
 
 
