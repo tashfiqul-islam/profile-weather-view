@@ -2,6 +2,13 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## [1.1.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.5...v1.1.6) (2025-04-22)
+
+
+### fix
+
+* **ci:** resolve semantic-release commit validation errors (#28) ([d39c14c](https://github.com/tashfiqul-islam/profile-weather-view/commit/d39c14cdb1b5c8e6c59cfc6ed184a9e56d74f7bd)), closes #28
+
 ## [1.1.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.4...v1.1.5) (2025-04-22)
 
 
