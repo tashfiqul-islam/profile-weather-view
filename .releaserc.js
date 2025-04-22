@@ -24,10 +24,10 @@ export default {
    * Uses the more modern extended syntax for better control
    */
   branches: [
-    '+([0-9])?(.{+([0-9]),x}).x',  // Maintenance branches: 1.x, 1.2.x
-    'master',                       // Main release branch
-    { name: 'beta', prerelease: true },  // Beta release branch
-    { name: 'alpha', prerelease: true }  // Alpha release branch
+    '+([0-9])?(.{+([0-9]),x}).x', // Maintenance branches: 1.x, 1.2.x
+    'master', // Main release branch
+    { name: 'beta', prerelease: true }, // Beta release branch
+    { name: 'alpha', prerelease: true }, // Alpha release branch
   ],
 
   /**
@@ -226,10 +226,12 @@ export default {
         // Custom PR comment templates
         successComment:
           '🚀 This PR is included in version ${nextRelease.version}',
-        failComment: '❌ Release automation failed with error: ${error.message}',
+        failComment:
+          '❌ Release automation failed with error: ${error.message}',
 
         // Updated Lodash template for release name with proper type indicator
-        releaseNameTemplate: 'v<%= nextRelease.version %> — <%= nextRelease.type === "major" ? "Major" : (nextRelease.type === "minor" ? "Minor" : "Patch") %>',
+        releaseNameTemplate:
+          'v<%= nextRelease.version %> — <%= nextRelease.type === "major" ? "Major" : (nextRelease.type === "minor" ? "Minor" : "Patch") %>',
 
         // Add labels to issues based on the type of pull request
         addReleases: 'bottom',
@@ -255,7 +257,7 @@ export default {
           'CHANGELOG.md', // Updated changelog with new release
           'package.json', // Updated version number
           'bunfig.toml', // Bun-specific configuration
-          'README.md',   // If version references appear in README
+          'README.md', // If version references appear in README
         ],
 
         // Use a concise commit message that passes commitlint
@@ -268,7 +270,7 @@ export default {
   /**
    * Global configuration options
    */
-  ci: true,  // Indicates the release is running in a CI environment
+  ci: true, // Indicates the release is running in a CI environment
   debug: process.env.DEBUG === 'true', // Enable debug mode when environment variable is set
   tagFormat: 'v${version}', // Format for the Git tag
-}
+};
