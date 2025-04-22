@@ -10,7 +10,7 @@ import securityPlugin from 'eslint-plugin-security';
 import eslintCommentsPlugin from 'eslint-plugin-eslint-comments';
 
 // ✅ Importing modular rule configurations
-import { getParserProjects, getParserOptions } from './src/config/parser.config.mjs';
+import { getParserOptions } from './src/config/parser.config.mjs';
 import { getPrettierRules } from './src/config/eslint-prettier.config.mjs';
 import { getSortRules } from './src/config/sort.config.mjs';
 import { getStylisticRules } from './src/config/stylistic.config.mjs';

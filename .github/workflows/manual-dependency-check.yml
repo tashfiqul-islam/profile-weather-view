@@ -475,7 +475,7 @@ jobs:
                 if [ "$VULNERABILITIES" = "true" ]; then
                   echo "**Security vulnerabilities detected!** Dependabot will be triggered to create security update PRs."
                   echo ""
-                }
+                fi
                 echo "Dependabot will be triggered to create PRs for these updates."
               else
                 echo "## ℹ️ No Updates Required"
