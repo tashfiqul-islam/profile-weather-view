@@ -13,6 +13,12 @@ on:
       - 'image/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
+  # Automatically sync branches after a PR is merged to master
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'master'
   # Automatically sync branches after a release is published
   workflow_run:
     workflows: ["semantic-release"]
@@ -59,14 +65,19 @@ env:
 # 🔄 Jobs
 # ============================================================
 jobs:
-  # Job to sync develop with master (after releases)
+  # Job to sync develop with master (after releases or PR merges)
   sync-branches:
     name: "🔄 Sync develop with master"
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Run this job when:
+    # 1. Manually triggered with sync_branches=true
+    # 2. After semantic-release completes successfully
+    # 3. When a PR is merged to master
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_branches == 'true') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master')
 
     steps:
       - name: "⬇️ Checkout Repository"
@@ -74,62 +85,37 @@ jobs:
         with:
           fetch-depth: 0  # Full history
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          ref: master # Always checkout master first
 
       - name: "🔍 Configure Git"
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "${{ secrets.GIT_COMMITTER_NAME || 'github-actions[bot]' }}"
+          git config user.email "${{ secrets.GIT_COMMITTER_EMAIL || '41898282+github-actions[bot]@users.noreply.github.com' }}"
 
-      - name: "🔄 Sync develop with master"
+      - name: "🔄 Hard Reset develop to match master"
         run: |
-          echo "::group::Branch Synchronization"
+          echo "::group::Branch Hard Reset"
           echo "🔹 Fetching latest changes from remote"
-          git fetch origin
+          git fetch origin --prune
+
+          echo "🔹 Current branch: $(git branch --show-current)"
+          echo "🔹 Master commit: $(git rev-parse origin/master)"
 
           echo "🔹 Checking out develop branch"
           git checkout develop
 
-          echo "🔹 Merging changes from master"
-          if git merge origin/master -m "chore: sync develop with master after release [skip ci]"; then
-            echo "✅ Successfully merged master into develop"
+          echo "🔹 Develop commit before reset: $(git rev-parse HEAD)"
 
-            echo "🔹 Pushing changes to develop"
-            git push origin develop
-            echo "✅ Successfully pushed changes to develop"
-          else
-            echo "⚠️ Merge conflicts detected"
-            git merge --abort
+          echo "🔹 Hard resetting develop to match master exactly"
+          git reset --hard origin/master
 
-            echo "🔹 Using alternative strategy: reset develop to master and apply new commits"
-            # Store current develop HEAD
-            DEVELOP_HEAD=$(git rev-parse HEAD)
+          echo "🔹 Develop commit after reset: $(git rev-parse HEAD)"
 
-            # Find the common ancestor commit
-            COMMON_ANCESTOR=$(git merge-base origin/master origin/develop)
+          echo "🔹 Pushing updated develop branch"
+          git push origin develop --force
 
-            # Find new commits on develop that aren't in master
-            DEVELOP_COMMITS=$(git log --reverse --pretty=format:"%H" $COMMON_ANCESTOR..origin/develop)
-
-            # Reset develop to match master
-            git reset --hard origin/master
-
-            # Cherry-pick the new commits from develop
-            if [ -n "$DEVELOP_COMMITS" ]; then
-              echo "🔹 Cherry-picking new commits from develop"
-              for COMMIT in $DEVELOP_COMMITS; do
-                if ! git cherry-pick $COMMIT; then
-                  git cherry-pick --abort
-                  echo "⚠️ Cherry-pick failed, attempting to preserve changes with a new commit"
-                  git checkout $COMMIT -- .
-                  git commit -m "fix: reconstructed changes from $COMMIT [skip ci]"
-                fi
-              done
-            fi
-
-            # Force push the updated develop branch
-            git push --force-with-lease origin develop
-            echo "✅ Successfully synced develop with master (forced update)"
-          fi
+          echo "✅ Successfully reset develop to match master - branches are now identical"
+          echo "🔹 Verification: master=$(git rev-parse origin/master), develop=$(git rev-parse origin/develop)"
           echo "::endgroup::"
 
   create-release-pr:
