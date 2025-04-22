@@ -211,7 +211,7 @@ jobs:
           echo "✅ Successfully created PR #$PR_NUMBER"
           echo "::endgroup::"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
 
       # -------------------------------------------------------
       # 📊 Summary

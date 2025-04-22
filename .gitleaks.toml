@@ -1,0 +1,96 @@
+# GitLeaks Configuration File
+# Full documentation: https://github.com/zricethezav/gitleaks#configuration
+
+title = "GitLeaks Configuration for profile-weather-view"
+
+# Global configurations
+[allowlist]
+description = "Global allowlist"
+paths = [
+    '''coverage/''',
+    '''.*\.test\.ts$''',
+    '''.*\.spec\.ts$''',
+    '''LICENSE''',
+    '''README\.md''',
+]
+
+# Secret type definitions below
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(?:key|api|token|secret|client|passwd|password|auth|access)['"]?\s*[:=>\[\(\{]+\s*['"]?([a-z0-9]{20,})['"]?'''
+secretGroup = 1
+tags = ["key", "API", "generic"]
+[rules.allowlist]
+stopwords = [
+    "EXAMPLE_KEY",
+    "YOUR_KEY_HERE",
+    "DEMO_KEY",
+    "example",
+    "sample",
+]
+
+[[rules]]
+id = "github-token"
+description = "GitHub Token"
+regex = '''(?i)(?:github|gh)(?:[-_])?(?:token|key)['"]?\s*[:=>\[\(\{]+\s*['"]?([0-9a-z_]{36,})['"]?'''
+secretGroup = 1
+tags = ["github", "token"]
+[rules.allowlist]
+regexes = [
+    '''GITHUB_TOKEN''',
+    '''${{ secrets.GITHUB_TOKEN }}''',
+]
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["aws", "access-key"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Key"
+regex = '''(?i)aws(?:[-_])?(?:access|account|secret)?(?:[-_])?key['"]?\s*[:=>\[\(\{]+\s*['"]?([a-z0-9/+]{40})['"]?'''
+secretGroup = 1
+tags = ["aws", "secret-key"]
+
+[[rules]]
+id = "npm-auth-token"
+description = "NPM Auth Token"
+regex = '''(?i)(?:npm|yarn|bun)(?:[-_])?(?:token|key|secret|pass|password|auth)['"]?\s*[:=>\[\(\{]+\s*['"]?([a-z0-9-]{36})['"]?'''
+secretGroup = 1
+tags = ["npm", "token"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----'''
+tags = ["key", "private"]
+
+[[rules]]
+id = "password-in-code"
+description = "Hard-coded password"
+regex = '''(?i)(?:password|passwd|pwd)(?:[-_])?(?:default|initial|dev|test|prod|admin)['"]?\s*[:=>\[\(\{]+\s*['"]?([^'"\s]{4,})['"]?'''
+secretGroup = 1
+tags = ["password", "hardcoded"]
+[rules.allowlist]
+stopwords = [
+    "password",
+    "Password",
+    "PASSWORD",
+    "example_password",
+    "placeholder",
+]
+
+[[rules]]
+id = "sonar-token"
+description = "SonarQube/SonarCloud Token"
+regex = '''(?i)(?:sonar|sonarqube|sonarcloud)(?:[-_])?(?:token|key|secret)['"]?\s*[:=>\[\(\{]+\s*['"]?([a-z0-9]{40})['"]?'''
+secretGroup = 1
+tags = ["sonar", "token"]
+[rules.allowlist]
+regexes = [
+    '''SONAR_TOKEN''',
+    '''${{ secrets.SONAR_TOKEN }}''',
+]
