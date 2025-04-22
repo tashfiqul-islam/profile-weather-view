@@ -260,8 +260,10 @@ jobs:
             bun install
           fi
 
-          # Verify signature integrity (supply chain security)
-          bun audit signatures
+          # Verify signature integrity in a more efficient way to avoid argument list too long error
+          echo "🔹 Verifying package signatures"
+          # Use a simple check that avoids passing too many arguments
+          bun pm signature verify
           echo "::endgroup::"
 
       # -------------------------------------------------------
