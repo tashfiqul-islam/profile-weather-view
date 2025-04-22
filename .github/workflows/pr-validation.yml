@@ -8,6 +8,16 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - 'master'
+      - 'main'
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'image/**'
+  push:
+    branches:
+      - 'master'
+      - 'main'
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
@@ -335,18 +345,23 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          config-path: .gitleaks.toml
-          verbose: true
-          report-format: sarif
-          report-path: gitleaks-report.sarif
         continue-on-error: true  # Don't fail the workflow, but flag the issues
 
       - name: "📤 Upload Secret Scanning Report"
-        if: always() && steps.secret-scan.outcome == 'success' && steps.secret-scan.outputs.result != null
+        if: always() && steps.secret-scan.outcome == 'success'
+        run: |
+          if [ -f "results.sarif" ]; then
+            echo "Secret scanning report found, uploading..."
+          else
+            echo "No secret scanning report found, skipping upload."
+            exit 0
+          fi
+
+      - name: "📤 Upload SARIF to GitHub"
+        if: always() && steps.secret-scan.outcome == 'success'
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: gitleaks-report.sarif
+          sarif_file: results.sarif
           category: secret-scanning
         continue-on-error: true
 
@@ -566,6 +581,10 @@ jobs:
 
           echo "Validation report: $VALIDATION_REPORT (Issues: $VALIDATION_ISSUES)"
 
-          # Temporarily treating PR as passing for debugging purposes
-          echo "::notice::PR validation treated as passing for debugging! (Original state: $VALIDATION_REPORT with $VALIDATION_ISSUES issues)"
+          if [[ "$VALIDATION_REPORT" != "passed" ]]; then
+            echo "::error::PR validation failed with $VALIDATION_ISSUES issues - please address them before merging"
+            exit 1
+          else
+            echo "::notice::PR validation passed! This PR is ready for review."
+          fi
           echo "::endgroup::"
