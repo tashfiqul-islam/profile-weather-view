@@ -139,7 +139,6 @@ jobs:
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
             -Dsonar.autoconfig.disabled=true
-            -Dsonar.analysis.mode=preview
             -Dsonar.scanner.force-deprecated-ci-autoconfig=false
             -Dsonar.alm.enabled=false
 
