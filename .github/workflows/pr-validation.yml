@@ -38,6 +38,7 @@ permissions:
   pull-requests: write  # For comments
   id-token: write    # For OIDC token
   security-events: write  # For CodeQL results
+  security-events: write  # For CodeQL results
 
 # ============================================================
 # 🌍 Environment Variables

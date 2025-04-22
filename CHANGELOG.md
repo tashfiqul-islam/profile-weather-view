@@ -2,6 +2,13 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## [1.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.2...v1.1.3) (2025-04-21)
+
+
+### fix
+
+* **ci:** automated release workflow syntax issue (#23) ([5b39ab6](https://github.com/tashfiqul-islam/profile-weather-view/commit/5b39ab6881c2b4bf891ce2f5533c9408276f1123)), closes #23
+
 ## [1.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.1...v1.1.2) (2025-04-21)
 
 
