@@ -8,7 +8,7 @@
  * - CHANGELOG.md generation and formatting
  * - GitHub release creation with customized templates
  *
- * @version 1.3.0
+ * @version 1.2.0
  * @license MIT
  */
 
@@ -186,7 +186,7 @@ export default {
         changelogTitle:
           '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.',
 
-        // Customize the version header format to include release type
+        // Customize the version header format to include release type with em-dash
         changelogVersionFormat: (version, type) => {
           // Determine release type label
           let releaseType = 'Patch';
@@ -229,9 +229,8 @@ export default {
         failComment:
           '❌ Release automation failed with error: ${error.message}',
 
-        // Updated Lodash template for release name with proper type indicator
-        releaseNameTemplate:
-          'v<%= nextRelease.version %> — <%= nextRelease.type === "major" ? "Major" : (nextRelease.type === "minor" ? "Minor" : "Patch") %>',
+        // Use the Lodash template string format which is properly supported
+        releaseNameTemplate: 'v<%= nextRelease.version %>',
 
         // Add labels to issues based on the type of pull request
         addReleases: 'bottom',
