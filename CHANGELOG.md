@@ -2,6 +2,13 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## [1.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.3...v1.1.4) (2025-04-22)
+
+
+### security
+
+* **ci:** enhance PR validation and security scanning workflows (#24) ([2f758be](https://github.com/tashfiqul-islam/profile-weather-view/commit/2f758be50e605cd13eaee6c06bbc7013fa9b05c4)), closes #24
+
 ## [1.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.2...v1.1.3) (2025-04-21)
 
 
