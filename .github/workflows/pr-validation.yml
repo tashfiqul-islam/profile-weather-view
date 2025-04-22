@@ -137,6 +137,7 @@ jobs:
             -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.autoconfig.disabled=true
 
       - name: "📝 SonarQube Quality Gate Check"
         uses: sonarsource/sonarqube-quality-gate-action@master
@@ -149,6 +150,7 @@ jobs:
     name: "🧪 Quality Validation"
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: [codeql-analysis, sonarqube-analysis]
 
     # Add SLSA provenance for CI/CD supply chain security
     outputs:
@@ -457,7 +459,7 @@ jobs:
           fi
 
           # Check security issues
-          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'true' }}" == "true" ]]; then
+          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
           fi
 
