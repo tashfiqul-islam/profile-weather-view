@@ -13,11 +13,20 @@ on:
       - 'image/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
+  # Automatically sync branches after a release is published
+  workflow_run:
+    workflows: ["semantic-release"]
+    types:
+      - completed
   # Allow manual trigger for urgent releases
   workflow_dispatch:
     inputs:
       force_create:
         description: "Force create a new PR even if one exists"
+        type: boolean
+        default: false
+      sync_branches:
+        description: "Sync develop with master (use after release)"
         type: boolean
         default: false
 
@@ -32,7 +41,7 @@ concurrency:
 # 🔒 Permissions (Least Privilege Principle)
 # ============================================================
 permissions:
-  contents: read     # For checking the repo
+  contents: write     # Increased to write for branch syncing
   pull-requests: write  # For creating PRs
   id-token: write    # For OIDC token
 
@@ -50,17 +59,91 @@ env:
 # 🔄 Jobs
 # ============================================================
 jobs:
+  # Job to sync develop with master (after releases)
+  sync-branches:
+    name: "🔄 Sync develop with master"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_branches == 'true') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+
+      - name: "🔍 Configure Git"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: "🔄 Sync develop with master"
+        run: |
+          echo "::group::Branch Synchronization"
+          echo "🔹 Fetching latest changes from remote"
+          git fetch origin
+
+          echo "🔹 Checking out develop branch"
+          git checkout develop
+
+          echo "🔹 Merging changes from master"
+          if git merge origin/master -m "chore: sync develop with master after release [skip ci]"; then
+            echo "✅ Successfully merged master into develop"
+
+            echo "🔹 Pushing changes to develop"
+            git push origin develop
+            echo "✅ Successfully pushed changes to develop"
+          else
+            echo "⚠️ Merge conflicts detected"
+            git merge --abort
+
+            echo "🔹 Using alternative strategy: reset develop to master and apply new commits"
+            # Store current develop HEAD
+            DEVELOP_HEAD=$(git rev-parse HEAD)
+
+            # Find the common ancestor commit
+            COMMON_ANCESTOR=$(git merge-base origin/master origin/develop)
+
+            # Find new commits on develop that aren't in master
+            DEVELOP_COMMITS=$(git log --reverse --pretty=format:"%H" $COMMON_ANCESTOR..origin/develop)
+
+            # Reset develop to match master
+            git reset --hard origin/master
+
+            # Cherry-pick the new commits from develop
+            if [ -n "$DEVELOP_COMMITS" ]; then
+              echo "🔹 Cherry-picking new commits from develop"
+              for COMMIT in $DEVELOP_COMMITS; do
+                if ! git cherry-pick $COMMIT; then
+                  git cherry-pick --abort
+                  echo "⚠️ Cherry-pick failed, attempting to preserve changes with a new commit"
+                  git checkout $COMMIT -- .
+                  git commit -m "fix: reconstructed changes from $COMMIT [skip ci]"
+                fi
+              done
+            fi
+
+            # Force push the updated develop branch
+            git push --force-with-lease origin develop
+            echo "✅ Successfully synced develop with master (forced update)"
+          fi
+          echo "::endgroup::"
+
   create-release-pr:
     name: "📦 Create Release PR"
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Skip this job for workflow_run events and manual syncs
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_branches != 'true')
 
     # Add SLSA provenance for CI/CD supply chain security
     outputs:
       sbom-generated: ${{ steps.generate-sbom.outputs.sbom_generated }}
-
-    # Skip this workflow for pull request events entirely
-    if: github.event_name != 'pull_request'
 
     steps:
       # -------------------------------------------------------
