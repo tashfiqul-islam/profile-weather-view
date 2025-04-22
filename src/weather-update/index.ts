@@ -1,5 +1,5 @@
-import { updateReadme } from '@/weather-update/services/updateReadme';
 import { fetchWeatherData } from '@/weather-update/services/fetchWeather';
+import { updateReadme } from '@/weather-update/services/updateReadme';
 import { ensureEnvironmentVariables } from '@/weather-update/utils/preload';
 
 /**

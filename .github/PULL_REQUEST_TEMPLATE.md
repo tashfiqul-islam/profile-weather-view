@@ -2,12 +2,6 @@
 Thank you for contributing to Profile Weather View!
 -->
 
-<div align="center">
-
-# 🌦️ Pull Request
-
-</div>
-
 ## 📝 What does this PR do?
 
 <!-- Briefly describe what this PR accomplishes -->

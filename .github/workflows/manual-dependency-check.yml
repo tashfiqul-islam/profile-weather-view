@@ -398,6 +398,22 @@ jobs:
           ACTION_UPDATES="${{ steps.check-actions.outputs.actions_update_available || 'false' }}"
           VULNERABILITIES="${{ steps.vuln-scan.outputs.vulnerabilities_found || 'false' }}"
 
+          # Store additional values with default fallbacks for safety
+          NPM_UPDATE_COUNT="${{ steps.check-npm.outputs.update_count || '0' }}"
+          NPM_UPDATE_EXAMPLES="${{ steps.check-npm.outputs.update_examples || 'information not available' }}"
+          BUN_UPDATE_TYPE="${{ steps.check-bun.outputs.bun_update_type || 'unknown' }}"
+          BUN_CURRENT_VERSION="${{ steps.check-bun.outputs.bun_current_version || 'unknown' }}"
+          BUN_LATEST_VERSION="${{ steps.check-bun.outputs.bun_latest_version || 'unknown' }}"
+          CURRENT_BUN_VERSION="${{ steps.analyze-config.outputs.bun_version || 'unknown' }}"
+          ACTIONS_UPDATE_COUNT="${{ steps.check-actions.outputs.actions_update_count || '0' }}"
+          ACTIONS_UPDATE_EXAMPLES="${{ steps.check-actions.outputs.actions_update_examples || 'information not available' }}"
+          HIGH_VULNS="${{ steps.vuln-scan.outputs.high_vulns || '0' }}"
+          CRITICAL_VULNS="${{ steps.vuln-scan.outputs.critical_vulns || '0' }}"
+          SBOM_FORMAT="${{ steps.generate-sbom.outputs.sbom_format || 'CycloneDX' }}"
+          SBOM_COMPONENT_COUNT="${{ steps.generate-sbom.outputs.sbom_component_count || '0' }}"
+          USES_BUN="${{ steps.analyze-config.outputs.uses_bun || 'false' }}"
+          SBOM_GENERATED="${{ steps.generate-sbom.outputs.sbom_generated || 'false' }}"
+
           if [ "$NPM_UPDATES" = "true" ] || [ "$BUN_UPDATES" = "true" ] || [ "$ACTION_UPDATES" = "true" ]; then
             echo "any_updates_available=true" >> $GITHUB_OUTPUT
             echo "✅ Updates available!"
@@ -415,7 +431,7 @@ jobs:
             if [ "${{ env.VULN_SCAN }}" = "true" ]; then
               echo "## 🔒 Security Status"
               if [ "$VULNERABILITIES" = "true" ]; then
-                echo "- ⚠️ **Vulnerabilities detected**: ${{ steps.vuln-scan.outputs.high_vulns }} high, ${{ steps.vuln-scan.outputs.critical_vulns }} critical"
+                echo "- ⚠️ **Vulnerabilities detected**: $HIGH_VULNS high, $CRITICAL_VULNS critical"
                 echo "- 🚨 **Action required**: Update dependencies to resolve security issues"
               else
                 echo "- ✅ **No vulnerabilities detected**"
@@ -424,10 +440,10 @@ jobs:
             fi
 
             # Add SBOM information
-            if [ "${{ env.GENERATE_SBOM }}" = "true" ] && [ "${{ steps.generate-sbom.outputs.sbom_generated }}" = "true" ]; then
+            if [ "${{ env.GENERATE_SBOM }}" = "true" ] && [ "$SBOM_GENERATED" = "true" ]; then
               echo "## 📋 Software Bill of Materials"
-              echo "- ✅ **SBOM generated**: ${{ steps.generate-sbom.outputs.sbom_format }} format"
-              echo "- 📊 **Components**: ${{ steps.generate-sbom.outputs.sbom_component_count }} tracked dependencies"
+              echo "- ✅ **SBOM generated**: $SBOM_FORMAT format"
+              echo "- 📊 **Components**: $SBOM_COMPONENT_COUNT tracked dependencies"
               echo ""
             fi
 
@@ -436,8 +452,8 @@ jobs:
 
             if [ "$NPM_UPDATES" = "true" ]; then
               echo "### 📦 NPM Packages"
-              echo "- ✅ **${steps.check-npm.outputs.update_count}** package updates available"
-              echo "- Examples: ${steps.check-npm.outputs.update_examples}"
+              echo "- ✅ **$NPM_UPDATE_COUNT** package updates available"
+              echo "- Examples: $NPM_UPDATE_EXAMPLES"
               echo ""
             else
               echo "### 📦 NPM Packages"
@@ -445,21 +461,21 @@ jobs:
               echo ""
             fi
 
-            if [ "${{ steps.analyze-config.outputs.uses_bun }}" = "true" ]; then
+            if [ "$USES_BUN" = "true" ]; then
               echo "### 🏃 Bun Runtime"
               if [ "$BUN_UPDATES" = "true" ]; then
-                echo "- ✅ **${steps.check-bun.outputs.bun_update_type}** update available: ${steps.check-bun.outputs.bun_current_version} → ${steps.check-bun.outputs.bun_latest_version}"
+                echo "- ✅ **$BUN_UPDATE_TYPE** update available: $BUN_CURRENT_VERSION → $BUN_LATEST_VERSION"
               else
-                echo "- ⚠️ Already at latest version (${steps.analyze-config.outputs.bun_version})"
+                echo "- ⚠️ Already at latest version ($CURRENT_BUN_VERSION)"
               fi
               echo ""
             fi
 
             echo "### 🔄 GitHub Actions"
             if [ "$ACTION_UPDATES" = "true" ]; then
-              echo "- ✅ **${steps.check-actions.outputs.actions_update_count}** action updates available"
-              if [ -n "${steps.check-actions.outputs.actions_update_examples}" ]; then
-                echo "- Examples: ${steps.check-actions.outputs.actions_update_examples}"
+              echo "- ✅ **$ACTIONS_UPDATE_COUNT** action updates available"
+              if [ -n "$ACTIONS_UPDATE_EXAMPLES" ]; then
+                echo "- Examples: $ACTIONS_UPDATE_EXAMPLES"
               fi
             else
               echo "- ⚠️ No updates available"

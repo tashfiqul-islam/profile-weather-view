@@ -8,16 +8,6 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - 'master'
-      - 'main'
-    paths-ignore:
-      - '**.md'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.github/PULL_REQUEST_TEMPLATE.md'
-      - 'image/**'
-  push:
-    branches:
-      - 'master'
-      - 'main'
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
@@ -156,6 +146,48 @@ jobs:
 
     steps:
       # -------------------------------------------------------
+      # 🔍 Source Branch Validation
+      # -------------------------------------------------------
+      - name: "🔍 Validate Source Branch"
+        id: branch-check
+        run: |
+          echo "::group::Branch Verification"
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+
+          echo "🔹 Source branch: $SOURCE_BRANCH"
+          echo "🔹 Target branch: $TARGET_BRANCH"
+
+          if [ "$SOURCE_BRANCH" != "develop" ] || [ "$TARGET_BRANCH" != "master" ]; then
+            echo "::warning::This PR is not from develop to master branch."
+            echo "::notice::Source: $SOURCE_BRANCH, Target: $TARGET_BRANCH"
+            echo "source_is_develop=false" >> $GITHUB_OUTPUT
+            if [ "$SOURCE_BRANCH" != "develop" ]; then
+              echo "::warning::Source branch is not 'develop'"
+            fi
+            if [ "$TARGET_BRANCH" != "master" ]; then
+              echo "::warning::Target branch is not 'master'"
+            fi
+          else
+            echo "✅ PR is correctly configured from develop to master branch."
+            echo "source_is_develop=true" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      # Skip workflow if not from develop to master
+      - name: "⏭️ Check if validation should continue"
+        id: should-continue
+        run: |
+          if [ "${{ steps.branch-check.outputs.source_is_develop }}" != "true" ]; then
+            echo "::notice::Skipping full validation as this PR is not from develop to master"
+            echo "This workflow is configured to fully validate only PRs from develop to master."
+            echo "Basic checks will still be performed."
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -------------------------------------------------------
       # 🔐 Security Verification
       # -------------------------------------------------------
       - name: "🛡️ Validate Workflow Context"
@@ -244,6 +276,7 @@ jobs:
       # -------------------------------------------------------
       - name: "🧪 Execute Test Suite"
         id: test-execution
+        if: steps.should-continue.outputs.should_skip != 'true'
         run: |
           echo "::group::Test Execution"
           echo "Running tests with coverage..."

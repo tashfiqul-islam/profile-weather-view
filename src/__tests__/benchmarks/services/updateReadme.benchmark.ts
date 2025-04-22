@@ -1,7 +1,6 @@
 import { bench, describe } from 'vitest';
 
 import type { WeatherData } from '@/weather-update/services/fetchWeather';
-
 import { updateReadme } from '@/weather-update/services/updateReadme';
 
 // Benchmark performance of updating the README file

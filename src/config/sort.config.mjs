@@ -22,6 +22,7 @@ const getPathAliases = () => {
 
 // ✅ Named Export for ESLint Perfectionist Sorting Rules
 export const getSortRules = () => ({
+  // Perfectionist plugin rules (excluding sort-imports)
   'perfectionist/sort-decorators': 'off',
   'perfectionist/sort-classes': 'off',
   'perfectionist/sort-variable-declarations': ['error'],
@@ -38,35 +39,31 @@ export const getSortRules = () => ({
   'perfectionist/sort-maps': ['error'],
   'perfectionist/sort-object-types': [
     'error',
-    { type: 'line-length', order: 'asc' },
+    { type: 'natural', order: 'asc' },
   ],
   'perfectionist/sort-jsx-props': [
     'error',
-    { type: 'line-length', order: 'asc' },
+    { type: 'natural', order: 'asc' },
   ],
-  'perfectionist/sort-imports': [
-    'error',
-    {
-      type: 'line-length',
-      order: 'asc',
-      specialCharacters: 'keep',
-      internalPattern: ['^~/.+', '^@/.+', ...getPathAliases()],
-      partitionByComment: true,
-      partitionByNewLine: false,
-      newlinesBetween: 'always',
-      tsconfigRootDir: process.cwd(),
-    },
-  ],
+
+  // Disable perfectionist's sort-imports to avoid schema conflicts
+  'perfectionist/sort-imports': 'off',
+
+  // Use simple-import-sort instead for import sorting
+  'simple-import-sort/imports': 'error',
+  'simple-import-sort/exports': 'error',
+
+  // Other perfectionist rules
   'perfectionist/sort-exports': [
     'error',
-    { type: 'line-length', order: 'asc' },
+    { type: 'natural', order: 'asc' },
   ],
   'perfectionist/sort-named-imports': [
     'error',
-    { type: 'line-length', order: 'asc' },
+    { type: 'natural', order: 'asc' },
   ],
   'perfectionist/sort-named-exports': [
     'error',
-    { type: 'line-length', order: 'asc' },
+    { type: 'natural', order: 'asc' },
   ],
 });

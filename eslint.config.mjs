@@ -8,6 +8,7 @@ import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import securityPlugin from 'eslint-plugin-security';
 import eslintCommentsPlugin from 'eslint-plugin-eslint-comments';
+import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
 
 // ✅ Importing modular rule configurations
 import { getParserOptions } from './src/config/parser.config.mjs';
@@ -79,6 +80,15 @@ export default tseslint.config(
         order: 'asc',
         partitionByComment: true,
       },
+    },
+  },
+
+  // ✅ Simple Import Sort
+  {
+    plugins: { 'simple-import-sort': simpleImportSortPlugin },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
     },
   },
 
