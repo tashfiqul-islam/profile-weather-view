@@ -260,9 +260,9 @@ export default {
           'README.md', // If version references appear in README
         ],
 
-        // Use a concise commit message that passes commitlint
-        message:
-          'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+        // Use a simplified commit message that passes commitlint
+        // Only include the version number without the full release notes
+        message: 'chore(release): ${nextRelease.version} [skip ci]',
       },
     ],
   ],
