@@ -1,4 +1,4 @@
-import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Import the main function to test
 import { main } from '@/weather-update';
@@ -15,8 +15,8 @@ vi.mock('@/weather-update/utils/preload', () => ({
 }));
 
 // Import the mocked functions
-import { updateReadme } from '@/weather-update/services/updateReadme';
 import { fetchWeatherData } from '@/weather-update/services/fetchWeather';
+import { updateReadme } from '@/weather-update/services/updateReadme';
 import { ensureEnvironmentVariables } from '@/weather-update/utils/preload';
 
 describe('main()', () => {

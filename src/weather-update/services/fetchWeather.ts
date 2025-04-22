@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { Temporal } from '@js-temporal/polyfill';
+import { z } from 'zod';
 
 /**
  * Geographic coordinates for location tracking.

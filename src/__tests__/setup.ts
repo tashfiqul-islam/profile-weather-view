@@ -1,4 +1,4 @@
-import { vi, afterAll, beforeAll, afterEach } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 // Mock global objects if needed
 beforeAll(() => {

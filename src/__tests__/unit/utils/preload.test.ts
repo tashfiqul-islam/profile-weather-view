@@ -1,4 +1,4 @@
-import { vi, test, expect, describe, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ensureEnvironmentVariables } from '@/weather-update/utils/preload';
 

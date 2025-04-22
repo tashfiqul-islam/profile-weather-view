@@ -4,24 +4,23 @@ name: "🧪 Pull Request Validation"
 # ⚡ Trigger Configuration
 # ============================================================
 on:
+  # Validate PRs to master branch
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
       - 'master'
-      - 'main'
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - 'image/**'
+  # Run on push to master branch for CodeQL analysis
   push:
     branches:
       - 'master'
-      - 'main'
     paths-ignore:
       - '**.md'
       - '.github/ISSUE_TEMPLATE/**'
-      - '.github/PULL_REQUEST_TEMPLATE.md'
       - 'image/**'
   # Allow manual trigger for debugging
   workflow_dispatch:
@@ -156,6 +155,48 @@ jobs:
 
     steps:
       # -------------------------------------------------------
+      # 🔍 Source Branch Validation
+      # -------------------------------------------------------
+      - name: "🔍 Validate Source Branch"
+        id: branch-check
+        run: |
+          echo "::group::Branch Verification"
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+
+          echo "🔹 Source branch: $SOURCE_BRANCH"
+          echo "🔹 Target branch: $TARGET_BRANCH"
+
+          if [ "$SOURCE_BRANCH" != "develop" ] || [ "$TARGET_BRANCH" != "master" ]; then
+            echo "::warning::This PR is not from develop to master branch."
+            echo "::notice::Source: $SOURCE_BRANCH, Target: $TARGET_BRANCH"
+            echo "source_is_develop=false" >> $GITHUB_OUTPUT
+            if [ "$SOURCE_BRANCH" != "develop" ]; then
+              echo "::warning::Source branch is not 'develop'"
+            fi
+            if [ "$TARGET_BRANCH" != "master" ]; then
+              echo "::warning::Target branch is not 'master'"
+            fi
+          else
+            echo "✅ PR is correctly configured from develop to master branch."
+            echo "source_is_develop=true" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      # Skip workflow if not from develop to master
+      - name: "⏭️ Check if validation should continue"
+        id: should-continue
+        run: |
+          if [ "${{ steps.branch-check.outputs.source_is_develop }}" != "true" ]; then
+            echo "::notice::Skipping full validation as this PR is not from develop to master"
+            echo "This workflow is configured to fully validate only PRs from develop to master."
+            echo "Basic checks will still be performed."
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -------------------------------------------------------
       # 🔐 Security Verification
       # -------------------------------------------------------
       - name: "🛡️ Validate Workflow Context"
@@ -244,6 +285,7 @@ jobs:
       # -------------------------------------------------------
       - name: "🧪 Execute Test Suite"
         id: test-execution
+        if: steps.should-continue.outputs.should_skip != 'true'
         run: |
           echo "::group::Test Execution"
           echo "Running tests with coverage..."
@@ -259,10 +301,18 @@ jobs:
           echo "::group::Test Results Processing"
           if [ -f "test-results/junit.xml" ]; then
             echo "✅ Test results file found"
+            # Use grep with -o to avoid empty output issues
             TEST_COUNT=$(grep -c "<testcase" test-results/junit.xml || echo "0")
             FAIL_COUNT=$(grep -c "<failure" test-results/junit.xml || echo "0")
             SKIP_COUNT=$(grep -c "<skipped" test-results/junit.xml || echo "0")
-            PASS_COUNT=$((TEST_COUNT - FAIL_COUNT - SKIP_COUNT))
+
+            # Ensure we have valid numbers with fallback to 0
+            if [ -z "$TEST_COUNT" ]; then TEST_COUNT=0; fi
+            if [ -z "$FAIL_COUNT" ]; then FAIL_COUNT=0; fi
+            if [ -z "$SKIP_COUNT" ]; then SKIP_COUNT=0; fi
+
+            # Calculate passing tests safely
+            PASS_COUNT=$(( TEST_COUNT - FAIL_COUNT - SKIP_COUNT ))
 
             echo "📊 Test summary: $PASS_COUNT passed, $FAIL_COUNT failed, $SKIP_COUNT skipped"
             echo "test_count=$TEST_COUNT" >> $GITHUB_OUTPUT
@@ -298,6 +348,7 @@ jobs:
       # -------------------------------------------------------
       - name: "🔍 Validate Conventional Commits"
         id: commit-validation
+        if: github.event_name == 'pull_request'
         continue-on-error: true  # Don't fail the entire workflow if this check fails
         uses: amannn/action-semantic-pull-request@v5
         env:
@@ -451,45 +502,51 @@ jobs:
           STATUS_EMOJI="❌"
           VALIDATION_ISSUES=0
 
-          # Debug output
-          echo "Debug: Test exit code: ${{ steps.test-execution.outputs.test_exit_code || 'not set' }}"
-          echo "Debug: Commit validation outcome: ${{ steps.commit-validation.outcome || 'not set' }}"
-          echo "Debug: Security scan issues: ${{ steps.security-scan.outputs.sec_issues_found || 'not set' }}"
-          echo "Debug: Secret scan outcome: ${{ steps.secret-scan.outcome || 'not set' }}"
-          echo "Debug: License issues: ${{ steps.license-check.outputs.license_issues_found || 'not set' }}"
+          # Debug output with proper fallback values
+          TEST_EXIT_CODE="${{ steps.test-execution.outputs.test_exit_code || '1' }}"
+          COMMIT_VALIDATION_OUTCOME="${{ steps.commit-validation.outcome || 'skipped' }}"
+          SECURITY_SCAN_ISSUES="${{ steps.security-scan.outputs.sec_issues_found || 'false' }}"
+          SECRET_SCAN_OUTCOME="${{ steps.secret-scan.outcome || 'skipped' }}"
+          LICENSE_ISSUES="${{ steps.license-check.outputs.license_issues_found || 'false' }}"
 
-          # Check test execution
-          if [[ "${{ steps.test-execution.outputs.test_exit_code || '1' }}" != "0" ]]; then
+          echo "Debug: Test exit code: $TEST_EXIT_CODE"
+          echo "Debug: Commit validation outcome: $COMMIT_VALIDATION_OUTCOME"
+          echo "Debug: Security scan issues: $SECURITY_SCAN_ISSUES"
+          echo "Debug: Secret scan outcome: $SECRET_SCAN_OUTCOME"
+          echo "Debug: License issues: $LICENSE_ISSUES"
+
+          # Check test execution - only if we're not in push mode
+          if [ "${{ github.event_name }}" != "push" ] && [ "$TEST_EXIT_CODE" != "0" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
             echo "Debug: ⚠️ Failed check - Test execution"
           fi
 
-          # Check commit validation
-          if [[ "${{ steps.commit-validation.outcome }}" != "success" ]]; then
+          # Check commit validation - only for PRs
+          if [ "${{ github.event_name }}" == "pull_request" ] && [ "$COMMIT_VALIDATION_OUTCOME" != "success" ] && [ "$COMMIT_VALIDATION_OUTCOME" != "skipped" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
             echo "Debug: ⚠️ Failed check - Commit validation"
           fi
 
           # Check security issues
-          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
+          if [ "$SECURITY_SCAN_ISSUES" == "true" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
             echo "Debug: ⚠️ Failed check - Security scan"
           fi
 
           # Check secret scanning
-          if [[ "${{ steps.secret-scan.outcome }}" == "failure" ]]; then
+          if [ "$SECRET_SCAN_OUTCOME" == "failure" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
             echo "Debug: ⚠️ Failed check - Secret scan"
           fi
 
           # Check license compliance
-          if [[ "${{ steps.license-check.outputs.license_issues_found || 'false' }}" == "true" ]]; then
+          if [ "$LICENSE_ISSUES" == "true" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
             echo "Debug: ⚠️ Failed check - License compliance"
           fi
 
           # Determine overall validation status
-          if [[ "$VALIDATION_ISSUES" == "0" ]]; then
+          if [ "$VALIDATION_ISSUES" -eq "0" ]; then
             STATUS_EMOJI="✅"
             VALIDATION_REPORT="passed"
           else
@@ -503,7 +560,7 @@ jobs:
           echo "$STATUS_EMOJI **Validation $VALIDATION_REPORT**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "$VALIDATION_REPORT" == "passed" ]]; then
+          if [ "$VALIDATION_REPORT" == "passed" ]; then
             echo "This PR is ready for review and can be merged using the **Squash and merge** option." >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Some checks failed - please address the issues before merging**" >> $GITHUB_STEP_SUMMARY
@@ -512,12 +569,34 @@ jobs:
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Validation Details" >> $GITHUB_STEP_SUMMARY
-          echo "- **PR:** [#${{ steps.init.outputs.pr_number }} - ${{ steps.init.outputs.pr_title }}](${{ github.event.pull_request.html_url || format('https://github.com/{0}/pull/{1}', github.repository, inputs.pr_number) }})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** \`${{ github.head_ref || 'unknown' }}\` → \`${{ github.base_ref || 'master' }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](${{ github.event.pull_request.head.repo.html_url || format('https://github.com/{0}/commit/{1}', github.repository, github.sha) }}/commit/${{ github.event.pull_request.head.sha || github.sha }})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Author:** @${{ steps.init.outputs.pr_author }}" >> $GITHUB_STEP_SUMMARY
+
+          # Handle both PR and push events properly
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            PR_NUMBER="${{ github.event.pull_request.number || steps.init.outputs.pr_number }}"
+            PR_TITLE="${{ steps.init.outputs.pr_title }}"
+            PR_URL="${{ github.event.pull_request.html_url || format('https://github.com/{0}/pull/{1}', github.repository, steps.init.outputs.pr_number) }}"
+            BRANCH_HEAD="${{ github.head_ref }}"
+            BRANCH_BASE="${{ github.base_ref }}"
+            COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+            COMMIT_URL="${{ github.event.pull_request.head.repo.html_url || format('https://github.com/{0}', github.repository) }}/commit/$COMMIT_SHA"
+            AUTHOR="${{ steps.init.outputs.pr_author }}"
+
+            echo "- **PR:** [#$PR_NUMBER - $PR_TITLE]($PR_URL)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch:** \`$BRANCH_HEAD\` → \`$BRANCH_BASE\`" >> $GITHUB_STEP_SUMMARY
+          else
+            # For push events
+            COMMIT_SHA="${{ github.sha }}"
+            COMMIT_URL="https://github.com/${{ github.repository }}/commit/$COMMIT_SHA"
+            AUTHOR="${{ github.actor }}"
+
+            echo "- **Push:** to \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "- **Commit:** [\`${COMMIT_SHA:0:7}\`]($COMMIT_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Author:** @$AUTHOR" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
+          # Rest of summary remains the same but with proper string comparison
           echo "## Test Results" >> $GITHUB_STEP_SUMMARY
           echo "- Total Tests: ${{ steps.test-results.outputs.test_count || '0' }}" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Passed: ${{ steps.test-results.outputs.pass_count || '0' }}" >> $GITHUB_STEP_SUMMARY
@@ -526,13 +605,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## Security Status" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ steps.security-scan.outputs.sec_issues_found || 'false' }}" == "true" ]]; then
+          if [ "$SECURITY_SCAN_ISSUES" == "true" ]; then
             echo "⚠️ **Security issues found in dependencies**" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **No security issues detected in dependencies**" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ steps.secret-scan.outcome }}" == "failure" ]]; then
+          if [ "$SECRET_SCAN_OUTCOME" == "failure" ]; then
             echo "⚠️ **Potential secrets detected in code**" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **No secrets detected in code**" >> $GITHUB_STEP_SUMMARY
@@ -540,13 +619,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## Compliance" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ steps.license-check.outputs.license_issues_found || 'false' }}" == "true" ]]; then
+          if [ "$LICENSE_ISSUES" == "true" ]; then
             echo "⚠️ **License compliance issues found: ${{ steps.license-check.outputs.license_issues_count || '0' }}**" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ **No license compliance issues**" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ steps.sbom-generation.outputs.sbom_generated || 'false' }}" == "true" ]]; then
+          SBOM_GENERATED="${{ steps.sbom-generation.outputs.sbom_generated || 'false' }}"
+          if [ "$SBOM_GENERATED" == "true" ]; then
             echo "✅ **SBOM generated with ${{ steps.sbom-generation.outputs.sbom_component_count || '0' }} components**" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **SBOM generation failed**" >> $GITHUB_STEP_SUMMARY

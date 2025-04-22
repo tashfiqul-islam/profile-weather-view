@@ -87,10 +87,9 @@ export default {
               return null; // Skip this commit entirely
             }
 
-            // Create a new object instead of modifying the original commit object
+            // Format commit information for consistent display
             const newCommit = { ...commit };
 
-            // Format commit information for consistent display
             if (typeof commit.hash === 'string') {
               newCommit.shortHash = commit.hash.substring(0, 7);
             }
@@ -111,7 +110,51 @@ export default {
           commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
 `,
 
-          // Custom footer
+          // Customized section headers with icons
+          groupBy: 'type',
+          commitGroupsSort: 'title',
+          commitsSort: ['scope', 'subject'],
+
+          // Define custom section titles with icons
+          commitGroupsGen: (commits, context) => {
+            const typeGroups = {};
+
+            // Group commits by type
+            commits.forEach((commit) => {
+              const type = commit.type || '';
+              if (!typeGroups[type]) {
+                typeGroups[type] = [];
+              }
+              typeGroups[type].push(commit);
+            });
+
+            // Map types to formatted headers with icons
+            const typeToTitleMap = {
+              feat: '✨ New Features',
+              fix: '🐛 Bug Fixes',
+              docs: '📚 Documentation',
+              style: '💎 Styling',
+              refactor: '📦 Code Refactoring',
+              perf: '🚀 Performance Improvements',
+              test: '🧪 Tests',
+              build: '🔧 Build System',
+              ci: '🔄 CI/CD Improvements',
+              chore: '♻️ Chores & Maintenance',
+              revert: '⏪ Reverts',
+              security: '🔒 Security Enhancements',
+              breaking: '💥 BREAKING CHANGES',
+            };
+
+            // Create the commit groups array with custom titles
+            return Object.entries(typeGroups).map(([type, typeCommits]) => {
+              return {
+                title: typeToTitleMap[type] || type,
+                commits: typeCommits,
+              };
+            });
+          },
+
+          // Custom footer format
           footerPartial: `{{#if noteGroups}}
 {{#each noteGroups}}
 
@@ -137,6 +180,20 @@ export default {
         changelogFile: 'CHANGELOG.md',
         changelogTitle:
           '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.',
+
+        // Customize the version header format to include release type
+        changelogVersionFormat: (version, type) => {
+          // Determine release type label
+          let releaseType = 'Patch';
+          if (type === 'major') {
+            releaseType = 'Major';
+          } else if (type === 'minor') {
+            releaseType = 'Minor';
+          }
+
+          // Format: ## 1.1.4 (2025-04-22) — Patch
+          return `## ${version} (${new Date().toISOString().split('T')[0]}) — ${releaseType}`;
+        },
       },
     ],
 
@@ -167,9 +224,19 @@ export default {
           '🚀 This PR is included in version ${nextRelease.version}',
         failComment: '❌ Release automation failed',
 
-        // Custom release name format
-        releaseNameTemplate: 'v${nextRelease.version}',
-        // Use standard generated notes for the release body
+        // Custom release name format with release type
+        releaseNameTemplate: (nextRelease) => {
+          // Determine release type based on version increment
+          let releaseType = 'Patch';
+          if (nextRelease.type === 'major') {
+            releaseType = 'Major';
+          } else if (nextRelease.type === 'minor') {
+            releaseType = 'Minor';
+          }
+
+          // Format: v1.1.4 — Patch
+          return `v${nextRelease.version} — ${releaseType}`;
+        },
 
         // Skip GitHub token verification in dry-run mode
         verifyConditions: process.env.DRY_RUN === 'true' ? false : undefined,

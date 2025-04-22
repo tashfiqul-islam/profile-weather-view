@@ -1,9 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  fetchWeatherData,
   convertToDhakaTime,
+  fetchWeatherData,
 } from '@/weather-update/services/fetchWeather';
 
 describe('fetchWeatherData()', () => {

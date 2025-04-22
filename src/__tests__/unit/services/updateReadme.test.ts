@@ -1,8 +1,8 @@
-import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  updateReadme,
   getSectionContent,
+  updateReadme,
 } from '@/weather-update/services/updateReadme';
 
 describe('updateReadme()', () => {
