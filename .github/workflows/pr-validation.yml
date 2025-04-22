@@ -125,7 +125,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           GITHUB_SHA: ${{ github.sha }}
-          SONAR_SCANNER_OPTS: "-Dproject.settings=./sonar-project.properties"
+          SONAR_SCANNER_OPTS: "-Dproject.settings=./sonar-project.properties -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/.scannerwork/report-task.txt"
 
       - name: "📝 SonarQube Quality Gate Check"
         uses: SonarSource/sonarqube-quality-gate-action@v1
