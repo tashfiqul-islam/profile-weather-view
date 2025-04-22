@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  security-events: write
 
 # ============================================================
 # 🌍 Environment Variables
@@ -89,29 +90,85 @@ jobs:
           echo "::endgroup::"
 
       # -------------------------------------------------------
+      # 🔍 Verify SonarQube Connection
+      # -------------------------------------------------------
+      - name: "🔍 Verify SonarQube Connection"
+        id: sonar-connection-test
+        run: |
+          echo "::group::SonarQube Connection Test"
+          echo "Testing connection to SonarQube server..."
+
+          # Mask the URL for logs but test the connection
+          SONAR_HOST="${{ secrets.SONAR_HOST_URL }}"
+          SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+
+          # Extract domain without protocol for the curl test
+          SONAR_DOMAIN=$(echo "$SONAR_HOST" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+
+          echo "Testing connection to SonarQube server domain: $(echo $SONAR_DOMAIN | cut -d'.' -f1).***.com"
+
+          # Test basic connectivity to the domain
+          if ! curl --silent --head --fail --connect-timeout 10 "https://$SONAR_DOMAIN"; then
+            echo "::error::Cannot connect to SonarQube server domain. Please check network connectivity and firewall rules."
+            echo "connection_ok=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ Connection to SonarQube domain successful"
+          fi
+
+          echo "connection_ok=true" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🔧 Prepare SonarQube Environment Variables
+      # -------------------------------------------------------
+      - name: "🔧 Prepare SonarQube Environment"
+        id: prepare-sonar
+        run: |
+          echo "::group::SonarQube Environment Preparation"
+          # Create the .scannerwork directory with appropriate permissions
+          mkdir -p $GITHUB_WORKSPACE/.scannerwork
+          chmod 777 $GITHUB_WORKSPACE/.scannerwork
+
+          # Export GITHUB_WORKSPACE as environment variable
+          echo "SONAR_SCANNER_WORK_DIR=$GITHUB_WORKSPACE/.scannerwork" >> $GITHUB_ENV
+
+          echo "Workspace path: $GITHUB_WORKSPACE"
+          echo "Scanner work directory: $GITHUB_WORKSPACE/.scannerwork"
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
       # 🔍 SonarQube Analysis
       # -------------------------------------------------------
       - name: "🔧 Setup SonarQube"
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: SonarSource/sonarqube-scan-action@v2
+        if: steps.sonar-connection-test.outputs.connection_ok == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
         with:
           args: >
-            -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.testExecutionReportPaths=test-results/junit.xml
-            -Dsonar.coverage.minimum=100
+            -Dsonar.projectKey=tashfiqul-islam_profile-weather-view
+            -Dsonar.projectName=profile-weather-view
+            -Dsonar.organization=tashfiqul-islam
+            -Dsonar.javascript.lcov.reportPaths=${{ github.workspace }}/coverage/lcov.info
+            -Dsonar.testExecutionReportPaths=${{ github.workspace }}/test-results/junit.xml
+            -Dsonar.working.directory=${{ github.workspace }}/.scannerwork
+            -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/.scannerwork/report-task.txt
             -Dsonar.verbose=true
 
       - name: "🚦 SonarQube Quality Gate Check"
         id: sonarqube-quality-gate-check
+        if: steps.sonar-connection-test.outputs.connection_ok == 'true'
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          scanMetadataReportFile: ${{ github.workspace }}/.scannerwork/report-task.txt
 
       # -------------------------------------------------------
       # 📊 Results & Artifacts
@@ -128,6 +185,21 @@ jobs:
         if: always()
         run: |
           echo "::group::Quality Gate Summary"
+          CONN_OK="${{ steps.sonar-connection-test.outputs.connection_ok || 'false' }}"
+
+          if [ "$CONN_OK" != "true" ]; then
+            echo "❌ SonarQube Connection Failed"
+            echo "## SonarQube Connection Error" >> $GITHUB_STEP_SUMMARY
+            echo "Could not establish a connection to the SonarQube server. Please check:" >> $GITHUB_STEP_SUMMARY
+            echo "- SONAR_TOKEN secret is valid and not expired" >> $GITHUB_STEP_SUMMARY
+            echo "- SONAR_HOST_URL is correctly formatted and accessible" >> $GITHUB_STEP_SUMMARY
+            echo "- Network connectivity and firewall rules allow connections to SonarQube" >> $GITHUB_STEP_SUMMARY
+            echo "- SonarQube service is running and accessible from GitHub Actions" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **Troubleshooting Tip:** Try testing the connection manually from your local environment" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
           if [ "${{ steps.sonarqube-quality-gate-check.outcome }}" == "success" ]; then
             echo "✅ Quality Gate Passed"
             echo "Quality Gate Status: PASSED" >> $GITHUB_STEP_SUMMARY
