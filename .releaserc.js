@@ -186,7 +186,7 @@ export default {
         changelogTitle:
           '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.',
 
-        // Customize the version header format to include release type
+        // Customize the version header format to include release type with em-dash
         changelogVersionFormat: (version, type) => {
           // Determine release type label
           let releaseType = 'Patch';
@@ -196,7 +196,7 @@ export default {
             releaseType = 'Minor';
           }
 
-          // Format: ## 1.1.4 (2025-04-22) — Patch
+          // Format: ## 1.1.4 (2025-04-22) — Patch (with em-dash)
           return `## ${version} (${new Date().toISOString().split('T')[0]}) — ${releaseType}`;
         },
       },
@@ -229,9 +229,8 @@ export default {
         failComment:
           '❌ Release automation failed with error: ${error.message}',
 
-        // Updated Lodash template for release name with proper type indicator
-        releaseNameTemplate:
-          'v<%= nextRelease.version %> — <%= nextRelease.type === "major" ? "Major" : (nextRelease.type === "minor" ? "Minor" : "Patch") %>',
+        // Updated template for release name - just the version number with v prefix
+        releaseNameTemplate: 'v<%= nextRelease.version %>',
 
         // Add labels to issues based on the type of pull request
         addReleases: 'bottom',
