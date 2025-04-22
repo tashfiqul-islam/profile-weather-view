@@ -8,10 +8,10 @@ title = "GitLeaks Configuration for profile-weather-view"
 description = "Global allowlist"
 paths = [
     '''coverage/''',
-    '''**/*.test.ts''',
-    '''**/*.spec.ts''',
+    '''.*\.test\.ts$''',
+    '''.*\.spec\.ts$''',
     '''LICENSE''',
-    '''README.md''',
+    '''README\.md''',
 ]
 
 # Secret type definitions below

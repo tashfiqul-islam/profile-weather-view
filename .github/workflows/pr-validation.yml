@@ -337,18 +337,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           config-path: .gitleaks.toml
-          pre-commit: false
           verbose: true
           report-format: sarif
           report-path: gitleaks-report.sarif
         continue-on-error: true  # Don't fail the workflow, but flag the issues
 
       - name: "📤 Upload Secret Scanning Report"
-        if: always() && steps.secret-scan.outcome == 'success'
+        if: always() && steps.secret-scan.outcome == 'success' && steps.secret-scan.outputs.result != null
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: gitleaks-report.sarif
           category: secret-scanning
+        continue-on-error: true
 
       # -------------------------------------------------------
       # 📋 License Compliance Check
