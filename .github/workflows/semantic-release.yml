@@ -313,28 +313,30 @@ jobs:
             git checkout develop
             git pull origin develop
 
-            echo "🔹 Resetting develop to exactly match master..."
+            # Instead of a hard reset, rebase develop on top of master
+            # This preserves develop branch changes while incorporating master changes
+            echo "🔹 Rebasing develop on top of master instead of hard reset..."
             if [[ "$SIGNING_ENABLED" == "true" ]]; then
-              # Use -S flag for signed commits
-              git reset --hard origin/master
+              # Use -S flag for signed commits during rebase
+              echo "$GPG_PASSPHRASE" | GIT_SEQUENCE_EDITOR=: git -c gpg.passphrase="$GPG_PASSPHRASE" rebase --gpg-sign master
               # Force push with signed commits
               echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - && git push origin develop --force
             else
               # Standard workflow without signing
-              git reset --hard origin/master
+              GIT_SEQUENCE_EDITOR=: git rebase master
               git push origin develop --force
             fi
 
-            echo "🔹 Verifying branches are identical..."
+            echo "🔹 Verifying develop is ahead or equal to master..."
             git checkout master
             MASTER_HEAD=$(git rev-parse HEAD)
             git checkout develop
             DEVELOP_HEAD=$(git rev-parse HEAD)
 
-            if [ "$MASTER_HEAD" = "$DEVELOP_HEAD" ]; then
-              echo "✅ Success! Both branches are now identical at commit: $MASTER_HEAD"
+            if git merge-base --is-ancestor "$MASTER_HEAD" "$DEVELOP_HEAD"; then
+              echo "✅ Success! Develop branch contains all of master's history"
             else
-              echo "⚠️ Warning: Branches are not identical!"
+              echo "⚠️ Warning: Develop branch does not contain master's history!"
               echo "Master: $MASTER_HEAD"
               echo "Develop: $DEVELOP_HEAD"
               exit 1
@@ -361,7 +363,7 @@ jobs:
               fi
             done
 
-            echo "✅ Successfully synchronized master and develop branches and removed other branches"
+            echo "✅ Successfully rebased develop on top of master and cleaned up branches"
             echo "back_merge_status=success" >> $GITHUB_OUTPUT
           else
             echo "⚠️ No develop branch found, skipping synchronization"
