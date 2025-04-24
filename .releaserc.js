@@ -1,77 +1,56 @@
 /**
- * @file Semantic Release Configuration
- * @description Advanced configuration for semantic-release automation pipeline
+ * Semantic Release Configuration
  *
- * This configuration defines the entire release pipeline for profile-weather-view:
- * - Versioning strategy based on conventional commits
- * - Release note generation with customized templates
- * - CHANGELOG.md generation and formatting
- * - GitHub release creation with customized templates
- *
- * @version 1.2.0
- * @license MIT
+ * Automates version management and release process based on commit messages.
+ * @type {import('semantic-release').GlobalConfig}
  */
 
-/**
- * @typedef {import('semantic-release').GlobalConfig} SemanticReleaseConfig
- */
-
-/** @type {SemanticReleaseConfig} */
+/** @type {import('semantic-release').GlobalConfig} */
 export default {
-  /**
-   * Release branches configuration
-   * Only commits to these branches will trigger a release
-   * Uses the more modern extended syntax for better control
-   */
+  // Define which branches trigger releases
   branches: [
     '+([0-9])?(.{+([0-9]),x}).x', // Maintenance branches: 1.x, 1.2.x
-    'master', // Main release branch
-    { name: 'beta', prerelease: true }, // Beta release branch
-    { name: 'alpha', prerelease: true }, // Alpha release branch
+    'master',                      // Main release branch
+    { name: 'beta', prerelease: true },  // Beta releases
+    { name: 'alpha', prerelease: true }, // Alpha releases
   ],
 
-  /**
-   * Release plugins configuration
-   * Each plugin is responsible for a specific task in the release process
-   * They execute in sequence, creating a complete release pipeline
-   */
+  tagFormat: 'v${version}',
+
   plugins: [
     /**
-     * Step 1: Analyze commits to determine release type
-     * Uses conventional commits to determine version bump (major/minor/patch)
+     * Analyze commits to determine release type
      */
     [
       '@semantic-release/commit-analyzer',
       {
-        preset: 'angular', // Using Angular commit convention
+        preset: 'angular',
         releaseRules: [
-          // Standard release rules
-          { type: 'feat', release: 'minor' }, // New features trigger minor release
-          { type: 'fix', release: 'patch' }, // Bug fixes trigger patch release
+          // Standard types
+          { type: 'feat', release: 'minor' },
+          { type: 'fix', release: 'patch' },
 
-          // Additional release rules for non-standard commit types
-          { type: 'docs', release: 'patch' }, // Documentation updates
-          { type: 'style', release: 'patch' }, // Formatting/style changes
-          { type: 'refactor', release: 'patch' }, // Code refactoring
-          { type: 'perf', release: 'patch' }, // Performance improvements
-          { type: 'build', release: 'patch' }, // Build system changes
-          { type: 'ci', release: 'patch' }, // CI configuration changes
-          { type: 'test', release: 'patch' }, // Test additions/changes
-          { type: 'chore', scope: 'deps', release: 'patch' }, // Dependency updates
-          { type: 'chore', release: false }, // Other maintenance tasks (no release)
-          { type: 'security', release: 'patch' }, // Security improvements
+          // Extended types
+          { type: 'docs', release: 'patch' },
+          { type: 'style', release: 'patch' },
+          { type: 'refactor', release: 'patch' },
+          { type: 'perf', release: 'patch' },
+          { type: 'build', release: 'patch' },
+          { type: 'ci', release: 'patch' },
+          { type: 'test', release: 'patch' },
+          { type: 'chore', scope: 'deps', release: 'patch' },
+          { type: 'chore', release: false },
+          { type: 'security', release: 'patch' },
+          { type: 'workflows', release: 'minor' },
         ],
         parserOpts: {
-          // Keywords in commit body that indicate breaking changes
           noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
         },
       },
     ],
 
     /**
-     * Step 2: Generate release notes from commits
-     * Creates structured, readable release notes from commit messages
-     *
+     * Generate release notes from commit messages
      */
     [
       '@semantic-release/release-notes-generator',
@@ -81,29 +60,32 @@ export default {
           noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
         },
         writerOpts: {
+          /**
+           * Process each commit for formatting in release notes
+           */
           transform: (commit, context) => {
-            // Filter out merge commits and auto-generated release commits
+            // Skip merge and release commits
             if (
               commit.message.startsWith('Merge branch') ||
               commit.message.startsWith('Merge pull request') ||
-              (commit.message.startsWith('chore(release)') &&
-                commit.message.includes('[skip ci]'))
+              (commit.message.startsWith('chore(release)') && commit.message.includes('[skip ci]'))
             ) {
-              return null; // Skip this commit entirely
+              return null;
             }
 
-            // Format commit information for consistent display
             const newCommit = { ...commit };
 
+            // Create short hash for display
             if (typeof commit.hash === 'string') {
               newCommit.shortHash = commit.hash.substring(0, 7);
             }
 
+            // Clean up subject
             if (typeof commit.subject === 'string') {
               newCommit.subject = commit.subject.trim();
             }
 
-            // Add proper URL links
+            // Add URL links for commits
             if (context.repository && commit.hash) {
               newCommit.commitUrl = `${context.host}/${context.owner}/${context.repository}/commit/${commit.hash}`;
             }
@@ -111,20 +93,20 @@ export default {
             return newCommit;
           },
 
-          // Clean commit format template
-          commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if @root.linkReferences}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}{{#if references}}{{#each references}}, closes {{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/each}}{{/if}}
-`,
+          // Format for commit entries
+          commitPartial: `* {{type}}: {{subject}} {{#if issue}}(#{{issue}}){{/if}} ({{shortHash}}), closes {{#if issue}}#{{issue}}{{/if}}\n`,
 
-          // Customized section headers with icons
           groupBy: 'type',
           commitGroupsSort: 'title',
           commitsSort: ['scope', 'subject'],
 
-          // Define custom section titles with icons
+          /**
+           * Organize commits into sections with descriptive titles
+           */
           commitGroupsGen: (commits, context) => {
             const typeGroups = {};
 
-            // Group commits by type
+            // Group by commit type
             commits.forEach((commit) => {
               const type = commit.type || '';
               if (!typeGroups[type]) {
@@ -133,7 +115,7 @@ export default {
               typeGroups[type].push(commit);
             });
 
-            // Map types to formatted headers with icons
+            // Section titles with emojis
             const typeToTitleMap = {
               feat: '✨ New Features',
               fix: '🐛 Bug Fixes',
@@ -148,18 +130,16 @@ export default {
               revert: '⏪ Reverts',
               security: '🔒 Security Enhancements',
               breaking: '💥 BREAKING CHANGES',
+              workflows: '🔄 CI/CD Improvements',
             };
 
-            // Create the commit groups array with custom titles
-            return Object.entries(typeGroups).map(([type, typeCommits]) => {
-              return {
-                title: typeToTitleMap[type] || type,
-                commits: typeCommits,
-              };
-            });
+            return Object.entries(typeGroups).map(([type, typeCommits]) => ({
+              title: typeToTitleMap[type] || `**${type}**`,
+              commits: typeCommits,
+            }));
           },
 
-          // Custom footer format
+          // Templates for release notes formatting
           footerPartial: `{{#if noteGroups}}
 {{#each noteGroups}}
 
@@ -170,42 +150,41 @@ export default {
 {{/each}}
 {{/each}}
 {{/if}}`,
+
+          mainTemplate: `{{> header}}
+
+{{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
+
+{{#each commitGroups}}
+{{#if title}}
+{{title}}
+
+{{/if}}
+{{#each commits}}
+{{> commit root=@root}}
+{{/each}}
+
+{{/each}}
+{{> footer}}`,
+
+          headerPartial: `# {{version}}\n`,
         },
       },
     ],
 
     /**
-     * Step 3: Create/update CHANGELOG.md file
-     * Maintains a comprehensive history of changes in the project
-     *
+     * Create/update CHANGELOG.md
      */
     [
       '@semantic-release/changelog',
       {
         changelogFile: 'CHANGELOG.md',
-        changelogTitle:
-          '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.',
-
-        // Customize the version header format to include release type with em-dash
-        changelogVersionFormat: (version, type) => {
-          // Determine release type label
-          let releaseType = 'Patch';
-          if (type === 'major') {
-            releaseType = 'Major';
-          } else if (type === 'minor') {
-            releaseType = 'Minor';
-          }
-
-          // Format: ## 1.1.4 (2025-04-22) — Patch
-          return `## ${version} (${new Date().toISOString().split('T')[0]}) — ${releaseType}`;
-        },
+        changelogTitle: '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.',
       },
     ],
 
     /**
-     * Step 4: Update version in package.json
-     * Updates version field without publishing to npm
-     *
+     * Update version in package.json
      */
     [
       '@semantic-release/npm',
@@ -215,61 +194,42 @@ export default {
     ],
 
     /**
-     * Step 5: Create GitHub release
-     * Creates a tagged release on GitHub with generated notes
+     * Create GitHub release
      */
     [
       '@semantic-release/github',
       {
-        assets: [], // No additional assets to upload with this release
-
-        // Custom PR comment templates
-        successComment:
-          '🚀 This PR is included in version ${nextRelease.version}',
-        failComment:
-          '❌ Release automation failed with error: ${error.message}',
-
-        // Use the Lodash template string format which is properly supported
-        releaseNameTemplate: 'v<%= nextRelease.version %>',
-
-        // Add labels to issues based on the type of pull request
-        addReleases: 'bottom',
+        assets: [],
+        successComment: '🚀 This PR is included in version ${nextRelease.version}',
+        failComment: '❌ Release automation failed with error: ${error.message}',
         releasedLabels: ['released', 'ready-for-production'],
-
-        // Skip GitHub token verification in dry-run mode
+        addReleases: 'bottom',
         dryRun: process.env.DRY_RUN === 'true',
-
-        // Use GH_TOKEN for GitHub authentication
         githubToken: process.env.GH_TOKEN,
       },
     ],
 
     /**
-     * Step 6: Commit updated files back to repository
-     * Ensures version changes in files are committed to the repo
+     * Commit updated files back to repository
      */
     [
       '@semantic-release/git',
       {
-        // Files to commit back to the repository after version bump
         assets: [
-          'CHANGELOG.md', // Updated changelog with new release
-          'package.json', // Updated version number
-          'bunfig.toml', // Bun-specific configuration
-          'README.md', // If version references appear in README
+          'CHANGELOG.md',
+          'package.json',
+          'bunfig.toml',
+          'README.md',
         ],
-
-        // Use a simplified commit message that passes commitlint
-        // Only include the version number without the full release notes
         message: 'chore(release): ${nextRelease.version} [skip ci]',
+        // Enable GPG signing for release commits
+        signoff: true,  // Add Signed-off-by line at the end of the commit message
+        gpgSign: true,  // Sign the commit with GPG
       },
     ],
   ],
 
-  /**
-   * Global configuration options
-   */
-  ci: true, // Indicates the release is running in a CI environment
-  debug: process.env.DEBUG === 'true', // Enable debug mode when environment variable is set
-  tagFormat: 'v${version}', // Format for the Git tag
+  // Global options
+  ci: true,
+  debug: process.env.DEBUG === 'true',
 };
