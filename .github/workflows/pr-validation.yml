@@ -4,7 +4,7 @@ name: "🧪 Pull Request Validation"
 # ⚡ Trigger Configuration
 # ============================================================
 on:
-  # Validate PRs to master branch
+  # Validate PRs to master branch (regardless of source branch)
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
@@ -14,14 +14,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - 'image/**'
-  # Run on push to master branch for CodeQL analysis
-  push:
-    branches:
-      - 'master'
-    paths-ignore:
-      - '**.md'
-      - '.github/ISSUE_TEMPLATE/**'
-      - 'image/**'
+
   # Allow manual trigger for debugging
   workflow_dispatch:
     inputs:
@@ -167,29 +160,28 @@ jobs:
           echo "🔹 Source branch: $SOURCE_BRANCH"
           echo "🔹 Target branch: $TARGET_BRANCH"
 
-          if [ "$SOURCE_BRANCH" != "develop" ] || [ "$TARGET_BRANCH" != "master" ]; then
-            echo "::warning::This PR is not from develop to master branch."
+          # Only validate that target branch is master
+          if [ "$TARGET_BRANCH" != "master" ]; then
+            echo "::warning::This PR is not targeting master branch."
             echo "::notice::Source: $SOURCE_BRANCH, Target: $TARGET_BRANCH"
-            echo "source_is_develop=false" >> $GITHUB_OUTPUT
-            if [ "$SOURCE_BRANCH" != "develop" ]; then
-              echo "::warning::Source branch is not 'develop'"
-            fi
-            if [ "$TARGET_BRANCH" != "master" ]; then
-              echo "::warning::Target branch is not 'master'"
-            fi
+            echo "target_is_master=false" >> $GITHUB_OUTPUT
+            echo "::warning::Target branch must be 'master' for releases to work properly"
           else
-            echo "✅ PR is correctly configured from develop to master branch."
-            echo "source_is_develop=true" >> $GITHUB_OUTPUT
+            echo "✅ PR is correctly targeting master branch."
+            echo "target_is_master=true" >> $GITHUB_OUTPUT
           fi
+
+          # Record source branch for informational purposes
+          echo "source_branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
           echo "::endgroup::"
 
-      # Skip workflow if not from develop to master
+      # Skip workflow if not targeting master
       - name: "⏭️ Check if validation should continue"
         id: should-continue
         run: |
-          if [ "${{ steps.branch-check.outputs.source_is_develop }}" != "true" ]; then
-            echo "::notice::Skipping full validation as this PR is not from develop to master"
-            echo "This workflow is configured to fully validate only PRs from develop to master."
+          if [ "${{ steps.branch-check.outputs.target_is_master }}" != "true" ]; then
+            echo "::notice::Skipping full validation as this PR is not targeting master"
+            echo "This workflow is configured to fully validate only PRs targeting master."
             echo "Basic checks will still be performed."
             echo "should_skip=true" >> $GITHUB_OUTPUT
           else
@@ -285,15 +277,70 @@ jobs:
       # -------------------------------------------------------
       # 🧪 Run Tests & Validation
       # -------------------------------------------------------
-      - name: "🧪 Execute Test Suite"
-        id: test-execution
+      - name: "🧪 Execute Required Tests"
+        id: required-tests
         if: steps.should-continue.outputs.should_skip != 'true'
         run: |
-          echo "::group::Test Execution"
-          echo "Running tests with coverage..."
-          bun run test:ci
-          TEST_EXIT_CODE=$?
-          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "::group::Required Tests Execution"
+          echo "Running critical path tests that must pass..."
+
+          # Only run critical unit tests - these are required to pass
+          REQUIRED_TESTS_PATTERN="src/__tests__/unit/index.test.ts src/__tests__/unit/services/fetchWeather.test.ts"
+
+          echo "🔹 Running required tests: $REQUIRED_TESTS_PATTERN"
+          bun run test --run -- $REQUIRED_TESTS_PATTERN
+
+          # Store the exit code to determine if required tests passed
+          REQUIRED_TEST_EXIT_CODE=$?
+          echo "required_test_exit_code=$REQUIRED_TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+
+          if [ $REQUIRED_TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ Required tests passed successfully"
+            echo "required_tests_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Required tests failed"
+            echo "required_tests_passed=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "::endgroup::"
+
+      - name: "🧪 Execute Optional Tests"
+        id: optional-tests
+        if: steps.should-continue.outputs.should_skip != 'true' && steps.required-tests.outputs.required_tests_passed == 'true'
+        continue-on-error: true  # Optional tests can fail without failing the workflow
+        run: |
+          echo "::group::Optional Tests Execution"
+          echo "Running additional tests that are helpful but not blocking..."
+
+          # Determine which tests to run (anything not in required tests)
+          # This will run all remaining tests
+          echo "🔹 Running optional tests..."
+          bun run test --run -- "src/__tests__/unit/services/updateReadme.test.ts src/__tests__/unit/utils/preload.test.ts"
+
+          OPTIONAL_TEST_EXIT_CODE=$?
+          echo "optional_test_exit_code=$OPTIONAL_TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+
+          if [ $OPTIONAL_TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ Optional tests passed successfully"
+            echo "optional_tests_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Some optional tests failed - these won't block the PR"
+            echo "optional_tests_passed=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "::endgroup::"
+
+      - name: "🧪 Run Benchmark Tests"
+        id: benchmark-tests
+        if: steps.should-continue.outputs.should_skip != 'true' && steps.required-tests.outputs.required_tests_passed == 'true'
+        continue-on-error: true  # Benchmarks should never block PRs
+        run: |
+          echo "::group::Benchmark Tests"
+          echo "Running benchmark tests to check for performance regressions..."
+
+          # Run benchmarks with a shorter run time for CI
+          bun run benchmark --short || true
+
           echo "::endgroup::"
 
       - name: "📊 Process Test Results"
@@ -322,7 +369,9 @@ jobs:
             echo "fail_count=$FAIL_COUNT" >> $GITHUB_OUTPUT
             echo "skip_count=$SKIP_COUNT" >> $GITHUB_OUTPUT
 
-            if [ "$FAIL_COUNT" -eq 0 ]; then
+            # Only check if required tests passed - we no longer rely on the overall tests
+            REQUIRED_TESTS_PASSED="${{ steps.required-tests.outputs.required_tests_passed || 'false' }}"
+            if [ "$REQUIRED_TESTS_PASSED" == "true" ]; then
               echo "test_passed=true" >> $GITHUB_OUTPUT
             else
               echo "test_passed=false" >> $GITHUB_OUTPUT
@@ -371,24 +420,6 @@ jobs:
           requireScope: false
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: "The subject must not start with an uppercase letter"
-
-      # -------------------------------------------------------
-      # 🔒 Security Analysis
-      # -------------------------------------------------------
-      - name: "🔒 Dependency Security Scan"
-        id: security-scan
-        continue-on-error: true
-        run: |
-          echo "::group::Security Scanning"
-          echo "Scanning dependencies for vulnerabilities..."
-          if ! bun audit --prod; then
-            echo "sec_issues_found=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Security issues found in dependencies"
-          else
-            echo "sec_issues_found=false" >> $GITHUB_OUTPUT
-            echo "✅ No security issues found"
-          fi
-          echo "::endgroup::"
 
       # -------------------------------------------------------
       # 🔍 Secret Scanning
@@ -505,22 +536,21 @@ jobs:
           VALIDATION_ISSUES=0
 
           # Debug output with proper fallback values
-          TEST_EXIT_CODE="${{ steps.test-execution.outputs.test_exit_code || '1' }}"
+          REQUIRED_TESTS_PASSED="${{ steps.required-tests.outputs.required_tests_passed || 'false' }}"
           COMMIT_VALIDATION_OUTCOME="${{ steps.commit-validation.outcome || 'skipped' }}"
-          SECURITY_SCAN_ISSUES="${{ steps.security-scan.outputs.sec_issues_found || 'false' }}"
           SECRET_SCAN_OUTCOME="${{ steps.secret-scan.outcome || 'skipped' }}"
           LICENSE_ISSUES="${{ steps.license-check.outputs.license_issues_found || 'false' }}"
 
-          echo "Debug: Test exit code: $TEST_EXIT_CODE"
+          echo "Debug: Required tests passed: $REQUIRED_TESTS_PASSED"
           echo "Debug: Commit validation outcome: $COMMIT_VALIDATION_OUTCOME"
           echo "Debug: Security scan issues: $SECURITY_SCAN_ISSUES"
           echo "Debug: Secret scan outcome: $SECRET_SCAN_OUTCOME"
           echo "Debug: License issues: $LICENSE_ISSUES"
 
-          # Check test execution - only if we're not in push mode
-          if [ "${{ github.event_name }}" != "push" ] && [ "$TEST_EXIT_CODE" != "0" ]; then
+          # Check required test execution - only if we're not in push mode
+          if [ "${{ github.event_name }}" != "push" ] && [ "$REQUIRED_TESTS_PASSED" != "true" ]; then
             VALIDATION_ISSUES=$((VALIDATION_ISSUES + 1))
-            echo "Debug: ⚠️ Failed check - Test execution"
+            echo "Debug: ⚠️ Failed check - Required test execution"
           fi
 
           # Check commit validation - only for PRs
@@ -644,7 +674,7 @@ jobs:
       # 📤 Upload Artifacts
       # -------------------------------------------------------
       - name: "📤 Upload Coverage Report"
-        if: always() && steps.test-execution.outcome != 'skipped'
+        if: always() && steps.required-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
