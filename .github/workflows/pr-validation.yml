@@ -538,7 +538,6 @@ jobs:
           # Debug output with proper fallback values
           REQUIRED_TESTS_PASSED="${{ steps.required-tests.outputs.required_tests_passed || 'false' }}"
           COMMIT_VALIDATION_OUTCOME="${{ steps.commit-validation.outcome || 'skipped' }}"
-          SECURITY_SCAN_ISSUES="${{ steps.security-scan.outputs.sec_issues_found || 'false' }}"
           SECRET_SCAN_OUTCOME="${{ steps.secret-scan.outcome || 'skipped' }}"
           LICENSE_ISSUES="${{ steps.license-check.outputs.license_issues_found || 'false' }}"
 
