@@ -224,22 +224,19 @@ jobs:
             echo "Setting up non-interactive GPG signing for semantic-release..."
 
             # Create a temporary directory for GPG to use
-            export GNUPGHOME=$(mktemp -d)
+            GNUPGHOME=$(mktemp -d)
             chmod 700 "$GNUPGHOME"
+            export GNUPGHOME
 
-            # Configure GPG for non-interactive environments
-            cat > "$GNUPGHOME/gpg.conf" << EOF
-            allow-loopback-pinentry
-            batch
-            no-tty
-            pinentry-mode loopback
-            EOF
+            # Write the GPG config files without using heredoc
+            echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg.conf"
+            echo "batch" >> "$GNUPGHOME/gpg.conf"
+            echo "no-tty" >> "$GNUPGHOME/gpg.conf"
+            echo "pinentry-mode loopback" >> "$GNUPGHOME/gpg.conf"
 
-            # Configure the gpg-agent to use loopback
-            cat > "$GNUPGHOME/gpg-agent.conf" << EOF
-            allow-loopback-pinentry
-            pinentry-program /bin/true
-            EOF
+            # Write the agent config
+            echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
+            echo "pinentry-program /bin/true" >> "$GNUPGHOME/gpg-agent.conf"
 
             # Restart the gpg-agent to apply settings
             gpgconf --kill gpg-agent
@@ -250,26 +247,20 @@ jobs:
 
             # Set up environment variable for passphrase
             export GPG_TTY=$(tty || echo /dev/null)
-            echo "GNUPGHOME=$GNUPGHOME" >> $GITHUB_ENV
-            echo "GPG_TTY=$GPG_TTY" >> $GITHUB_ENV
 
             # Create a git hook to provide the passphrase automatically
             mkdir -p "$(git rev-parse --git-dir)/hooks"
-            cat > "$(git rev-parse --git-dir)/hooks/prepare-commit-msg" << EOF
-            #!/bin/sh
-            export GPG_TTY=/dev/null
-            echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true
-            EOF
+            echo "#!/bin/sh" > "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
+            echo "export GPG_TTY=/dev/null" >> "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
+            echo "echo \"\$GPG_PASSPHRASE\" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true" >> "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
             chmod +x "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
 
             # Create a helper script for GPG passphrase
-            cat > "$GNUPGHOME/pass-helper.sh" << EOF
-            #!/bin/sh
-            echo "$GPG_PASSPHRASE"
-            EOF
+            echo "#!/bin/sh" > "$GNUPGHOME/pass-helper.sh"
+            echo "echo \"\$GPG_PASSPHRASE\"" >> "$GNUPGHOME/pass-helper.sh"
             chmod +x "$GNUPGHOME/pass-helper.sh"
 
-            # Configure Git to use our passphrase helper
+            # Set the GPG passphrase directly
             git config --global gpg.passphrase "$GPG_PASSPHRASE"
 
             echo "GPG signing is configured for semantic-release commits"
