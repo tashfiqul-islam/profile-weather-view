@@ -522,10 +522,404 @@ jobs:
           sarif_file: npm-audit.sarif
           category: dependency-check
 
-      - name: "🚀 Trigger Dependabot"
+      # -------------------------------------------------------
+      # 🔐 Setup GPG for Commit Signing
+      # -------------------------------------------------------
+      - name: "🔐 Setup GPG for Commit Signing"
+        id: gpg-setup
         if: steps.summary.outputs.any_updates_available == 'true' && env.DRY_RUN != 'true'
         run: |
-          echo "::group::Triggering Dependabot"
+          echo "::group::GPG Setup"
+          # Only proceed if GPG keys are provided
+          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" && -n "${{ secrets.GPG_PASSPHRASE }}" ]]; then
+            echo "Setting up GPG key for signed commits"
+
+            # Install gnupg if needed
+            which gpg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -qq -y gnupg; }
+
+            # Create temporary file for GPG key
+            GPG_KEY_FILE=$(mktemp)
+            chmod 600 "$GPG_KEY_FILE"
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d > "$GPG_KEY_FILE"
+
+            # Import the GPG key
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --import "$GPG_KEY_FILE"
+
+            # Get the key ID
+            KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -n1 | awk '{print $2}' | cut -d'/' -f2)
+
+            # Configure Git to use the imported GPG key
+            git config --global user.signingkey "$KEY_ID"
+            git config --global commit.gpgsign true
+
+            # Set commit author identity from secrets
+            git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
+            git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL || 'github-actions@github.com' }}"
+
+            # Secure cleanup
+            rm -f "$GPG_KEY_FILE"
+
+            echo "signing_enabled=true" >> $GITHUB_OUTPUT
+            echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
+            echo "GPG signing enabled with key: $KEY_ID"
+          else
+            echo "GPG signing not configured - using standard commits"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            echo "signing_enabled=false" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🔄 Update NPM Dependencies
+      # -------------------------------------------------------
+      - name: "🔄 Update NPM Dependencies"
+        if: env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'npm' && steps.check-npm.outputs.updates_available == 'true' && env.DRY_RUN != 'true'
+        id: update-npm
+        run: |
+          echo "::group::Updating NPM Dependencies"
+
+          # Setup Bun if it's used in the project
+          if [ "${{ steps.analyze-config.outputs.uses_bun }}" == "true" ]; then
+            echo "🔹 Setting up Bun runtime..."
+            curl -fsSL https://bun.sh/install | bash
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH"
+          fi
+
+          # Check if JSON data exists
+          if [ ! -f "npm-updates.json" ]; then
+            echo "⚠️ No update information found"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Read the update data
+          UPDATES=$(cat npm-updates.json)
+
+          # Create a temporary file for filtered updates
+          echo "{}" > minor-patch-updates.json
+
+          # Filter updates to include only minor and patch versions
+          echo "🔹 Filtering for minor and patch updates only..."
+          MINOR_PATCH_COUNT=0
+
+          # Loop through each update to determine if it's minor or patch
+          for pkg in $(echo "$UPDATES" | jq -r 'keys[]'); do
+            CURRENT=$(echo "$UPDATES" | jq -r ".[\"$pkg\"].from" || echo "0.0.0")
+            TARGET=$(echo "$UPDATES" | jq -r ".[\"$pkg\"].to" || echo "0.0.0")
+
+            # Extract major.minor.patch
+            CURRENT_MAJOR=$(echo "$CURRENT" | sed -E 's/^([0-9]+)\..*/\1/')
+            CURRENT_MINOR=$(echo "$CURRENT" | sed -E 's/^[0-9]+\.([0-9]+)\..*/\1/')
+            TARGET_MAJOR=$(echo "$TARGET" | sed -E 's/^([0-9]+)\..*/\1/')
+            TARGET_MINOR=$(echo "$TARGET" | sed -E 's/^[0-9]+\.([0-9]+)\..*/\1/')
+
+            # Only include if it's minor or patch update
+            if [ "$TARGET_MAJOR" = "$CURRENT_MAJOR" ]; then
+              # Add to our filtered updates
+              jq --arg pkg "$pkg" --arg ver "$TARGET" '.[$pkg] = $ver' minor-patch-updates.json > tmp.json
+              mv tmp.json minor-patch-updates.json
+              MINOR_PATCH_COUNT=$((MINOR_PATCH_COUNT + 1))
+
+              if [ "$TARGET_MINOR" -gt "$CURRENT_MINOR" ]; then
+                echo "🔹 Minor update: $pkg $CURRENT -> $TARGET"
+              else
+                echo "🔹 Patch update: $pkg $CURRENT -> $TARGET"
+              fi
+            else
+              echo "🔹 Skipping major update: $pkg $CURRENT -> $TARGET"
+            fi
+          done
+
+          echo "🔹 Found $MINOR_PATCH_COUNT minor/patch updates to apply"
+          echo "minor_patch_count=$MINOR_PATCH_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$MINOR_PATCH_COUNT" -eq 0 ]; then
+            echo "⚠️ No minor or patch updates to apply"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Create a new branch for the updates
+          BRANCH_NAME="auto-update-deps-$(date +"%Y%m%d%H%M%S")"
+          git checkout -b "$BRANCH_NAME"
+
+          # Apply the updates
+          if [ "${{ steps.analyze-config.outputs.uses_bun }}" == "true" ]; then
+            # Use Bun to update dependencies
+            echo "🔹 Applying updates with Bun..."
+            for pkg in $(jq -r 'keys[]' minor-patch-updates.json); do
+              version=$(jq -r ".\"$pkg\"" minor-patch-updates.json)
+              if jq -e '.dependencies["'$pkg'"]' package.json > /dev/null; then
+                echo "🔹 Updating dependency: $pkg to $version"
+                bun add "$pkg@$version"
+              elif jq -e '.devDependencies["'$pkg'"]' package.json > /dev/null; then
+                echo "🔹 Updating dev dependency: $pkg to $version"
+                bun add -d "$pkg@$version"
+              fi
+            done
+          else
+            # Use npm to update dependencies
+            echo "🔹 Applying updates with npm..."
+            for pkg in $(jq -r 'keys[]' minor-patch-updates.json); do
+              version=$(jq -r ".\"$pkg\"" minor-patch-updates.json)
+              if jq -e '.dependencies["'$pkg'"]' package.json > /dev/null; then
+                echo "🔹 Updating dependency: $pkg to $version"
+                npm install --save "$pkg@$version"
+              elif jq -e '.devDependencies["'$pkg'"]' package.json > /dev/null; then
+                echo "🔹 Updating dev dependency: $pkg to $version"
+                npm install --save-dev "$pkg@$version"
+              fi
+            done
+          fi
+
+          # Check if there are actually changes to commit
+          if git diff --quiet package.json; then
+            echo "⚠️ No changes to package.json, nothing to commit"
+          else
+            # Format the updated package.json
+            if command -v prettier > /dev/null && [ -f ".prettierrc" ]; then
+              echo "🔹 Formatting package.json with prettier..."
+              npx prettier --write package.json
+            fi
+
+            # Commit the changes with signed commit if enabled
+            echo "🔹 Committing changes..."
+            git add package.json package-lock.json bun.lockb 2>/dev/null || git add package.json
+
+            # Create detailed commit message
+            UPDATE_LIST=$(jq -r 'to_entries | map("  - \(.key): \(.value)") | join("\n")' minor-patch-updates.json)
+            COMMIT_MSG="deps: update dependencies with minor and patch updates\n\nUpdates the following dependencies:\n$UPDATE_LIST"
+
+            # Perform the commit
+            if [ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]; then
+              echo "🔹 Creating signed commit..."
+              echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true
+              git commit -S -m "$(echo -e "$COMMIT_MSG")"
+            else
+              echo "🔹 Creating commit (unsigned)..."
+              git commit -m "$(echo -e "$COMMIT_MSG")"
+            fi
+
+            # Push the changes
+            echo "🔹 Pushing changes..."
+            git push origin "$BRANCH_NAME"
+
+            # Create PR
+            echo "🔹 Creating pull request..."
+            PR_URL=$(curl -s -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v4+json" \
+              https://api.github.com/repos/${{ github.repository }}/pulls \
+              -d "{
+                \"title\": \"deps: update minor and patch dependencies\",
+                \"body\": \"Automated dependency updates for minor and patch versions.\n\nUpdated packages:\n$UPDATE_LIST\",
+                \"head\": \"$BRANCH_NAME\",
+                \"base\": \"master\"
+              }" | jq -r '.html_url')
+
+            echo "✅ Pull request created: $PR_URL"
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🔄 Update Bun Runtime
+      # -------------------------------------------------------
+      - name: "🔄 Update Bun Runtime"
+        if: (env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'bun-runtime') && steps.check-bun.outputs.bun_update_available == 'true' && steps.check-bun.outputs.bun_update_type != 'major' && env.DRY_RUN != 'true'
+        id: update-bun
+        run: |
+          echo "::group::Updating Bun Runtime"
+          # Only update if it's a minor or patch update
+          if [ "${{ steps.check-bun.outputs.bun_update_type }}" == "major" ]; then
+            echo "⚠️ Major Bun update detected - skipping automated update"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Get the versions
+          NEW_VERSION="${{ steps.check-bun.outputs.bun_latest_version }}"
+          OLD_VERSION="${{ steps.check-bun.outputs.bun_current_version }}"
+
+          echo "🔹 Updating Bun from $OLD_VERSION to $NEW_VERSION..."
+
+          # Create a branch for the update
+          BRANCH_NAME="bun-update-$NEW_VERSION-$(date +"%Y%m%d%H%M%S")"
+          git checkout -b "$BRANCH_NAME"
+
+          # Update packageManager in package.json
+          echo "🔹 Updating packageManager in package.json"
+          jq --arg ver "$NEW_VERSION" '.packageManager = "bun@" + $ver' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+          # Update engines.bun field if it exists
+          if jq -e '.engines.bun' package.json > /dev/null 2>&1; then
+            echo "🔹 Updating engines.bun in package.json"
+            # Get only major.minor from new version
+            MAJOR_MINOR=$(echo "$NEW_VERSION" | cut -d. -f1-2)
+
+            # Check format (^ or >= prefix)
+            if grep -q '"bun": *">=' package.json; then
+              jq --arg ver "$MAJOR_MINOR.0" '.engines.bun = ">=" + $ver' package.json > package.json.tmp
+              mv package.json.tmp package.json
+            elif grep -q '"bun": *"\\^' package.json; then
+              jq --arg ver "$MAJOR_MINOR.0" '.engines.bun = "^" + $ver' package.json > package.json.tmp
+              mv package.json.tmp package.json
+            fi
+          fi
+
+          # Update BUN_VERSION in workflow files
+          echo "🔹 Updating BUN_VERSION in workflow files"
+          for file in .github/workflows/*.yml; do
+            if grep -q "BUN_VERSION:" "$file"; then
+              sed -i -E "s/(BUN_VERSION: *\")[0-9]+\.[0-9]+\.[0-9]+(\" *#.*)/\1$NEW_VERSION\2/" "$file"
+            fi
+          done
+
+          # Format the package.json if prettier is available
+          if command -v prettier > /dev/null && [ -f ".prettierrc" ]; then
+            echo "🔹 Formatting package.json with prettier..."
+            npx prettier --write package.json
+          fi
+
+          # Commit changes with a signed commit
+          echo "🔹 Committing changes..."
+          git add package.json .github/workflows/*.yml
+
+          # Create detailed commit message
+          COMMIT_MSG="deps(bun): update bun from $OLD_VERSION to $NEW_VERSION\n\nAutomated update of Bun runtime version in:\n- packageManager field in package.json\n- BUN_VERSION in workflow files"
+
+          # Perform the commit
+          if [ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]; then
+            echo "🔹 Creating signed commit..."
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true
+            git commit -S -m "$(echo -e "$COMMIT_MSG")"
+          else
+            echo "🔹 Creating commit (unsigned)..."
+            git commit -m "$(echo -e "$COMMIT_MSG")"
+          fi
+
+          # Push the changes
+          echo "🔹 Pushing changes..."
+          git push origin "$BRANCH_NAME"
+
+          # Create PR
+          echo "🔹 Creating pull request..."
+          PR_URL=$(curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v4+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "{
+              \"title\": \"deps(bun): update bun from $OLD_VERSION to $NEW_VERSION\",
+              \"body\": \"Automated update of Bun runtime from $OLD_VERSION to $NEW_VERSION.\",
+              \"head\": \"$BRANCH_NAME\",
+              \"base\": \"master\"
+            }" | jq -r '.html_url')
+
+          echo "✅ Pull request created: $PR_URL"
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      # -------------------------------------------------------
+      # 🔄 Update GitHub Actions
+      # -------------------------------------------------------
+      - name: "🔄 Update GitHub Actions"
+        if: (env.CHECK_TYPE == 'all' || env.CHECK_TYPE == 'github-actions') && steps.check-actions.outputs.actions_update_available == 'true' && env.DRY_RUN != 'true'
+        id: update-actions
+        run: |
+          echo "::group::Updating GitHub Actions"
+          if [ ! -f "action_updates.csv" ] || [ ! -s "action_updates.csv" ]; then
+            echo "⚠️ No action updates found"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Create a branch for updates
+          BRANCH_NAME="action-updates-$(date +"%Y%m%d%H%M%S")"
+          git checkout -b "$BRANCH_NAME"
+
+          # Track changes
+          UPDATED_ACTIONS=()
+          UPDATED_FILES=()
+
+          # Read the CSV file
+          while IFS=, read -r ACTION_NAME ACTION_VERSION LATEST_VERSION FILE PUBLISHER; do
+            if [ -z "$ACTION_NAME" ] || [ -z "$ACTION_VERSION" ] || [ -z "$LATEST_VERSION" ] || [ -z "$FILE" ]; then
+              continue
+            fi
+
+            # Only update from trusted publishers or explicitly approved actions
+            if [[ "$PUBLISHER" == "github" ]] || [[ "$PUBLISHER" == "oven-sh" ]] || [[ "$ACTION_NAME" == "actions/checkout" ]] || [[ "$ACTION_NAME" == "actions/setup-node" ]]; then
+              echo "🔹 Updating trusted action: $ACTION_NAME from $ACTION_VERSION to $LATEST_VERSION in $FILE"
+
+              # Use sed to update the action version in the workflow file
+              sed -i "s|uses: $ACTION_NAME@$ACTION_VERSION|uses: $ACTION_NAME@$LATEST_VERSION|g" "$FILE"
+
+              # Track what we updated
+              UPDATED_ACTIONS+=("$ACTION_NAME: $ACTION_VERSION → $LATEST_VERSION")
+
+              # Add file to tracking if not already there
+              if [[ ! " ${UPDATED_FILES[*]} " =~ " ${FILE} " ]]; then
+                UPDATED_FILES+=("$FILE")
+              fi
+            else
+              echo "⚠️ Skipping update for untrusted publisher: $ACTION_NAME ($PUBLISHER)"
+            fi
+          done < action_updates.csv
+
+          # Check if we have any updates
+          if [ ${#UPDATED_ACTIONS[@]} -eq 0 ]; then
+            echo "⚠️ No trusted actions to update"
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          # Commit the changes
+          echo "🔹 Committing updates for ${#UPDATED_ACTIONS[@]} actions..."
+          git add "${UPDATED_FILES[@]}"
+
+          # Build commit message
+          ACTIONS_LIST=$(printf "  - %s\n" "${UPDATED_ACTIONS[@]}")
+          COMMIT_MSG="ci: update GitHub Actions to latest versions\n\nUpdated actions:\n$ACTIONS_LIST"
+
+          # Perform the commit
+          if [ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]; then
+            echo "🔹 Creating signed commit..."
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true
+            git commit -S -m "$(echo -e "$COMMIT_MSG")"
+          else
+            echo "🔹 Creating commit (unsigned)..."
+            git commit -m "$(echo -e "$COMMIT_MSG")"
+          fi
+
+          # Push the changes
+          echo "🔹 Pushing changes..."
+          git push origin "$BRANCH_NAME"
+
+          # Create PR
+          echo "🔹 Creating pull request..."
+          PR_URL=$(curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v4+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "{
+              \"title\": \"ci: update GitHub Actions to latest versions\",
+              \"body\": \"Automated update of GitHub Actions.\n\nUpdated actions:\n$(printf \"- %s\n\" \"${UPDATED_ACTIONS[@]}\")\",
+              \"head\": \"$BRANCH_NAME\",
+              \"base\": \"master\"
+            }" | jq -r '.html_url')
+
+          echo "✅ Pull request created: $PR_URL"
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: "🚀 Trigger Dependabot"
+        if: steps.summary.outputs.any_updates_available == 'true' && env.DRY_RUN != 'true' && (steps.check-bun.outputs.bun_update_type == 'major' || steps.vuln-scan.outputs.vulnerabilities_found == 'true')
+        run: |
+          echo "::group::Triggering Dependabot for Major Updates and Security Fixes"
 
           # Check if Dependabot is configured
           if [ "${{ steps.analyze-config.outputs.dependabot_config_exists }}" != "true" ]; then
