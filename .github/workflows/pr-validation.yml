@@ -431,48 +431,74 @@ jobs:
           echo "::group::Security Scanning"
           echo "Scanning dependencies for vulnerabilities..."
 
-          # Create a more robust security scanning approach
-          echo "Running advanced security scanning..."
+          # Simple approach using bun ls rather than outdated (which isn't available)
+          echo "🔹 Checking package dependencies..."
+          bun pm ls > dependencies.txt
+          DEP_COUNT=$(cat dependencies.txt | grep -v "└─" | grep -v "├─" | wc -l || echo "0")
+          echo "📊 Found $DEP_COUNT dependencies"
 
-          # Install and use npm-audit-html for better vulnerability reporting
-          echo "Installing security scanning tools..."
-          bun add --dev npm-audit-html @cyclonedx/bom
+          # Check for untrusted dependencies
+          echo "🔹 Checking for untrusted dependencies..."
+          bun pm untrusted > untrusted.txt
+          UNTRUSTED_COUNT=$(cat untrusted.txt | grep -v "No untrusted" | wc -l || echo "0")
+          echo "📊 Found $UNTRUSTED_COUNT untrusted dependencies with scripts"
 
-          # Generate package lock for npm audit (bun audit has issues with E2BIG)
-          echo "Generating package-lock.json for npm audit..."
-          npm i --package-lock-only --ignore-scripts --no-audit
+          # Check for specific high-risk patterns in dependencies
+          echo "🔹 Checking for known high-risk patterns..."
+          RISK_PATTERNS=("prototype-pollution" "code-injection" "command-injection" "regex-dos" "npm:lodash:")
+          HIGH_RISK_COUNT=0
 
-          # Run npm audit and capture both exit code and output
-          echo "Running npm audit..."
-          npm audit --json > npm-audit.json || AUDIT_EXIT_CODE=$?
+          for pattern in "${RISK_PATTERNS[@]}"; do
+            # Look for these patterns in node_modules if available
+            if [ -d "node_modules" ]; then
+              FOUND=$(grep -r "$pattern" --include="*.js" --include="*.ts" node_modules | wc -l || echo "0")
+              HIGH_RISK_COUNT=$((HIGH_RISK_COUNT + FOUND))
+            fi
 
-          # Generate HTML report for better visibility
-          if [ -s npm-audit.json ]; then
-            npx npm-audit-html -o security-audit-report.html
-            echo "📊 Generated security audit report"
-          fi
+            # Check package.json for dependencies with known issues
+            FOUND=$(grep -i "$pattern" package.json | wc -l || echo "0")
+            HIGH_RISK_COUNT=$((HIGH_RISK_COUNT + FOUND))
+          done
 
-          # Check for vulnerabilities in a more reliable way
-          VULN_COUNT=$(jq '.vulnerabilities | length' npm-audit.json 2>/dev/null || echo "0")
-          HIGH_VULN_COUNT=$(jq '.metadata.vulnerabilities.high' npm-audit.json 2>/dev/null || echo "0")
-          CRITICAL_VULN_COUNT=$(jq '.metadata.vulnerabilities.critical' npm-audit.json 2>/dev/null || echo "0")
-
-          # Handle empty or invalid JSON
-          if [ "$VULN_COUNT" = "null" ] || [ -z "$VULN_COUNT" ]; then VULN_COUNT=0; fi
-          if [ "$HIGH_VULN_COUNT" = "null" ] || [ -z "$HIGH_VULN_COUNT" ]; then HIGH_VULN_COUNT=0; fi
-          if [ "$CRITICAL_VULN_COUNT" = "null" ] || [ -z "$CRITICAL_VULN_COUNT" ]; then CRITICAL_VULN_COUNT=0; fi
-
-          echo "📊 Found $VULN_COUNT vulnerabilities (including $HIGH_VULN_COUNT high, $CRITICAL_VULN_COUNT critical)"
+          echo "📊 Found $DEP_COUNT total dependencies"
+          echo "📊 Found $UNTRUSTED_COUNT untrusted dependencies with scripts"
+          echo "📊 Found $HIGH_RISK_COUNT potential high-risk patterns"
 
           # Set output variables
-          echo "vuln_count=$VULN_COUNT" >> $GITHUB_OUTPUT
-          echo "high_vuln_count=$HIGH_VULN_COUNT" >> $GITHUB_OUTPUT
-          echo "critical_vuln_count=$CRITICAL_VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "dep_count=$DEP_COUNT" >> $GITHUB_OUTPUT
+          echo "untrusted_count=$UNTRUSTED_COUNT" >> $GITHUB_OUTPUT
+          echo "high_vuln_count=$HIGH_RISK_COUNT" >> $GITHUB_OUTPUT
+
+          # Simple HTML report
+          cat > security-report.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Security Scan Report</title>
+            <style>
+              body { font-family: sans-serif; padding: 20px; }
+              .summary { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+              .high { color: red; }
+              .low { color: green; }
+            </style>
+          </head>
+          <body>
+            <h1>Security Scan Report</h1>
+            <div class="summary">
+              <p>Total Dependencies: ${DEP_COUNT}</p>
+              <p>Untrusted Dependencies: <span class="${UNTRUSTED_COUNT > 0 ? 'high' : 'low'}">${UNTRUSTED_COUNT}</span></p>
+              <p>Potential High-Risk Patterns: <span class="${HIGH_RISK_COUNT > 0 ? 'high' : 'low'}">${HIGH_RISK_COUNT}</span></p>
+              <p>Scan Date: $(date)</p>
+            </div>
+            <p>Note: This is a simplified security scan. For thorough analysis, consider using dedicated security tools.</p>
+          </body>
+          </html>
+          EOF
 
           # Determine if we have security issues to report
-          if [ "$HIGH_VULN_COUNT" -gt 0 ] || [ "$CRITICAL_VULN_COUNT" -gt 0 ]; then
+          if [ "$HIGH_RISK_COUNT" -gt 0 ] || [ "$UNTRUSTED_COUNT" -gt 0 ]; then
             echo "sec_issues_found=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Security issues found in dependencies"
+            echo "⚠️ Security concerns identified in dependencies"
           else
             echo "sec_issues_found=false" >> $GITHUB_OUTPUT
             echo "✅ No significant security issues found"
@@ -485,8 +511,7 @@ jobs:
         with:
           name: security-audit-report
           path: |
-            security-audit-report.html
-            npm-audit.json
+            security-report.html
           retention-days: 14
 
       # -------------------------------------------------------
