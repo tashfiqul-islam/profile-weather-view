@@ -2,6 +2,14 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+# 1.2.2
+
+Patch (2025-04-26)
+
+fix
+
+* fix: simplify semantic-release workflow and fix branch synchronization (#39)  (0304ad5), closes
+
 # 1.2.1
 
 Patch (2025-04-26)
