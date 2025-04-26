@@ -4,6 +4,14 @@ All notable changes to profile-weather-view will be documented in this file.
 
 
 
+# [1.2.4](profile-weather-view/compare/v1.2.3...v1.2.4)
+
+## Patch (2025-04-26)
+---
+### refactor
+
+* **ci:** improve changelog formatting and section headers (#41) ([3589a2f](https://github.com/tashfiqul-islam/profile-weather-view/commit/3589a2f98a90bb41701bb000bd2f7e43fe1a5e5f))
+
 # [1.2.3](profile-weather-view/compare/v1.2.2...v1.2.3)
 
 ## Patch (2025-04-26)
