@@ -247,7 +247,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           GPG_SIGNING: ${{ steps.gpg-setup.outputs.signing_enabled == 'true' }}
           GPG_KEY_ID: ${{ steps.gpg-setup.outputs.key_id }}
-        run: >
+        run: |
           echo "::group::Semantic Release Process"
 
           # Configure release flags based on inputs
