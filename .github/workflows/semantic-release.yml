@@ -263,60 +263,73 @@ jobs:
             echo "Debug mode enabled"
           fi
 
-          # Set up GPG for semantic-release to use in non-interactive environment
-          if [[ "${{ secrets.GPG_PASSPHRASE }}" != "" ]]; then
-            echo "Setting up non-interactive GPG signing for semantic-release..."
-
-            # Ensure the imported key is available for all git operations
-            # This is important - need to use the same gpg home directory as where the key was imported
-            export GNUPGHOME="$HOME/.gnupg"
-
-            # We need this to ensure git can sign with the imported key
-            git config --global gpg.program $(which gpg)
-            git config --global user.signingkey "${{ steps.gpg-setup.outputs.key_id }}"
-            git config --global commit.gpgsign true
-
-            # Configure non-interactive signing
-            echo 'allow-loopback-pinentry' > "$HOME/.gnupg/gpg-agent.conf"
-            echo 'pinentry-mode loopback' > "$HOME/.gnupg/gpg.conf"
-            echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
-            echo 'batch' >> "$HOME/.gnupg/gpg.conf"
-
-            # Restart agent to apply settings
-            gpgconf --kill gpg-agent
-
-            # Set passphrase for non-interactive signing
-            git config --global gpg.passphrase "$GPG_PASSPHRASE"
-
-            # Create helper script for semantic-release to use with git
-            echo '#!/bin/bash' > /tmp/git-gpg-wrapper.sh
-            echo 'echo "$GPG_PASSPHRASE" | /usr/bin/gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback "$@"' >> /tmp/git-gpg-wrapper.sh
-            chmod +x /tmp/git-gpg-wrapper.sh
-
-            # Test GPG signing to verify configuration
-            echo "Testing GPG signing configuration..."
-            echo "test" | gpg --clearsign > /dev/null && echo "✓ GPG signing test successful" || echo "✗ GPG signing test failed"
-
-            echo "GPG signing is configured for semantic-release commits"
-          else
-            echo "GPG signing is not configured, commits will not be signed"
-          fi
-
-          # Execute semantic-release with Bun
+          # Let semantic-release do its work without GPG signing
           echo "Executing: bunx semantic-release ${FLAGS}"
           bunx semantic-release ${FLAGS}
           STATUS=$?
 
-          # Handle status
+          # If semantic-release was successful, manually create a GPG-signed tag
           if [ $STATUS -eq 0 ]; then
             echo "::notice::Semantic release completed successfully"
 
-            # Try to extract the released version from package.json
+            # Extract the released version from package.json
             VERSION=$(node -e "try { console.log(require('./package.json').version) } catch (e) { console.log('') }")
 
             if [[ -n "$VERSION" ]]; then
               echo "version=${VERSION}" >> $GITHUB_OUTPUT
               echo "::notice::Version v${VERSION} released!"
+
+              # If GPG is enabled, create a signed tag
+              if [[ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]]; then
+                echo "Creating GPG-signed tag for v${VERSION}..."
+
+                # Extract the existing tag message (if it exists)
+                TAG_MESSAGE=$(git tag -l "v${VERSION}" --format='%(contents)')
+
+                # If the tag exists but is unsigned, delete it first
+                if git tag -l "v${VERSION}" | grep -q "v${VERSION}"; then
+                  echo "Replacing existing unsigned tag with signed tag..."
+                  git tag -d "v${VERSION}"
+                fi
+
+                # Create a new signed tag with the message
+                git config --global gpg.program $(which gpg)
+                git config --global commit.gpgsign true
+
+                # Sign the tag with our configured GPG key
+                TAG_MSG="Release v${VERSION}"
+                echo "$GPG_PASSPHRASE" | GPG_TTY="" git tag -f -a "v${VERSION}" -m "$TAG_MSG" -s
+
+                # Push the signed tag
+                git push origin "v${VERSION}" --force
+                echo "✅ Created and pushed GPG-signed tag v${VERSION}"
+
+                # Now sign the release commit if it exists
+                RELEASE_COMMIT=$(git rev-parse HEAD)
+                if [[ -n "$RELEASE_COMMIT" ]]; then
+                  echo "Checking if the release commit is already signed..."
+
+                  # Check if the latest commit is already signed
+                  if git verify-commit $RELEASE_COMMIT 2>/dev/null; then
+                    echo "✅ Release commit is already signed"
+                  else
+                    echo "🔏 Release commit is not signed, creating a signed amend commit..."
+
+                    # Get the existing commit message
+                    COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+
+                    # Amend the commit with signing but keeping the same message
+                    echo "$GPG_PASSPHRASE" | GIT_COMMITTER_DATE="$(git show -s --format=%ci HEAD)" \
+                      git -c gpg.passphrase="$GPG_PASSPHRASE" commit --amend -S --no-edit
+
+                    # Force push to update the commit (be careful!)
+                    git push --force-with-lease origin ${{ github.ref_name }}
+
+                    echo "✅ Created GPG-signed amended commit"
+                  fi
+                fi
+              fi
+
             elif [[ "${{ env.DRY_RUN }}" == "true" ]]; then
               echo "status=dry-run" >> $GITHUB_OUTPUT
               echo "::notice::Dry run completed successfully"

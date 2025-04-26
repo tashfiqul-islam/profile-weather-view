@@ -222,11 +222,10 @@ export default {
           'README.md',
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
-        // GitHub Actions workflow handle the signing
-        signoff: true,
+        // Skip GPG signing in the plugin itself but keep the option to sign
+        // using system GPG setup that's already configured
         gpgSign: false,
-        // No need for special git commit options when not signing through the plugin
-        gitCommitOptions: ['--no-verify', '--allow-empty'],
+        gitCommitOptions: ['--no-verify', '--allow-empty', '--no-gpg-sign'],
       },
     ],
   ],
