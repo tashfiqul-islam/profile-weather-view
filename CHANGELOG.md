@@ -2,6 +2,14 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+# 1.2.1
+
+Patch (2025-04-26)
+
+fix
+
+* fix: properly configure GPG signing for semantic-release (#38)  (cb0a047), closes
+
 # 1.2.0
 
 Major (2025-04-26)
