@@ -222,10 +222,10 @@ export default {
           'README.md',
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
-        // Skip GPG signing in the plugin itself but keep the option to sign
-        // using system GPG setup that's already configured
+        // CRITICAL: Completely disable signing in the semantic-release process
         gpgSign: false,
-        gitCommitOptions: ['--no-verify', '--allow-empty', '--no-gpg-sign'],
+        // These options make sure git doesn't attempt to sign commits
+        gitCommitOptions: ['--no-gpg-sign', '--no-verify'],
       },
     ],
   ],
