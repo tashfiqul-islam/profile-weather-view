@@ -2,6 +2,28 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+# 1.2.0
+
+Major (2025-04-26)
+
+ci
+
+* ci: enhance workflows with automated updates and GPG signing (#32)  (16eed63), closes 
+
+feat
+
+* feat: implement GPG signing for semantic-release commits (#29)  (2ec8e3c), closes 
+
+fix
+
+* fix: implement two-phase approach for GPG signing in semantic-release (#37)  (1ac1795), closes 
+* fix: implement two-phase GPG signing for semantic-release (#36)  (d2aa79b), closes 
+* fix: repair GPG signing for semantic-release commits (#30)  (29012b8), closes 
+* fix: resolve GPG signing errors in semantic-release workflow (#31)  (ff50ea1), closes 
+* fix: resolve GPG signing issues and workflow syntax errors (#34)  (45b0e21), closes 
+* fix: resolve GPG signing issues in semantic-release workflow (#33)  (53e545f), closes 
+* fix: resolve GPG signing issues in semantic-release workflow (#35)  (e50f617), closes
+
 ## [1.1.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.5...v1.1.6) (2025-04-22)
 
 
