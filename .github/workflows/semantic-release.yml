@@ -280,18 +280,16 @@ jobs:
             # Now use the preferred strategy for branch synchronization based on squash merges
             echo "🔹 Synchronizing develop with master's history..."
 
-            # Method 1: Reset develop to master + apply develop-only changes
+            # Store original develop HEAD for verification
             git checkout develop
             git pull origin develop
-
-            # Store original develop HEAD for verification
             DEVELOP_HEAD_BEFORE=$(git rev-parse HEAD)
             echo "Develop was at: $DEVELOP_HEAD_BEFORE"
 
-            # Create a temp branch to hold develop-only changes
-            echo "🔹 Creating temporary working branch..."
-            TEMP_BRANCH="temp-sync-$(date +%s)"
-            git checkout -b $TEMP_BRANCH
+            # COMPLETE HISTORY RESET APPROACH:
+            # We will completely reset the develop branch to match master exactly
+            # and then create a single new commit with any develop-only changes
+            echo "🔹 Completely resetting develop branch history to match master..."
 
             # Find all commits that are in develop but not in master
             echo "🔹 Identifying develop-only changes..."
@@ -310,12 +308,18 @@ jobs:
                   cp "$FILE" "/tmp/develop-changes/$FILE" 2>/dev/null || true
                 fi
               done
+            else
+              echo "🔹 No develop-only changes found"
+            fi
 
-              # Now reset develop branch to match master exactly
-              git checkout develop
-              git reset --hard origin/master
+            # Completely reset develop branch to be identical to master
+            echo "🔹 Resetting develop to exactly match master's history..."
+            git checkout master
+            git checkout -B develop
 
-              # Copy back develop-only changes
+            # Copy back develop-only changes if any
+            if [ -n "$DEVELOP_ONLY_FILES" ]; then
+              echo "🔹 Restoring develop-only changes on clean history..."
               for FILE in $(find /tmp/develop-changes -type f 2>/dev/null); do
                 RELATIVE_PATH=${FILE#/tmp/develop-changes/}
                 if [ -n "$RELATIVE_PATH" ]; then
@@ -329,16 +333,13 @@ jobs:
               git add --all
               HAS_CHANGES=$(git status --porcelain)
               if [ -n "$HAS_CHANGES" ]; then
-                git commit -m "chore: sync develop with master while preserving develop-only changes [skip ci]"
+                git commit -m "chore: preserve develop-only changes [skip ci]"
+                echo "✅ Created a clean commit with develop-only changes"
               fi
-            else
-              echo "🔹 No develop-only changes found, resetting develop to match master"
-              git checkout develop
-              git reset --hard origin/master
             fi
 
-            # Force push the updated develop branch
-            echo "🔹 Pushing synchronized develop branch..."
+            # Force push the updated develop branch with completely rewritten history
+            echo "🔹 Force-pushing develop branch with clean history..."
             git push origin develop --force
 
             # Verify the synchronization was successful
@@ -347,10 +348,15 @@ jobs:
 
             # Check that master's history is now in develop
             if git merge-base --is-ancestor "$MASTER_HEAD" "$DEVELOP_HEAD_AFTER"; then
-              echo "✅ Success! Develop branch now contains master's complete history"
+              echo "✅ Success! Develop branch now has a clean history based on master"
               echo "Master: $MASTER_HEAD"
               echo "Develop (after sync): $DEVELOP_HEAD_AFTER"
               echo "back_merge_status=success" >> $GITHUB_OUTPUT
+
+              # Show commit count difference which should now be minimal
+              AHEAD_COUNT=$(git rev-list --count "origin/master..origin/develop")
+              BEHIND_COUNT=$(git rev-list --count "origin/develop..origin/master")
+              echo "✅ Develop is now only $AHEAD_COUNT commits ahead and $BEHIND_COUNT commits behind master"
 
               # Also update any feature branches if they exist
               echo "🔹 Checking for active feature branches to update..."
