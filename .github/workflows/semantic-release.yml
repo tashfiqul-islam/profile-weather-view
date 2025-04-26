@@ -213,6 +213,15 @@ jobs:
             git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
             git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
 
+            # Configure GPG for non-interactive environment
+            mkdir -p ~/.gnupg
+            echo 'allow-loopback-pinentry' > ~/.gnupg/gpg-agent.conf
+            echo 'use-agent' > ~/.gnupg/gpg.conf
+            echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+            echo 'no-tty' >> ~/.gnupg/gpg.conf
+            chmod 700 ~/.gnupg
+            gpgconf --kill gpg-agent
+
             # Secure cleanup
             rm -f "$GPG_KEY_FILE"
 
@@ -236,9 +245,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_SIGNING: ${{ steps.gpg-setup.outputs.fingerprint != '' }}
-          GPG_KEY_ID: ${{ steps.gpg-setup.outputs.fingerprint }}
-        run: |
+          GPG_SIGNING: ${{ steps.gpg-setup.outputs.signing_enabled == 'true' }}
+          GPG_KEY_ID: ${{ steps.gpg-setup.outputs.key_id }}
+        run: >
           echo "::group::Semantic Release Process"
 
           # Configure release flags based on inputs
@@ -254,49 +263,39 @@ jobs:
             echo "Debug mode enabled"
           fi
 
-          # Set up GPG for semantic-release to use
-          if [[ "$GPG_SIGNING" == "true" ]]; then
+          # Set up GPG for semantic-release to use in non-interactive environment
+          if [[ "${{ secrets.GPG_PASSPHRASE }}" != "" ]]; then
             echo "Setting up non-interactive GPG signing for semantic-release..."
 
             # Create a temporary directory for GPG to use
-            GNUPGHOME=$(mktemp -d)
+            export GNUPGHOME="$(mktemp -d)"
             chmod 700 "$GNUPGHOME"
-            export GNUPGHOME
 
-            # Write the GPG config files without using heredoc
-            echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg.conf"
-            echo "batch" >> "$GNUPGHOME/gpg.conf"
-            echo "no-tty" >> "$GNUPGHOME/gpg.conf"
-            echo "pinentry-mode loopback" >> "$GNUPGHOME/gpg.conf"
-
-            # Write the agent config
+            # Configure GPG for non-interactive use
             echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
-            echo "pinentry-program /bin/true" >> "$GNUPGHOME/gpg-agent.conf"
+            echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
+            echo "no-tty" >> "$GNUPGHOME/gpg.conf"
+            echo "batch" >> "$GNUPGHOME/gpg.conf"
 
-            # Restart the gpg-agent to apply settings
+            # Kill gpg-agent to apply new settings
             gpgconf --kill gpg-agent
 
-            # Set up Git to use custom GPG settings
-            git config --global gpg.program "$(which gpg)"
+            # Ensure git doesn't try to use a TTY
+            export GPG_TTY=/dev/null
+
+            # Set git commit.gpgsign explicitly
             git config --global commit.gpgsign true
+            git config --global gpg.program $(which gpg)
 
-            # Set up environment variable for passphrase
-            export GPG_TTY=$(tty || echo /dev/null)
-
-            # Create a git hook to provide the passphrase automatically
-            mkdir -p "$(git rev-parse --git-dir)/hooks"
-            echo "#!/bin/sh" > "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
-            echo "export GPG_TTY=/dev/null" >> "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
-            echo "echo \"\$GPG_PASSPHRASE\" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true" >> "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
-            chmod +x "$(git rev-parse --git-dir)/hooks/prepare-commit-msg"
-
-            # Create a helper script for GPG passphrase
-            echo "#!/bin/sh" > "$GNUPGHOME/pass-helper.sh"
-            echo "echo \"\$GPG_PASSPHRASE\"" >> "$GNUPGHOME/pass-helper.sh"
-            chmod +x "$GNUPGHOME/pass-helper.sh"
-
-            # Set the GPG passphrase directly
+            # Configure git with a command that passes the passphrase correctly
             git config --global gpg.passphrase "$GPG_PASSPHRASE"
+
+            # Create a script to be used by semantic-release
+            COMMIT_SCRIPT="$GNUPGHOME/commit-script.sh"
+            echo '#!/bin/bash' > "$COMMIT_SCRIPT"
+            echo 'echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback "$@"' >> "$COMMIT_SCRIPT"
+            chmod +x "$COMMIT_SCRIPT"
+            git config --global gpg.program "$COMMIT_SCRIPT"
 
             echo "GPG signing is configured for semantic-release commits"
           else
@@ -305,18 +304,15 @@ jobs:
 
           # Execute semantic-release with Bun
           echo "Executing: bunx semantic-release ${FLAGS}"
-          OUTPUT=$(bunx semantic-release ${FLAGS})
+          bunx semantic-release ${FLAGS}
           STATUS=$?
 
-          # Store output for inspection
-          echo "$OUTPUT" > semantic-release-output.log
-
-          # Handle output
+          # Handle status
           if [ $STATUS -eq 0 ]; then
             echo "::notice::Semantic release completed successfully"
 
-            # Try to extract the released version from output
-            VERSION=$(echo "$OUTPUT" | grep -oP "(?:The next release version is|Published release )\K[0-9]+\.[0-9]+\.[0-9]+" || echo "")
+            # Try to extract the released version from package.json
+            VERSION=$(node -e "try { console.log(require('./package.json').version) } catch (e) { console.log('') }")
 
             if [[ -n "$VERSION" ]]; then
               echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -330,7 +326,6 @@ jobs:
             fi
           else
             echo "::error::Semantic release failed with exit code $STATUS"
-            echo "$OUTPUT" | grep -E "ERR|Error|WARN|Warning" || echo "$OUTPUT" | tail -n 20
             exit $STATUS
           fi
 

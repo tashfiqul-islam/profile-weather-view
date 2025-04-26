@@ -1,3 +1,5 @@
+# Pull Request
+
 <!--
 Thank you for contributing to Profile Weather View!
 -->
@@ -31,6 +33,7 @@ Thank you for contributing to Profile Weather View!
 ## ✅ Checklist
 
 ### Code Quality
+
 - [ ] My code follows project style guidelines
 - [ ] I've added/updated relevant tests
 - [ ] All existing tests pass with my changes
@@ -38,6 +41,7 @@ Thank you for contributing to Profile Weather View!
 - [ ] My changes generate no new TypeScript errors or warnings
 
 ### Review Readiness
+
 - [ ] This PR is ready for review (not a draft)
 - [ ] I've addressed any feedback from previous reviews
 - [ ] This PR can be merged without conflicts
