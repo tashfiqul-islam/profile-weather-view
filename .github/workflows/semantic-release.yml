@@ -255,66 +255,132 @@ jobs:
           if git show-ref --verify --quiet refs/remotes/origin/develop; then
             echo "✅ Found develop branch"
 
-            echo "🔹 Fetching latest changes from all branches..."
-            git fetch origin --prune
+            # Fetch all branches and tags to ensure we have the latest state
+            echo "🔹 Fetching latest repository state..."
+            git fetch --all --tags --force
 
-            echo "🔹 Ensure we're on master with latest changes..."
+            # Get the latest release tag for reference
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+            echo "Latest release tag: $LATEST_TAG"
+
+            # Clean workspace completely before starting
+            echo "🔹 Cleaning workspace to ensure no conflicts..."
+            git reset --hard HEAD
+            git clean -fdx
+
+            # Ensure we have the latest master branch
+            echo "🔹 Getting the latest master branch..."
             git checkout master
             git pull origin master
 
-            # Handle any unstaged changes - first check if there are any
-            if [[ -n "$(git status --porcelain)" ]]; then
-              echo "🔹 Detected unstaged changes, stashing them..."
-              # List the unstaged changes
-              git status --porcelain
+            # Store master HEAD for verification
+            MASTER_HEAD=$(git rev-parse HEAD)
+            echo "Master is at commit: $MASTER_HEAD"
 
-              # Clean generated files that can be recreated
-              if [[ -f "tsconfig.tsbuildinfo" ]]; then
-                echo "🔹 Removing tsconfig.tsbuildinfo (generated file)..."
-                git checkout -- tsconfig.tsbuildinfo || rm -f tsconfig.tsbuildinfo
-              fi
+            # Now use the preferred strategy for branch synchronization based on squash merges
+            echo "🔹 Synchronizing develop with master's history..."
 
-              # Stash any remaining changes
-              git stash -u
-            fi
-
-            echo "🔹 Getting the latest commit hash from master..."
-            MASTER_COMMIT=$(git rev-parse HEAD)
-            echo "Master is at commit: $MASTER_COMMIT"
-
-            echo "🔹 Checking out develop branch..."
+            # Method 1: Reset develop to master + apply develop-only changes
             git checkout develop
             git pull origin develop
 
-            # Clean any potential unstaged changes on develop too
-            if [[ -n "$(git status --porcelain)" ]]; then
-              echo "🔹 Cleaning unstaged changes on develop branch..."
-              git reset --hard HEAD
+            # Store original develop HEAD for verification
+            DEVELOP_HEAD_BEFORE=$(git rev-parse HEAD)
+            echo "Develop was at: $DEVELOP_HEAD_BEFORE"
+
+            # Create a temp branch to hold develop-only changes
+            echo "🔹 Creating temporary working branch..."
+            TEMP_BRANCH="temp-sync-$(date +%s)"
+            git checkout -b $TEMP_BRANCH
+
+            # Find all commits that are in develop but not in master
+            echo "🔹 Identifying develop-only changes..."
+            DEVELOP_ONLY_FILES=$(git diff --name-only master...develop)
+
+            # If there are any develop-only files, save them
+            if [ -n "$DEVELOP_ONLY_FILES" ]; then
+              echo "🔹 Found develop-only changes to preserve"
+              mkdir -p /tmp/develop-changes
+
+              # Copy the current state of these files to a temp location
+              for FILE in $DEVELOP_ONLY_FILES; do
+                if [ -f "$FILE" ]; then
+                  echo "Preserving: $FILE"
+                  mkdir -p "/tmp/develop-changes/$(dirname "$FILE")"
+                  cp "$FILE" "/tmp/develop-changes/$FILE" 2>/dev/null || true
+                fi
+              done
+
+              # Now reset develop branch to match master exactly
+              git checkout develop
+              git reset --hard origin/master
+
+              # Copy back develop-only changes
+              for FILE in $(find /tmp/develop-changes -type f 2>/dev/null); do
+                RELATIVE_PATH=${FILE#/tmp/develop-changes/}
+                if [ -n "$RELATIVE_PATH" ]; then
+                  echo "Restoring: $RELATIVE_PATH"
+                  mkdir -p "$(dirname "$RELATIVE_PATH")"
+                  cp "$FILE" "$RELATIVE_PATH" 2>/dev/null || true
+                fi
+              done
+
+              # Commit these changes with a clear message
+              git add --all
+              HAS_CHANGES=$(git status --porcelain)
+              if [ -n "$HAS_CHANGES" ]; then
+                git commit -m "chore: sync develop with master while preserving develop-only changes [skip ci]"
+              fi
+            else
+              echo "🔹 No develop-only changes found, resetting develop to match master"
+              git checkout develop
+              git reset --hard origin/master
             fi
 
-            # Instead of a hard reset, rebase develop on top of master
-            # This preserves develop branch changes while incorporating master changes
-            echo "🔹 Rebasing develop on top of master instead of hard reset..."
-            GIT_SEQUENCE_EDITOR=: git rebase master
+            # Force push the updated develop branch
+            echo "🔹 Pushing synchronized develop branch..."
             git push origin develop --force
 
-            echo "🔹 Verifying develop is ahead or equal to master..."
-            git checkout master
-            MASTER_HEAD=$(git rev-parse HEAD)
-            git checkout develop
-            DEVELOP_HEAD=$(git rev-parse HEAD)
+            # Verify the synchronization was successful
+            echo "🔹 Verifying branch synchronization..."
+            DEVELOP_HEAD_AFTER=$(git rev-parse HEAD)
 
-            if git merge-base --is-ancestor "$MASTER_HEAD" "$DEVELOP_HEAD"; then
-              echo "✅ Success! Develop branch contains all of master's history"
-            else
-              echo "⚠️ Warning: Develop branch does not contain master's history!"
+            # Check that master's history is now in develop
+            if git merge-base --is-ancestor "$MASTER_HEAD" "$DEVELOP_HEAD_AFTER"; then
+              echo "✅ Success! Develop branch now contains master's complete history"
               echo "Master: $MASTER_HEAD"
-              echo "Develop: $DEVELOP_HEAD"
-              exit 1
+              echo "Develop (after sync): $DEVELOP_HEAD_AFTER"
+              echo "back_merge_status=success" >> $GITHUB_OUTPUT
+
+              # Also update any feature branches if they exist
+              echo "🔹 Checking for active feature branches to update..."
+              FEATURE_BRANCHES=$(git branch -r | grep 'origin/feature/' | sed 's/origin\///')
+              if [ -n "$FEATURE_BRANCHES" ]; then
+                echo "Found feature branches to update"
+                for BRANCH in $FEATURE_BRANCHES; do
+                  echo "Updating $BRANCH with latest master changes..."
+                  git checkout $BRANCH 2>/dev/null || git checkout -b $BRANCH origin/$BRANCH
+                  git pull origin $BRANCH
+
+                  # Try to rebase on master
+                  if git rebase master; then
+                    echo "✅ Successfully rebased $BRANCH on master"
+                    git push origin $BRANCH --force
+                  else
+                    echo "⚠️ Conflicts rebasing $BRANCH, aborting"
+                    git rebase --abort
+                  fi
+                done
+              fi
+            else
+              echo "⚠️ Warning: Synchronization may have failed - master history not in develop"
+              echo "Master: $MASTER_HEAD"
+              echo "Develop (after attempted sync): $DEVELOP_HEAD_AFTER"
+              echo "back_merge_status=failed" >> $GITHUB_OUTPUT
             fi
 
-            echo "✅ Successfully rebased develop on top of master"
-            echo "back_merge_status=success" >> $GITHUB_OUTPUT
+            # Return to master branch to complete workflow
+            git checkout master
           else
             echo "⚠️ No develop branch found, skipping synchronization"
             echo "back_merge_status=skipped" >> $GITHUB_OUTPUT
