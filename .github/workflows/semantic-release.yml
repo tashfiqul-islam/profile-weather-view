@@ -153,8 +153,8 @@ jobs:
           echo "::group::Security Scan"
           echo "🔹 Running minimal security scan..."
 
-          # Generate package lock for npm audit
-          npm i --package-lock-only --ignore-scripts --no-audit
+          # Generate package lock for npm audit with legacy-peer-deps flag to handle dependency conflicts
+          npm i --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
 
           # Run only high and critical vulnerability check
           npm audit --audit-level=high --json > npm-audit.json || true
