@@ -222,10 +222,8 @@ export default {
           'README.md',
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
-        // CRITICAL: Completely disable signing in the semantic-release process
-        gpgSign: false,
-        // These options make sure git doesn't attempt to sign commits
-        gitCommitOptions: ['--no-gpg-sign', '--no-verify'],
+        // Use git signing configuration from global git config
+        gpgSign: true,
       },
     ],
   ],
