@@ -92,6 +92,14 @@ export default {
             newCommit.commitUrl = `${context.host}/${context.owner}/${context.repository}/commit/${commit.hash}`;
           }
 
+          // Better detection for refactor commits
+          if (newCommit.subject &&
+             (newCommit.subject.includes('refactor') ||
+              newCommit.subject.includes('modernize') ||
+              newCommit.subject.includes('clean up'))) {
+            newCommit.type = 'refactor';
+          }
+
           return newCommit;
         },
 
@@ -99,9 +107,9 @@ export default {
         commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n`,
         headerPartial: `# [{{version}}]({{repository}}/compare/{{previousTag}}...{{currentTag}})\n\n`,
 
-        // Main template controlling overall changelog format
+        // Main template controlling overall changelog format - fixed horizontal line
         mainTemplate: `{{> header}}## {{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
------------------------------------------------------------
+---
 {{#each commitGroups}}
 {{#if title}}
 ### {{title}}
@@ -127,38 +135,19 @@ export default {
         commitsSort: ['scope', 'subject'],
 
         // Group commits by type with emoji prefixes
-        commitGroupsGeneratorFn: (commits) => {
-          const typeMapping = {
-            feat: { title: '✨ Features', order: 1 },
-            fix: { title: '🐛 Bug Fixes', order: 2 },
-            perf: { title: '⚡ Performance Improvements', order: 3 },
-            revert: { title: '⏪ Reverts', order: 4 },
-            docs: { title: '📚 Documentation', order: 5 },
-            style: { title: '💎 Styles', order: 6 },
-            refactor: { title: '♻️ Code Refactoring', order: 7 },
-            test: { title: '✅ Tests', order: 8 },
-            build: { title: '👷 Build System', order: 9 },
-            ci: { title: '🔄 CI/CD', order: 10 },
-            chore: { title: '🧹 Chores', order: 11 },
-          };
-
-          // Group commits by type
-          const commitGroups = {};
-          commits.forEach(commit => {
-            const type = commit.type || 'other';
-            if (!commitGroups[type]) commitGroups[type] = [];
-            commitGroups[type].push(commit);
-          });
-
-          // Convert to array and add titles
-          return Object.entries(commitGroups)
-            .map(([type, groupCommits]) => ({
-              title: typeMapping[type]?.title || `${type.charAt(0).toUpperCase() + type.slice(1)}`,
-              commits: groupCommits,
-              order: typeMapping[type]?.order || 99,
-            }))
-            .sort((a, b) => a.order - b.order);
-        }
+        commitsGroups: {
+          'feat': '✨ Features',
+          'fix': '🐛 Bug Fixes',
+          'perf': '⚡ Performance Improvements',
+          'revert': '⏪ Reverts',
+          'docs': '📚 Documentation',
+          'style': '💎 Styles',
+          'refactor': '♻️ Code Refactoring',
+          'test': '✅ Tests',
+          'build': '👷 Build System',
+          'ci': '🔄 CI/CD',
+          'chore': '🧹 Chores'
+        },
       },
     }],
 
