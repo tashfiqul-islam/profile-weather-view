@@ -1,5 +1,3 @@
-# Pull Request
-
 <!--
 Thank you for contributing to Profile Weather View!
 -->
