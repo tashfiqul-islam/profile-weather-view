@@ -106,8 +106,8 @@ export default {
         // Format templates for changelog entries
         commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n`,
 
-        // Clean header without extra newlines
-        headerPartial: `# [{{version}}]({{repository}}/compare/{{previousTag}}...{{currentTag}})`,
+        // Fix compare URL format to prevent duplicate repo name
+        headerPartial: `# [{{version}}](https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}})`,
 
         // Main template with absolutely no horizontal rules
         mainTemplate:
@@ -139,7 +139,7 @@ export default {
         commitGroupsSort: 'title',
         commitsSort: ['scope', 'subject'],
 
-        // Don't use the generator function - directly set the groups with fixed titles
+        // Using standard types array with sections for emoji headers
         types: [
           { type: 'feat', section: '✨ Features' },
           { type: 'fix', section: '🐛 Bug Fixes' },
