@@ -180,73 +180,12 @@ jobs:
           echo "::endgroup::"
 
       # -------------------------------------------------------
-      # 🔐 GPG Setup for Commit Signing
-      # -------------------------------------------------------
-      - name: "🔐 Setup GPG for Commit Signing"
-        id: gpg-setup
-        if: ${{ env.DRY_RUN != 'true' }}
-        run: |
-          echo "::group::GPG Setup"
-          # Only proceed if GPG keys are provided
-          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" && -n "${{ secrets.GPG_PASSPHRASE }}" ]]; then
-            echo "Setting up GPG key for signed commits"
-
-            # Install gnupg if needed
-            which gpg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -qq -y gnupg; }
-
-            # Create temporary file for GPG key
-            GPG_KEY_FILE=$(mktemp)
-            chmod 600 "$GPG_KEY_FILE"
-            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d > "$GPG_KEY_FILE"
-
-            # Import the GPG key
-            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --import "$GPG_KEY_FILE"
-
-            # Get the key ID
-            KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -n1 | awk '{print $2}' | cut -d'/' -f2)
-
-            # Configure Git to use the imported GPG key
-            git config --global user.signingkey "$KEY_ID"
-            git config --global commit.gpgsign true
-
-            # Set commit author identity from secrets
-            git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
-            git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
-
-            # Configure GPG for non-interactive environment
-            mkdir -p ~/.gnupg
-            echo 'allow-loopback-pinentry' > ~/.gnupg/gpg-agent.conf
-            echo 'use-agent' > ~/.gnupg/gpg.conf
-            echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
-            echo 'no-tty' >> ~/.gnupg/gpg.conf
-            chmod 700 ~/.gnupg
-            gpgconf --kill gpg-agent
-
-            # Secure cleanup
-            rm -f "$GPG_KEY_FILE"
-
-            echo "signing_enabled=true" >> $GITHUB_OUTPUT
-            echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
-            echo "GPG signing enabled with key: $KEY_ID"
-          else
-            echo "GPG signing not configured - using standard commits"
-            git config --global user.name "${{ env.GIT_AUTHOR_NAME }}"
-            git config --global user.email "${{ env.GIT_AUTHOR_EMAIL }}"
-
-            echo "signing_enabled=false" >> $GITHUB_OUTPUT
-          fi
-          echo "::endgroup::"
-
-      # -------------------------------------------------------
       # 🚀 Semantic Release
       # -------------------------------------------------------
       - name: "🚀 Run Semantic Release"
         id: semantic-release
         env:
           GH_TOKEN: ${{ secrets.PAT }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_SIGNING: ${{ steps.gpg-setup.outputs.signing_enabled == 'true' }}
-          GPG_KEY_ID: ${{ steps.gpg-setup.outputs.key_id }}
         run: |
           echo "::group::Semantic Release Process"
 
@@ -263,29 +202,11 @@ jobs:
             echo "Debug mode enabled"
           fi
 
-          # Configure proper GPG environment variables for semantic-release to use
-          if [[ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]]; then
-            echo "Setting up GPG for semantic-release..."
+          # Set git identity for commits
+          git config --global user.name "${{ env.GIT_AUTHOR_NAME }}"
+          git config --global user.email "${{ env.GIT_AUTHOR_EMAIL }}"
 
-            # Use non-interactive GPG signing wrapper for semantic-release
-            echo '#!/bin/bash' > /tmp/gpg-no-tty.sh
-            echo 'echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 "$@"' >> /tmp/gpg-no-tty.sh
-            chmod +x /tmp/gpg-no-tty.sh
-
-            # Use the wrapper as the GPG program
-            git config --global gpg.program /tmp/gpg-no-tty.sh
-
-            # Make sure .gitconfig has the right signing key
-            git config --global user.signingkey "${{ steps.gpg-setup.outputs.key_id }}"
-            git config --global commit.gpgsign true
-
-            # Test signing to verify the configuration works
-            echo "Testing signing configuration..."
-            echo "test" | git commit --allow-empty -F - -S > /dev/null && git reset --soft HEAD~1
-            echo "✅ Signing test successful"
-          fi
-
-          # Execute semantic-release with environment variables set up for proper signing
+          # Execute semantic-release
           echo "Executing: bunx semantic-release ${FLAGS}"
           bunx semantic-release ${FLAGS}
           SEMANTIC_STATUS=$?
@@ -300,31 +221,6 @@ jobs:
             if [[ -n "$VERSION" ]]; then
               echo "version=${VERSION}" >> $GITHUB_OUTPUT
               echo "::notice::Version v${VERSION} released!"
-
-              # Verify the commit is properly signed
-              echo "Verifying signature on the most recent commit..."
-              if git verify-commit HEAD 2>/dev/null; then
-                echo "✅ Release commit is properly signed"
-              else
-                echo "⚠️ Release commit is not signed - this should not happen"
-                # If needed, we could add fallback signing here, but it should be fixed upstream
-              fi
-
-              # Sometimes semantic-release creates an unsigned tag, replace it with a signed one
-              if [[ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]]; then
-                echo "Replacing tag v${VERSION} with a GPG-signed tag..."
-                if git tag -v "v${VERSION}" 2>/dev/null | grep -q "Good signature"; then
-                  echo "✅ Tag already has a valid signature"
-                else
-                  # Replace with signed tag
-                  echo "Creating signed tag..."
-                  TAG_MSG="Release v${VERSION}"
-                  git tag -d "v${VERSION}" 2>/dev/null || true
-                  git tag -a "v${VERSION}" -m "$TAG_MSG" -s
-                  git push origin "v${VERSION}" --force
-                  echo "✅ Created and pushed GPG-signed tag v${VERSION}"
-                fi
-              fi
             elif [[ "${{ env.DRY_RUN }}" == "true" ]]; then
               echo "status=dry-run" >> $GITHUB_OUTPUT
               echo "::notice::Dry run completed successfully"
@@ -347,19 +243,12 @@ jobs:
         if: steps.semantic-release.outputs.version != '' && env.DRY_RUN != 'true'
         env:
           GH_TOKEN: ${{ secrets.PAT }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SIGNING_ENABLED: ${{ steps.gpg-setup.outputs.fingerprint != '' }}
         run: |
           echo "::group::Back-Merge and Branch Synchronization"
-          echo "🔹 Setting git configuration..."
-          if [[ "$SIGNING_ENABLED" == "true" ]]; then
-            # GPG is already configured in the previous step
-            echo "Using GPG signing for branch synchronization"
-          else
-            # Standard git configuration without signing
-            git config --global user.name "${{ env.GIT_AUTHOR_NAME }}"
-            git config --global user.email "${{ env.GIT_AUTHOR_EMAIL }}"
-          fi
+
+          # Set git identity
+          git config --global user.name "${{ env.GIT_AUTHOR_NAME }}"
+          git config --global user.email "${{ env.GIT_AUTHOR_EMAIL }}"
 
           # Check if develop branch exists
           echo "🔹 Checking for develop branch..."
@@ -373,6 +262,22 @@ jobs:
             git checkout master
             git pull origin master
 
+            # Handle any unstaged changes - first check if there are any
+            if [[ -n "$(git status --porcelain)" ]]; then
+              echo "🔹 Detected unstaged changes, stashing them..."
+              # List the unstaged changes
+              git status --porcelain
+
+              # Clean generated files that can be recreated
+              if [[ -f "tsconfig.tsbuildinfo" ]]; then
+                echo "🔹 Removing tsconfig.tsbuildinfo (generated file)..."
+                git checkout -- tsconfig.tsbuildinfo || rm -f tsconfig.tsbuildinfo
+              fi
+
+              # Stash any remaining changes
+              git stash -u
+            fi
+
             echo "🔹 Getting the latest commit hash from master..."
             MASTER_COMMIT=$(git rev-parse HEAD)
             echo "Master is at commit: $MASTER_COMMIT"
@@ -381,19 +286,17 @@ jobs:
             git checkout develop
             git pull origin develop
 
+            # Clean any potential unstaged changes on develop too
+            if [[ -n "$(git status --porcelain)" ]]; then
+              echo "🔹 Cleaning unstaged changes on develop branch..."
+              git reset --hard HEAD
+            fi
+
             # Instead of a hard reset, rebase develop on top of master
             # This preserves develop branch changes while incorporating master changes
             echo "🔹 Rebasing develop on top of master instead of hard reset..."
-            if [[ "$SIGNING_ENABLED" == "true" ]]; then
-              # Use -S flag for signed commits during rebase
-              echo "$GPG_PASSPHRASE" | GIT_SEQUENCE_EDITOR=: git -c gpg.passphrase="$GPG_PASSPHRASE" rebase --gpg-sign master
-              # Force push with signed commits
-              echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - && git push origin develop --force
-            else
-              # Standard workflow without signing
-              GIT_SEQUENCE_EDITOR=: git rebase master
-              git push origin develop --force
-            fi
+            GIT_SEQUENCE_EDITOR=: git rebase master
+            git push origin develop --force
 
             echo "🔹 Verifying develop is ahead or equal to master..."
             git checkout master
@@ -410,28 +313,7 @@ jobs:
               exit 1
             fi
 
-            # List all branches and delete all except master and develop
-            echo "🔹 Cleaning up other branches..."
-            git checkout master
-
-            # Delete local branches except master and develop
-            for branch in $(git branch | grep -v "master" | grep -v "develop" | tr -d " *"); do
-              echo "Deleting local branch: $branch"
-              git branch -D $branch
-            done
-
-            # Delete remote branches except master and develop
-            for branch in $(git branch -r | grep "origin/" | grep -v "origin/master" | grep -v "origin/develop" | sed 's/origin\///'); do
-              echo "Deleting remote branch: $branch"
-              if [[ "$SIGNING_ENABLED" == "true" ]]; then
-                # Use signing for branch deletion
-                echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - && git push origin --delete $branch
-              else
-                git push origin --delete $branch
-              fi
-            done
-
-            echo "✅ Successfully rebased develop on top of master and cleaned up branches"
+            echo "✅ Successfully rebased develop on top of master"
             echo "back_merge_status=success" >> $GITHUB_OUTPUT
           else
             echo "⚠️ No develop branch found, skipping synchronization"
@@ -452,12 +334,6 @@ jobs:
           if [[ "${{ steps.semantic-release.outputs.version }}" != "" ]]; then
             echo "✅ **Version ${{ steps.semantic-release.outputs.version }} released successfully**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-
-            # Add signing information
-            if [[ "${{ steps.gpg-setup.outputs.fingerprint }}" != "" ]]; then
-              echo "🔐 **Release commits were signed with GPG**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
 
             # Add changelog info if available
             if [[ -f "CHANGELOG.md" ]]; then
