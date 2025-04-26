@@ -105,10 +105,15 @@ export default {
 
         // Format templates for changelog entries
         commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n`,
-        headerPartial: `# [{{version}}]({{repository}}/compare/{{previousTag}}...{{currentTag}})\n\n`,
 
-        // Main template
-        mainTemplate: `{{> header}}## {{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
+        // Fix compare URL format to prevent duplicate repo name
+        headerPartial: `# [{{version}}](https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}})`,
+
+        // Main template with absolutely no horizontal rules
+        mainTemplate:
+`{{> header}}
+
+## {{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
 
 {{#each commitGroups}}
 {{#if title}}
@@ -134,49 +139,20 @@ export default {
         commitGroupsSort: 'title',
         commitsSort: ['scope', 'subject'],
 
-        // Map commit types to emoji headers
-        commitGroupsGeneratorFn: (commits) => {
-          const typeMapping = {
-            feat: '✨ Features',
-            fix: '🐛 Bug Fixes',
-            perf: '⚡ Performance Improvements',
-            revert: '⏪ Reverts',
-            docs: '📚 Documentation',
-            style: '💎 Styles',
-            refactor: '♻️ Code Refactoring',
-            test: '✅ Tests',
-            build: '👷 Build System',
-            ci: '🔄 CI/CD',
-            chore: '🧹 Chores'
-          };
-
-          // Group commits by type
-          const groups = {};
-
-          commits.forEach(commit => {
-            const type = commit.type || 'other';
-            if (!groups[type]) {
-              groups[type] = {
-                type,
-                commits: [],
-                title: typeMapping[type] || type.charAt(0).toUpperCase() + type.slice(1)
-              };
-            }
-            groups[type].commits.push(commit);
-          });
-
-          // Convert to array
-          return Object.values(groups).sort((a, b) => {
-            // Known types first, then alphabetical
-            const indexA = Object.keys(typeMapping).indexOf(a.type);
-            const indexB = Object.keys(typeMapping).indexOf(b.type);
-
-            if (indexA >= 0 && indexB >= 0) return indexA - indexB;
-            if (indexA >= 0) return -1;
-            if (indexB >= 0) return 1;
-            return a.title.localeCompare(b.title);
-          });
-        }
+        // Using standard types array with sections for emoji headers
+        types: [
+          { type: 'feat', section: '✨ Features' },
+          { type: 'fix', section: '🐛 Bug Fixes' },
+          { type: 'perf', section: '⚡ Performance Improvements' },
+          { type: 'revert', section: '⏪ Reverts' },
+          { type: 'docs', section: '📚 Documentation' },
+          { type: 'style', section: '💎 Styles' },
+          { type: 'refactor', section: '♻️ Code Refactoring' },
+          { type: 'test', section: '✅ Tests' },
+          { type: 'build', section: '👷 Build System' },
+          { type: 'ci', section: '🔄 CI/CD' },
+          { type: 'chore', section: '🧹 Chores' },
+        ]
       },
     }],
 
@@ -185,7 +161,7 @@ export default {
      */
     ['@semantic-release/changelog', {
       changelogFile: 'CHANGELOG.md',
-      changelogTitle: '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.\n\n',
+      changelogTitle: '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.\n',
     }],
 
     /**
