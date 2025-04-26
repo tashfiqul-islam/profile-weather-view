@@ -2,6 +2,16 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+
+
+# [1.2.3](profile-weather-view/compare/v1.2.2...v1.2.3)
+
+## Patch (2025-04-26)
+-----------------------------------------------------------
+### refactor
+
+* **ci:** modernize semantic-release workflow and configuration (#40) ([78961d4](https://github.com/tashfiqul-islam/profile-weather-view/commit/78961d497968dbbb22026b4de786c5fdc6471860))
+
 # 1.2.2
 
 Patch (2025-04-26)
