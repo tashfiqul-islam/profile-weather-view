@@ -161,7 +161,7 @@ jobs:
 
           # Check for high and critical vulnerabilities only
           HIGH_VULN_COUNT=$(jq '.metadata.vulnerabilities.high' npm-audit.json 2>/dev/null || echo "0")
-          CRITICAL_VULN_COUNT=$(jq '.metadata.vulnerabilities.critical' npm-audit.json 2>/dev/null || echo "0")
+          CRITICAL_VULN_COUNT=$(jq '.metadata.vulnerabilities.critical' npm-audit.json 2>/dev.null || echo "0")
 
           # Handle empty or invalid JSON
           if [ "$HIGH_VULN_COUNT" = "null" ] || [ -z "$HIGH_VULN_COUNT" ]; then HIGH_VULN_COUNT=0; fi
@@ -263,13 +263,24 @@ jobs:
             echo "Debug mode enabled"
           fi
 
-          # Let semantic-release do its work without GPG signing
+          # IMPORTANT: Temporarily disable GPG signing globally to prevent semantic-release from trying to sign
+          echo "Temporarily disabling GPG signing for semantic-release..."
+          git config --global commit.gpgsign false
+
+          # Execute semantic-release without GPG signing
           echo "Executing: bunx semantic-release ${FLAGS}"
           bunx semantic-release ${FLAGS}
-          STATUS=$?
+          SEMANTIC_STATUS=$?
 
-          # If semantic-release was successful, manually create a GPG-signed tag
-          if [ $STATUS -eq 0 ]; then
+          # Re-enable GPG signing for post-release operations
+          if [[ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]]; then
+            echo "Re-enabling GPG signing for post-release operations..."
+            git config --global commit.gpgsign true
+            git config --global user.signingkey "${{ steps.gpg-setup.outputs.key_id }}"
+          fi
+
+          # Handle semantic-release status
+          if [ $SEMANTIC_STATUS -eq 0 ]; then
             echo "::notice::Semantic release completed successfully"
 
             # Extract the released version from package.json
@@ -293,12 +304,19 @@ jobs:
                 fi
 
                 # Create a new signed tag with the message
-                git config --global gpg.program $(which gpg)
-                git config --global commit.gpgsign true
-
-                # Sign the tag with our configured GPG key
                 TAG_MSG="Release v${VERSION}"
-                echo "$GPG_PASSPHRASE" | GPG_TTY="" git tag -f -a "v${VERSION}" -m "$TAG_MSG" -s
+
+                # Configure GPG for non-interactive signing
+                export GPG_TTY=""
+
+                # Create a wrapper script that supplies the passphrase
+                echo '#!/bin/bash' > /tmp/gpg-no-tty.sh
+                echo 'echo "$GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 "$@"' >> /tmp/gpg-no-tty.sh
+                chmod +x /tmp/gpg-no-tty.sh
+                git config --global gpg.program /tmp/gpg-no-tty.sh
+
+                # Sign the tag
+                git tag -f -a "v${VERSION}" -m "$TAG_MSG" -s
 
                 # Push the signed tag
                 git push origin "v${VERSION}" --force
@@ -319,8 +337,8 @@ jobs:
                     COMMIT_MESSAGE=$(git log -1 --pretty=%B)
 
                     # Amend the commit with signing but keeping the same message
-                    echo "$GPG_PASSPHRASE" | GIT_COMMITTER_DATE="$(git show -s --format=%ci HEAD)" \
-                      git -c gpg.passphrase="$GPG_PASSPHRASE" commit --amend -S --no-edit
+                    GIT_COMMITTER_DATE="$(git show -s --format=%ci HEAD)" \
+                      git commit --amend -S --no-edit
 
                     # Force push to update the commit (be careful!)
                     git push --force-with-lease origin ${{ github.ref_name }}
@@ -338,8 +356,8 @@ jobs:
               echo "::notice::No release required - no relevant changes detected"
             fi
           else
-            echo "::error::Semantic release failed with exit code $STATUS"
-            exit $STATUS
+            echo "::error::Semantic release failed with exit code $SEMANTIC_STATUS"
+            exit $SEMANTIC_STATUS
           fi
 
           echo "::endgroup::"
