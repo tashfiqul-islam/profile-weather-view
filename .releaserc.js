@@ -107,9 +107,9 @@ export default {
         commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n`,
         headerPartial: `# [{{version}}]({{repository}}/compare/{{previousTag}}...{{currentTag}})\n\n`,
 
-        // Main template controlling overall changelog format - fixed horizontal line
+        // Main template
         mainTemplate: `{{> header}}## {{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
----
+
 {{#each commitGroups}}
 {{#if title}}
 ### {{title}}
@@ -134,20 +134,49 @@ export default {
         commitGroupsSort: 'title',
         commitsSort: ['scope', 'subject'],
 
-        // Group commits by type with emoji prefixes
-        commitsGroups: {
-          'feat': '✨ Features',
-          'fix': '🐛 Bug Fixes',
-          'perf': '⚡ Performance Improvements',
-          'revert': '⏪ Reverts',
-          'docs': '📚 Documentation',
-          'style': '💎 Styles',
-          'refactor': '♻️ Code Refactoring',
-          'test': '✅ Tests',
-          'build': '👷 Build System',
-          'ci': '🔄 CI/CD',
-          'chore': '🧹 Chores'
-        },
+        // Map commit types to emoji headers
+        commitGroupsGeneratorFn: (commits) => {
+          const typeMapping = {
+            feat: '✨ Features',
+            fix: '🐛 Bug Fixes',
+            perf: '⚡ Performance Improvements',
+            revert: '⏪ Reverts',
+            docs: '📚 Documentation',
+            style: '💎 Styles',
+            refactor: '♻️ Code Refactoring',
+            test: '✅ Tests',
+            build: '👷 Build System',
+            ci: '🔄 CI/CD',
+            chore: '🧹 Chores'
+          };
+
+          // Group commits by type
+          const groups = {};
+
+          commits.forEach(commit => {
+            const type = commit.type || 'other';
+            if (!groups[type]) {
+              groups[type] = {
+                type,
+                commits: [],
+                title: typeMapping[type] || type.charAt(0).toUpperCase() + type.slice(1)
+              };
+            }
+            groups[type].commits.push(commit);
+          });
+
+          // Convert to array
+          return Object.values(groups).sort((a, b) => {
+            // Known types first, then alphabetical
+            const indexA = Object.keys(typeMapping).indexOf(a.type);
+            const indexB = Object.keys(typeMapping).indexOf(b.type);
+
+            if (indexA >= 0 && indexB >= 0) return indexA - indexB;
+            if (indexA >= 0) return -1;
+            if (indexB >= 0) return 1;
+            return a.title.localeCompare(b.title);
+          });
+        }
       },
     }],
 
