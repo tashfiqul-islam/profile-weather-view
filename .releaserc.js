@@ -222,8 +222,6 @@ export default {
           'README.md',
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
-        // Use git signing configuration from global git config
-        gpgSign: true,
       },
     ],
   ],
