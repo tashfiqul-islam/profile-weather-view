@@ -3,6 +3,12 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.5...v1.2.6)
+## Patch (2025-04-26)
+
+### fix
+
+* **ci:** correct changelog formatting with emoji headers (#43) ([03cc278](https://github.com/tashfiqul-islam/profile-weather-view/commit/03cc2783b2d4c7a696395d029e14e445fe2e705f))
 
 # [1.2.5](profile-weather-view/compare/v1.2.4...v1.2.5)
 
