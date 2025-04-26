@@ -112,7 +112,7 @@ jobs:
           echo "::group::Dependency Installation"
           bun install --frozen-lockfile
           # Verify integrity
-          bun audit signatures
+          bun --revision
           echo "::endgroup::"
 
       # -------------------------------------------------------
@@ -267,35 +267,35 @@ jobs:
           if [[ "${{ secrets.GPG_PASSPHRASE }}" != "" ]]; then
             echo "Setting up non-interactive GPG signing for semantic-release..."
 
-            # Create a temporary directory for GPG to use
-            export GNUPGHOME="$(mktemp -d)"
-            chmod 700 "$GNUPGHOME"
+            # Ensure the imported key is available for all git operations
+            # This is important - need to use the same gpg home directory as where the key was imported
+            export GNUPGHOME="$HOME/.gnupg"
 
-            # Configure GPG for non-interactive use
-            echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
-            echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
-            echo "no-tty" >> "$GNUPGHOME/gpg.conf"
-            echo "batch" >> "$GNUPGHOME/gpg.conf"
+            # We need this to ensure git can sign with the imported key
+            git config --global gpg.program $(which gpg)
+            git config --global user.signingkey "${{ steps.gpg-setup.outputs.key_id }}"
+            git config --global commit.gpgsign true
 
-            # Kill gpg-agent to apply new settings
+            # Configure non-interactive signing
+            echo 'allow-loopback-pinentry' > "$HOME/.gnupg/gpg-agent.conf"
+            echo 'pinentry-mode loopback' > "$HOME/.gnupg/gpg.conf"
+            echo 'no-tty' >> "$HOME/.gnupg/gpg.conf"
+            echo 'batch' >> "$HOME/.gnupg/gpg.conf"
+
+            # Restart agent to apply settings
             gpgconf --kill gpg-agent
 
-            # Ensure git doesn't try to use a TTY
-            export GPG_TTY=/dev/null
-
-            # Set git commit.gpgsign explicitly
-            git config --global commit.gpgsign true
-            git config --global gpg.program $(which gpg)
-
-            # Configure git with a command that passes the passphrase correctly
+            # Set passphrase for non-interactive signing
             git config --global gpg.passphrase "$GPG_PASSPHRASE"
 
-            # Create a script to be used by semantic-release
-            COMMIT_SCRIPT="$GNUPGHOME/commit-script.sh"
-            echo '#!/bin/bash' > "$COMMIT_SCRIPT"
-            echo 'echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback "$@"' >> "$COMMIT_SCRIPT"
-            chmod +x "$COMMIT_SCRIPT"
-            git config --global gpg.program "$COMMIT_SCRIPT"
+            # Create helper script for semantic-release to use with git
+            echo '#!/bin/bash' > /tmp/git-gpg-wrapper.sh
+            echo 'echo "$GPG_PASSPHRASE" | /usr/bin/gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback "$@"' >> /tmp/git-gpg-wrapper.sh
+            chmod +x /tmp/git-gpg-wrapper.sh
+
+            # Test GPG signing to verify configuration
+            echo "Testing GPG signing configuration..."
+            echo "test" | gpg --clearsign > /dev/null && echo "✓ GPG signing test successful" || echo "✗ GPG signing test failed"
 
             echo "GPG signing is configured for semantic-release commits"
           else

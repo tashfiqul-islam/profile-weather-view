@@ -222,15 +222,11 @@ export default {
           'README.md',
         ],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
-        // Enhanced GPG signing configuration for CI environment
+        // GitHub Actions workflow handle the signing
         signoff: true,
-        gpgSign: process.env.GPG_SIGNING === 'true',
-        // Use environment-friendly commit options that work in non-interactive environments
-        gitCommitOptions: process.env.GPG_SIGNING === 'true'
-          ? ['-S', '--no-verify', '--allow-empty', '--no-gpg-sign']
-          : ['--no-verify', '--allow-empty'],
-        // When true, the GPG signature will be done externally, not by semantic-release
-        externallyManagedGpgSigning: process.env.GPG_SIGNING === 'true',
+        gpgSign: false,
+        // No need for special git commit options when not signing through the plugin
+        gitCommitOptions: ['--no-verify', '--allow-empty'],
       },
     ],
   ],
