@@ -106,15 +106,45 @@ jobs:
         with:
           bun-version: ${{ steps.init.outputs.bun_version }}
 
+      - name: "📦 Restore Dependencies Cache"
+        uses: actions/cache/restore@v4
+        id: bun-cache
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+            bun.lockb
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/package.json', '**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+            ${{ runner.os }}-
+          enableCrossOsArchive: false
+
       - name: "📦 Install Dependencies"
         id: deps
         run: |
           echo "::group::Dependency Installation"
-          bun install --frozen-lockfile
+          if [ "${{ steps.bun-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "::notice::Using cached dependencies"
+            bun install --frozen-lockfile --no-summary
+          else
+            echo "Installing dependencies..."
+            bun install --frozen-lockfile
+          fi
           # Verify integrity
           bun --revision
           echo "::endgroup::"
 
+      - name: "💾 Save Dependencies Cache"
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+            bun.lockb
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/package.json', '**/bun.lockb') }}
+          enableCrossOsArchive: false
       # -------------------------------------------------------
       # 🧪 Validation
       # -------------------------------------------------------

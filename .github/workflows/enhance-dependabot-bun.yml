@@ -68,14 +68,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
-      # Add integrity verification
-      - name: "🔐 Verify Repository Integrity"
-        id: verify-integrity
-        run: |
-          echo "::group::Verifying repository integrity"
-          git verify-commit HEAD || echo "::warning::Last commit is not signed"
-          echo "::endgroup::"
-
       # -------------------------------------------------------
       # 🔐 Setup GPG for Commit Signing
       # -------------------------------------------------------
@@ -279,6 +271,25 @@ jobs:
           fi
           echo "::endgroup::"
 
+      # Install the new Bun version to update lockfile and ensure dependencies are compatible
+      - name: "🔧 Install Updated Bun Version"
+        if: steps.check-bun-update.outputs.is_bun_update == 'true'
+        run: |
+          echo "::group::Installing new Bun version"
+          NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
+
+          # Install the new Bun version globally
+          npm install -g bun@$NEW_VERSION
+
+          # Verify installation
+          bun --version
+
+          # Update lockfile by reinstalling dependencies
+          bun install
+
+          echo "✅ Successfully installed Bun $NEW_VERSION and updated lockfile"
+          echo "::endgroup::"
+
       # Add SBOM generation
       - name: "📋 Generate SBOM for Bun Update"
         if: steps.check-bun-update.outputs.is_bun_update == 'true'
@@ -288,6 +299,7 @@ jobs:
           NEW_VERSION="${{ steps.check-bun-update.outputs.new_bun_version }}"
 
           # Generate simplified SBOM
+          cat > sbom.json << EOF
           {
             "bomFormat": "CycloneDX",
             "specVersion": "1.5",
@@ -323,6 +335,7 @@ jobs:
             ]
           }
           EOF
+          echo "Generated SBOM saved to sbom.json"
           echo "::endgroup::"
           echo "sbom_generated=true" >> $GITHUB_OUTPUT
 
@@ -331,7 +344,7 @@ jobs:
         run: |
           echo "::group::Committing changes with signed commits"
           # Check if there are changes to commit
-          if git diff --quiet; then
+          if git diff --quiet && [ ! -f "bun.lockb" ]; then
             echo "::notice::No changes to commit"
             echo "::endgroup::"
             exit 0
@@ -342,13 +355,13 @@ jobs:
           UPDATE_TYPE="${{ steps.check-bun-update.outputs.update_type }}"
 
           # Create a meaningful commit message that follows commitlint format
-          COMMIT_MSG="deps(bun): update bun from $OLD_VERSION to $NEW_VERSION\n\nAutomatically updates Bun runtime version in:\n- packageManager field in package.json\n- BUN_VERSION in workflow files\n- engines.bun field (if present)"
+          COMMIT_MSG="deps(bun): update bun from $OLD_VERSION to $NEW_VERSION\n\nAutomatically updates Bun runtime version in:\n- packageManager field in package.json\n- BUN_VERSION in workflow files\n- engines.bun field (if present)\n- Updated lockfile with compatible dependencies"
 
           # Show what's being changed
           git diff --unified=1
 
-          # Add changes
-          git add package.json .github/workflows/*.yml
+          # Add changes - ensure we include the lockfile
+          git add package.json .github/workflows/*.yml bun.lockb sbom.json
 
           # Commit with signing if enabled
           if [ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]; then

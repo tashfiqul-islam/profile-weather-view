@@ -11,13 +11,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"  # Ensure regular updates
       time: "06:00"
       timezone: "Asia/Dhaka"
     versioning-strategy: "auto"
     target-branch: "master"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 15  # Concurrent updates
     pull-request-branch-name:
       separator: "-"
     labels:
@@ -34,6 +33,9 @@ updates:
       include: "scope"
     assignees:
       - "tashfiqul-islam"
+    reviewers:
+      - "tashfiqul-islam"  # Add reviewer to ensure updates are checked
+    rebase-strategy: "auto"  # Auto-rebase PRs to avoid conflicts
     groups:
       dev-dependencies:
         dependency-type: "development"
@@ -55,22 +57,27 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Auto-merge configuration for patch updates
+    auto-merge: true
+    automerge-requirements:
+      - check-success=lint
+      - check-success=build
+      - check-success=test
 
   # -------------------------------------------------------
-  # 🤖 Bun Runtime Version (Custom Updater)
+  # 🤖 Bun Runtime Version
   # -------------------------------------------------------
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"  # Ensure daily updates
       time: "06:30"
       timezone: "Asia/Dhaka"
     allow:
       - dependency-name: "bun"
       - dependency-name: "bun-types"
     versioning-strategy: "auto"
-    target-branch: "develop"
+    target-branch: "master"  # Pointing to master branch
     open-pull-requests-limit: 2
     pull-request-branch-name:
       separator: "-"
@@ -88,6 +95,7 @@ updates:
       include: "scope"
     assignees:
       - "tashfiqul-islam"
+    rebase-strategy: "auto"  # Auto-rebase PRs to avoid conflicts
 
   # -------------------------------------------------------
   # 🔄 GitHub Actions
@@ -123,3 +131,7 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Auto-merge configuration for GitHub Actions
+    auto-merge: true
+    automerge-requirements:
+      - check-success=lint
