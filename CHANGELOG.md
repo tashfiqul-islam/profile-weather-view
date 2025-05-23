@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.9](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.8...v1.2.9)
+## Patch (2025-05-23)
+
+### ci
+
+* enhanced cicd workflows ([11226a8](https://github.com/tashfiqul-islam/profile-weather-view/commit/11226a81dac46e5a40013316f3781c4e5d538a42))
+
 # [1.2.8](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.7...v1.2.8)
 ## Patch (2025-05-23)
 
