@@ -39,6 +39,7 @@ permissions:
   contents: write  # For repository updates
   pull-requests: write  # For PR creation
   id-token: write  # For provenance generation
+  actions: write  # Required to modify workflow files
 
 # ============================================================
 # 🌍 Environment Variables

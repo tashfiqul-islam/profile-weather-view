@@ -9,7 +9,7 @@
     "bun": ">=1.2.0",
     "node": ">=22.0.0"
   },
-  "packageManager": "bun@1.2.10",
+  "packageManager": "bun@1.2.14",
   "repository": {
     "type": "git",
     "url": "https://github.com/tashfiqul-islam/profile-weather-view"
