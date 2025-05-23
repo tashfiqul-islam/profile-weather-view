@@ -61,7 +61,7 @@ env:
   AUTO_MERGE: ${{ github.event.inputs.auto_merge || 'true' }}
   SECURITY_ONLY: ${{ github.event.inputs.only_security || 'false' }}
   DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.PAT }}  # Use PAT for better rate limits and permissions
   NODE_OPTIONS: "--max-old-space-size=4096" # Increased memory limit for Node processes
 
 # ============================================================
@@ -88,9 +88,22 @@ jobs:
       - name: "🔍 Detect Node.js Version"
         id: detect-node
         run: |
-          NODE_VERSION=$(jq -r '.engines.node // "18.x"' package.json 2>/dev/null || echo "18.x")
+          # Fetch the latest LTS Node.js version dynamically
+          echo "🔍 Fetching latest Node.js LTS version..."
+          LATEST_LTS=$(curl -s https://nodejs.org/dist/index.json | jq -r '[.[] | select(.lts != false)] | .[0].version' | sed 's/^v//')
+
+          if [ -n "$LATEST_LTS" ] && [ "$LATEST_LTS" != "null" ]; then
+            # Extract major version for actions/setup-node compatibility
+            MAJOR_VERSION=$(echo "$LATEST_LTS" | cut -d. -f1)
+            NODE_VERSION="${MAJOR_VERSION}"
+            echo "📊 Latest Node.js LTS: v$LATEST_LTS (using $NODE_VERSION for setup)"
+          else
+            # Fallback to current known LTS if API fails
+            NODE_VERSION="22"
+            echo "⚠️ Could not fetch latest LTS, falling back to Node.js $NODE_VERSION"
+          fi
+
           echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
-          echo "📊 Detected Node.js version: $NODE_VERSION"
 
       - name: "🔍 Analyze Project Configuration"
         id: analyze-config
@@ -133,7 +146,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.analyze-project.outputs.node_version }}
-          cache: 'npm'
 
       - name: "🧰 Install npm-check-updates"
         run: |
@@ -223,7 +235,7 @@ jobs:
       - name: "🧰 Setup GitHub CLI"
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ needs.analyze-project.outputs.node_version }}
 
       - name: "🧰 Install GitHub CLI"
         run: |
@@ -233,7 +245,7 @@ jobs:
           sudo apt update -y
           sudo apt install -y gh
           gh --version
-          gh auth login --with-token <<< "${{ env.GITHUB_TOKEN }}"
+          # GitHub CLI will use GITHUB_TOKEN automatically - no need to explicitly login
 
       - name: "🔍 Check GitHub Actions"
         id: check-actions
@@ -366,7 +378,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.analyze-project.outputs.node_version }}
-          cache: 'npm'
 
       - name: "🧰 Install Tools"
         run: |

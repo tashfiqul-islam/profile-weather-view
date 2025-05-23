@@ -6,24 +6,23 @@
 version: 2
 updates:
   # -------------------------------------------------------
-  # 📦 npm Package Dependencies
+  # 📦 npm Package Dependencies (Including Bun)
   # -------------------------------------------------------
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"  # Ensure regular updates
+      interval: "daily"
       time: "06:00"
       timezone: "Asia/Dhaka"
     versioning-strategy: "auto"
     target-branch: "master"
-    open-pull-requests-limit: 15  # Concurrent updates
+    open-pull-requests-limit: 15
     pull-request-branch-name:
       separator: "-"
     labels:
       - "dependencies"
       - "npm"
       - "security"
-      - "{{type}}"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -34,8 +33,8 @@ updates:
     assignees:
       - "tashfiqul-islam"
     reviewers:
-      - "tashfiqul-islam"  # Add reviewer to ensure updates are checked
-    rebase-strategy: "auto"  # Auto-rebase PRs to avoid conflicts
+      - "tashfiqul-islam"
+    rebase-strategy: "auto"
     groups:
       dev-dependencies:
         dependency-type: "development"
@@ -44,6 +43,14 @@ updates:
           - "patch"
         patterns:
           - "*"
+      bun-runtime:
+        patterns:
+          - "bun"
+          - "bun-types"
+          - "@types/bun"
+        update-types:
+          - "minor"
+          - "patch"
       eslint-plugins:
         patterns:
           - "*eslint*"
@@ -57,45 +64,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Auto-merge configuration for patch updates
-    auto-merge: true
-    automerge-requirements:
-      - check-success=lint
-      - check-success=build
-      - check-success=test
-
-  # -------------------------------------------------------
-  # 🤖 Bun Runtime Version
-  # -------------------------------------------------------
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "daily"  # Ensure daily updates
-      time: "06:30"
-      timezone: "Asia/Dhaka"
-    allow:
-      - dependency-name: "bun"
-      - dependency-name: "bun-types"
-    versioning-strategy: "auto"
-    target-branch: "master"  # Pointing to master branch
-    open-pull-requests-limit: 2
-    pull-request-branch-name:
-      separator: "-"
-    labels:
-      - "dependencies"
-      - "npm"
-      - "bun-runtime"
-      - "{{type}}"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-    commit-message:
-      prefix: "deps"
-      prefix-development: "chore"
-      include: "scope"
-    assignees:
-      - "tashfiqul-islam"
-    rebase-strategy: "auto"  # Auto-rebase PRs to avoid conflicts
 
   # -------------------------------------------------------
   # 🔄 GitHub Actions
@@ -115,7 +83,6 @@ updates:
       - "dependencies"
       - "github-actions"
       - "ci"
-      - "{{type}}"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -131,7 +98,3 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Auto-merge configuration for GitHub Actions
-    auto-merge: true
-    automerge-requirements:
-      - check-success=lint
