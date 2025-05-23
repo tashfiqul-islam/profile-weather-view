@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.11](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.10...v1.2.11)
+## Patch (2025-05-23)
+
+### ci
+
+* **deps:** bump gitleaks/gitleaks-action from 2.3.4 to 2.3.9 (#45) ([aeeeb9c](https://github.com/tashfiqul-islam/profile-weather-view/commit/aeeeb9c862dee47e9d1058efb07e51339d035516))
+
 # [1.2.10](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.9...v1.2.10)
 ## Patch (2025-05-23)
 
