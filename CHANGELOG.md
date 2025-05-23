@@ -3,6 +3,16 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.7](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.6...v1.2.7)
+## Patch (2025-05-23)
+
+### chore
+
+* **ci:** updated manual deps check (#44) ([351b840](https://github.com/tashfiqul-islam/profile-weather-view/commit/351b8406388bd243d9de2bd2e22393adf1991bc3))
+### ci
+
+* enhanced existing workflows ([2c8a2d0](https://github.com/tashfiqul-islam/profile-weather-view/commit/2c8a2d01663f6cc3299f33972981ee0ab32e45ae))
+
 # [1.2.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.5...v1.2.6)
 ## Patch (2025-04-26)
 
