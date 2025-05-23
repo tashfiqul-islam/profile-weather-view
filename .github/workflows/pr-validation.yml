@@ -426,7 +426,7 @@ jobs:
       # -------------------------------------------------------
       - name: "🔍 Secret Scanning"
         id: secret-scan
-        uses: gitleaks/gitleaks-action@v2.3.4
+        uses: gitleaks/gitleaks-action@v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true  # Don't fail the workflow, but flag the issues
