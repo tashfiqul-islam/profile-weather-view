@@ -124,7 +124,6 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           GITHUB_SHA: ${{ github.sha }}
           SONAR_SCANNER_OPTS: "-Dproject.settings=./sonar-project.properties -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/.scannerwork/report-task.txt"
 
@@ -133,7 +132,6 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   quality-validation:
     name: "🧪 Quality Validation"

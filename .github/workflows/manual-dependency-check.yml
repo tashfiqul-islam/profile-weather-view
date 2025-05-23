@@ -179,19 +179,33 @@ jobs:
         id: audit
         if: needs.analyze-project.outputs.uses_bun == 'true'
         run: |
-          # Using Bun audit if available
+          # Install Bun
           curl -fsSL https://bun.sh/install | bash
           export BUN_INSTALL="$HOME/.bun"
           export PATH="$BUN_INSTALL/bin:$PATH"
 
+          # Install dependencies with Bun
+          bun install
+
+          # Use npm audit since Bun doesn't have native audit support
+          # Generate package-lock.json for npm audit to work
+          npm install --package-lock-only
+
           # Run audit and capture output
-          AUDIT_RESULT=$(bun pm audit --json || true)
-          VULN_COUNT=$(echo "$AUDIT_RESULT" | jq -r '.vulnerabilities | length')
+          AUDIT_RESULT=$(npm audit --json 2>/dev/null || echo '{"vulnerabilities": {}}')
+
+          # Count vulnerabilities safely
+          VULN_COUNT=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.total // 0')
 
           echo "vulnerabilities=$VULN_COUNT" >> $GITHUB_OUTPUT
           echo "$AUDIT_RESULT" > audit-results.json
 
           echo "🔒 Found $VULN_COUNT security vulnerabilities"
+
+          # Clean up temporary package-lock.json if it was created
+          if [ ! -f "package-lock.json.bak" ]; then
+            rm -f package-lock.json
+          fi
 
       - name: "🔒 NPM Audit for Security Vulnerabilities"
         id: npm-audit

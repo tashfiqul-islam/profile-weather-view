@@ -1,5 +1,5 @@
 # ============================================================
-# 🤖 Dependabot Configuration
+# 🤖 Dependabot Configuration with Bun Support
 # ============================================================
 # Automated dependency updates with intelligent versioning control
 
@@ -23,12 +23,13 @@ updates:
       - "dependencies"
       - "npm"
       - "security"
+      - "auto-merge" # Add label for auto-merge workflow
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     commit-message:
-      prefix: "deps"
-      prefix-development: "chore"
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps)"
       include: "scope"
     assignees:
       - "tashfiqul-islam"

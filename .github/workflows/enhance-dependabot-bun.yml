@@ -69,51 +69,17 @@ jobs:
           fetch-depth: 1
 
       # -------------------------------------------------------
-      # 🔐 Setup GPG for Commit Signing
+      # 🔐 Setup Git Configuration (No GPG Signing)
       # -------------------------------------------------------
-      - name: "🔐 Setup GPG for Commit Signing"
-        id: gpg-setup
+      - name: "🔐 Setup Git Configuration"
+        id: git-setup
         run: |
-          echo "::group::GPG Setup"
-          # Only proceed if GPG keys are provided
-          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" && -n "${{ secrets.GPG_PASSPHRASE }}" ]]; then
-            echo "Setting up GPG key for signed commits"
+          echo "::group::Git Setup"
+          # Configure Git for standard commits (no GPG signing)
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            # Install gnupg if needed
-            which gpg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -qq -y gnupg; }
-
-            # Create temporary file for GPG key
-            GPG_KEY_FILE=$(mktemp)
-            chmod 600 "$GPG_KEY_FILE"
-            echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 -d > "$GPG_KEY_FILE"
-
-            # Import the GPG key
-            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --import "$GPG_KEY_FILE"
-
-            # Get the key ID
-            KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -n1 | awk '{print $2}' | cut -d'/' -f2)
-
-            # Configure Git to use the imported GPG key
-            git config --global user.signingkey "$KEY_ID"
-            git config --global commit.gpgsign true
-
-            # Set commit author identity from secrets
-            git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
-            git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL || 'github-actions@github.com' }}"
-
-            # Secure cleanup
-            rm -f "$GPG_KEY_FILE"
-
-            echo "signing_enabled=true" >> $GITHUB_OUTPUT
-            echo "key_id=$KEY_ID" >> $GITHUB_OUTPUT
-            echo "GPG signing enabled with key: $KEY_ID"
-          else
-            echo "GPG signing not configured - using standard commits"
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-            echo "signing_enabled=false" >> $GITHUB_OUTPUT
-          fi
+          echo "✅ Git configured for automated commits"
           echo "::endgroup::"
 
       - name: "🔍 Check for Bun Update"
@@ -339,10 +305,10 @@ jobs:
           echo "::endgroup::"
           echo "sbom_generated=true" >> $GITHUB_OUTPUT
 
-      - name: "📝 Commit Changes with GPG Signing"
+      - name: "📝 Commit Changes"
         if: steps.check-bun-update.outputs.is_bun_update == 'true'
         run: |
-          echo "::group::Committing changes with signed commits"
+          echo "::group::Committing changes"
           # Check if there are changes to commit
           if git diff --quiet && [ ! -f "bun.lockb" ]; then
             echo "::notice::No changes to commit"
@@ -354,8 +320,8 @@ jobs:
           OLD_VERSION="${{ steps.check-bun-update.outputs.old_bun_version }}"
           UPDATE_TYPE="${{ steps.check-bun-update.outputs.update_type }}"
 
-          # Create a meaningful commit message that follows commitlint format
-          COMMIT_MSG="deps(bun): update bun from $OLD_VERSION to $NEW_VERSION\n\nAutomatically updates Bun runtime version in:\n- packageManager field in package.json\n- BUN_VERSION in workflow files\n- engines.bun field (if present)\n- Updated lockfile with compatible dependencies"
+          # Create a short commit message that follows commitlint format (under 100 chars)
+          COMMIT_MSG="chore(deps): update bun from $OLD_VERSION to $NEW_VERSION"
 
           # Show what's being changed
           git diff --unified=1
@@ -363,15 +329,8 @@ jobs:
           # Add changes - ensure we include the lockfile
           git add package.json .github/workflows/*.yml bun.lockb sbom.json
 
-          # Commit with signing if enabled
-          if [ "${{ steps.gpg-setup.outputs.signing_enabled }}" == "true" ]; then
-            echo "🔹 Creating signed commit..."
-            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback -o /dev/null --sign - 2>/dev/null || true
-            git commit -S -m "$(echo -e "$COMMIT_MSG")"
-          else
-            echo "🔹 Creating commit (unsigned)..."
-            git commit -m "$(echo -e "$COMMIT_MSG")"
-          fi
+          # Commit the changes (no GPG signing)
+          git commit -m "$COMMIT_MSG"
 
           # Push directly to the main branch since these are safe minor/patch updates
           git push origin HEAD:${GITHUB_REF#refs/heads/}

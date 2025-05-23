@@ -1,0 +1,81 @@
+name: "🔄 Dependabot Bun Lockfile Update"
+
+# ============================================================
+# ⚡ Automatically update bun.lockb when Dependabot updates package.json
+# ============================================================
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'package.json'
+
+# ============================================================
+# 🔒 Permissions
+# ============================================================
+permissions:
+  contents: write
+  pull-requests: write
+
+# ============================================================
+# 🔄 Jobs
+# ============================================================
+jobs:
+  update-lockfile:
+    name: "🔄 Update Bun Lockfile"
+    runs-on: ubuntu-latest
+    # Only run on Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: "⬇️ Checkout PR"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: "🔧 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.14"
+
+      - name: "🔄 Update Lockfile"
+        run: |
+          echo "::group::Updating bun.lockb"
+
+          # Check if package.json was modified
+          if git diff --name-only HEAD~1 | grep -q "package.json"; then
+            echo "package.json was modified, updating lockfile..."
+
+            # Install dependencies to update lockfile
+            bun install
+
+            # Check if lockfile was updated
+            if git diff --quiet bun.lockb; then
+              echo "No lockfile changes needed"
+            else
+              echo "Lockfile updated, committing changes..."
+
+              # Configure git
+              git config --global user.name "github-actions[bot]"
+              git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+              # Add and commit lockfile
+              git add bun.lockb
+              git commit -m "chore(deps): update bun.lockb after package.json changes"
+              git push origin HEAD:${{ github.head_ref }}
+
+              echo "✅ Successfully updated bun.lockb"
+            fi
+          else
+            echo "package.json not modified, skipping lockfile update"
+          fi
+
+          echo "::endgroup::"
+
+      - name: "✅ Verify Installation"
+        run: |
+          echo "::group::Verifying installation"
+          bun install --frozen-lockfile
+          echo "✅ Dependencies verified successfully"
+          echo "::endgroup::"
