@@ -83,13 +83,48 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Get PR details
-            const pr = context.payload.pull_request || 
-                      await github.rest.pulls.get({
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        pull_number: context.issue.number
-                      }).then(r => r.data);
+            // Get PR details with improved error handling
+            let pr = context.payload.pull_request;
+            let prNumber;
+            
+            // If not available from payload, try multiple sources
+            if (!pr) {
+              // Try different ways to get PR number
+              prNumber = context.payload.number || 
+                        context.issue?.number || 
+                        context.payload.pull_request?.number;
+              
+              if (!prNumber) {
+                console.log('❌ Unable to determine PR number from context');
+                console.log('Available context:', JSON.stringify({
+                  payload_number: context.payload.number,
+                  issue_number: context.issue?.number,
+                  event_name: context.eventName
+                }, null, 2));
+                core.setOutput('eligible', 'false');
+                return;
+              }
+              
+              console.log(`🔍 Attempting to fetch PR #${prNumber} from API`);
+              
+              try {
+                const { data } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+                pr = data;
+                console.log(`✅ Successfully fetched PR #${prNumber}`);
+              } catch (error) {
+                console.log(`❌ Failed to fetch PR #${prNumber}: ${error.message}`);
+                console.log('This may not be a pull request event');
+                core.setOutput('eligible', 'false');
+                return;
+              }
+            } else {
+              prNumber = pr.number;
+              console.log(`📋 Using PR from payload: #${prNumber}`);
+            }
             
             console.log(`Analyzing PR #${pr.number}: ${pr.title}`);
             
@@ -262,10 +297,19 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const prNumber = context.payload.pull_request?.number || 
-                           context.issue.number;
             
-            console.log(`Waiting for checks on PR #${prNumber}`);
+            // Get PR number with robust detection
+            const prNumber = context.payload.pull_request?.number || 
+                           context.payload.number ||
+                           context.issue?.number;
+            
+            if (!prNumber) {
+              console.log('❌ Unable to determine PR number');
+              core.setFailed('No PR number available');
+              return;
+            }
+            
+            console.log(`⏳ Waiting for checks on PR #${prNumber}`);
             
             // Wait for all required checks to complete
             let attempts = 0;
@@ -319,8 +363,17 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
+            
+            // Get PR number with robust detection
             const prNumber = context.payload.pull_request?.number || 
-                           context.issue.number;
+                           context.payload.number ||
+                           context.issue?.number;
+            
+            if (!prNumber) {
+              console.log('❌ Unable to determine PR number');
+              core.setFailed('No PR number available');
+              return;
+            }
             
             try {
               console.log(`🔀 Merging PR #${prNumber}`);

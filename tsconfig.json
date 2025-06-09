@@ -75,7 +75,7 @@
     "src/**/*.mts",
     "src/**/*.d.ts",
     ".releaserc.js",
-    "scripts/**/*.js"
+    "src/scripts/**/*.js"
   ],
 
   "exclude": [

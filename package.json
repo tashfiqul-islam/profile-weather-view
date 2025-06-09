@@ -39,6 +39,7 @@
     "// Security": "",
     "security": "bunx biome check --apply",
     "audit": "bun audit",
+    "validate-deps": "bun run src/scripts/validate-dependency-system.ts",
     "// Version Control & CI": "",
     "prepare": "husky",
     "commit": "bunx commit",
