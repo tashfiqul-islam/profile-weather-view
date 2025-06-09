@@ -53,7 +53,6 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  BUN_VERSION: "1.2.10"  # Default Bun version (will be overridden if specified in package.json)
   CACHE_KEY_PREFIX: "v9-profile-weather"
   LOG_LEVEL: ${{ github.event.inputs.debug == 'true' && 'debug' || 'warn' }}
   TIMEZONE: "Asia/Dhaka"
@@ -209,22 +208,17 @@ jobs:
           fetch-depth: 1
           ref: master
 
-      - name: "📋 Extract Bun Version"
-        id: extract-bun-version
-        working-directory: weather-code
+      - name: "📦 Extract Bun Version"
+        id: bun-version
         run: |
-          if [[ -f "package.json" ]]; then
-            BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.9'); } catch (e) { console.log('1.2.9'); }")
-            echo "BUN_VERSION=$BUN_VERSION" >> $GITHUB_ENV
-            echo "::notice::Using Bun version $BUN_VERSION from package.json"
-          else
-            echo "::warning::package.json not found, using default Bun version: ${{ env.BUN_VERSION }}"
-          fi
+          BUN_VERSION=$(jq -r '.packageManager' package.json | cut -d@ -f2)
+          echo "version=$BUN_VERSION" >> $GITHUB_OUTPUT
+          echo "Using Bun version: $BUN_VERSION"
 
-      - name: "🧰 Setup Bun Runtime"
-        uses: oven-sh/setup-bun@v2
+      - name: "🏗️ Setup Bun"
+        uses: oven-sh/setup-bun@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: ${{ steps.bun-version.outputs.version }}
 
       - name: "🔍 Verify Bun Runtime"
         run: |

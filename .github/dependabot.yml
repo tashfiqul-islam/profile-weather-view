@@ -1,7 +1,7 @@
 # ============================================================
-# 🤖 Dependabot Configuration with Bun Support
+# 🤖 Enhanced Dependabot Configuration with Automated Updates
 # ============================================================
-# Automated dependency updates with intelligent versioning control
+# Intelligent dependency updates with auto-merge for minor/patch & notifications for major
 
 version: 2
 updates:
@@ -12,24 +12,24 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      time: "06:00"
+      time: "03:00"
       timezone: "Asia/Dhaka"
     versioning-strategy: "auto"
     target-branch: "master"
-    open-pull-requests-limit: 15
+    open-pull-requests-limit: 20
     pull-request-branch-name:
       separator: "-"
     labels:
       - "dependencies"
       - "npm"
       - "security"
-      - "auto-merge" # Add label for auto-merge workflow
+      - "auto-merge"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore(deps)"
-      prefix-development: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
       include: "scope"
     assignees:
       - "tashfiqul-islam"
@@ -37,7 +37,15 @@ updates:
       - "tashfiqul-islam"
     rebase-strategy: "auto"
     groups:
-      dev-dependencies:
+      # Enhanced grouping for better automation
+      non-major-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor" 
+          - "patch"
+        patterns:
+          - "*"
+      non-major-dev-dependencies:
         dependency-type: "development"
         update-types:
           - "minor"
@@ -49,19 +57,6 @@ updates:
           - "bun"
           - "bun-types"
           - "@types/bun"
-        update-types:
-          - "minor"
-          - "patch"
-      eslint-plugins:
-        patterns:
-          - "*eslint*"
-        update-types:
-          - "minor"
-          - "patch"
-      test-dependencies:
-        patterns:
-          - "vitest"
-          - "@vitest/*"
         update-types:
           - "minor"
           - "patch"

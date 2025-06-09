@@ -1,0 +1,430 @@
+# filepath: d:\Projects\profile-weather-view\.github\workflows\auto-merge-dependencies.yml
+name: "🔄 Auto-Merge Dependencies"
+
+# ============================================================
+# ⚡ Trigger Configuration (Auto-merge for minor/patch updates)
+# ============================================================
+on:
+  # Trigger on pull request events for dependency updates
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: ["master"]
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      force_merge:
+        description: "Force merge eligible PRs"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Dry run mode (don't actually merge)"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions (Enhanced for auto-merge)
+# ============================================================
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+  actions: read
+  security-events: read
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  WORKFLOW_VERSION: "2.0.0"
+  NODE_ENV: "production"
+  BUN_VERSION: "1.2.15"
+
+# ============================================================
+# 🏗️ Jobs Configuration
+# ============================================================
+jobs:
+  # -------------------------------------------------------
+  # 🎯 Analyze PR for Auto-Merge Eligibility
+  # -------------------------------------------------------
+  analyze-pr:
+    name: "🔍 Analyze PR Eligibility"
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' || github.event_name == 'workflow_dispatch'
+    
+    outputs:
+      eligible: ${{ steps.check-eligibility.outputs.eligible }}
+      update-type: ${{ steps.check-eligibility.outputs.update-type }}
+      package-names: ${{ steps.check-eligibility.outputs.package-names }}
+      
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # 🔍 Check Auto-Merge Eligibility
+      # -------------------------------------------------------
+      - name: "🔍 Check Auto-Merge Eligibility"
+        id: check-eligibility
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Get PR details
+            const pr = context.payload.pull_request || 
+                      await github.rest.pulls.get({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.issue.number
+                      }).then(r => r.data);
+            
+            console.log(`Analyzing PR #${pr.number}: ${pr.title}`);
+            
+            // Check if this is a dependabot PR
+            if (pr.user.login !== 'dependabot[bot]') {
+              console.log('❌ Not a dependabot PR');
+              core.setOutput('eligible', 'false');
+              return;
+            }
+            
+            // Check for auto-merge label
+            const hasAutoMergeLabel = pr.labels.some(label => 
+              label.name === 'auto-merge' || label.name === 'dependencies'
+            );
+            
+            if (!hasAutoMergeLabel) {
+              console.log('❌ Missing auto-merge label');
+              core.setOutput('eligible', 'false');
+              return;
+            }
+            
+            // Parse PR title to determine update type
+            const title = pr.title.toLowerCase();
+            let updateType = 'unknown';
+            let packageNames = [];
+            
+            // Extract package names and update type from title
+            // Examples: "chore(deps): bump @types/node from 22.15.29 to 22.15.30"
+            //           "chore(deps-dev): bump vitest from 3.2.2 to 3.2.3"
+            const bumpMatch = title.match(/bump\s+(.+?)\s+from\s+(\d+\.\d+\.\d+.*?)\s+to\s+(\d+\.\d+\.\d+.*)/);
+            
+            if (bumpMatch) {
+              const packageName = bumpMatch[1];
+              const fromVersion = bumpMatch[2];
+              const toVersion = bumpMatch[3];
+              
+              packageNames.push(packageName);
+              
+              console.log(`📦 Package: ${packageName}`);
+              console.log(`⬆️  Version: ${fromVersion} → ${toVersion}`);
+              
+              // Parse semantic versions
+              const fromParts = fromVersion.match(/(\d+)\.(\d+)\.(\d+)/);
+              const toParts = toVersion.match(/(\d+)\.(\d+)\.(\d+)/);
+              
+              if (fromParts && toParts) {
+                const [, fromMajor, fromMinor, fromPatch] = fromParts.map(Number);
+                const [, toMajor, toMinor, toPatch] = toParts.map(Number);
+                
+                if (toMajor > fromMajor) {
+                  updateType = 'major';
+                } else if (toMinor > fromMinor) {
+                  updateType = 'minor';
+                } else if (toPatch > fromPatch) {
+                  updateType = 'patch';
+                }
+              }
+            }
+            
+            // Check for security updates (always eligible)
+            const isSecurityUpdate = title.includes('security') || 
+                                   pr.labels.some(label => label.name === 'security');
+            
+            // Determine eligibility
+            const isEligible = updateType === 'minor' || 
+                              updateType === 'patch' || 
+                              isSecurityUpdate ||
+                              ${{ github.event.inputs.force_merge || false }};
+            
+            console.log(`🎯 Update Type: ${updateType}`);
+            console.log(`🔒 Security Update: ${isSecurityUpdate}`);
+            console.log(`✅ Eligible for Auto-Merge: ${isEligible}`);
+            
+            core.setOutput('eligible', isEligible.toString());
+            core.setOutput('update-type', updateType);
+            core.setOutput('package-names', JSON.stringify(packageNames));
+
+  # -------------------------------------------------------
+  # 🧪 Run Tests and Quality Checks
+  # -------------------------------------------------------
+  quality-checks:
+    name: "🧪 Quality Checks"
+    runs-on: ubuntu-latest
+    needs: analyze-pr
+    if: needs.analyze-pr.outputs.eligible == 'true'
+    
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # 🔧 Setup Bun Runtime
+      # -------------------------------------------------------
+      - name: "🔧 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # -------------------------------------------------------
+      # 📦 Install Dependencies
+      # -------------------------------------------------------
+      - name: "📦 Install Dependencies"
+        run: bun install --frozen-lockfile
+        env:
+          BUN_INSTALL_CACHE_DIR: ~/.bun/install/cache
+
+      # -------------------------------------------------------
+      # 🏗️ Build Project
+      # -------------------------------------------------------
+      - name: "🏗️ Build Project"
+        run: bun run build
+
+      # -------------------------------------------------------
+      # 🔍 Type Checking
+      # -------------------------------------------------------
+      - name: "🔍 Type Check"
+        run: bun run type-check
+
+      # -------------------------------------------------------
+      # 🧪 Run Tests
+      # -------------------------------------------------------
+      - name: "🧪 Run Tests"
+        run: bun run test:ci
+
+      # -------------------------------------------------------
+      # 🔎 Linting
+      # -------------------------------------------------------
+      - name: "🔎 Lint Code"
+        run: bun run lint:check
+
+      # -------------------------------------------------------
+      # 💅 Format Check
+      # -------------------------------------------------------
+      - name: "💅 Format Check"
+        run: bun run format:check
+
+  # -------------------------------------------------------
+  # 🔀 Auto-Merge Eligible PRs
+  # -------------------------------------------------------
+  auto-merge:
+    name: "🔀 Auto-Merge PR"
+    runs-on: ubuntu-latest
+    needs: [analyze-pr, quality-checks]
+    if: |
+      needs.analyze-pr.outputs.eligible == 'true' && 
+      needs.quality-checks.result == 'success' &&
+      github.event.inputs.dry_run != 'true'
+    
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # ⏳ Wait for All Checks
+      # -------------------------------------------------------
+      - name: "⏳ Wait for All Checks"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request?.number || 
+                           context.issue.number;
+            
+            console.log(`Waiting for checks on PR #${prNumber}`);
+            
+            // Wait for all required checks to complete
+            let attempts = 0;
+            const maxAttempts = 30; // 15 minutes max wait
+            
+            while (attempts < maxAttempts) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber
+              });
+              
+              // Check if PR is still open
+              if (pr.state !== 'open') {
+                console.log('❌ PR is no longer open');
+                return;
+              }
+              
+              // Get commit status
+              const { data: status } = await github.rest.repos.getCombinedStatusForRef({
+                owner,
+                repo,
+                ref: pr.head.sha
+              });
+              
+              console.log(`📊 Status: ${status.state} (${status.statuses.length} checks)`);
+              
+              if (status.state === 'success') {
+                console.log('✅ All checks passed!');
+                break;
+              } else if (status.state === 'failure') {
+                console.log('❌ Some checks failed');
+                core.setFailed('Quality checks failed');
+                return;
+              }
+              
+              attempts++;
+              console.log(`⏳ Waiting... (${attempts}/${maxAttempts})`);
+              await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+            }
+            
+            if (attempts >= maxAttempts) {
+              core.setFailed('Timeout waiting for checks');
+            }
+
+      # -------------------------------------------------------
+      # 🔀 Merge the PR
+      # -------------------------------------------------------
+      - name: "🔀 Merge PR"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request?.number || 
+                           context.issue.number;
+            
+            try {
+              console.log(`🔀 Merging PR #${prNumber}`);
+              
+              const { data: pr } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: prNumber
+              });
+              
+              // Enable auto-merge with squash
+              await github.rest.pulls.merge({
+                owner,
+                repo,
+                pull_number: prNumber,
+                commit_title: `${pr.title} (#${prNumber})`,
+                commit_message: `Auto-merged dependency update\n\n${pr.body || ''}`,
+                merge_method: 'squash'
+              });
+              
+              console.log('✅ PR successfully merged!');
+              
+              // Add success comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `🎉 **Auto-merged successfully!**\n\n` +
+                      `✅ Update Type: \`${process.env.UPDATE_TYPE}\`\n` +
+                      `📦 Packages: ${process.env.PACKAGE_NAMES}\n` +
+                      `🤖 All quality checks passed\n\n` +
+                      `_Automated by workflow: ${context.workflow}_`
+              });
+              
+            } catch (error) {
+              console.error('❌ Merge failed:', error);
+              
+              // Add failure comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: `❌ **Auto-merge failed**\n\n` +
+                      `Error: ${error.message}\n\n` +
+                      `Please review and merge manually if appropriate.\n\n` +
+                      `_Automated by workflow: ${context.workflow}_`
+              });
+              
+              core.setFailed(`Merge failed: ${error.message}`);
+            }
+        env:
+          UPDATE_TYPE: ${{ needs.analyze-pr.outputs.update-type }}
+          PACKAGE_NAMES: ${{ needs.analyze-pr.outputs.package-names }}
+
+  # -------------------------------------------------------
+  # 📊 Report Results
+  # -------------------------------------------------------
+  report:
+    name: "📊 Report Results"
+    runs-on: ubuntu-latest
+    needs: [analyze-pr, quality-checks, auto-merge]
+    if: always()
+    
+    steps:
+      # -------------------------------------------------------
+      # 📊 Summary Report
+      # -------------------------------------------------------
+      - name: "📊 Generate Summary"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eligible = '${{ needs.analyze-pr.outputs.eligible }}';
+            const updateType = '${{ needs.analyze-pr.outputs.update-type }}';
+            const qualityResult = '${{ needs.quality-checks.result }}';
+            const mergeResult = '${{ needs.auto-merge.result }}';
+            
+            let status = '🔄 **Auto-Merge Workflow Report**\n\n';
+            
+            if (eligible === 'true') {
+              status += `✅ **Eligible for auto-merge**\n`;
+              status += `📦 **Update Type:** \`${updateType}\`\n\n`;
+              
+              if (qualityResult === 'success') {
+                status += `✅ **Quality checks:** Passed\n`;
+                
+                if (mergeResult === 'success') {
+                  status += `✅ **Auto-merge:** Successful\n`;
+                } else if (mergeResult === 'failure') {
+                  status += `❌ **Auto-merge:** Failed\n`;
+                } else {
+                  status += `⏭️ **Auto-merge:** Skipped (dry run)\n`;
+                }
+              } else {
+                status += `❌ **Quality checks:** Failed\n`;
+                status += `⏭️ **Auto-merge:** Skipped\n`;
+              }
+            } else {
+              status += `❌ **Not eligible for auto-merge**\n`;
+              status += `📦 **Update Type:** \`${updateType}\`\n`;
+              status += `ℹ️ **Reason:** Major updates require manual review\n`;
+            }
+            
+            console.log(status);
+            
+            // Set job summary
+            core.summary.addRaw(status);
+            await core.summary.write();

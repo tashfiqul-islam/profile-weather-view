@@ -1,0 +1,400 @@
+# filepath: d:\Projects\profile-weather-view\.github\workflows\major-update-notification.yml
+name: "📧 Major Update Notifications"
+
+# ============================================================
+# ⚡ Trigger Configuration (Major version notifications)
+# ============================================================
+on:
+  # Trigger when dependabot creates PRs with major updates
+  pull_request:
+    types: [opened, reopened]
+    branches: ["master"]
+
+  # Also trigger on schedule to check for major updates
+  schedule:
+    # Run every Monday at 9:00 AM Bangladesh Time
+    - cron: '0 3 * * 1'
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: "Force check for major updates"
+        type: boolean
+        default: false
+      notification_test:
+        description: "Test notification system"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions (For notifications and PR management)
+# ============================================================
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  actions: read
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  WORKFLOW_VERSION: "1.0.0"
+  NODE_ENV: "production"
+  BUN_VERSION: "1.2.15"
+
+# ============================================================
+# 🏗️ Jobs Configuration
+# ============================================================
+jobs:
+  # -------------------------------------------------------
+  # 🔍 Detect Major Updates
+  # -------------------------------------------------------
+  detect-major-updates:
+    name: "🔍 Detect Major Updates"
+    runs-on: ubuntu-latest
+    
+    outputs:
+      has-major-updates: ${{ steps.analyze-updates.outputs.has-major-updates }}
+      major-updates: ${{ steps.analyze-updates.outputs.major-updates }}
+      notification-required: ${{ steps.analyze-updates.outputs.notification-required }}
+      
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # 🔧 Setup Bun Runtime
+      # -------------------------------------------------------
+      - name: "🔧 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # -------------------------------------------------------
+      # 📦 Check for Outdated Packages
+      # -------------------------------------------------------
+      - name: "📦 Check Outdated Packages"
+        id: check-outdated
+        run: |
+          echo "🔍 Checking for outdated packages..."
+          
+          # Create output directory
+          mkdir -p .github-artifacts
+          
+          # Get outdated packages info
+          bun outdated --json > .github-artifacts/outdated.json 2>/dev/null || echo "[]" > .github-artifacts/outdated.json
+          
+          # Also get a human-readable version
+          bun outdated > .github-artifacts/outdated.txt 2>/dev/null || echo "No outdated packages found" > .github-artifacts/outdated.txt
+          
+          echo "📊 Outdated packages check completed"
+
+      # -------------------------------------------------------
+      # 🔍 Analyze for Major Updates
+      # -------------------------------------------------------
+      - name: "🔍 Analyze Major Updates"
+        id: analyze-updates
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read the current package.json
+            const packageJsonPath = path.join(process.cwd(), 'package.json');
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            
+            // Read outdated packages info
+            let outdatedPackages = [];
+            try {
+              const outdatedPath = path.join(process.cwd(), '.github-artifacts', 'outdated.json');
+              if (fs.existsSync(outdatedPath)) {
+                const outdatedData = fs.readFileSync(outdatedPath, 'utf8');
+                outdatedPackages = JSON.parse(outdatedData) || [];
+              }
+            } catch (error) {
+              console.log('ℹ️ Could not parse outdated packages JSON, continuing...');
+            }
+            
+            // Check for existing major update PRs
+            const { data: existingPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: 'dependabot'
+            });
+            
+            const majorUpdatePRs = existingPRs.filter(pr => {
+              const title = pr.title.toLowerCase();
+              return pr.user.login === 'dependabot[bot]' && 
+                     title.includes('bump') && 
+                     this.isMajorUpdate(title);
+            });
+            
+            // Function to check if update is major
+            function isMajorUpdate(title) {
+              const bumpMatch = title.match(/bump\s+(.+?)\s+from\s+(\d+)\.(\d+)\.(\d+).*?\s+to\s+(\d+)\.(\d+)\.(\d+)/);
+              if (bumpMatch) {
+                const [, packageName, fromMajor, , , toMajor] = bumpMatch;
+                return parseInt(toMajor) > parseInt(fromMajor);
+              }
+              return false;
+            }
+            
+            // Analyze potential major updates from outdated packages
+            const potentialMajorUpdates = [];
+            
+            if (Array.isArray(outdatedPackages)) {
+              for (const pkg of outdatedPackages) {
+                if (pkg.current && pkg.latest) {
+                  const currentMajor = parseInt(pkg.current.split('.')[0]);
+                  const latestMajor = parseInt(pkg.latest.split('.')[0]);
+                  
+                  if (latestMajor > currentMajor) {
+                    potentialMajorUpdates.push({
+                      name: pkg.name,
+                      current: pkg.current,
+                      latest: pkg.latest,
+                      type: pkg.type || 'unknown'
+                    });
+                  }
+                }
+              }
+            }
+            
+            const hasMajorUpdates = majorUpdatePRs.length > 0 || potentialMajorUpdates.length > 0;
+            const notificationRequired = hasMajorUpdates || ${{ github.event.inputs.notification_test || false }};
+            
+            const majorUpdatesInfo = {
+              existingPRs: majorUpdatePRs.map(pr => ({
+                number: pr.number,
+                title: pr.title,
+                url: pr.html_url,
+                created: pr.created_at
+              })),
+              potentialUpdates: potentialMajorUpdates
+            };
+            
+            console.log(`🎯 Major Update PRs found: ${majorUpdatePRs.length}`);
+            console.log(`🎯 Potential major updates: ${potentialMajorUpdates.length}`);
+            console.log(`📧 Notification required: ${notificationRequired}`);
+            
+            core.setOutput('has-major-updates', hasMajorUpdates.toString());
+            core.setOutput('major-updates', JSON.stringify(majorUpdatesInfo));
+            core.setOutput('notification-required', notificationRequired.toString());
+
+      # -------------------------------------------------------
+      # 📎 Upload Artifacts
+      # -------------------------------------------------------
+      - name: "📎 Upload Analysis Artifacts"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis
+          path: .github-artifacts/
+          retention-days: 7
+
+  # -------------------------------------------------------
+  # 📧 Send Major Update Notifications
+  # -------------------------------------------------------
+  send-notifications:
+    name: "📧 Send Notifications"
+    runs-on: ubuntu-latest
+    needs: detect-major-updates
+    if: needs.detect-major-updates.outputs.notification-required == 'true'
+    
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------------------------------------
+      # 📧 Create GitHub Issue for Major Updates
+      # -------------------------------------------------------
+      - name: "📧 Create GitHub Issue Notification"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const majorUpdates = JSON.parse('${{ needs.detect-major-updates.outputs.major-updates }}');
+            const isTest = ${{ github.event.inputs.notification_test || false }};
+            
+            // Check if there's already an open issue for major updates
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'major-update-notification',
+              creator: 'github-actions[bot]'
+            });
+            
+            const hasExistingIssue = existingIssues.length > 0;
+            
+            // Prepare notification content
+            let issueBody = `# 🚨 Major Dependency Updates Available\n\n`;
+            
+            if (isTest) {
+              issueBody += `> **⚠️ This is a test notification**\n\n`;
+            }
+            
+            issueBody += `This is an automated notification about available major version updates that require manual review.\n\n`;
+            
+            // Add existing PRs
+            if (majorUpdates.existingPRs && majorUpdates.existingPRs.length > 0) {
+              issueBody += `## 📋 Open Major Update PRs\n\n`;
+              for (const pr of majorUpdates.existingPRs) {
+                issueBody += `- [ ] **${pr.title}**\n`;
+                issueBody += `  - PR: #${pr.number}\n`;
+                issueBody += `  - URL: ${pr.url}\n`;
+                issueBody += `  - Created: ${new Date(pr.created).toLocaleDateString()}\n\n`;
+              }
+            }
+            
+            // Add potential updates
+            if (majorUpdates.potentialUpdates && majorUpdates.potentialUpdates.length > 0) {
+              issueBody += `## 🔄 Potential Major Updates\n\n`;
+              for (const update of majorUpdates.potentialUpdates) {
+                issueBody += `- [ ] **${update.name}** (${update.type})\n`;
+                issueBody += `  - Current: \`${update.current}\`\n`;
+                issueBody += `  - Latest: \`${update.latest}\`\n`;
+                issueBody += `  - Type: Breaking change (major version)\n\n`;
+              }
+            }
+            
+            issueBody += `## 📝 Action Required\n\n`;
+            issueBody += `Major version updates often contain breaking changes and require manual review:\n\n`;
+            issueBody += `1. 📖 **Review changelogs** for each package\n`;
+            issueBody += `2. 🧪 **Test compatibility** with your codebase\n`;
+            issueBody += `3. 🔄 **Update code** if necessary\n`;
+            issueBody += `4. ✅ **Merge PRs** when ready\n\n`;
+            issueBody += `## 🤖 Automation Info\n\n`;
+            issueBody += `- **Workflow:** ${context.workflow}\n`;
+            issueBody += `- **Triggered:** ${new Date().toISOString()}\n`;
+            issueBody += `- **Repository:** ${context.repo.owner}/${context.repo.repo}\n\n`;
+            issueBody += `---\n`;
+            issueBody += `*This issue was automatically created by the dependency notification system.*`;
+            
+            if (hasExistingIssue && !isTest) {
+              // Update existing issue
+              const existingIssue = existingIssues[0];
+              
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                title: `🚨 Major Dependency Updates Available - ${new Date().toLocaleDateString()}`,
+                body: issueBody
+              });
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `🔄 **Notification Updated**\n\nThis issue has been updated with the latest major update information.\n\n*Updated at: ${new Date().toISOString()}*`
+              });
+              
+              console.log(`✅ Updated existing issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              const { data: newIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Major Dependency Updates Available - ${new Date().toLocaleDateString()}`,
+                body: issueBody,
+                labels: ['major-update-notification', 'dependencies', 'enhancement'],
+                assignees: ['tashfiqul-islam']
+              });
+              
+              console.log(`✅ Created new issue #${newIssue.number}`);
+            }
+
+      # -------------------------------------------------------
+      # 📧 Send Email Notification (via GitHub API)
+      # -------------------------------------------------------
+      - name: "📧 Trigger Email Notification"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // This will trigger GitHub's built-in email notifications
+            // since the user is assigned to the issue and watching the repo
+            
+            const majorUpdates = JSON.parse('${{ needs.detect-major-updates.outputs.major-updates }}');
+            const totalMajorUpdates = (majorUpdates.existingPRs?.length || 0) + 
+                                    (majorUpdates.potentialUpdates?.length || 0);
+            
+            console.log(`📧 Email notification triggered for ${totalMajorUpdates} major updates`);
+            console.log('ℹ️ GitHub will send email notifications automatically due to:');
+            console.log('   - Issue assignment to tashfiqul-islam');
+            console.log('   - Repository watch settings');
+            console.log('   - Dependency labels on issues/PRs');
+
+  # -------------------------------------------------------
+  # 📊 Summary Report
+  # -------------------------------------------------------
+  summary:
+    name: "📊 Notification Summary"
+    runs-on: ubuntu-latest
+    needs: [detect-major-updates, send-notifications]
+    if: always()
+    
+    steps:
+      # -------------------------------------------------------
+      # 📊 Generate Summary
+      # -------------------------------------------------------
+      - name: "📊 Generate Workflow Summary"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hasMajorUpdates = '${{ needs.detect-major-updates.outputs.has-major-updates }}';
+            const notificationSent = '${{ needs.send-notifications.result }}';
+            
+            let summary = `# 📧 Major Update Notification Summary\n\n`;
+            
+            if (hasMajorUpdates === 'true') {
+              summary += `✅ **Major updates detected**\n`;
+              
+              if (notificationSent === 'success') {
+                summary += `✅ **Notifications sent successfully**\n`;
+                summary += `📧 GitHub issue created/updated\n`;
+                summary += `📧 Email notifications triggered\n`;
+              } else {
+                summary += `❌ **Notification failed**\n`;
+              }
+            } else {
+              summary += `ℹ️ **No major updates found**\n`;
+              summary += `🎉 All dependencies are up to date or have only minor/patch updates\n`;
+            }
+            
+            summary += `\n## 🔍 What was checked?\n\n`;
+            summary += `- ✅ Open dependabot PRs\n`;
+            summary += `- ✅ Available package updates\n`;
+            summary += `- ✅ Version comparison for major changes\n`;
+            summary += `\n## 📧 Notification channels\n\n`;
+            summary += `- 🎯 **GitHub Issues:** Detailed update information\n`;
+            summary += `- 📧 **Email:** Automatic via GitHub notifications\n`;
+            summary += `- 👤 **Assignee:** @tashfiqul-islam\n`;
+            
+            summary += `\n---\n*Workflow completed at: ${new Date().toISOString()}*`;
+            
+            core.summary.addRaw(summary);
+            await core.summary.write();
+            
+            console.log(summary);

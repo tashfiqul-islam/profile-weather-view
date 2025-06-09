@@ -1,0 +1,481 @@
+# filepath: d:\Projects\profile-weather-view\.github\workflows\dependency-health-check.yml
+name: "🩺 Dependency Health Check"
+
+# ============================================================
+# ⚡ System Health Monitor for Dependency Automation
+# ============================================================
+on:
+  # Scheduled health checks
+  schedule:
+    # Every day at 11:00 AM Bangladesh Time (5:00 AM UTC)
+    - cron: '0 5 * * *'
+    # Every Sunday at 6:00 PM Bangladesh Time (12:00 PM UTC)
+    - cron: '0 12 * * 0'
+
+  # Manual health check
+  workflow_dispatch:
+    inputs:
+      comprehensive:
+        description: "Run comprehensive health check"
+        type: boolean
+        default: false
+      fix_issues:
+        description: "Attempt to fix detected issues"
+        type: boolean
+        default: false
+
+# ============================================================
+# 🚫 Prevent Redundant Runs
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+# ============================================================
+# 🔒 Permissions
+# ============================================================
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+  actions: read
+  security-events: read
+
+# ============================================================
+# 🌍 Environment Variables
+# ============================================================
+env:
+  WORKFLOW_VERSION: "1.0.0"
+  BUN_VERSION: "1.2.15"
+
+# ============================================================
+# 🏗️ Jobs Configuration
+# ============================================================
+jobs:
+  # -------------------------------------------------------
+  # 🩺 System Health Analysis
+  # -------------------------------------------------------
+  health-analysis:
+    name: "🩺 System Health Analysis"
+    runs-on: ubuntu-latest
+    
+    outputs:
+      health-score: ${{ steps.calculate-health.outputs.health-score }}
+      issues-found: ${{ steps.calculate-health.outputs.issues-found }}
+      recommendations: ${{ steps.calculate-health.outputs.recommendations }}
+      
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      # -------------------------------------------------------
+      # 🔧 Setup Bun Runtime
+      # -------------------------------------------------------
+      - name: "🔧 Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # -------------------------------------------------------
+      # 📊 Analyze Dependency Health
+      # -------------------------------------------------------
+      - name: "📊 Analyze Dependency Health"
+        id: analyze-dependencies
+        run: |
+          echo "🔍 Analyzing dependency health..."
+          
+          # Check for outdated packages
+          echo "📦 Checking outdated packages..."
+          bun outdated --json > outdated.json 2>/dev/null || echo "[]" > outdated.json
+          
+          # Check for security vulnerabilities
+          echo "🔒 Checking security vulnerabilities..."
+          bun audit --json > audit.json 2>/dev/null || echo "[]" > audit.json
+          
+          # Check lockfile integrity
+          echo "🔐 Checking lockfile integrity..."
+          bun install --frozen-lockfile --dry-run > lockfile-check.txt 2>&1 || echo "Lockfile integrity check failed" > lockfile-check.txt
+          
+          # Count dependency statistics
+          echo "📈 Gathering dependency statistics..."
+          TOTAL_DEPS=$(bun pm ls --all | wc -l)
+          echo "TOTAL_DEPS=$TOTAL_DEPS" >> $GITHUB_ENV
+
+      # -------------------------------------------------------
+      # 🔍 Check Workflow Health
+      # -------------------------------------------------------
+      - name: "🔍 Check Workflow Health"
+        id: check-workflows
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('🔍 Checking workflow health...');
+            
+            const workflows = [
+              'dependency-scheduler.yml',
+              'auto-merge-dependencies.yml', 
+              'major-update-notification.yml',
+              'enhance-dependabot-bun.yml',
+              'manual-dependency-check.yml'
+            ];
+            
+            let workflowHealth = {};
+            
+            for (const workflow of workflows) {
+              try {
+                // Get recent workflow runs
+                const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: workflow,
+                  per_page: 10
+                });
+                
+                const recentRuns = runs.workflow_runs.slice(0, 5);
+                const successCount = recentRuns.filter(run => run.conclusion === 'success').length;
+                const successRate = recentRuns.length > 0 ? (successCount / recentRuns.length) * 100 : 0;
+                
+                workflowHealth[workflow] = {
+                  recentRuns: recentRuns.length,
+                  successRate: successRate,
+                  lastRun: recentRuns[0]?.created_at || 'Never',
+                  status: successRate >= 80 ? 'healthy' : successRate >= 60 ? 'warning' : 'critical'
+                };
+                
+                console.log(`📊 ${workflow}: ${successRate.toFixed(1)}% success rate`);
+                
+              } catch (error) {
+                console.log(`❌ Failed to check ${workflow}:`, error.message);
+                workflowHealth[workflow] = {
+                  status: 'error',
+                  error: error.message
+                };
+              }
+            }
+            
+            // Store workflow health data
+            const fs = require('fs');
+            fs.writeFileSync('workflow-health.json', JSON.stringify(workflowHealth, null, 2));
+
+      # -------------------------------------------------------
+      # 📋 Check Open PRs and Issues
+      # -------------------------------------------------------
+      - name: "📋 Check Open PRs and Issues"
+        id: check-prs-issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('📋 Checking open PRs and issues...');
+            
+            // Check dependency PRs
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            
+            const dependencyPRs = prs.filter(pr => 
+              pr.user.login === 'dependabot[bot]' || 
+              pr.labels.some(label => label.name === 'dependencies')
+            );
+            
+            const majorUpdatePRs = dependencyPRs.filter(pr => {
+              const title = pr.title.toLowerCase();
+              const bumpMatch = title.match(/bump\s+(.+?)\s+from\s+(\d+)\.(\d+)\.(\d+).*?\s+to\s+(\d+)\.(\d+)\.(\d+)/);
+              if (bumpMatch) {
+                const [, , fromMajor, , , toMajor] = bumpMatch;
+                return parseInt(toMajor) > parseInt(fromMajor);
+              }
+              return false;
+            });
+            
+            // Check major update issues
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'major-update-notification'
+            });
+            
+            const prIssueData = {
+              totalPRs: prs.length,
+              dependencyPRs: dependencyPRs.length,
+              majorUpdatePRs: majorUpdatePRs.length,
+              majorUpdateIssues: issues.length,
+              oldestPR: dependencyPRs.length > 0 ? dependencyPRs[dependencyPRs.length - 1].created_at : null
+            };
+            
+            console.log(`📊 Open dependency PRs: ${dependencyPRs.length}`);
+            console.log(`🚨 Major update PRs: ${majorUpdatePRs.length}`);
+            console.log(`📢 Major update issues: ${issues.length}`);
+            
+            const fs = require('fs');
+            fs.writeFileSync('pr-issue-data.json', JSON.stringify(prIssueData, null, 2));
+
+      # -------------------------------------------------------
+      # 🧮 Calculate Health Score
+      # -------------------------------------------------------
+      - name: "🧮 Calculate Health Score"
+        id: calculate-health
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read analysis data
+            let outdatedPackages = [];
+            let auditResults = [];
+            let workflowHealth = {};
+            let prIssueData = {};
+            
+            try {
+              outdatedPackages = JSON.parse(fs.readFileSync('outdated.json', 'utf8')) || [];
+              auditResults = JSON.parse(fs.readFileSync('audit.json', 'utf8')) || [];
+              workflowHealth = JSON.parse(fs.readFileSync('workflow-health.json', 'utf8')) || {};
+              prIssueData = JSON.parse(fs.readFileSync('pr-issue-data.json', 'utf8')) || {};
+            } catch (error) {
+              console.log('⚠️ Error reading analysis files:', error.message);
+            }
+            
+            // Calculate health metrics
+            let healthScore = 100;
+            let issues = [];
+            let recommendations = [];
+            
+            // Deduct points for outdated packages
+            const outdatedCount = Array.isArray(outdatedPackages) ? outdatedPackages.length : 0;
+            if (outdatedCount > 0) {
+              const deduction = Math.min(outdatedCount * 2, 20);
+              healthScore -= deduction;
+              issues.push(`${outdatedCount} outdated packages found`);
+              recommendations.push('Run dependency updates to get latest versions');
+            }
+            
+            // Deduct points for security vulnerabilities
+            const vulnCount = Array.isArray(auditResults) ? auditResults.length : 0;
+            if (vulnCount > 0) {
+              const deduction = vulnCount * 5;
+              healthScore -= deduction;
+              issues.push(`${vulnCount} security vulnerabilities found`);
+              recommendations.push('Address security vulnerabilities immediately');
+            }
+            
+            // Deduct points for workflow failures
+            const workflows = Object.keys(workflowHealth);
+            for (const workflow of workflows) {
+              const health = workflowHealth[workflow];
+              if (health.status === 'critical') {
+                healthScore -= 15;
+                issues.push(`Workflow ${workflow} is failing frequently`);
+                recommendations.push(`Investigate and fix ${workflow} workflow`);
+              } else if (health.status === 'warning') {
+                healthScore -= 5;
+                issues.push(`Workflow ${workflow} has reduced success rate`);
+              }
+            }
+            
+            // Deduct points for stale PRs
+            if (prIssueData.dependencyPRs > 10) {
+              healthScore -= 10;
+              issues.push(`${prIssueData.dependencyPRs} open dependency PRs (review needed)`);
+              recommendations.push('Review and merge or close open dependency PRs');
+            }
+            
+            // Deduct points for old major update issues
+            if (prIssueData.majorUpdateIssues > 3) {
+              healthScore -= 5;
+              issues.push(`${prIssueData.majorUpdateIssues} unresolved major update notifications`);
+              recommendations.push('Review and address major update notifications');
+            }
+            
+            // Ensure health score doesn't go below 0
+            healthScore = Math.max(0, healthScore);
+            
+            // Determine overall health status
+            let healthStatus = 'excellent';
+            if (healthScore < 60) healthStatus = 'critical';
+            else if (healthScore < 75) healthStatus = 'poor';
+            else if (healthScore < 90) healthStatus = 'good';
+            
+            console.log(`🏥 Health Score: ${healthScore}/100 (${healthStatus})`);
+            console.log(`🔍 Issues Found: ${issues.length}`);
+            console.log(`💡 Recommendations: ${recommendations.length}`);
+            
+            core.setOutput('health-score', healthScore.toString());
+            core.setOutput('issues-found', JSON.stringify(issues));
+            core.setOutput('recommendations', JSON.stringify(recommendations));
+            
+            // Create detailed health report
+            const healthReport = {
+              score: healthScore,
+              status: healthStatus,
+              timestamp: new Date().toISOString(),
+              metrics: {
+                outdatedPackages: outdatedCount,
+                securityVulnerabilities: vulnCount,
+                workflowHealth: workflowHealth,
+                openPRs: prIssueData.dependencyPRs,
+                majorUpdateIssues: prIssueData.majorUpdateIssues
+              },
+              issues: issues,
+              recommendations: recommendations
+            };
+            
+            fs.writeFileSync('health-report.json', JSON.stringify(healthReport, null, 2));
+
+      # -------------------------------------------------------
+      # 📎 Upload Health Report
+      # -------------------------------------------------------
+      - name: "📎 Upload Health Report"
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-health-report
+          path: |
+            health-report.json
+            workflow-health.json
+            pr-issue-data.json
+            outdated.json
+            audit.json
+          retention-days: 30
+
+  # -------------------------------------------------------
+  # 📊 Generate Health Dashboard
+  # -------------------------------------------------------
+  health-dashboard:
+    name: "📊 Generate Health Dashboard"
+    runs-on: ubuntu-latest
+    needs: health-analysis
+    if: always()
+    
+    steps:
+      # -------------------------------------------------------
+      # 📥 Repository Checkout
+      # -------------------------------------------------------
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------------------------------------
+      # 📊 Create Health Dashboard Issue
+      # -------------------------------------------------------
+      - name: "📊 Create Health Dashboard"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const healthScore = parseInt('${{ needs.health-analysis.outputs.health-score }}');
+            const issues = JSON.parse('${{ needs.health-analysis.outputs.issues-found }}');
+            const recommendations = JSON.parse('${{ needs.health-analysis.outputs.recommendations }}');
+            
+            // Determine health emoji and status
+            let healthEmoji = '🟢';
+            let healthStatus = 'Excellent';
+            if (healthScore < 60) { healthEmoji = '🔴'; healthStatus = 'Critical'; }
+            else if (healthScore < 75) { healthEmoji = '🟠'; healthStatus = 'Poor'; }
+            else if (healthScore < 90) { healthEmoji = '🟡'; healthStatus = 'Good'; }
+            
+            // Create dashboard content
+            let dashboardContent = `# 🩺 Dependency System Health Dashboard\n\n`;
+            dashboardContent += `## ${healthEmoji} Overall Health: ${healthScore}/100 (${healthStatus})\n\n`;
+            dashboardContent += `**Last Updated:** ${new Date().toISOString()}\n`;
+            const reportType = (process.env.GITHUB_EVENT_NAME === 'schedule') ? 'Scheduled' : 'Manual';
+            dashboardContent += `**Report Type:** ${reportType}\n\n`;
+            
+            // Health score visualization
+            const scoreBar = '█'.repeat(Math.floor(healthScore / 5)) + '░'.repeat(20 - Math.floor(healthScore / 5));
+            dashboardContent += `### 📊 Health Score\n`;
+            dashboardContent += `\`\`\`\n${scoreBar} ${healthScore}%\n\`\`\`\n\n`;
+            
+            // Issues section
+            if (issues.length > 0) {
+              dashboardContent += `### ⚠️ Issues Found (${issues.length})\n\n`;
+              for (let i = 0; i < issues.length; i++) {
+                dashboardContent += `${i + 1}. ${issues[i]}\n`;
+              }
+              dashboardContent += `\n`;
+            } else {
+              dashboardContent += `### ✅ No Issues Found\n\nAll systems are operating normally.\n\n`;
+            }
+            
+            // Recommendations section
+            if (recommendations.length > 0) {
+              dashboardContent += `### 💡 Recommendations (${recommendations.length})\n\n`;
+              for (let i = 0; i < recommendations.length; i++) {
+                dashboardContent += `${i + 1}. ${recommendations[i]}\n`;
+              }
+              dashboardContent += `\n`;
+            }
+            
+            // System overview
+            dashboardContent += `### 🏗️ System Overview\n\n`;
+            dashboardContent += `| Component | Status |\n`;
+            dashboardContent += `|-----------|--------|\n`;
+            dashboardContent += `| 🤖 Dependabot | Active (daily 3:00 AM BDT) |\n`;
+            dashboardContent += `| 🔄 Auto-merge | Active (minor/patch updates) |\n`;
+            dashboardContent += `| 📧 Notifications | Active (major updates) |\n`;
+            dashboardContent += `| 🟠 Bun Updates | Active (bi-weekly) |\n`;
+            dashboardContent += `| 📅 Scheduler | Active (multi-schedule) |\n\n`;
+            
+            // Next actions
+            dashboardContent += `### 🎯 Next Actions\n\n`;
+            if (healthScore >= 90) {
+              dashboardContent += `✅ System is healthy - continue regular monitoring\n`;
+            } else if (healthScore >= 75) {
+              dashboardContent += `🔍 Review issues and apply recommendations\n`;
+            } else if (healthScore >= 60) {
+              dashboardContent += `⚠️ Address critical issues immediately\n`;
+            } else {
+              dashboardContent += `🚨 System requires immediate attention\n`;
+            }
+            
+            dashboardContent += `\n### 📚 Resources\n\n`;
+            dashboardContent += `- [Dependency Automation Guide](.github/DEPENDENCY_AUTOMATION.md)\n`;
+            dashboardContent += `- [Workflow Status](../../actions)\n`;
+            dashboardContent += `- [Security Advisories](../../security/advisories)\n`;
+            
+            dashboardContent += `\n---\n*This dashboard is automatically updated by the health check workflow.*`;
+            
+            // Check for existing health dashboard issue
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'health-dashboard',
+              creator: 'github-actions[bot]'
+            });
+            
+            if (existingIssues.length > 0) {
+              // Update existing dashboard
+              const existingIssue = existingIssues[0];
+              
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                title: `🩺 Dependency Health Dashboard - Score: ${healthScore}/100`,
+                body: dashboardContent
+              });
+              
+              console.log(`✅ Updated health dashboard issue #${existingIssue.number}`);
+            } else {
+              // Create new dashboard
+              const { data: newIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🩺 Dependency Health Dashboard - Score: ${healthScore}/100`,
+                body: dashboardContent,
+                labels: ['health-dashboard', 'documentation', 'monitoring']
+              });
+              
+              console.log(`✅ Created health dashboard issue #${newIssue.number}`);
+            }
+            
+            // Set job summary
+            core.summary.addRaw(`# 🩺 Health Check Complete\n\n**Score:** ${healthScore}/100\n**Status:** ${healthStatus}\n**Issues:** ${issues.length}\n**Recommendations:** ${recommendations.length}`);
+            await core.summary.write();
