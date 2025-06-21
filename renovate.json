@@ -4,14 +4,13 @@
 
   "extends": [
     "config:best-practices",
-    "schedule:weeklyOnMonday",
     "group:monorepos",
     "group:recommended",
     "workarounds:all"
   ],
 
   "timezone": "Asia/Dhaka",
-  "schedule": ["after 2am and before 5am on monday"],
+  "schedule": ["* 2-4 * * 1"],
 
   "labels": ["dependencies", "renovate"],
   "assignees": ["tashfiqul-islam"],
