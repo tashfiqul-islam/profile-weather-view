@@ -49,7 +49,8 @@
       "automergeType": "pr",
       "automergeStrategy": "auto",
       "requiredStatusChecks": null,
-      "labels": ["dependencies", "auto-merge", "{{updateType}}"]
+      "labels": ["dependencies", "auto-merge", "{{updateType}}"],
+      "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🔧 Auto-merge non-major updates for dev dependencies",
@@ -60,7 +61,8 @@
       "automergeType": "pr",
       "automergeStrategy": "auto",
       "requiredStatusChecks": null,
-      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"]
+      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"],
+      "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🚨 Major updates require manual approval",
@@ -68,7 +70,8 @@
       "automerge": false,
       "dependencyDashboardApproval": true,
       "labels": ["dependencies", "major", "needs-approval"],
-      "addLabels": ["breaking-change"]
+      "addLabels": ["breaking-change"],
+      "prTitle": "feat(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🔒 Security updates - always auto-merge",
@@ -79,7 +82,8 @@
       "automergeType": "pr",
       "schedule": ["at any time"],
       "labels": ["dependencies", "security", "auto-merge"],
-      "addLabels": ["critical"]
+      "addLabels": ["critical"],
+      "prTitle": "fix(security): patch {{depName}} to {{newVersion}}"
     },
     {
       "description": "📦 Bun runtime updates - weekly check",
@@ -92,7 +96,7 @@
       "labels": ["dependencies", "bun", "runtime", "auto-merge"],
       "commitMessagePrefix": "chore(bun):",
       "commitMessageTopic": "update {{depName}}",
-      "prTitle": "🔄 Update Bun runtime {{depName}} to {{newVersion}}"
+      "prTitle": "chore(deps): update bun runtime to {{newVersion}}"
     },
     {
       "description": "⚡ Group ESLint packages together",
@@ -101,7 +105,8 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "eslint", "linting", "auto-merge"]
+      "labels": ["dependencies", "eslint", "linting", "auto-merge"],
+      "prTitle": "chore(deps): update eslint packages"
     },
     {
       "description": "🧪 Group Vitest packages together",
@@ -110,7 +115,8 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "vitest", "testing", "auto-merge"]
+      "labels": ["dependencies", "vitest", "testing", "auto-merge"],
+      "prTitle": "chore(deps): update vitest packages"
     },
     {
       "description": "🔧 Group TypeScript packages together",
@@ -119,7 +125,8 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "typescript", "types", "auto-merge"]
+      "labels": ["dependencies", "typescript", "types", "auto-merge"],
+      "prTitle": "chore(deps): update typescript packages"
     },
     {
       "description": "⚙️ GitHub Actions - weekly updates with auto-merge",
@@ -130,7 +137,7 @@
       "labels": ["dependencies", "github-actions", "auto-merge"],
       "commitMessagePrefix": "chore(actions):",
       "commitMessageTopic": "update {{depName}}",
-      "prTitle": "⚙️ Update GitHub Action {{depName}} to {{newVersion}}",
+      "prTitle": "ci(actions): update github actions",
       "groupName": "GitHub Actions"
     },
     {
@@ -146,7 +153,8 @@
       "schedule": ["after 2am and before 4am on monday"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "labels": ["dependencies", "node", "lts", "auto-merge"]
+      "labels": ["dependencies", "node", "lts", "auto-merge"],
+      "prTitle": "chore(deps): update node.js lts"
     }
   ],
 
