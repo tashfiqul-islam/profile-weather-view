@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.15](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.14...v1.2.15)
+## Patch (2025-06-21)
+
+### fix
+
+* **renovate:** use standard cron syntax for schedule ([7349844](https://github.com/tashfiqul-islam/profile-weather-view/commit/73498442a528b90c03b552427a40ef72a2134a05))
+
 # [1.2.14](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.13...v1.2.14)
 ## Patch (2025-06-21)
 
