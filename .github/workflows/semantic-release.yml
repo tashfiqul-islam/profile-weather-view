@@ -61,6 +61,7 @@ jobs:
       version: ${{ steps.check-for-release.outputs.new_release_version }}
       release_upload_url: ${{ steps.check-for-release.outputs.release_upload_url }}
       provenance-assets: ${{ steps.slsa-subjects.outputs.provenance-assets }}
+      latest_tag: ${{ steps.check-for-release.outputs.latest_tag }}
     steps:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
@@ -119,8 +120,11 @@ jobs:
 
       - name: "Check for new release"
         id: check-for-release
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           LATEST_TAG_AFTER=$(git describe --tags --abbrev=0 2>/dev/null || echo 'none')
+          echo "latest_tag=${LATEST_TAG_AFTER}" >> $GITHUB_OUTPUT
           if [ "${{ steps.pre-release-check.outputs.last_tag }}" != "$LATEST_TAG_AFTER" ]; then
             echo "✅ New release detected: $LATEST_TAG_AFTER"
             echo "new_release_version=${LATEST_TAG_AFTER#v}" >> $GITHUB_OUTPUT
@@ -131,8 +135,6 @@ jobs:
             echo "new_release_version=" >> $GITHUB_OUTPUT
             echo "release_upload_url=" >> $GITHUB_OUTPUT
           fi
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}
 
       - name: "Upload changelog artifact"
         if: steps.check-for-release.outputs.new_release_version != ''
@@ -180,14 +182,9 @@ jobs:
           path: .
 
       - name: "Upload provenance to release"
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        with:
-          upload_url: ${{ needs.release-assets.outputs.release_upload_url }}
-          asset_path: ${{ needs.provenance.outputs.provenance-name }}
-          asset_name: ${{ needs.provenance.outputs.provenance-name }}
-          asset_content_type: application/json
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: gh release upload ${{ needs.release-assets.outputs.latest_tag }} ./${{ needs.provenance.outputs.provenance-name }}
 
   back-merge:
     name: "🔄 Back-Merge & Synchronize Branches"
