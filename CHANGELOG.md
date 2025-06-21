@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.22](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.21...v1.2.22)
+## Patch (2025-06-21)
+
+### fix
+
+* **ci:** correct provenance upload and audit logic in release workflow ([44f7ba2](https://github.com/tashfiqul-islam/profile-weather-view/commit/44f7ba2d8b676982326406b442e6b6eeedf8df32))
+
 # [1.2.21](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.20...v1.2.21)
 ## Patch (2025-06-21)
 
