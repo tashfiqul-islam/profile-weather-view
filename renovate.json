@@ -29,7 +29,6 @@
   "separateMinorPatch": false,
 
   "ignoreTests": true,
-  "followTag": "latest",
 
   "commitMessagePrefix": "chore(deps):",
   "commitMessageTopic": "{{depName}}",
