@@ -3,6 +3,17 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.17](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.16...v1.2.17)
+## Patch (2025-06-21)
+
+### chore
+
+* **ci:** update bun.lockb ([482457d](https://github.com/tashfiqul-islam/profile-weather-view/commit/482457d1005571e930fbdaf353e869dab4759692))
+* **deps:** Pin dependencies (#51) ([b544abe](https://github.com/tashfiqul-islam/profile-weather-view/commit/b544abedd0b723b5b23797509b85de5195939834))
+### fix
+
+* **ci:** resolve workflow failures for external PRs and releases ([583965e](https://github.com/tashfiqul-islam/profile-weather-view/commit/583965ea5dd6d9f567c93e93b62f66e2f72e19f4))
+
 # [1.2.16](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.15...v1.2.16)
 ## Patch (2025-06-21)
 
