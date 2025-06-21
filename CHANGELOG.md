@@ -3,6 +3,16 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.19](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.18...v1.2.19)
+## Patch (2025-06-21)
+
+### chore
+
+* **ci:** overhaul semantic-release workflow with SLSA ([e5d083b](https://github.com/tashfiqul-islam/profile-weather-view/commit/e5d083bfacf1f548e0ff441336294d4b9614d369))
+### fix
+
+* **deps:** resolve security vulnerabilities ([8ce4ca1](https://github.com/tashfiqul-islam/profile-weather-view/commit/8ce4ca1a4134a2be77e121d0444a3c6209604274))
+
 # [1.2.18](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.17...v1.2.18)
 ## Patch (2025-06-21)
 
