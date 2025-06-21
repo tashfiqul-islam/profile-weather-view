@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
-      version: ${{ steps.semantic-release.outputs.new_release_version }}
+      version: ${{ steps.check-for-release.outputs.new_release_version }}
       release_upload_url: ${{ steps.semantic-release.outputs.release_upload_url }}
       provenance-assets: ${{ steps.slsa-subjects.outputs.provenance-assets }}
     steps:
@@ -100,6 +100,10 @@ jobs:
           fi
           echo "::endgroup::"
 
+      - name: "Get latest tag before release"
+        id: pre-release-check
+        run: echo "last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
+
       - name: "🚀 Run Semantic Release"
         id: semantic-release
         env:
@@ -114,8 +118,20 @@ jobs:
           fi
           bunx semantic-release $FLAGS
 
+      - name: "Check for new release"
+        id: check-for-release
+        run: |
+          LATEST_TAG_AFTER=$(git describe --tags --abbrev=0 2>/dev/null || echo 'none')
+          if [ "${{ steps.pre-release-check.outputs.last_tag }}" != "$LATEST_TAG_AFTER" ]; then
+            echo "✅ New release detected: $LATEST_TAG_AFTER"
+            echo "new_release_version=${LATEST_TAG_AFTER#v}" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ No new release detected."
+            echo "new_release_version=" >> $GITHUB_OUTPUT
+          fi
+
       - name: "Upload changelog artifact"
-        if: steps.semantic-release.outputs.new_release_version != ''
+        if: steps.check-for-release.outputs.new_release_version != ''
         uses: actions/upload-artifact@v4
         with:
           name: changelog
@@ -123,7 +139,7 @@ jobs:
 
       - name: "Generate subjects for SLSA provenance"
         id: slsa-subjects
-        if: steps.semantic-release.outputs.new_release_version != ''
+        if: steps.check-for-release.outputs.new_release_version != ''
         run: |
           ASSETS=("CHANGELOG.md" "package.json" "bun.lockb" "bunfig.toml" "README.md")
           SUBJECTS="["
