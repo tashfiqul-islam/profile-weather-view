@@ -200,7 +200,7 @@ export default {
     [
       '@semantic-release/git',
       {
-        assets: ['CHANGELOG.md', 'package.json', 'bunfig.toml', 'README.md'],
+        assets: ['CHANGELOG.md', 'package.json', 'bun.lockb', 'bunfig.toml', 'README.md'],
         message: 'chore(release): v${nextRelease.version} [skip ci]',
       },
     ],

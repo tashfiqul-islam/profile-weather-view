@@ -7,23 +7,15 @@ on:
   push:
     branches:
       - master
-    paths-ignore:
-      - 'CHANGELOG.md'
-      - 'package.json'
-      - '*.md'
-
   workflow_dispatch:
     inputs:
       debug:
         description: "Enable debug logging"
         required: false
-        default: "false"
         type: choice
-        options:
-          - "true"
-          - "false"
+        options: ["true", "false"]
       dry_run:
-        description: "Run in dry-run mode (no actual release)"
+        description: "Run in dry-run mode"
         type: boolean
         default: false
 
@@ -38,10 +30,10 @@ concurrency:
 # 🔒 Permissions (Least Privilege Principle)
 # ============================================================
 permissions:
-  contents: write  # For repository updates, Git tags
-  issues: write    # For issue comments
-  pull-requests: write  # For PR comments
-  id-token: write  # For provenance generation (npm best practice)
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 # ============================================================
 # 🌍 Environment Variables
@@ -50,8 +42,8 @@ env:
   GH_TOKEN: ${{ secrets.PAT }}
   NODE_ENV: "production"
   BUN_RUNTIME_SAFETY: "true"
-  DEBUG: ${{ github.event.inputs.debug == 'true' && 'semantic-release:*' || '' }}
-  DRY_RUN: ${{ github.event.inputs.dry_run == 'true' || 'false' }}
+  DEBUG: ${{ (github.event.inputs.debug == 'true' && 'semantic-release:*') || '' }}
+  DRY_RUN: ${{ (github.event.inputs.dry_run == 'true' && 'true') || 'false' }}
   GIT_AUTHOR_NAME: "GitHub Actions"
   GIT_AUTHOR_EMAIL: "github-actions@github.com"
   GIT_COMMITTER_NAME: "GitHub Actions"
@@ -61,230 +53,116 @@ env:
 # 🔄 Jobs
 # ============================================================
 jobs:
-  release:
+  release-assets:
     name: "🚀 Release"
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.semantic-release.outputs.new_release_version }}
+      release_upload_url: ${{ steps.semantic-release.outputs.release_upload_url }}
+      provenance-assets: ${{ steps.slsa-subjects.outputs.provenance-assets }}
     steps:
-      # -------------------------------------------------------
-      # 📋 Setup
-      # -------------------------------------------------------
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for correct versioning
-          persist-credentials: true
+          fetch-depth: 0
           token: ${{ secrets.PAT }}
 
-      - name: "🔍 Initialize Workflow"
-        id: init
-        run: |
-          echo "::group::Environment Information"
-          echo "🔹 Repository: ${{ github.repository }}"
-          echo "🔹 Branch: ${{ github.ref_name }}"
-          echo "🔹 Trigger: ${{ github.event_name }}"
-          echo "🔹 Commit: ${{ github.sha }}"
-          echo "🔹 Mode: ${{ env.DRY_RUN == 'true' && 'Dry Run' || 'Release' }}"
-          echo "🔹 Debug: ${{ github.event.inputs.debug == 'true' && 'Enabled' || 'Disabled' }}"
-          echo "::endgroup::"
-
-          # Extract Bun version from package.json
-          BUN_VERSION=$(node -e "try { const pkg = require('./package.json'); const pm = pkg.packageManager || ''; const version = pm.match(/bun@(.*)/); console.log(version ? version[1] : '1.2.10'); } catch (e) { console.log('1.2.10'); }")
-          echo "bun_version=${BUN_VERSION}" >> $GITHUB_OUTPUT
-
-          # Get last tag for reference
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
-          echo "last_tag=${LAST_TAG}" >> $GITHUB_OUTPUT
-          echo "::notice::Last release tag: ${LAST_TAG}"
-
-      # -------------------------------------------------------
-      # ⚙️ Runtime Setup
-      # -------------------------------------------------------
       - name: "🧰 Setup Bun"
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ steps.init.outputs.bun_version }}
-
-      - name: "📦 Restore Dependencies Cache"
-        uses: actions/cache/restore@v4
-        id: bun-cache
-        with:
-          path: |
-            node_modules
-            ~/.bun/install/cache
-            bun.lockb
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/package.json', '**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-            ${{ runner.os }}-
-          enableCrossOsArchive: false
+          bun-version: latest
 
       - name: "📦 Install Dependencies"
-        id: deps
-        run: |
-          echo "::group::Dependency Installation"
-          if [ "${{ steps.bun-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "::notice::Using cached dependencies"
-          fi
-          echo "Installing dependencies..."
-          bun install --no-summary
-          # Verify integrity
-          bun --revision
-          echo "::endgroup::"
+        run: bun install --frozen-lockfile
 
-      - name: "📝 Commit Lockfile Changes"
-        run: |
-          # Check if the lockfile has changed
-          if [[ -n "$(git status --porcelain bun.lockb)" ]]; then
-            echo "::notice::Lockfile has been updated. Committing changes..."
-            git config --local user.name "GitHub Actions"
-            git config --local user.email "github-actions@github.com"
-            git add bun.lockb
-            git commit -m "chore(ci): update bun.lockb"
-            git push
-          else
-            echo "✅ Lockfile is up to date."
-          fi
-
-      - name: "💾 Save Dependencies Cache"
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            node_modules
-            ~/.bun/install/cache
-            bun.lockb
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/package.json', '**/bun.lockb') }}
-          enableCrossOsArchive: false
-      # -------------------------------------------------------
-      # 🧪 Validation
-      # -------------------------------------------------------
       - name: "🔍 Validate Project"
         id: validate
         if: ${{ env.DRY_RUN != 'true' }}
         run: |
           echo "::group::Project Validation"
-          echo "🔹 Running TypeScript checks..."
           bun run type-check
-
-          # Run a subset of critical tests rather than the whole test suite
-          echo "🔹 Running critical path tests..."
-          bun run test --run -- 'src/__tests__/unit/index.test.ts' 'src/__tests__/unit/services/fetchWeather.test.ts'
-
-          echo "🔹 Validating build process..."
-          # Ensure project can be built successfully
-          bun run build || echo "⚠️ Warning: Build script not found, skipping build validation"
-
-          # Simple code quality check focused on production files
-          echo "🔹 Checking for code quality issues..."
-          ISSUE_COUNT=$(grep -r "TODO\|FIXME\|console.log" src/weather-update/ | wc -l)
-          if [ "$ISSUE_COUNT" -gt 0 ]; then
-            echo "⚠️ Warning: Found $ISSUE_COUNT potential code quality issues in production code"
-          fi
+          bun run test:ci
           echo "::endgroup::"
 
-      # -------------------------------------------------------
-      # 🔒 Security Check
-      # -------------------------------------------------------
-      - name: "🔒 Quick Security Scan"
+      - name: "🔒 Security Audit"
         id: security-check
         if: ${{ env.DRY_RUN != 'true' }}
         continue-on-error: true
         run: |
-          echo "::group::Security Scan"
-          echo "🔹 Running minimal security scan..."
-
-          # Generate package lock for npm audit with legacy-peer-deps flag to handle dependency conflicts
-          npm i --package-lock-only --ignore-scripts --no-audit --legacy-peer-deps
-
-          # Run only high and critical vulnerability check
-          npm audit --audit-level=high --json > npm-audit.json || true
-
-          # Check for high and critical vulnerabilities only
-          HIGH_VULN_COUNT=$(jq '.metadata.vulnerabilities.high' npm-audit.json 2>/dev/null || echo "0")
-          CRITICAL_VULN_COUNT=$(jq '.metadata.vulnerabilities.critical' npm-audit.json 2>/dev.null || echo "0")
-
-          # Handle empty or invalid JSON
-          if [ "$HIGH_VULN_COUNT" = "null" ] || [ -z "$HIGH_VULN_COUNT" ]; then HIGH_VULN_COUNT=0; fi
-          if [ "$CRITICAL_VULN_COUNT" = "null" ] || [ -z "$CRITICAL_VULN_COUNT" ]; then CRITICAL_VULN_COUNT=0; fi
-
-          echo "📊 Found $HIGH_VULN_COUNT high and $CRITICAL_VULN_COUNT critical vulnerabilities"
-
-          # Set output but don't fail the build - just warn
-          if [ "$HIGH_VULN_COUNT" -gt 0 ] || [ "$CRITICAL_VULN_COUNT" -gt 0 ]; then
-            echo "sec_issues_found=true" >> $GITHUB_OUTPUT
-            echo "::warning::Security issues found: $HIGH_VULN_COUNT high, $CRITICAL_VULN_COUNT critical vulnerabilities"
+          echo "::group::Security Audit"
+          bun audit --level high > bun-audit.txt || true
+          if [ -s bun-audit.txt ]; then
+            echo "::warning::High or critical vulnerabilities found by bun audit."
+            cat bun-audit.txt
           else
-            echo "sec_issues_found=false" >> $GITHUB_OUTPUT
-            echo "✅ No significant security issues found"
+            echo "✅ No high or critical vulnerabilities found."
           fi
           echo "::endgroup::"
 
-      # -------------------------------------------------------
-      # 🚀 Semantic Release
-      # -------------------------------------------------------
       - name: "🚀 Run Semantic Release"
         id: semantic-release
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
-          echo "::group::Semantic Release Process"
-
-          # Configure release flags based on inputs
           FLAGS=""
           if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
             FLAGS="--dry-run"
-            echo "Running in dry-run mode (no actual release)"
           fi
-
-          # Add debug flags if needed
           if [[ "${{ github.event.inputs.debug }}" == "true" ]]; then
             FLAGS="${FLAGS} --debug"
-            echo "Debug mode enabled"
           fi
+          bunx semantic-release $FLAGS
 
-          # Set git identity for commits
-          git config --global user.name "${{ env.GIT_AUTHOR_NAME }}"
-          git config --global user.email "${{ env.GIT_AUTHOR_EMAIL }}"
+      - name: "Upload changelog artifact"
+        if: steps.semantic-release.outputs.new_release_version != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
 
-          # Execute semantic-release
-          echo "Executing: bunx semantic-release ${FLAGS}"
-          bunx semantic-release ${FLAGS}
-          SEMANTIC_STATUS=$?
-
-          # Handle semantic-release status
-          if [ $SEMANTIC_STATUS -eq 0 ]; then
-            echo "::notice::Semantic release completed successfully"
-
-            # Extract the released version from package.json
-            VERSION=$(node -e "try { console.log(require('./package.json').version) } catch (e) { console.log('') }")
-
-            if [[ -n "$VERSION" ]]; then
-              echo "version=${VERSION}" >> $GITHUB_OUTPUT
-              echo "::notice::Version v${VERSION} released!"
-            elif [[ "${{ env.DRY_RUN }}" == "true" ]]; then
-              echo "status=dry-run" >> $GITHUB_OUTPUT
-              echo "::notice::Dry run completed successfully"
-            else
-              echo "status=no-release" >> $GITHUB_OUTPUT
-              echo "::notice::No release required - no relevant changes detected"
+      - name: "Generate subjects for SLSA provenance"
+        id: slsa-subjects
+        if: steps.semantic-release.outputs.new_release_version != ''
+        run: |
+          ASSETS=("CHANGELOG.md" "package.json" "bun.lockb" "bunfig.toml" "README.md")
+          SUBJECTS="["
+          for asset in "${ASSETS[@]}"; do
+            if [ -f "$asset" ]; then
+              HASH=$(sha256sum "$asset" | awk '{ print $1 }')
+              SUBJECTS+=$(printf '{"name":"%s","digest":{"sha256":"%s"}},' "$asset" "$HASH")
             fi
-          else
-            echo "::error::Semantic release failed with exit code $SEMANTIC_STATUS"
-            exit $SEMANTIC_STATUS
-          fi
+          done
+          SUBJECTS=${SUBJECTS%,}
+          SUBJECTS+="]"
+          echo "provenance-assets=$(echo -n "$SUBJECTS" | base64 -w0)" >> "$GITHUB_OUTPUT"
 
-          echo "::endgroup::"
+  provenance:
+    needs: [release-assets]
+    if: needs.release-assets.outputs.version != ''
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: "${{ needs.release-assets.outputs.provenance-assets }}"
+      upload-assets: true
 
-      # -------------------------------------------------------
-      # 🔄 Back-Merge & Synchronize Branches
-      # -------------------------------------------------------
-      - name: "🔄 Back-Merge & Synchronize Branches"
-        id: back-merge
-        if: steps.semantic-release.outputs.version != '' && env.DRY_RUN != 'true'
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}
+  back-merge:
+    name: "🔄 Back-Merge & Synchronize Branches"
+    needs: [release-assets]
+    if: needs.release-assets.outputs.version != '' && github.event.inputs.dry_run != 'true'
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "⬇️ Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+      - name: "Run Back-Merge Script"
         run: |
           echo "::group::Back-Merge and Branch Synchronization"
 
@@ -435,69 +313,29 @@ jobs:
           fi
           echo "::endgroup::"
 
-      # -------------------------------------------------------
-      # 📊 Release Summary
-      # -------------------------------------------------------
-      - name: "📊 Generate Release Summary"
-        if: always()
+  generate-summary:
+    name: "📊 Generate Release Summary"
+    needs: [release-assets]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download changelog"
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+      - name: "Generate Summary"
+        id: summary
         run: |
+          VERSION="${{ needs.release-assets.outputs.version }}"
           echo "# Semantic Release Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # If we have version output, a release happened
-          if [[ "${{ steps.semantic-release.outputs.version }}" != "" ]]; then
-            echo "✅ **Version ${{ steps.semantic-release.outputs.version }} released successfully**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
-            # Add changelog info if available
-            if [[ -f "CHANGELOG.md" ]]; then
-              echo "## Release Notes" >> $GITHUB_STEP_SUMMARY
-              echo "See [CHANGELOG.md](../blob/master/CHANGELOG.md) for detailed release notes." >> $GITHUB_STEP_SUMMARY
-
-              # Extract the latest release notes from CHANGELOG.md
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "### Latest Changes" >> $GITHUB_STEP_SUMMARY
-              echo "```" >> $GITHUB_STEP_SUMMARY
-              sed -n "/## \[${{ steps.semantic-release.outputs.version }}/,/## \[/p" CHANGELOG.md | sed '1p;/## \[/d' | head -n 15 >> $GITHUB_STEP_SUMMARY
-              echo "..." >> $GITHUB_STEP_SUMMARY
-              echo "```" >> $GITHUB_STEP_SUMMARY
-            fi
-
-          elif [[ "${{ steps.semantic-release.outputs.status }}" == "dry-run" ]]; then
+          if [[ "$VERSION" != "" ]]; then
+            echo "✅ **Version $VERSION released successfully**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
             echo "✅ **Dry run completed successfully**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "No changes were made to the repository." >> $GITHUB_STEP_SUMMARY
-
-          elif [[ "${{ steps.semantic-release.outputs.status }}" == "no-release" ]]; then
-            echo "ℹ️ **No new version released**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "No changes that would trigger a semantic version bump were detected." >> $GITHUB_STEP_SUMMARY
-
           elif [[ "${{ job.status }}" != "success" ]]; then
             echo "❌ **Release process failed**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Check the workflow logs for more information." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ **No new version released**" >> $GITHUB_STEP_SUMMARY
           fi
-
-          # Add execution stats
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Execution Details" >> $GITHUB_STEP_SUMMARY
-          echo "- **Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** [\`${GITHUB_SHA:0:7}\`](../commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Workflow Run:** [#${{ github.run_number }}](../actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Previous Release:** ${{ steps.init.outputs.last_tag }}" >> $GITHUB_STEP_SUMMARY
-
-      # -------------------------------------------------------
-      # 📦 Upload Artifacts
-      # -------------------------------------------------------
-      - name: "📤 Upload Release Output Artifact"
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: semantic-release-output-${{ github.run_id }}
-          path: |
-            semantic-release-output.log
-            CHANGELOG.md
-          retention-days: 7
-          if-no-files-found: ignore
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "N/A")
+          echo "- **Previous Release:** $LAST_TAG" >> $GITHUB_STEP_SUMMARY
