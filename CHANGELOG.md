@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.18](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.17...v1.2.18)
+## Patch (2025-06-21)
+
+### fix
+
+* **ci:** align renovate pr titles with conventional commit standard ([c798827](https://github.com/tashfiqul-islam/profile-weather-view/commit/c798827a7d9bf2bacac94aeb2b23e53ab9008ed1))
+
 # [1.2.17](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.16...v1.2.17)
 ## Patch (2025-06-21)
 
