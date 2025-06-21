@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.21](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.20...v1.2.21)
+## Patch (2025-06-21)
+
+### fix
+
+* **ci:** correct SLSA subject format ([1ea0b70](https://github.com/tashfiqul-islam/profile-weather-view/commit/1ea0b702a34d3e23dcd33b6f404aaec72b8e8f62))
+
 # [1.2.20](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.19...v1.2.20)
 ## Patch (2025-06-21)
 
