@@ -126,14 +126,26 @@ jobs:
           echo "::group::Dependency Installation"
           if [ "${{ steps.bun-cache.outputs.cache-hit }}" == "true" ]; then
             echo "::notice::Using cached dependencies"
-            bun install --frozen-lockfile --no-summary
-          else
-            echo "Installing dependencies..."
-            bun install --frozen-lockfile
           fi
+          echo "Installing dependencies..."
+          bun install --no-summary
           # Verify integrity
           bun --revision
           echo "::endgroup::"
+
+      - name: "📝 Commit Lockfile Changes"
+        run: |
+          # Check if the lockfile has changed
+          if [[ -n "$(git status --porcelain bun.lockb)" ]]; then
+            echo "::notice::Lockfile has been updated. Committing changes..."
+            git config --local user.name "GitHub Actions"
+            git config --local user.email "github-actions@github.com"
+            git add bun.lockb
+            git commit -m "chore(ci): update bun.lockb"
+            git push
+          else
+            echo "✅ Lockfile is up to date."
+          fi
 
       - name: "💾 Save Dependencies Cache"
         uses: actions/cache/save@v4

@@ -96,12 +96,14 @@ jobs:
     name: "🔍 SonarQube Analysis"
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      SONAR_TOKEN_EXISTS: ${{ secrets.SONAR_TOKEN != '' }}
 
     steps:
       - name: "⬇️ Checkout Repository"
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Important for SonarQube to get full history for proper analysis
+          fetch-depth: 0 # Important for SonarQube to get full history for proper analysis
 
       - name: "🧰 Setup JDK 21"
         uses: actions/setup-java@v4
@@ -121,6 +123,7 @@ jobs:
         run: bun run test:coverage
 
       - name: "🔍 SonarQube Scan"
+        if: env.SONAR_TOKEN_EXISTS == 'true'
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -128,6 +131,7 @@ jobs:
           SONAR_SCANNER_OPTS: "-Dproject.settings=./sonar-project.properties -Dsonar.scanner.metadataFilePath=${{ github.workspace }}/.scannerwork/report-task.txt"
 
       - name: "📝 SonarQube Quality Gate Check"
+        if: env.SONAR_TOKEN_EXISTS == 'true'
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
@@ -137,7 +141,7 @@ jobs:
     name: "🧪 Quality Validation"
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [codeql-analysis, sonarqube-analysis]
+    needs: [codeql-analysis]
 
     # Add SLSA provenance for CI/CD supply chain security
     outputs:
