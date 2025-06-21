@@ -142,16 +142,14 @@ jobs:
         if: steps.check-for-release.outputs.new_release_version != ''
         run: |
           ASSETS=("CHANGELOG.md" "package.json" "bun.lockb" "bunfig.toml" "README.md")
-          SUBJECTS="["
+          CONTENT=""
           for asset in "${ASSETS[@]}"; do
             if [ -f "$asset" ]; then
-              HASH=$(sha256sum "$asset" | awk '{ print $1 }')
-              SUBJECTS+=$(printf '{"name":"%s","digest":{"sha256":"%s"}},' "$asset" "$HASH")
+              CONTENT+=$(sha256sum "$asset")
+              CONTENT+=$'\n'
             fi
           done
-          SUBJECTS=${SUBJECTS%,}
-          SUBJECTS+="]"
-          echo "provenance-assets=$(echo -n "$SUBJECTS" | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "provenance-assets=$(echo -n "$CONTENT" | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
     needs: [release-assets]
