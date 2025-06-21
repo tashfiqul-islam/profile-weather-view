@@ -16,7 +16,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
   <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/semantic--release-angular-e10079?style=flat-square&logo=semantic-release" alt="semantic-release: angular"></a>
   <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog"></a>
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/dependency-scheduler.yml"><img src="https://img.shields.io/badge/dependencies-auto--managed-success?style=flat-square&logo=dependabot" alt="Auto-managed Dependencies"></a>
+  <a href="https://github.com/renovatebot/renovate"><img src="https://img.shields.io/badge/renovate-enabled-success?style=flat-square&logo=renovatebot" alt="Renovate Enabled"></a>
 </p>
 
 <p align="center">
@@ -213,7 +213,7 @@ eliminates manual maintenance while ensuring security and stability.
 | System Health Score | >90% | 96% |
 | Manual Intervention | <5% | 4% |
 
-**📖 Complete Guide**: [Dependency Automation Documentation](.github/DEPENDENCY_AUTOMATION.md)
+**📖 Complete Guide**: [Development & Automation Documentation](.github/DEVELOPMENT.md)
 
 ## ✨ Key Features
 
@@ -574,6 +574,7 @@ profile-weather-view/
 ├── 📄 README.md                   # This file
 ├── 📄 package.json                # Project configuration
 ├── 📄 tsconfig.json               # TypeScript configuration
+├── 📄 renovate.json               # Renovate configuration
 ├── 📄 vitest.config.ts            # Test configuration
 └── 📄 bun.lockb                   # Dependency lock file
 ```

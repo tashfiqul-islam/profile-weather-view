@@ -80,8 +80,8 @@ The application is organized around these main components:
 
 | Requirement | Version | Description |
 |-------------|---------|-------------|
-| **Bun** | ≥ 1.2.0 | JavaScript runtime and package manager |
-| **Node.js** | ≥ 22.0.0 | Required for some development tools |
+| **Bun** | >=1.2.16 | JavaScript runtime and package manager |
+| **Node.js** | >=22.0.0 | Required for some development tools |
 | **Git** | Latest | Version control |
 | **OpenWeather API Key** | N/A | Required for weather data fetching |
 
@@ -118,29 +118,30 @@ This project works best with Visual Studio Code with these extensions:
 
 <div align="center">
 
-![Branch Strategy](https://mermaid.ink/img/pako:eNplksFKxDAQhl9lmJNeWnDdVQ-99CKIILjgVfQQ0mbabiDJhGS6pWXffdNs3XYVJgkz3_wzfyYFGTUn6FQht_Ny5o2axEpbdMQlPHDfO62CDCl4Qy-Bflfm9Jm1tVaVNRpwPm6rZJQ0BpY3JqeBsNlfRMmhkTiIxDQbWX5Yg9vvlwavaCdITdxo1vb3WW4q5AdQbMH3RcsvH1qFaLShwLgflyFMCLKzVeO28OYjfbydsKvlE52ylvmbfOtsUzjQcL1aFVuPkwIwrJVVbXJB6XMNZYYYeQqtbPCmfxcDx3JvpescZzOY4SjkcLeSUH9B8w92DxRxBp0aTg_QGVdDiEHH5OxeJYr9n-gXo0Vcwg?type=png)
+![Branch Strategy](https://mermaid.ink/img/pako:eNplkcFqwzAQhl9l5JNeWlB3XYdeehFEENzwFrqEtJl2g01iSHaVLfu9m2zbtoJgMvPNN_9NlhQYNSfoVCM3w3LmjZrESlpyiEsYvL-vTSkjDs54S-j3pYw4p9baqqxqNeB03FalKGkMLG9MjgZBs78IJYdG4iAW02xkAWI97t9cAa1gnZCaqNm0_j3LTYX8A4ot-L4pWfajVghFGwqc-fAdYQjB3m0atwNvH-Hj7YRXLZ_oFKu5f5m3ziuFBwzXq1Wx9TgpAMNaaa0aLkB9rKHHGHoKrWzwJj-Xg8dyd8k1jjM5jBDuRhx6Jwf0H3D_YA1FEGnRpOADPFWGgAdfkpF4liv2f6BegwVcwg?type=png)
 
 </div>
 
-We use a simplified two-branch strategy optimized for solo development:
+We use a simplified Git Flow strategy optimized for this project's scale:
 
-- **`master`**: Production branch, always stable and deployable
-- **`develop`**: Development branch where feature work occurs
+- **`master`**: This is the main branch. It is always stable and contains the latest released version. All development work is done in feature branches and merged into master.
+- **Feature Branches** (`feat/...`, `fix/...`, etc.): All new development, bug fixes, or chores are done in separate branches. These are created from `master`. Once work is complete, a pull request is opened to merge back into `master`.
 
 ### Development Cycle
 
-1. **Start in develop branch**
+1. **Create a feature branch from `master`**
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout master
+   git pull origin master
+   git checkout -b feat/your-feature-name
    ```
 
 2. **Make your changes**
-   - Implement features or fixes
-   - Write tests for new functionality
-   - Run local quality checks
+   - Implement features or fixes.
+   - Write or update tests for new functionality.
+   - Run local quality checks to ensure everything passes.
 
-3. **Commit changes** using conventional commits format
+3. **Commit changes** using the conventional commits format.
    ```bash
    # Use the interactive commit tool for proper formatting
    bun run commit
@@ -151,22 +152,19 @@ We use a simplified two-branch strategy optimized for solo development:
    # docs: update API documentation
    ```
 
-4. **Push changes** to trigger automated PR
+4. **Push changes** and create a pull request.
    ```bash
-   git push origin develop
+   git push origin feat/your-feature-name
    ```
+   - Open a pull request from your feature branch to `master`.
 
-5. **Review the automatically created PR**
-   - Check validation results in GitHub Actions
-   - Address any issues that arise
+5. **Review the Pull Request**
+   - The PR will trigger GitHub Actions to run tests, linting, and other checks.
+   - Ensure all checks pass and address any feedback.
 
 6. **Merge using "Squash and merge"**
-   - This keeps the commit history clean
-   - Triggers the release process automatically
-
-7. **Sync develop with master** after release
-   - This happens automatically through GitHub Actions
-   - Ensures develop has all version bumps and changelog updates
+   - This keeps the `master` branch history clean and linear.
+   - Merging to `master` automatically triggers the semantic release process, which versions, tags, and releases the new code.
 
 ## Testing Strategy
 
@@ -239,55 +237,40 @@ Pre-commit hooks and CI processes enforce these coverage requirements.
 
 <div align="center">
 
-![CI/CD Pipeline](https://mermaid.ink/img/pako:eNptVE1r20AQ_SsjSlJoAnIcO20vvRVKC23BlByKDkJerbWCpF1rd2WXEP_3zq6+LNmhCLSaN2_ezLzd7JUzLrXKpdNKsWUQ80YpM1ckPcGZ18PFfeukI3l5IfmHJMFP0veHlFSv93oKbZRpjcOVYRLaNZTlvaGJ2Iuh87KhiK2NvImSN29z-UFlZ-rr1cHvWsGSlQde8RWoXal0qQbWCPtcey83YTfkHvz_Aq6d5oRIorzAlHgBY5uQVz4MBay8jCb3Oo_G4_FMO3rVtrP8K0frKkM-Z7WmzNjykfdkJ56PpMkanSsYCwd-wJqsE6CwjlzHzWbTbussWmQpGkfXsE5uIQCZocQy4FoZPoQSgGamBcwrmkRRBHMtl0Eq_X74-rsNycgoJeMIC-LoC8wa3p6U0BLc5kuNBlCBbYyWlqOl1gbgL8TTYdojlaG7SKNF5c0w1gSnBdj9nyJTEdfyCjd6UH3BUOL5DyXPbWUpTwzlWVPBAocXK9A4xAsLZWztJ6xOxljC4IEYxoU-K8OZufLyA8-d3omldq20K0fRShw2Ei2BdAGbGOsc9iLd2mftbn7sRqZgSkIE7WQAngtYEtCOP-fa4vguFDl9-VgURIRrpG6lFEw3SnRK4cQVj45Rtap1ozfiUQzxEM5W3E5lvNhtw65VXtpF2Sr9FCaft24ytIkUe8tyeHwshKqLcnF-bo-unV3gVRxE69q36_22epqZimtD2wBp4asy64jp02zf3_7YVzRObiUemr1INuK28SMsfT-qFeTedu7in-7ivzn6gmvHnfjWrFXpFNttu0cHGNX18ADXuNZN88K11vR6vXnbXEcc0Qx_uOM_uIGaHQ?type=png)
+![CI/CD Pipeline](https://mermaid.ink/img/pako:eNptkcFqwzAQhl9l5JNeWqC7rkOvFkEEwQ1voS1k2mk32CSGZFerZN97M23bVhCYzDz_zT_JkoJR40yq1cgtMD9zTq1ipSU5xCUMLO7rK2Xk4QlvCf1-lRFn1lorqzqrBYfj9kqlpDEwvDE5GgTN_iKSHAqJhWA0yx4sQK3H_c0V0ArWCaWJmk3rPWW5qZAfQLAF3zclKz9qhVC0ocCYD98RhhDs3apxO_DuIz6-nbCr5ROdcpX5m3zrXBQcaLheLYouJwcBGKhlrZpcQP2so8YYeAqtbPASP5eDx3J3yTGOcDmOEI5GHHpFB_QfMPdgD0UQadGk4P0AlXV4hBx-TsXiWK_Z_oF6LBVz)
 
 </div>
 
-### GitHub Actions Workflows
+### GitHub Actions Workflows & Automation
 
-This project uses several GitHub Actions workflows:
+This project uses GitHub Actions and Renovate for a robust CI/CD pipeline.
 
-1. **PR Validation**
-   - Triggered on: Pull request to `master`
-   - Performs: Code quality checks, tests, security scanning
-   - File: `.github/workflows/pr-validation.yml`
+1.  **Pull Request Validation**:
+    *   Triggered on every push to a pull request.
+    *   Runs a series of checks:
+        *   **Linting & Formatting**: Ensures code style consistency.
+        *   **Type Checking**: Validates TypeScript types.
+        *   **Unit Tests**: Runs the full test suite with Vitest.
+        *   **Code Coverage**: Verifies that 100% coverage is maintained.
+    *   These checks must pass before a PR can be merged.
 
-2. **Release Automation**
-   - Triggered on: Push to `develop`
-   - Creates PR from `develop` to `master`
-   - File: `.github/workflows/release-automation.yml`
+2.  **Automated Release**:
+    *   Triggered when a commit is merged to the `master` branch.
+    *   Uses `semantic-release` to:
+        *   Analyze commit messages to determine the next version number (major, minor, or patch).
+        *   Create a new Git tag.
+        *   Generate a `CHANGELOG.md` with all the recent changes.
+        *   Create a new GitHub Release.
 
-3. **Semantic Release**
-   - Triggered on: Merge to `master`
-   - Creates releases, tags, and updates version
-   - File: `.github/workflows/semantic-release.yml`
+3.  **Automated Dependency Updates**:
+    *   **Renovate App**: We use the Renovate GitHub App to keep our dependencies up-to-date.
+    *   It runs on a weekly schedule as defined in `renovate.json`.
+    *   Renovate automatically creates pull requests to update:
+        *   `npm` packages in `package.json`.
+        *   GitHub Actions used in our workflows.
+    *   Minor and patch updates are configured to be auto-merged if all tests pass.
 
-4. **Branch Synchronization**
-   - Triggered on: After release completion
-   - Syncs `develop` with `master` to include version bumps
-   - Part of: `.github/workflows/release-automation.yml`
-
-### Automated Checks
-
-Every PR undergoes these automated validations:
-
-- **Code Quality**
-  - ESLint with custom rule configurations
-  - TypeScript type checking
-  - Code formatting with Prettier
-
-- **Tests**
-  - Unit tests with 100% coverage requirement
-  - Performance benchmarks against thresholds
-
-- **Security**
-  - Dependency vulnerability scanning
-  - Secret detection with GitLeaks
-  - SonarQube analysis
-
-- **Compliance**
-  - License compatibility checking
-  - Conventional commit format validation
+This automated pipeline ensures that every change is validated, releases are consistent and automated, and dependencies are kept current with minimal manual intervention.
 
 ## Release Process
 

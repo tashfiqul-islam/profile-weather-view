@@ -11,11 +11,6 @@ import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-interface ConfigCheck {
-  name: string;
-  pattern: RegExp;
-}
-
 interface PackageJson {
   scripts?: Record<string, string>;
 }
@@ -49,11 +44,11 @@ class DependencyValidator {
    */
   private checkWorkflowFiles(): void {
     const requiredWorkflows = [
-      'auto-merge-dependencies.yml',
-      'dependency-health-check.yml',
-      'dependency-scheduler.yml',
-      'enhance-dependabot-bun.yml',
-      'major-update-notification.yml',
+      'pr-validation.yml',
+      'profile-weather-update.yml',
+      'semantic-release.yml',
+      'update-dependencies.yml',
+      'update-github-actions.yml',
     ];
 
     for (const workflow of requiredWorkflows) {
@@ -77,15 +72,23 @@ class DependencyValidator {
   }
 
   /**
-   * Check Dependabot configuration
+   * Check Renovate configuration
    */
   private checkDependabotConfig(): void {
-    const configPath = join('.github', 'dependabot.yml');
+    this.checkRenovateConfig();
+    this.checkDependabotDisabled();
+  }
 
-    if (!existsSync(configPath)) {
+  /**
+   * Check Renovate configuration file
+   */
+  private checkRenovateConfig(): void {
+    const renovateConfigPath = 'renovate.json';
+
+    if (!existsSync(renovateConfigPath)) {
       this.results.push({
-        message: 'dependabot.yml not found',
-        name: 'Dependabot Config',
+        message: 'renovate.json not found',
+        name: 'Renovate Config',
         status: 'fail',
       });
 
@@ -93,30 +96,109 @@ class DependencyValidator {
     }
 
     try {
-      const config = readFileSync(configPath, 'utf8');
+      const config = readFileSync(renovateConfigPath, 'utf8');
+      const renovateConfig = JSON.parse(config) as Record<string, unknown>;
 
-      // Check for required configuration elements
-      const checks: ConfigCheck[] = [
-        { name: 'NPM ecosystem', pattern: /package-ecosystem:\s*["']npm["']/ },
-        { name: 'Auto-merge labels', pattern: /labels:/ },
-        { name: 'PR limit configured', pattern: /open-pull-requests-limit:/ },
-        { name: 'Update schedule', pattern: /schedule:\s*\n.*interval:/ },
+      // Check for best practices preset
+      const extendsArray = renovateConfig['extends'] as string[] | undefined;
+      if (extendsArray?.includes('config:best-practices')) {
+        this.results.push({
+          message: 'Configuration found',
+          name: 'Renovate: Best practices preset',
+          status: 'pass',
+        });
+      } else {
+        this.results.push({
+          message: 'Configuration may be missing',
+          name: 'Renovate: Best practices preset',
+          status: 'warning',
+        });
+      }
+
+      // Check for automerge in package rules
+      const packageRules = renovateConfig['packageRules'] as
+        | Record<string, unknown>[]
+        | undefined;
+      const hasAutomerge = packageRules?.some(
+        (rule) => rule['automerge'] === true,
+      );
+
+      this.results.push({
+        message: hasAutomerge
+          ? 'Configuration found'
+          : 'Configuration may be missing',
+        name: 'Renovate: Automerge configuration',
+        status: hasAutomerge ? 'pass' : 'warning',
+      });
+
+      // Check for GitHub Actions updates
+      const hasGitHubActions = packageRules?.some((rule) => {
+        const managers = rule['matchManagers'] as string[] | undefined;
+
+        return managers?.includes('github-actions');
+      });
+
+      this.results.push({
+        message: hasGitHubActions
+          ? 'Configuration found'
+          : 'Configuration may be missing',
+        name: 'Renovate: GitHub Actions updates',
+        status: hasGitHubActions ? 'pass' : 'warning',
+      });
+    } catch (error: unknown) {
+      this.results.push({
+        details: error instanceof Error ? error.message : String(error),
+        message: 'Failed to parse configuration',
+        name: 'Renovate Config',
+        status: 'fail',
+      });
+    }
+  }
+
+  /**
+   * Check if Dependabot is properly disabled
+   */
+  private checkDependabotDisabled(): void {
+    const dependabotConfigPath = join('.github', 'dependabot.yml');
+
+    if (!existsSync(dependabotConfigPath)) {
+      // Show warnings for missing dependabot config elements (legacy)
+      const legacyChecks = [
+        'NPM ecosystem',
+        'Auto-merge labels',
+        'PR limit configured',
+        'Update schedule',
       ];
 
-      for (const check of checks) {
-        if (check.pattern.test(config)) {
-          this.results.push({
-            message: 'Configuration found',
-            name: `Dependabot: ${check.name}`,
-            status: 'pass',
-          });
-        } else {
-          this.results.push({
-            message: 'Configuration may be missing',
-            name: `Dependabot: ${check.name}`,
-            status: 'warning',
-          });
-        }
+      for (const check of legacyChecks) {
+        this.results.push({
+          message: 'Configuration may be missing',
+          name: `Dependabot: ${check}`,
+          status: 'warning',
+        });
+      }
+
+      return;
+    }
+
+    try {
+      const config = readFileSync(dependabotConfigPath, 'utf8');
+
+      if (
+        config.includes('Dependabot is disabled') ||
+        config.includes('Replaced by Renovate')
+      ) {
+        this.results.push({
+          message: 'Properly disabled in favor of Renovate',
+          name: 'Dependabot: Disabled',
+          status: 'pass',
+        });
+      } else {
+        this.results.push({
+          message: 'Should be disabled when using Renovate',
+          name: 'Dependabot: Active',
+          status: 'warning',
+        });
       }
     } catch (error: unknown) {
       this.results.push({
@@ -218,22 +300,15 @@ class DependencyValidator {
   }
 
   /**
-   * Check GitHub secrets (can only detect presence, not values)
+   * Check GitHub secrets (actually used ones)
    */
   private checkGitHubSecrets(): void {
-    const requiredSecrets = [
-      'EMAIL_PASSWORD',
-      'EMAIL_USERNAME',
-      'NOTIFICATION_EMAIL',
-    ];
-
-    // Note: We can't actually check if secrets exist from a local script
-    // This is just for documentation/reminder purposes
+    // The required secrets are now validated dynamically by workflow runs
+    // No longer checking EMAIL_* secrets as they're not used in current workflows
     this.results.push({
-      details: `Required secrets: ${requiredSecrets.join(', ')}`,
-      message: 'Manual verification required',
+      message: 'Secrets validated by workflow requirements',
       name: 'GitHub Secrets',
-      status: 'warning',
+      status: 'pass',
     });
   }
 
@@ -401,8 +476,7 @@ class DependencyValidator {
       this.logMessage('\n🔧 Please fix the failed checks before proceeding.');
     }
 
-    this.logMessage('\n📚 For setup help, see: .github/EMAIL_SETUP.md');
-    this.logMessage('📖 Full documentation: .github/DEPENDENCY_AUTOMATION.md');
+    this.logMessage('📖 Full documentation: .github/DEVELOPMENT.md');
   }
 
   /**

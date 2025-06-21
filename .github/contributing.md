@@ -72,8 +72,8 @@ Profile Weather View embraces these core principles:
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| **Bun** | ≥ 1.2.0 | Required |
-| **Node.js** | ≥ 22.0.0 | For some dev tools |
+| **Bun** | >=1.2.16 | Required |
+| **Node.js** | >=22.0.0 | For some dev tools |
 | **Git** | Latest | For version control |
 | **GitHub Account** | N/A | For pull requests |
 | **OpenWeather API Key** | N/A | For local testing |
@@ -125,37 +125,37 @@ bun run check-all
 
 ### Branch Strategy
 
-```
-master                # Production-ready code
-└── develop           # Integration branch
-    ├── feature/*     # New features
-    ├── fix/*         # Bug fixes
-    ├── refactor/*    # Code improvements
-    ├── docs/*        # Documentation updates
-    └── test/*        # Test enhancements
-```
+The project uses a simple branching strategy based on Git Flow:
+
+- **`master`**: The main branch, containing the latest stable code. All pull requests are merged into this branch.
+- **Feature Branches** (`feat/`, `fix/`, `docs/`, etc.): All contributions should be made in a separate branch created from `master`.
+
+This ensures `master` always remains in a good state while allowing for parallel development of new features and fixes.
 
 ### Development Cycle
 
 1. **Sync Your Fork**
-
    ```bash
+   # Ensure you're on your local master branch
    git checkout master
+
+   # Pull the latest changes from the upstream (original) repository
    git pull upstream master
+
+   # (Optional) Push the updates to your own fork on GitHub
    git push origin master
    ```
 
 2. **Create a Feature Branch**
-
    ```bash
-   git checkout -b feature/my-awesome-feature
+   # Create a new branch from master for your changes
+   git checkout -b feat/your-awesome-feature
    ```
 
 3. **Implement Your Changes**
-
-   - Write code following the [Code Architecture](#code-architecture)
-   - Add tests for new functionality
-   - Update documentation
+   - Write code following the project's architecture and quality standards.
+   - Add or update tests for any new functionality.
+   - If you add a new feature, update the documentation as well.
 
 4. **Local Quality Checks**
 
@@ -172,13 +172,14 @@ master                # Production-ready code
 6. **Push Changes**
 
    ```bash
-   git push origin feature/my-awesome-feature
+   git push origin feat/your-awesome-feature
    ```
 
 7. **Open a Pull Request**
-   - Use the PR template
-   - Link related issues
-   - Wait for CI checks to pass
+   - Use the PR template provided.
+   - Clearly describe the problem you are solving and your changes.
+   - Link any related issues by using keywords like `Closes #123`.
+   - Wait for the automated CI checks to complete and ensure they all pass.
 
 ## Code Architecture
 

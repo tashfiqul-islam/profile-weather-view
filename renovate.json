@@ -1,0 +1,207 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "🔄 Renovate configuration for automated dependency updates",
+
+  "extends": [
+    "config:best-practices",
+    "schedule:weeklyOnMonday",
+    "group:monorepos",
+    "group:recommended",
+    "workarounds:all"
+  ],
+
+  "timezone": "Asia/Dhaka",
+  "schedule": ["after 2am and before 5am on monday"],
+
+  "labels": ["dependencies", "renovate"],
+  "assignees": ["tashfiqul-islam"],
+  "reviewers": ["tashfiqul-islam"],
+
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "🔄 Dependency Dashboard",
+  "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
+
+  "prConcurrentLimit": 10,
+  "branchConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "separateMinorPatch": false,
+
+  "ignoreTests": true,
+  "followTag": "latest",
+
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 3am on the first day of the month"]
+  },
+
+  "packageRules": [
+    {
+      "description": "🔄 Auto-merge non-major updates for production dependencies",
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "auto",
+      "requiredStatusChecks": null,
+      "labels": ["dependencies", "auto-merge", "{{updateType}}"]
+    },
+    {
+      "description": "🔧 Auto-merge non-major updates for dev dependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "auto",
+      "requiredStatusChecks": null,
+      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"]
+    },
+    {
+      "description": "🚨 Major updates require manual approval",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "dependencyDashboardApproval": true,
+      "labels": ["dependencies", "major", "needs-approval"],
+      "addLabels": ["breaking-change"]
+    },
+    {
+      "description": "🔒 Security updates - always auto-merge",
+      "matchPackagePatterns": ["*"],
+      "matchDatasources": ["npm"],
+      "vulnerabilityAlerts": true,
+      "automerge": true,
+      "automergeType": "pr",
+      "schedule": ["at any time"],
+      "labels": ["dependencies", "security", "auto-merge"],
+      "addLabels": ["critical"]
+    },
+    {
+      "description": "📦 Bun runtime updates - weekly check",
+      "matchPackageNames": ["bun", "bun-types", "@types/bun"],
+      "matchDepTypes": ["packageManager", "devDependencies"],
+      "schedule": ["after 2am and before 4am on monday"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["dependencies", "bun", "runtime", "auto-merge"],
+      "commitMessagePrefix": "chore(bun):",
+      "commitMessageTopic": "update {{depName}}",
+      "prTitle": "🔄 Update Bun runtime {{depName}} to {{newVersion}}"
+    },
+    {
+      "description": "⚡ Group ESLint packages together",
+      "matchPackageNames": ["/^@typescript-eslint/", "/^eslint/"],
+      "groupName": "ESLint packages",
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "eslint", "linting", "auto-merge"]
+    },
+    {
+      "description": "🧪 Group Vitest packages together",
+      "matchPackageNames": ["/^@vitest/", "vitest"],
+      "groupName": "Vitest packages",
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "vitest", "testing", "auto-merge"]
+    },
+    {
+      "description": "🔧 Group TypeScript packages together",
+      "matchPackageNames": ["/^@types/", "typescript", "typescript-eslint"],
+      "groupName": "TypeScript packages",
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "typescript", "types", "auto-merge"]
+    },
+    {
+      "description": "⚙️ GitHub Actions - weekly updates with auto-merge",
+      "matchManagers": ["github-actions"],
+      "schedule": ["after 2am and before 4am on monday"],
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["dependencies", "github-actions", "auto-merge"],
+      "commitMessagePrefix": "chore(actions):",
+      "commitMessageTopic": "update {{depName}}",
+      "prTitle": "⚙️ Update GitHub Action {{depName}} to {{newVersion}}",
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "🔐 Pin GitHub Action digests for security",
+      "matchManagers": ["github-actions"],
+      "rangeStrategy": "pin",
+      "pinDigests": true
+    },
+    {
+      "description": "⏰ Node.js LTS updates only",
+      "matchPackageNames": ["node", "@types/node"],
+      "allowedVersions": "/^(18|20|22)\\./",
+      "schedule": ["after 2am and before 4am on monday"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "labels": ["dependencies", "node", "lts", "auto-merge"]
+    }
+  ],
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Bun version in package.json packageManager field",
+      "fileMatch": ["^package\\.json$"],
+      "matchStrings": [
+        "\"packageManager\":\\s*\"bun@(?<currentValue>[^\"]+)\""
+      ],
+      "autoReplaceStringTemplate": "\"packageManager\": \"bun@{{newValue}}\"",
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "bun",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Bun version in package.json engines field",
+      "fileMatch": ["^package\\.json$"],
+      "matchStrings": ["\"bun\":\\s*\">=(?<currentValue>[^\"]+)\""],
+      "autoReplaceStringTemplate": "\"bun\": \">={{newValue}}\"",
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "bun",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "postUpdateOptions": ["npmDedupe"],
+
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/*.min.js"
+  ],
+
+  "allowedPostUpgradeCommands": [
+    "^bun install$",
+    "^bun update$",
+    "^bun run build$",
+    "^bun run lint --fix$",
+    "^bun run format$"
+  ],
+
+  "postUpgradeTasks": {
+    "commands": ["bun install", "bun run lint --fix", "bun run format"],
+    "fileFilters": [
+      "package.json",
+      "bun.lockb",
+      "**/*.ts",
+      "**/*.js",
+      "**/*.json"
+    ],
+    "executionMode": "update"
+  }
+}
