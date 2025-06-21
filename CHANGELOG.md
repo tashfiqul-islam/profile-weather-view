@@ -3,6 +3,13 @@
 All notable changes to profile-weather-view will be documented in this file.
 
 
+# [1.2.23](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.22...v1.2.23)
+## Patch (2025-06-21)
+
+### refactor
+
+* **ci:** use gh cli to upload release assets ([f60b829](https://github.com/tashfiqul-islam/profile-weather-view/commit/f60b8293d66535a7c6d5db99d147a80e31682db2))
+
 # [1.2.22](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.21...v1.2.22)
 ## Patch (2025-06-21)
 
