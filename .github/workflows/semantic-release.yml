@@ -59,7 +59,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       version: ${{ steps.check-for-release.outputs.new_release_version }}
-      release_upload_url: ${{ steps.semantic-release.outputs.release_upload_url }}
+      release_upload_url: ${{ steps.check-for-release.outputs.release_upload_url }}
       provenance-assets: ${{ steps.slsa-subjects.outputs.provenance-assets }}
     steps:
       - name: "⬇️ Checkout Repository"
@@ -91,12 +91,11 @@ jobs:
         continue-on-error: true
         run: |
           echo "::group::Security Audit"
-          bun audit --level high > bun-audit.txt || true
-          if [ -s bun-audit.txt ]; then
+          if bun audit --level high > bun-audit.txt; then
+            echo "✅ No high or critical vulnerabilities found."
+          else
             echo "::warning::High or critical vulnerabilities found by bun audit."
             cat bun-audit.txt
-          else
-            echo "✅ No high or critical vulnerabilities found."
           fi
           echo "::endgroup::"
 
@@ -125,10 +124,15 @@ jobs:
           if [ "${{ steps.pre-release-check.outputs.last_tag }}" != "$LATEST_TAG_AFTER" ]; then
             echo "✅ New release detected: $LATEST_TAG_AFTER"
             echo "new_release_version=${LATEST_TAG_AFTER#v}" >> $GITHUB_OUTPUT
+            RELEASE_UPLOAD_URL=$(gh release view "$LATEST_TAG_AFTER" --json uploadUrl -q .uploadUrl)
+            echo "release_upload_url=${RELEASE_UPLOAD_URL}" >> $GITHUB_OUTPUT
           else
             echo "ℹ️ No new release detected."
             echo "new_release_version=" >> $GITHUB_OUTPUT
+            echo "release_upload_url=" >> $GITHUB_OUTPUT
           fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
 
       - name: "Upload changelog artifact"
         if: steps.check-for-release.outputs.new_release_version != ''
@@ -161,7 +165,29 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects: "${{ needs.release-assets.outputs.provenance-assets }}"
-      upload-assets: true
+      upload-assets: false
+
+  upload-provenance:
+    name: "📜 Upload Provenance"
+    needs: [release-assets, provenance]
+    if: needs.release-assets.outputs.version != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download provenance artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.provenance.outputs.provenance-name }}
+          path: .
+
+      - name: "Upload provenance to release"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        with:
+          upload_url: ${{ needs.release-assets.outputs.release_upload_url }}
+          asset_path: ${{ needs.provenance.outputs.provenance-name }}
+          asset_name: ${{ needs.provenance.outputs.provenance-name }}
+          asset_content_type: application/json
 
   back-merge:
     name: "🔄 Back-Merge & Synchronize Branches"
