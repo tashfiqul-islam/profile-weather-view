@@ -1,44 +1,34 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "🔄 Renovate configuration for automated dependency updates",
-
   "extends": [
     "config:best-practices",
     "group:monorepos",
     "group:recommended",
     "workarounds:all"
   ],
-
   "timezone": "Asia/Dhaka",
   "schedule": ["* 2-4 * * 1"],
-
   "labels": ["dependencies", "renovate"],
   "assignees": ["tashfiqul-islam"],
   "reviewers": ["tashfiqul-islam"],
-
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "🔄 Dependency Dashboard",
   "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
-
   "prConcurrentLimit": 10,
   "branchConcurrentLimit": 5,
   "prHourlyLimit": 0,
-
   "separateMajorMinor": true,
   "separateMultipleMajor": true,
   "separateMinorPatch": false,
-
   "ignoreTests": true,
-
   "commitMessagePrefix": "chore(deps):",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "to {{newVersion}}",
-
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 3am on the first day of the month"]
   },
-
   "packageRules": [
     {
       "description": "🔄 Auto-merge non-major updates for production dependencies",
@@ -48,7 +38,7 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "auto",
-      "requiredStatusChecks": null,
+      "ignoreTests": true,
       "labels": ["dependencies", "auto-merge", "{{updateType}}"],
       "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
@@ -60,7 +50,7 @@
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "auto",
-      "requiredStatusChecks": null,
+      "ignoreTests": true,
       "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"],
       "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
@@ -75,15 +65,17 @@
     },
     {
       "description": "🔒 Security updates - always auto-merge",
-      "matchPackagePatterns": ["*"],
       "matchDatasources": ["npm"],
-      "vulnerabilityAlerts": true,
+      "vulnerabilityAlerts": {
+        "enabled": true
+      },
       "automerge": true,
       "automergeType": "pr",
       "schedule": ["at any time"],
       "labels": ["dependencies", "security", "auto-merge"],
       "addLabels": ["critical"],
-      "prTitle": "fix(security): patch {{depName}} to {{newVersion}}"
+      "prTitle": "fix(security): patch {{depName}} to {{newVersion}}",
+      "matchPackageNames": ["*"]
     },
     {
       "description": "📦 Bun runtime updates - weekly check",
@@ -157,12 +149,11 @@
       "prTitle": "chore(deps): update node.js lts"
     }
   ],
-
   "customManagers": [
     {
       "customType": "regex",
       "description": "Update Bun version in package.json packageManager field",
-      "fileMatch": ["^package\\.json$"],
+      "managerFilePatterns": ["/^package\\.json$/"],
       "matchStrings": [
         "\"packageManager\":\\s*\"bun@(?<currentValue>[^\"]+)\""
       ],
@@ -174,7 +165,7 @@
     {
       "customType": "regex",
       "description": "Update Bun version in package.json engines field",
-      "fileMatch": ["^package\\.json$"],
+      "managerFilePatterns": ["/^package\\.json$/"],
       "matchStrings": ["\"bun\":\\s*\">=(?<currentValue>[^\"]+)\""],
       "autoReplaceStringTemplate": "\"bun\": \">={{newValue}}\"",
       "datasourceTemplate": "npm",
@@ -183,22 +174,19 @@
     }
   ],
   "postUpdateOptions": ["npmDedupe"],
-
   "ignorePaths": [
     "**/node_modules/**",
     "**/dist/**",
     "**/coverage/**",
     "**/*.min.js"
   ],
-
-  "allowedPostUpgradeCommands": [
+  "allowedCommands": [
     "^bun install$",
     "^bun update$",
     "^bun run build$",
     "^bun run lint --fix$",
     "^bun run format$"
   ],
-
   "postUpgradeTasks": {
     "commands": ["bun install", "bun run lint --fix", "bun run format"],
     "fileFilters": [
