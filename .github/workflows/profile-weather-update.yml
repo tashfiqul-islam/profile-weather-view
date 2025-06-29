@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: "⬇️ Checkout Weather Code Repository (For Hash Calculation)"
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           repository: ${{ env.CODE_REPO }}
           path: hash-check
@@ -193,14 +193,14 @@ jobs:
 
     steps:
       - name: "⬇️ Checkout Weather Code Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           repository: ${{ env.CODE_REPO }}
           path: weather-code
           fetch-depth: 1
 
       - name: "⬇️ Checkout Profile Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
@@ -216,7 +216,7 @@ jobs:
           echo "Using Bun version: $BUN_VERSION"
 
       - name: "🏗️ Setup Bun"
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@f4d14e03ff726c06358e5557344e1da148b56cf7 # v1
         with:
           bun-version: ${{ steps.bun-version.outputs.version }}
 
@@ -237,7 +237,7 @@ jobs:
           echo "::endgroup::"
 
       - name: "📦 Cache Dependencies"
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         id: bun-cache
         with:
           path: |
@@ -312,7 +312,7 @@ jobs:
 
       - name: "📦 Cache Test Results"
         if: env.SKIP_TESTS != 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         with:
           path: weather-code/coverage
           key: ${{ env.CACHE_KEY_PREFIX }}-test-${{ hashFiles('weather-code/src/**/*.ts') }}
@@ -441,7 +441,7 @@ jobs:
 
       - name: "📤 Upload Weather Output Artifact"
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: weather-output-${{ github.run_id }}
           path: profile-repo/README.md
