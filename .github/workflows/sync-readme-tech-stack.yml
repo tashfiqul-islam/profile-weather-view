@@ -35,7 +35,7 @@ jobs:
     if: |
       !contains(github.event.head_commit.message, '[skip actions]')
     env:
-      CACHE_KEY_PREFIX: v3-sync-readme
+      CACHE_KEY_PREFIX: v4-sync-readme
       TIMEZONE: Asia/Dhaka
     steps:
       - name: "⬇️ Checkout Repository"
@@ -111,19 +111,25 @@ jobs:
           git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
 
       - name: "💾 Commit Changes"
+        id: commit
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then \
-          git add README.md && \
-          git commit -S --no-verify -m "docs(readme): sync tech stack badges and footer date [skip actions]"; \
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add README.md
+            if git commit -S --no-verify -m "docs(readme): sync tech stack badges and footer date [skip actions]"; then
+              echo "did_commit=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "did_commit=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "did_commit=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: "⬆️ Push"
+        if: steps.commit.outputs.did_commit == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then \
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}; \
-          fi
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
 
       - name: "💾 Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
