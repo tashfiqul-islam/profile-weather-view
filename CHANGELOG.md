@@ -1,5 +1,24 @@
 # Changelog
 
+# [2.1.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.0.0...v2.1.0)
+### chore
+
+* **deps:** Pin dependencies [skip actions] (#84) ([475cde6](https://github.com/tashfiqul-islam/profile-weather-view/commit/475cde63902405471866b4decd1e4670ebb21e8c))
+### feat
+
+* **core:** ship v2 implementation (#83) ([876dda7](https://github.com/tashfiqul-islam/profile-weather-view/commit/876dda7a014d83a3371d55a882121a592510110f))
+### fix
+
+* **ci:** build issue ([5be0ce2](https://github.com/tashfiqul-islam/profile-weather-view/commit/5be0ce26a7f386c3bedfbf4883172ac28495671e))
+* **ci:** fixing release pipeline issue (#86) ([d237cdc](https://github.com/tashfiqul-islam/profile-weather-view/commit/d237cdc519dd3cf68c43636ecc59a9328a56b90c))
+* **test:** updated configuration ([53a65d8](https://github.com/tashfiqul-islam/profile-weather-view/commit/53a65d8eefeef0c11b4681b08a0b693955c76547))
+* **test:** updated configuration ([cf6c385](https://github.com/tashfiqul-islam/profile-weather-view/commit/cf6c385f2429c4dd5509d958bfcdcb7a7577637e))
+### test
+
+* cleanup ([c944aea](https://github.com/tashfiqul-islam/profile-weather-view/commit/c944aea08c09dd63f4a895a6d477d902681a9ed0))
+* testing pre-commit hook ([876baf2](https://github.com/tashfiqul-islam/profile-weather-view/commit/876baf283d1dba78ea63a9150e9a3888bcb3c6fe))
+* testing pre-commit hook ([0c5490e](https://github.com/tashfiqul-islam/profile-weather-view/commit/0c5490e516c0e6adf14242f77dbf88d5e5cb37d5))
+
 All notable changes to profile-weather-view will be documented in this file.
 
 ## v1.2.24...HEAD
