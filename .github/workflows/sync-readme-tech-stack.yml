@@ -82,11 +82,15 @@ jobs:
           echo "::endgroup::"
 
       - name: "🔎 Validate GPG secret format"
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
-          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+          if [ -z "${GPG_PRIVATE_KEY}" ]; then
             echo "::error::Missing secret GPG_PRIVATE_KEY"; exit 1; fi
-          if ! grep -q "BEGIN PGP PRIVATE KEY BLOCK" <<< "${{ secrets.GPG_PRIVATE_KEY }}"; then
+          if ! grep -q "BEGIN PGP PRIVATE KEY BLOCK" <<< "${GPG_PRIVATE_KEY}"; then
             echo "::error::GPG_PRIVATE_KEY is not ASCII-armored. Re-export with 'gpg --export-secret-keys --armor KEY_ID' and paste full block including BEGIN/END lines."; exit 1; fi
+          if ! grep -q "END PGP PRIVATE KEY BLOCK" <<< "${GPG_PRIVATE_KEY}"; then
+            echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
 
       - name: "🔐 Setup GPG for Commit Signing"
         id: gpg
