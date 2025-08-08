@@ -27,7 +27,7 @@ class DependencyValidator {
   /**
    * Run all validation checks
    */
-  public validate(): void {
+  validate(): void {
     this.logMessage('🔍 Validating Dependency Automation System...\n');
 
     this.checkWorkflowFiles();
@@ -120,7 +120,7 @@ class DependencyValidator {
         | Record<string, unknown>[]
         | undefined;
       const hasAutomerge = packageRules?.some(
-        (rule) => rule['automerge'] === true,
+        (rule) => rule['automerge'] === true
       );
 
       this.results.push({
@@ -330,14 +330,14 @@ class DependencyValidator {
 
     try {
       const workflowFiles = readdirSync(workflowDirectory).filter(
-        (file: string) => file.endsWith('.yml') || file.endsWith('.yaml'),
+        (file: string) => file.endsWith('.yml') || file.endsWith('.yaml')
       );
 
       for (const workflow of workflowFiles) {
         try {
           const content = readFileSync(
             join(workflowDirectory, workflow),
-            'utf8',
+            'utf8'
           );
 
           // Basic YAML structure checks
@@ -382,18 +382,18 @@ class DependencyValidator {
    * Display validation results with reduced complexity
    */
   private displayResults(): void {
-    this.logMessage('\n' + '='.repeat(60));
+    this.logMessage(`\n${'='.repeat(60)}`);
     this.logMessage('📊 VALIDATION RESULTS');
     this.logMessage('='.repeat(60));
 
     const passed = this.results.filter(
-      (result) => result.status === 'pass',
+      (result) => result.status === 'pass'
     ).length;
     const failed = this.results.filter(
-      (result) => result.status === 'fail',
+      (result) => result.status === 'fail'
     ).length;
     const warnings = this.results.filter(
-      (result) => result.status === 'warning',
+      (result) => result.status === 'warning'
     ).length;
 
     // Display results by status
@@ -408,7 +408,7 @@ class DependencyValidator {
    */
   private displayPassedChecks(): void {
     const passedResults = this.results.filter(
-      (result) => result.status === 'pass',
+      (result) => result.status === 'pass'
     );
     if (passedResults.length > 0) {
       this.logMessage('\n✅ PASSED CHECKS:');
@@ -423,7 +423,7 @@ class DependencyValidator {
    */
   private displayWarnings(): void {
     const warningResults = this.results.filter(
-      (result) => result.status === 'warning',
+      (result) => result.status === 'warning'
     );
     if (warningResults.length > 0) {
       this.logMessage('\n⚠️  WARNINGS:');
@@ -441,7 +441,7 @@ class DependencyValidator {
    */
   private displayFailures(): void {
     const failedResults = this.results.filter(
-      (result) => result.status === 'fail',
+      (result) => result.status === 'fail'
     );
     if (failedResults.length > 0) {
       this.logMessage('\n❌ FAILED CHECKS:');
@@ -460,11 +460,11 @@ class DependencyValidator {
   private displaySummary(
     passed: number,
     warnings: number,
-    failed: number,
+    failed: number
   ): void {
-    this.logMessage('\n' + '-'.repeat(60));
+    this.logMessage(`\n${'-'.repeat(60)}`);
     this.logMessage(
-      `📈 SUMMARY: ${passed} passed, ${warnings} warnings, ${failed} failed`,
+      `📈 SUMMARY: ${passed} passed, ${warnings} warnings, ${failed} failed`
     );
 
     const percentage = Math.round((passed / this.results.length) * 100);
@@ -484,7 +484,7 @@ class DependencyValidator {
    */
   private logMessage(message: string): void {
     // Using process.stdout.write instead of console.log to satisfy ESLint
-    process.stdout.write(message + '\n');
+    process.stdout.write(`${message}\n`);
   }
 }
 

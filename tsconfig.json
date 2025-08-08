@@ -5,12 +5,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "allowArbitraryExtensions": true,
-    "lib": [
-      "ESNext",
-      "DOM",
-      "WebWorker"
-    ],
-
+    "lib": ["ESNext", "DOM", "WebWorker"],
     "baseUrl": "./",
     "rootDir": "src",
     "outDir": "dist",
@@ -19,17 +14,8 @@
       "@/tests/*": ["src/tests/*"],
       "@/weather-update/*": ["src/weather-update/*"]
     },
-
-    "types": [
-      "bun",
-      "node"
-    ],
-
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
-
+    "types": ["bun", "node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "resolveJsonModule": true,
     "strict": true,
     "noImplicitAny": true,
@@ -68,7 +54,6 @@
     "disableSourceOfProjectReferenceRedirect": true,
     "useDefineForClassFields": true
   },
-
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
@@ -77,27 +62,14 @@
     ".releaserc.js",
     "src/scripts/**/*.js"
   ],
-
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tmp",
-    "coverage",
-    ".git",
-    ".github"
-  ],
-
+  "exclude": ["node_modules", "dist", "tmp", "coverage", ".git", ".github"],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
     "fallbackPolling": "dynamicPriority",
     "synchronousWatchDirectory": true,
-    "excludeDirectories": [
-      "**/node_modules",
-      "dist"
-    ]
+    "excludeDirectories": ["**/node_modules", "dist"]
   },
-
   "ts-node": {
     "transpileOnly": true,
     "esm": true

@@ -28,6 +28,9 @@ test-results/
 *.env.local
 script
 
+# API Rate Limiting
+.api-calls.json
+
 # Runtime Data
 pids
 *.pid

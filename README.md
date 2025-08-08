@@ -1,635 +1,279 @@
 <div align="center">
-  <img src="/image/readme_cover.png" alt="Profile Weather View" width="900">
+  <img src="/image/readme_cover.png" alt="Profile Weather View banner" width="900">
 </div>
 
-<h1 align="center">🌦️ Profile Weather View</h1>
+<h1 align="center">🌦️ Profile Weather View (v2)</h1>
 
 <p align="center">
-  <b>Transform your GitHub profile into a live weather dashboard with fully automated workflow</b>
+  Automate live weather on your GitHub profile using a modern TypeScript + Bun stack, robust CI/CD, strict quality gates, and zero‑maintenance dependency automation.
 </p>
 
 <p align="center">
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml"><img src="https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat-square&logo=github&label=weather%20update" alt="GitHub Actions Status"></a>
-  <a href="https://vitest.dev"><img src="https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square&logo=vitest" alt="Test Coverage"></a>
-  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript" alt="TypeScript"></a>
-  <a href="https://bun.sh"><img src="https://img.shields.io/badge/powered%20by-bun-black?style=flat-square&logo=bun" alt="Powered by Bun"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="https://github.com/semantic-release/semantic-release"><img src="https://img.shields.io/badge/semantic--release-angular-e10079?style=flat-square&logo=semantic-release" alt="semantic-release: angular"></a>
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/blob/master/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-maintained-orange?style=flat-square" alt="Changelog"></a>
-  <a href="https://github.com/renovatebot/renovate"><img src="https://img.shields.io/badge/renovate-enabled-success?style=flat-square&logo=renovatebot" alt="Renovate Enabled"></a>
-</p>
-
-<p align="center">
-  A next-generation automated weather integration system for GitHub profiles.
-  Built with TypeScript, Bun, and world-class DevOps practices including
-  intelligent dependency management, auto-merge workflows, and comprehensive monitoring.
-</p>
-
-<div align="center">
-  <a href="#-overview"><img src="https://img.shields.io/badge/-Overview-304259?style=for-the-badge&logoColor=white" alt="Overview" /></a>
-  <a href="#-automation-system"><img src="https://img.shields.io/badge/-Automation-2dc653?style=for-the-badge&logoColor=white" alt="Automation" /></a>
-  <a href="#-quick-start"><img src="https://img.shields.io/badge/-Quick%20Start-3a7ca5?style=for-the-badge&logoColor=white" alt="Quick Start" /></a>
-  <a href="#%EF%B8%8F-configuration"><img src="https://img.shields.io/badge/-Configuration-f67280?style=for-the-badge&logoColor=white" alt="Configuration" /></a>
-  <a href="#-architecture"><img src="https://img.shields.io/badge/-Architecture-6c5ce7?style=for-the-badge&logoColor=white" alt="Architecture" /></a>
-</div>
-
-<br>
-
-## 🎯 What Makes This Special
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" width="25%">
-        <h3>🤖 Automation</h3>
-        <p>Intelligent dependency management with auto-merge workflows</p>
-      </td>
-      <td align="center" width="25%">
-        <h3>🛡️ Security-First</h3>
-        <p>Automated security scanning and vulnerability management</p>
-      </td>
-      <td align="center" width="25%">
-        <h3>📧 Smart Notifications</h3>
-        <p>Email alerts for major updates requiring manual review</p>
-      </td>
-      <td align="center" width="25%">
-        <h3>📊 Health Monitoring</h3>
-        <p>Automated system health dashboards and metrics</p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<details open>
-<summary><h2>📊 Live Weather Demo</h2></summary>
-<br>
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center" colspan="5"><h3>Current Weather in Uttara, Dhaka</h3></td>
-    </tr>
-    <tr>
-      <th align="center">Weather</th>
-      <th align="center">Temperature</th>
-      <th align="center">Sunrise</th>
-      <th align="center">Sunset</th>
-      <th align="center">Humidity</th>
-    </tr>
-    <!-- Hourly Weather Update -->
-    <tr>
-      <td align="center">Clear <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""></td>
-      <td align="center">32°C</td>
-      <td align="center">06:12:30</td>
-      <td align="center">18:15:45</td>
-      <td align="center">65%</td>
-    </tr>
-    <!-- End of Hourly Weather Update -->
-  </table>
-  
-  <!-- Last Weather Update -->
-  <small><em>Last refresh: Saturday, April 20, 2025 14:30:22 UTC+6</em></small>
-  <!-- End of Last Weather Update -->
-
-  <br><br>
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/generate">
-    <img src="https://img.shields.io/badge/use%20this-template-13c366?style=for-the-badge&logo=github" alt="Use this template">
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml">
+    <img alt="Weather Update workflow" src="https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat&logo=github&label=weather%20update" />
   </a>
-</div>
-</details>
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/semantic-release.yml">
+    <img alt="Release workflow" src="https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/semantic-release.yml?style=flat&logo=githubactions&label=release" />
+  </a>
+  <a href="https://bun.sh">
+    <img alt="Powered by Bun" src="https://img.shields.io/badge/powered%20by-bun-000?style=flat&logo=bun" />
+  </a>
+  <a href="#quality--testing">
+    <img alt="Coverage 100%" src="https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat&logo=vitest" />
+  </a>
+  <a href="https://www.typescriptlang.org/">
+    <img alt="TypeScript" src="https://img.shields.io/badge/typescript-strict-3178C6?style=flat&logo=typescript&logoColor=white" />
+  </a>
+  <a href="CHANGELOG.md">
+    <img alt="Changelog maintained" src="https://img.shields.io/badge/changelog-maintained-orange?style=flat&logo=keepachangelog" />
+  </a>
+  <a href="https://github.com/semantic-release/semantic-release">
+    <img alt="semantic-release (angular)" src="https://img.shields.io/badge/semantic--release-angular-e10079?style=flat&logo=semantic-release" />
+  </a>
+  <a href="https://renovatebot.com">
+    <img alt="Renovate Enabled" src="https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat&logo=renovatebot" />
+  </a>
+  <a href="LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue?style=flat&logo=opensourceinitiative" />
+  </a>
+</p>
 
-## 📋 Overview
+---
 
-Profile Weather View represents the pinnacle of modern GitHub profile automation.
-Beyond simple weather integration, it showcases a complete 2025 DevOps architecture
-with intelligent dependency management, automated security monitoring, and
-self-healing CI/CD pipelines.
+## TL;DR
 
-**🚀 Why Choose This Solution?**
+- Schedules a workflow 3× daily to fetch current weather (OpenWeather One Call 3.0) and update your profile `README.md`.
+- Built with TypeScript (strict) on Bun for speed, with Zod validation, Temporal polyfill, and robust error handling.
+  - Quality: 100% unit test coverage (v8 + LCOV), SonarCloud analysis, Ultracite (Biome) linting/formatting, commitlint.
+- Delivery: GitHub Actions with caching, optional signed commits, and semantic-release for automated versioning.
+- Dependencies: Renovate with chore commits that skip CI and do not tag releases.
 
-- **Zero Maintenance**: Automated dependency updates with intelligent merge strategies
-- **Production Ready**: 100% test coverage, comprehensive error handling
-- **Security Focused**: Automated vulnerability scanning and updates
-- **Industry standards**: Modern TypeScript, Bun runtime, advanced GitHub Actions
+---
 
-<details>
-<summary><b>📑 Complete Documentation Index</b></summary>
-<br>
+## Features
 
-- [🎯 What Makes This Special](#-what-makes-this-special)
-- [📋 Overview](#-overview)
-- [🤖 Automated Dependency Management](#-automated-dependency-management)
-  - [🎯 What's Automated](#-whats-automated)
-  - [📈 Performance Metrics](#-performance-metrics)
-- [✨ Key Features](#-key-features)
-- [🚀 Quick Start](#-quick-start)
-  - [🎯 One-Click Setup](#-one-click-setup)
-  - [⚙️ Manual Installation](#️-manual-installation)
-    - [Prerequisites](#prerequisites)
-    - [Installation Steps](#installation-steps)
-    - [GitHub Actions Setup](#github-actions-setup)
-- [⚙️ Configuration](#️-configuration)
-  - [🔐 Environment Variables](#-environment-variables)
-  - [📍 Location Settings](#-location-settings)
-  - [🎨 Display Customization](#-display-customization)
-    - [Table Format (Default)](#table-format-default)
-    - [Card Format](#card-format)
-    - [Badge Format](#badge-format)
-- [🏗️ Architecture](#️-architecture)
-  - [🧩 Core Components](#-core-components)
-  - [📊 Data Flow](#-data-flow)
-- [⚡ Technology Stack](#-technology-stack)
-- [🛠️ Development](#️-development)
-  - [📋 Prerequisites](#-prerequisites)
-  - [🔧 Available Scripts](#-available-scripts)
-  - [📂 Project Structure](#-project-structure)
-- [🔄 CI/CD Pipeline](#-cicd-pipeline)
-  - [🎯 Advanced Features](#-advanced-features)
-- [🧪 Testing \& Quality](#-testing--quality)
-  - [📊 Coverage Report](#-coverage-report)
-  - [⚡ Performance Benchmarks](#-performance-benchmarks)
-  - [🎯 Testing Strategy](#-testing-strategy)
-  - [🏆 Quality Metrics](#-quality-metrics)
-- [🤝 Contributing](#-contributing)
-  - [🚀 Getting Started](#-getting-started)
-  - [📝 Commit Message Format](#-commit-message-format)
-  - [🔍 Pull Request Guidelines](#-pull-request-guidelines)
-- [📜 License](#-license)
-- [🙏 Acknowledgements](#-acknowledgements)
-  - [🌟 Special Thanks](#-special-thanks)
+- Runtime: Bun 1.2+ for fast startup and fetch performance
+- Type-safety: TypeScript 5.x, Zod 4 schemas, strict `tsconfig` (null-safety, no implicit anys)
+- Weather: OpenWeather One Call 3.0 (current) with retries and timeouts
+- CI/CD: Two workflows
+  - Profile Weather Update: schedules, validates, tests, updates profile README with optional signed commit
+  - Semantic Release: conventional commits → automated releases and changelog
+  - See detailed workflows: [WORKFLOWS.md](./src/docs/WORKFLOWS.md)
+- Quality toolchain
+  - Tests: Vitest (v8 coverage, LCOV at `coverage/lcov.info`), current coverage: 100%
+  - Lint/format: Ultracite preset (Biome) via `biome.jsonc`
+  - Commit standards: commitlint (Conventional Commits). See [COMMIT_CONVENTION.md](./src/docs/COMMIT_CONVENTION.md)
+  - Code quality: SonarCloud (JS/TS analyzer, LCOV coverage)
+- Releases: semantic-release (see [RELEASE.md](./src/docs/RELEASE.md))
+ - Scripts: see [SCRIPTS.md](./src/docs/SCRIPTS.md)
+ - Tests: see [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md)
+- Dependencies: Renovate with auto‑merge for safe updates and major‑update approvals
 
-</details>
+---
 
-## 🤖 Automated Dependency Management
+## Tech stack
 
-This project features a **world-class dependency automation system** that
-eliminates manual maintenance while ensuring security and stability.
+<p>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9.2-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
+  <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.2.19-000000?style=flat-square&logo=bun&logoColor=white" /></a>
+  <a href="https://vitest.dev/"><img alt="Vitest" src="https://img.shields.io/badge/Vitest-3.2.4-6E9F18?style=flat-square&logo=vitest&logoColor=white" /></a>
+  <a href="https://github.com/colinhacks/zod"><img alt="Zod" src="https://img.shields.io/badge/Zod-4.0.15-3E67B1?style=flat-square" /></a>
+  <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.11.0-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
+  <a href="https://github.com/tc39/proposal-temporal"><img alt="Temporal polyfill" src="https://img.shields.io/badge/Temporal-0.5.1-1F2A44?style=flat-square" /></a>
+  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.0-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
+  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.1.4-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
+  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-5.1.2-0B7285?style=flat-square" /></a>
+  <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-24.2.7-e10079?style=flat-square&logo=semantic-release" /></a>
+  <a href="https://github.com/renovatebot/renovate"><img alt="Renovate" src="https://img.shields.io/badge/Renovate-enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white" /></a>
+  <a href="https://github.com/features/actions"><img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white" /></a>
+  <a href="https://www.sonarsource.com/products/sonarcloud/"><img alt="SonarCloud" src="https://img.shields.io/badge/SonarCloud-configured-F3702A?style=flat-square&logo=sonarcloud&logoColor=white" /></a>
+  <a href="https://openweathermap.org/api/one-call-3.0"><img alt="OpenWeather" src="https://img.shields.io/badge/OpenWeather-API-EE4B2B?style=flat-square&logo=openweather&logoColor=white" /></a>
+</p>
 
-<div align="center">
-  <table>
-    <tr>
-      <th align="center" width="25%">🔄 Auto-Merge</th>
-      <th align="center" width="25%">📧 Smart Alerts</th>
-      <th align="center" width="25%">🛡️ Security Focus</th>
-      <th align="center" width="25%">📊 Health Monitoring</th>
-    </tr>
-    <tr>
-      <td align="center">
-        Minor & patch updates<br>
-        auto-merge after tests pass
-      </td>
-      <td align="center">
-        Email notifications for<br>
-        major breaking changes
-      </td>
-      <td align="center">
-        Priority security updates<br>
-        with automated fixes
-      </td>
-      <td align="center">
-        Weekly system health<br>
-        reports & dashboards
-      </td>
-    </tr>
-  </table>
-</div>
+---
 
-### 🎯 What's Automated
+## How it works
 
-- ✅ **Daily dependency checks** (3:00 AM BDT)
-- ✅ **Intelligent version analysis** (semver-aware)
-- ✅ **Quality gate validation** (build, test, lint, format)
-- ✅ **Auto-merge for safe updates** (95%+ success rate)
-- ✅ **Email alerts for breaking changes**
-- ✅ **Security vulnerability patches**
-- ✅ **Weekly health dashboards**
+1. Workflow runs on a schedule (5:23, 13:23, 21:23 Asia/Dhaka) or manually.
+2. Script `src/weather-update/index.ts` validates env, fetches current weather, formats output, and updates the target README section bounded by:
+   - `<!-- Hourly Weather Update --> ... <!-- End of Hourly Weather Update -->`
+3. If changes are detected (or forced), the workflow commits and pushes to your profile repo, optionally with GPG signing.
 
-### 📈 Performance Metrics
+---
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Auto-merge Success Rate | >95% | 96% |
-| Security Response Time | <24h | <12h |
-| System Health Score | >90% | 96% |
-| Manual Intervention | <5% | 4% |
-
-**📖 Complete Guide**: [Development & Automation Documentation](.github/DEVELOPMENT.md)
-
-## ✨ Key Features
+## Architecture
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center" width="33%">
-        <h3>🌐 Real-time Weather</h3>
-        <p>OpenWeather API 3.0 integration with global coverage and automatic updates</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>🔄 Smart Automation</h3>
-        <p>Intelligent GitHub Actions with self-healing and error recovery</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>🛠️ Type Safety</h3>
-        <p>100% TypeScript with Zod schema validation and strict checking</p>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="33%">
-        <h3>⚡ Ultra Performance</h3>
-        <p>Bun runtime for lightning-fast execution and minimal resource usage</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>🎨 Highly Customizable</h3>
-        <p>Multiple display formats, themes, and configuration options</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>🧪 Production Ready</h3>
-        <p>100% test coverage with comprehensive error handling</p>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="33%">
-        <h3>🤖 Auto Dependencies</h3>
-        <p>Intelligent dependency management with automated security updates</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>📧 Smart Notifications</h3>
-        <p>Email alerts for major updates and system health monitoring</p>
-      </td>
-      <td align="center" width="33%">
-        <h3>🔒 Security First</h3>
-        <p>Automated vulnerability scanning and dependency auditing</p>
-      </td>
-    </tr>
-  </table>
+  <img src="/image/architecture.png" alt="Profile Weather View Architecture diagram showing GitHub Actions triggering index.ts orchestrator which calls preload.ts, fetchWeather.ts, and updateReadme.ts" width="900">
+  <p><em>High‑level data flow: GitHub Actions → orchestrator → weather service → README updater.</em></p>
 </div>
 
-## 🚀 Quick Start
+See the detailed system design in [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md).
 
-### 🎯 One-Click Setup
+---
 
-1. **Use This Template**
+## Example output on profile
 
-   ```bash
-   # Clone the repository
-   git clone https://github.com/tashfiqul-islam/profile-weather-view.git
-   cd profile-weather-view
-   ```
+Below is how the rendered section appears in the profile README after an update.
 
-2. **Configure OpenWeather API**
+```markdown
+## Current Weather in Uttara, Dhaka
 
-   - Get your free API key from [OpenWeather](https://openweathermap.org/api)
-   - Add to GitHub Secrets: `OPEN_WEATHER_KEY`
+| Weather | Temperature | Sunrise   | Sunset    | Humidity |
+|---------|-------------|-----------|-----------|----------|
+| Clear   | 32°C        | 06:12:30  | 18:15:45  | 65%      |
 
-3. **Set Your Location**
+Last refresh: Saturday, April 20, 2025 14:30:22 UTC+6
+```
 
-   ```typescript
-   // In src/weather-update/index.ts
-   const CITY = "Your City";
-   const COUNTRY_CODE = "Your Country Code";
-   ```
+The update replaces content between the markers:
 
-4. **Enable GitHub Actions**
+```text
+<!-- Hourly Weather Update -->
+...generated table and timestamp...
+<!-- End of Hourly Weather Update -->
+```
 
-   - Go to repository Settings → Actions → General
-   - Enable "Allow all actions and reusable workflows"
+You can style this section further in your profile repo; the generator focuses on content.
 
-**🎉 That's it!** Your profile will update automatically every 8 hours.
+---
 
-### ⚙️ Manual Installation
+## Getting started
 
-<details>
-<summary>Click to expand detailed setup instructions</summary>
+### Prerequisites
 
-#### Prerequisites
+- Bun ≥ 1.2.19 (recommended)
+- Node.js ≥ 22 (CI tooling)
+- OpenWeather API key (free): `https://openweathermap.org/api`
 
-- **Bun 1.2+**: [Install Bun](https://bun.sh/docs/installation)
-- **Node.js 22+**: Fallback runtime (optional)
-- **OpenWeather API Key**: [Get Free Key](https://openweathermap.org/api)
-
-#### Installation Steps
+### Install & Run locally
 
 ```bash
-# Clone repository
 git clone https://github.com/tashfiqul-islam/profile-weather-view.git
 cd profile-weather-view
-
-# Install dependencies
 bun install
 
-# Create environment file
-cp .env.example .env
+# Provide your API key in the environment
+export OPEN_WEATHER_KEY=your_api_key
 
-# Add your OpenWeather API key
-echo "OPEN_WEATHER_KEY=your_api_key_here" >> .env
-
-# Test the setup
+# Run once locally
 bun run dev
 ```
 
-#### GitHub Actions Setup
+### Configure your profile repository
 
-1. **Add Repository Secrets**
+The workflow updates a profile README hosted at `PROFILE_REPO` (defaults to `tashfiqul-islam/tashfiqul-islam`). Change this in `.github/workflows/profile-weather-update.yml` if needed.
 
-   ```bash
-   # Navigate to: Settings → Secrets and variables → Actions
-   # Add these secrets:
-   OPEN_WEATHER_KEY=your_openweather_api_key
-   ```
+### Required GitHub secrets
 
-2. **Configure Email Notifications** (Optional)
+Add these to your repository (Settings → Secrets and variables → Actions):
 
-   ```bash
-   # For dependency update notifications
-   EMAIL_USERNAME=your-email@gmail.com
-   EMAIL_PASSWORD=your-gmail-app-password
-   NOTIFICATION_EMAIL=alerts@yourcompany.com
-   ```
+- `OPEN_WEATHER_KEY` (required): OpenWeather API key
+- `PAT` (required): A Personal Access Token with `repo` scope to push to your profile repo
 
-   **📖 Detailed Guide**: [Email Setup Instructions](.github/EMAIL_SETUP.md)
+Optional (for signed commits):
 
-</details>
+- `GPG_PRIVATE_KEY`: ASCII‑armored private key
+- `GPG_PASSPHRASE`: Passphrase for the key
+- `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`: Identity for commits
 
-## ⚙️ Configuration
+---
 
-### 🔐 Environment Variables
+## Configuration
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `OPEN_WEATHER_KEY` | OpenWeather API key | ✅ | - |
-| `CITY` | Your city name | ✅ | "Uttara" |
-| `COUNTRY_CODE` | ISO country code | ✅ | "BD" |
-| `FORCE_UPDATE` | Force README update | ❌ | false |
-| `DEBUG` | Enable debug logging | ❌ | false |
+### Weather location
 
-### 📍 Location Settings
+Coordinates live in `src/weather-update/services/fetchWeather.ts`:
 
-```typescript
-// Configure your location in src/weather-update/index.ts
-const config = {
-  city: "Your City",
-  countryCode: "US", // ISO 3166 country code
-  units: "metric",   // metric, imperial, kelvin
-  language: "en"     // API language code
-};
+```ts
+const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 ```
 
-### 🎨 Display Customization
+Change these to your latitude/longitude. The script fetches only "current" data for speed and reliability.
 
-The system supports multiple display formats:
+### Environment variables
 
-<details>
-<summary><b>🔧 Available Display Formats</b></summary>
+- `OPEN_WEATHER_KEY` (required)
+- `FORCE_UPDATE` (optional): set to `true` in a manual run input to force a commit even when data is unchanged
 
-#### Table Format (Default)
+---
 
-```html
-<table>
-  <tr>
-    <th>Weather</th>
-    <th>Temperature</th>
-    <th>Humidity</th>
-  </tr>
-  <tr>
-    <td>Sunny ☀️</td>
-    <td>25°C</td>
-    <td>60%</td>
-  </tr>
-</table>
-```
+## Workflows
 
-#### Card Format
+### 1) Profile Weather Update (`.github/workflows/profile-weather-update.yml`)
 
-```html
-<div style="display: flex; gap: 10px;">
-  <div>Weather: Sunny ☀️</div>
-  <div>Temp: 25°C</div>
-  <div>Humidity: 60%</div>
-</div>
-```
+- Schedule: 3× daily (Asia/Dhaka)
+- Tooling: `oven-sh/setup-bun@v2`, `actions/setup-node@v4`
+- Caching: `actions/cache@v4` keyed by `bun.lock`
+- Quality gates (skippable via input): Ultracite lint, TS type‑check, Vitest
+- Artifacts: uploads the updated README for traceability
+- Commit: optional GPG signing; uses `PAT` to push to the profile repo
 
-#### Badge Format
+Manual inputs:
 
-```markdown
-![Weather](https://img.shields.io/badge/Weather-Sunny%20☀️-yellow)
-![Temperature](https://img.shields.io/badge/Temperature-25°C-orange)
-![Humidity](https://img.shields.io/badge/Humidity-60%25-blue)
-```
+- `force_update` (boolean): force commit even if unchanged
+- `skip_tests` (boolean): bypass quality steps for speed
 
-</details>
+### 2) Semantic Release (`.github/workflows/semantic-release.yml`)
 
-## 🏗️ Architecture
+- Trigger: push to `master` and manual dispatch (supports dry‑run)
+- Runtime: Bun for install/cache, Node LTS for running semantic‑release
+- Auth: uses `GITHUB_TOKEN` for release creation (no PAT required)
+- Skip‑CI handling: commits with `[skip ci]`/`[skip actions]` are analyzed but won’t create a release
+- SLSA provenance: optional generation for released assets
 
-<div align="center">
-  <img src="/image/architecture.png" alt="System Architecture" width="800">
-</div>
+Release rules (from `.releaserc.js`):
 
-### 🧩 Core Components
+- `feat:` → minor
+- `fix:` → patch
+- `chore(deps|actions|bun|dependencies):` → patch
+- `chore:` (other) → no release
+- `BREAKING CHANGE:` → major
 
-```mermaid
-graph TB
-    A[GitHub Actions Scheduler] --> B[Weather Data Fetcher]
-    B --> C[Data Validator]
-    C --> D[README Generator]
-    D --> E[Git Committer]
-    
-    F[Dependency Manager] --> G[Auto-Merge System]
-    G --> H[Quality Gates]
-    H --> I[Email Notifier]
-    
-    J[Health Monitor] --> K[System Dashboard]
-    K --> L[Metrics Collector]
-```
+---
 
-### 📊 Data Flow
+### 3) README Tech Stack Sync (`.github/workflows/sync-readme-tech-stack.yml`)
 
-1. **🕐 Scheduled Trigger**: GitHub Actions runs every 8 hours
-2. **🌐 API Request**: Fetch weather data from OpenWeather API
-3. **✅ Validation**: Zod schema validates API response
-4. **🔧 Processing**: Generate formatted weather display
-5. **📝 Update**: Modify README.md with new content
-6. **🚀 Commit**: Push changes to repository
-7. **📧 Notify**: Send alerts if errors occur
+- Trigger: on changes to `package.json` or `bun.lock` (Renovate merges included); manual dispatch supported
+- Action: updates flat‑square tech stack badges in `README.md` with the latest versions and refreshes footer date
+- Commit: signed commit as you (GPG), message includes `[skip actions]` to avoid loops
+- Tooling: Bun + dependency cache keyed by `bun.lock`, concurrency guard per ref
 
-## ⚡ Technology Stack
+---
 
-<div align="center">
-  <table>
-    <tr>
-      <th align="center" width="25%">🏃‍♂️ Runtime</th>
-      <th align="center" width="25%">🔧 Language</th>
-      <th align="center" width="25%">🧪 Testing</th>
-      <th align="center" width="25%">🚀 Automation</th>
-    </tr>
-    <tr>
-      <td align="center">
-        <a href="https://bun.sh">
-          <img src="https://user-images.githubusercontent.com/709451/182802334-d9c42afe-f35d-4a7b-86ea-9985f73f20c3.png" width="40"><br>
-          <b>Bun 1.2.15</b>
-        </a><br>
-        <sub>Ultra-fast runtime</sub>
-      </td>
-      <td align="center">
-        <a href="https://www.typescriptlang.org">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/512px-Typescript_logo_2020.svg.png" width="40"><br>
-          <b>TypeScript 5.8</b>
-        </a><br>
-        <sub>Type safety</sub>
-      </td>
-      <td align="center">
-        <a href="https://vitest.dev">
-          <img src="https://vitest.dev/logo.svg" width="40"><br>
-          <b>Vitest</b>
-        </a><br>
-        <sub>100% coverage</sub>
-      </td>
-      <td align="center">
-        <a href="https://github.com/features/actions">
-          <img src="https://github.githubassets.com/images/modules/site/features/actions-icon-actions.svg" width="40"><br>
-          <b>GitHub Actions</b>
-        </a><br>
-        <sub>CI/CD automation</sub>
-      </td>
-    </tr>
-  </table>
-</div>
+## Dependency automation (Renovate)
 
-**Core Technologies:**
+Renovate (`renovate.json`) is configured to:
 
-- 🏃‍♂️ **Runtime**: Bun 1.2.15 (ultra-fast JavaScript runtime)
-- 🔧 **Language**: TypeScript 5.8 (strict type checking)
-- 🌐 **API**: OpenWeather API 3.0 (weather data)
-- ✅ **Validation**: Zod (schema validation)
-- 🧪 **Testing**: Vitest (100% coverage)
-- 📊 **Linting**: ESLint + Prettier (code quality)
-- 🚀 **CI/CD**: GitHub Actions (automation)
-- 📦 **Dependencies**: Automated with Dependabot
+- Use semantic chore commits that intentionally skip CI: suffix/body `[skip actions]`
+- Auto‑merge non‑major updates directly to the base branch (`automergeType: "branch"`)
+- Require manual approval for majors (Dependency Dashboard)
+- Auto‑merge vulnerability fixes promptly
+- Group classes of dependencies (ESLint, Vitest, TypeScript, Actions) to reduce PR noise
+- Maintain Bun versions via `customManagers` and regex managers
 
-## 🛠️ Development
+This preserves a clean release history: Renovate chore commits do not tag releases, and the release workflow recognizes skip‑CI semantics.
 
-### 📋 Prerequisites
+---
 
-- **Bun**: `>=1.2.0` ([Installation Guide](https://bun.sh/docs/installation))
-- **Node.js**: `>=22.0.0` (fallback runtime)
-- **Git**: Latest version
-- **OpenWeather API Key**: [Get Free Key](https://openweathermap.org/api)
+## Quality & testing
 
-### 🔧 Available Scripts
+### Ultracite (Biome)
 
-```bash
-# 🚀 Development
-bun run dev                    # Run development mode
-bun run start                  # Production build and run
+- Config: `biome.jsonc` (extends `ultracite`)
+- Commands: `bunx ultracite lint` and `bunx ultracite format`
+- JavaScript globals configured for Bun; file include rules; style/suspicious overrides where appropriate
 
-# 🏗️ Build
-bun run build                  # Build for production
-bun run build:prod            # Build with minification
+### Vitest
 
-# 🧪 Testing
-bun run test                   # Run tests in watch mode
-bun run test:ci               # Run tests once
-bun run test:coverage         # Generate coverage report
+- Config: `vitest.config.ts`
+- Coverage: v8 provider; LCOV at `coverage/lcov.info` (used by SonarCloud); HTML report in `html/`
+  - Preview local HTML report: `npx vite preview --outDir html`
+- Coverage status (v2): 100% across statements, branches, functions, and lines
+- CI enforcement: global thresholds ≥ 90% (see `coverage.thresholds.global` in `vitest.config.ts`)
+- Optional (enforce 100% in CI): set thresholds to 100 and, if desired, enable `perFile: true` in `vitest.config.ts`
 
-# 🔍 Quality Assurance
-bun run lint                  # Fix linting issues
-bun run lint:check           # Check for linting issues
-bun run format               # Format code with Prettier
-bun run type-check           # TypeScript type checking
-bun run check-all            # Run all quality checks
-
-# 🔒 Security
-bun run audit                 # Check for vulnerabilities
-bun run validate-deps        # Validate dependency system
-
-# 📦 Dependency Management
-bun run deps:update          # Manual dependency update
-bun run deps:check          # Check outdated packages
-```
-
-### 📂 Project Structure
-
-```text
-profile-weather-view/
-├── 📁 .github/                    # GitHub configurations
-│   ├── 📁 workflows/              # Automated CI/CD pipelines
-│   │   ├── 🔄 auto-merge-dependencies.yml
-│   │   ├── 📧 major-update-notification.yml
-│   │   ├── 📅 dependency-scheduler.yml
-│   │   └── 🔍 dependency-health-check.yml
-│   ├── 📄 dependabot.yml         # Dependency automation config
-│   ├── 📖 DEPENDENCY_AUTOMATION.md
-│   └── 📧 EMAIL_SETUP.md
-├── 📁 src/                        # Source code
-│   ├── 📁 __tests__/              # Comprehensive test suites
-│   │   ├── 📁 benchmarks/         # Performance testing
-│   │   └── 📁 unit/               # Unit tests (100% coverage)
-│   ├── 📁 config/                 # Configuration modules
-│   ├── 📁 scripts/                # Automation scripts
-│   ├── 📁 types/                  # TypeScript definitions
-│   └── 📁 weather-update/         # Core application
-│       ├── 📁 services/           # Business logic
-│       ├── 📁 utils/              # Utility functions
-│       └── 📄 index.ts            # Entry point
-├── 📁 image/                      # Assets and documentation
-├── 📄 README.md                   # This file
-├── 📄 package.json                # Project configuration
-├── 📄 tsconfig.json               # TypeScript configuration
-├── 📄 renovate.json               # Renovate configuration
-├── 📄 vitest.config.ts            # Test configuration
-└── 📄 bun.lockb                   # Dependency lock file
-```
-
-## 🔄 CI/CD Pipeline
-
-This project features a sophisticated CI/CD pipeline with multiple specialized workflows:
-
-<div align="center">
-  <table>
-    <tr>
-      <th align="center">🔄 Workflow</th>
-      <th align="center">📅 Schedule</th>
-      <th align="center">🎯 Purpose</th>
-      <th align="center">✨ Features</th>
-    </tr>
-    <tr>
-      <td align="center"><b>Weather Update</b></td>
-      <td align="center">Every 8 hours</td>
-      <td align="center">Update weather data</td>
-      <td align="center">Self-healing, retry logic</td>
-    </tr>
-    <tr>
-      <td align="center"><b>Auto-Merge</b></td>
-      <td align="center">On PR creation</td>
-      <td align="center">Merge safe updates</td>
-      <td align="center">Quality gates, semver parsing</td>
-    </tr>
-    <tr>
-      <td align="center"><b>Dependency Health</b></td>
-      <td align="center">Weekly</td>
-      <td align="center">System monitoring</td>
-      <td align="center">Health scoring, dashboards</td>
-    </tr>
-    <tr>
-      <td align="center"><b>Major Updates</b></td>
-      <td align="center">On major versions</td>
-      <td align="center">Breaking change alerts</td>
-      <td align="center">Email notifications, GitHub issues</td>
-    </tr>
-  </table>
-</div>
-
-### 🎯 Advanced Features
-
-- **🔄 Self-Healing**: Automatic recovery from transient failures
-- **📊 Quality Gates**: Comprehensive testing before deployment  
-- **🔒 Security Scanning**: Automated vulnerability detection
-- **📈 Performance Monitoring**: Build time and execution metrics
-- **🎛️ Smart Caching**: Optimized dependency and build caching
-- **📧 Intelligent Notifications**: Context-aware alerting system
-
-## 🧪 Testing & Quality
-
-### 📊 Coverage Report
+#### Coverage snapshot (v2)
 
 ```text
 % Coverage report from v8
@@ -647,93 +291,123 @@ All files         |     100 |      100 |     100 |     100 |
 ------------------|---------|----------|---------|---------|-------------------
 ```
 
-### ⚡ Performance Benchmarks
+| Metric      | Value             |
+|-------------|-------------------|
+| Statements  | 100% (620/620)    |
+| Branches    | 100% (127/127)    |
+| Functions   | 100% (28/28)      |
+| Lines       | 100% (620/620)    |
 
-Our comprehensive benchmarking ensures optimal performance:
 
-| Operation | Target | Current | Status |
-|-----------|--------|---------|--------|
-| API Request | <2s | 1.2s | ✅ |
-| README Generation | <500ms | 320ms | ✅ |
-| Full Pipeline | <30s | 18s | ✅ |
-| Memory Usage | <50MB | 32MB | ✅ |
+### SonarCloud
 
-### 🎯 Testing Strategy
+- Config: `sonar-project.properties`
+  - `sonar.sources=src/`
+  - `sonar.tests=src/__tests__/`
+  - `sonar.javascript.lcov.reportPaths=coverage/lcov.info`
+  - `sonar.typescript.tsconfigPaths=tsconfig.json`
+  - Exclusions for tests, benchmarks, d.ts
 
-- **🔬 Unit Tests**: 46 tests covering all functions and edge cases
-- **🔗 Integration Tests**: End-to-end workflow validation
-- **🎭 Mock Testing**: External API and service simulation
-- **⚡ Performance Tests**: Benchmark critical operations
-- **🔒 Security Tests**: Vulnerability and dependency scanning
-- **📊 Continuous Testing**: Every commit and pull request
+---
 
-### 🏆 Quality Metrics
+## Commit conventions (commitlint)
 
-- **100% Test Coverage**: Complete code coverage with meaningful tests
-- **Zero Warnings**: ESLint, TypeScript, and security warnings
-- **A+ Security Grade**: Regular security audits and updates
-- **Performance Optimized**: Sub-second execution times
-- **Documentation Coverage**: Comprehensive inline and external docs
+Conventional Commits enforced by `commitlint.config.mjs`.
 
-## 🤝 Contributing
-
-We welcome contributions! This project follows semantic versioning and
-conventional commits for automated releases and clear history.
-
-### 🚀 Getting Started
-
-```bash
-# Fork the repository
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/profile-weather-view.git
-
-# Install dependencies
-bun install
-
-# Create a feature branch
-git checkout -b feature/amazing-feature
-
-# Make your changes and test
-bun run test
-bun run lint
-bun run type-check
-
-# Commit using conventional format
-git commit -m "feat(weather): add new display format"
-
-# Push and create pull request
-git push origin feature/amazing-feature
-```
-
-### 📝 Commit Message Format
+Examples:
 
 ```text
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer(s)]
+feat(weather): add hourly icon rendering
+fix(ci): correct cache key for bun.lock
+chore(deps): update zod to 4.0.15 [skip actions]
+docs(readme): improve setup section
 ```
 
-**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+Scopes include: `actions`, `bun`, `ci`, `config`, `core`, `deps`, `docs`, `perf`, `release`, `security`, `test`, `types`, `utils`, `weather`.
 
-**Scopes**: `weather`, `deps`, `ci`, `config`, `docs`
+---
 
-### 🔍 Pull Request Guidelines
+## Scripts
 
-- **✅ Tests**: All tests must pass
-- **📝 Documentation**: Update docs for new features  
-- **🎯 Single Purpose**: One feature per pull request
-- **🔄 Conventional Commits**: Follow commit message format
-- **📊 Coverage**: Maintain 100% test coverage
+```bash
+# Development
+bun run dev            # run the weather script locally
+bun run start          # build then run
 
-<div align="center">
-  <a href="https://github.com/tashfiqul-islam/profile-weather-view/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=tashfiqul-islam/profile-weather-view" alt="Contributors" />
-  </a>
-</div>
+# Build
+bun run build          # production build
+bun run build:prod     # minified build
 
-## 📜 License
+# Testing
+bun run test           # vitest watch
+bun run test:ci        # run once
+bun run test:coverage  # coverage (lcov, html, text)
+
+# Quality
+bun run lint           # ultracite lint (with fixes)
+bun run lint:check     # lint check only
+bun run format         # ultracite format
+bun run type-check     # tsc --noEmit
+bun run check-all      # type-check, format:check, lint:check, test:ci
+
+# Security
+bun run audit
+bun run validate-deps
+
+# Release
+bun run semantic-release
+```
+
+---
+
+## Project structure
+
+```text
+📦 profile-weather-view/
+├─ 📁 .github/
+│  └─ 📁 workflows/
+│     ├─ 📄 profile-weather-update.yml
+│     ├─ 📄 semantic-release.yml
+│     └─ 📄 sync-readme-tech-stack.yml # auto-update README tech badges
+├─ 📁 src/
+│  ├─ 📁 __tests__/                         # test setup and unit tests
+│  ├─ 📁 weather-update/
+│  │  ├─ 📁 services/                       # fetchWeather, updateReadme
+│  │  ├─ 📁 utils/                          # preload/env/rate-limit
+│  │  └─ 📄 index.ts                        # orchestrator
+│  └─ 📁 scripts/                           # validate-dependency-system.ts
+├─ 📁 html/                                 # static coverage & reports preview
+├─ 📁 image/                                # documentation images
+├─ 📄 biome.jsonc                           # Ultracite/Biome config
+├─ 📄 bunfig.toml                           # Bun runtime/test config
+├─ 📄 renovate.json                         # Renovate config
+├─ 📄 sonar-project.properties              # SonarCloud config
+├─ 📄 tsconfig.json                         # TS strict config
+├─ 📄 vitest.config.ts                      # test + coverage config
+├─ 📄 README.md
+├─ 📄 LICENSE
+└─ 📄 package.json
+```
+
+---
+
+## Contributing
+
+- See the full guides:
+  - [Contributing Guide](./src/docs/CONTRIBUTING.md)
+  - [Development Guide](./src/docs/DEVELOPMENT.md)
+
+Quick start:
+1) Fork and clone
+2) `bun install`
+3) Create a branch and implement changes
+4) Run checks: `bun run check-all`
+5) Commit using Conventional Commits
+6) Open a Pull Request
+
+---
+
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -753,79 +427,25 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 ```
 
-## 🙏 Acknowledgements
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <a href="https://openweathermap.org/">
-          <img src="https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png" width="50" alt="OpenWeather"><br>
-          <b>OpenWeather API</b>
-        </a><br>
-        <sub>Real-time global weather data</sub>
-      </td>
-      <td align="center">
-        <a href="https://bun.sh">
-          <img src="https://user-images.githubusercontent.com/709451/182802334-d9c42afe-f35d-4a7b-86ea-9985f73f20c3.png" width="50" alt="Bun"><br>
-          <b>Bun Runtime</b>
-        </a><br>
-        <sub>Lightning-fast JavaScript runtime</sub>
-      </td>
-      <td align="center">
-        <a href="https://www.typescriptlang.org/">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/512px-Typescript_logo_2020.svg.png" width="50" alt="TypeScript"><br>
-          <b>TypeScript</b>
-        </a><br>
-        <sub>Type-safe development</sub>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <a href="https://tc39.es/proposal-temporal/docs/">
-          <img src="https://avatars.githubusercontent.com/u/1725583?s=200&v=4" width="50" alt="TC39"><br>
-          <b>Temporal API</b>
-        </a><br>
-        <sub>Modern date/time handling</sub>
-      </td>
-      <td align="center">
-        <a href="https://zod.dev">
-          <img src="https://zod.dev/logo.svg" width="50" alt="Zod"><br>
-          <b>Zod Validation</b>
-        </a><br>
-        <sub>TypeScript-first schema validation</sub>
-      </td>
-      <td align="center">
-        <a href="https://github.com/features/actions">
-          <img src="https://github.githubassets.com/images/modules/site/features/actions-icon-actions.svg" width="50" alt="GitHub Actions"><br>
-          <b>GitHub Actions</b>
-        </a><br>
-        <sub>World-class CI/CD automation</sub>
-      </td>
-    </tr>
-  </table>
-</div>
-
-### 🌟 Special Thanks
-
-- **🤖 Dependabot**: Automated dependency management
-- **🔒 CodeQL**: Security vulnerability scanning  
-- **📊 SonarCloud**: Code quality analysis
-- **🧪 Vitest**: Ultra-fast testing framework
-- **💅 Prettier**: Opinionated code formatting
-- **🔍 ESLint**: Comprehensive linting rules
-
 ---
 
-<div align="center">
-  <p>
-    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">🐛 Report Bug</a>
-    ·
-    <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues">💡 Request Feature</a>
+<br>
+
+<p align="center">
+  <strong>Thanks for visiting!</strong>
+  <br>
+  <em>Feedback and support are always welcome.</em>
+  <br><br>
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=bug&title=%5Bbug%5D%3A+">🐛 Report Bug</a>
+  ·
+  <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=enhancement&title=%5Bfeature%5D%3A+">💡 Request Feature</a>
     ·
     <a href="https://github.com/sponsors/tashfiqul-islam">💖 Sponsor</a>
     ·
-    <a href="https://twitter.com/tashfiqul_islam">🐦 Follow</a>
-  </p>
-  </table>
-  <small><em>Last refresh: Tuesday, June 10 2025</em></small>
+  <a href="https://github.com/tashfiqul-islam">🐦 Follow</a>
+  <br>
+  <sub>Last refresh: August 7, 2025</sub>
+  <br>
+  <a href="#-profile-weather-view-v2">↑ Back to top</a>
+</p>
+

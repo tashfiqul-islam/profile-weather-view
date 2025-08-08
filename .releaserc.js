@@ -51,7 +51,14 @@ export default {
           { type: 'build', release: 'patch' },
           { type: 'ci', release: 'patch' },
           { type: 'test', release: 'patch' },
+          // Dependency updates - be more specific and handle various formats
           { type: 'chore', scope: 'deps', release: 'patch' },
+          { type: 'chore', scope: 'actions', release: 'patch' },
+          { type: 'chore', scope: 'bun', release: 'patch' },
+          { type: 'chore', scope: 'dependencies', release: 'patch' },
+          // Handle commits that mention dependency updates in the message (regex)
+          { type: 'chore', subject: '/deps|update/i', release: 'patch' },
+          // Other chore commits should not trigger releases
           { type: 'chore', release: false },
           { type: 'security', release: 'patch' },
           // Revert commits should trigger patch releases
@@ -115,16 +122,16 @@ export default {
             return newCommit;
           },
 
-          // Format templates for changelog entries
-          commitPartial: `* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n`,
+          // Enhanced format templates for changelog entries
+          commitPartial:
+            '* {{#if scope}}**{{scope}}:** {{/if}}{{subject}} {{#if commitUrl}}([{{shortHash}}]({{commitUrl}})){{else}}({{shortHash}}){{/if}}\n',
 
           // Fix compare URL format to prevent duplicate repo name
-          headerPartial: `# [{{version}}](https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}})`,
+          headerPartial:
+            '# [{{version}}](https://github.com/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}})',
 
-          // Main template with absolutely no horizontal rules
+          // Enhanced main template with better structure
           mainTemplate: `{{> header}}
-
-## {{#if isPatch}}Patch{{else}}{{#if isMinor}}Minor{{else}}Major{{/if}}{{/if}} ({{date}})
 
 {{#each commitGroups}}
 {{#if title}}
@@ -150,19 +157,20 @@ export default {
           commitGroupsSort: 'title',
           commitsSort: ['scope', 'subject'],
 
-          // Using standard types array with sections for emoji headers
+          // Enhanced types array with emoji headers and better categorization
           types: [
             { type: 'feat', section: '✨ Features' },
-            { type: 'fix', section: '🐛 Bug Fixes' },
-            { type: 'perf', section: '⚡ Performance Improvements' },
-            { type: 'revert', section: '⏪ Reverts' },
+            { type: 'fix', section: '🛠️ Fixes' },
             { type: 'docs', section: '📚 Documentation' },
-            { type: 'style', section: '💎 Styles' },
-            { type: 'refactor', section: '♻️ Code Refactoring' },
+            { type: 'types', section: '🌊 Types' },
+            { type: 'chore', section: '🏡 Chore' },
             { type: 'test', section: '✅ Tests' },
+            { type: 'perf', section: '⚡ Performance' },
+            { type: 'refactor', section: '♻️ Refactors' },
             { type: 'build', section: '👷 Build System' },
             { type: 'ci', section: '🔄 CI/CD' },
-            { type: 'chore', section: '🧹 Chores' },
+            { type: 'security', section: '🔒 Security' },
+            { type: 'revert', section: '⏪ Reverts' },
           ],
         },
       },
@@ -175,8 +183,7 @@ export default {
       '@semantic-release/changelog',
       {
         changelogFile: 'CHANGELOG.md',
-        changelogTitle:
-          '# Changelog\n\nAll notable changes to profile-weather-view will be documented in this file.\n',
+        changelogTitle: '# Changelog',
       },
     ],
 
@@ -188,9 +195,6 @@ export default {
       {
         npmPublish: false,
         pkgRoot: '.',
-        verifyConditions: {
-          npmPublish: false,
-        },
       },
     ],
 
@@ -200,7 +204,13 @@ export default {
     [
       '@semantic-release/git',
       {
-        assets: ['CHANGELOG.md', 'package.json', 'bun.lockb', 'bunfig.toml', 'README.md'],
+        assets: [
+          'CHANGELOG.md',
+          'package.json',
+          'bun.lock',
+          'bunfig.toml',
+          'README.md',
+        ],
         message: 'chore(release): v${nextRelease.version} [skip ci]',
       },
     ],
@@ -220,7 +230,7 @@ export default {
         addReleases: 'bottom',
         githubOptions: {
           request: {
-            timeout: 10000,
+            timeout: 10_000,
           },
         },
       },

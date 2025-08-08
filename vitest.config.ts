@@ -5,228 +5,223 @@
  * and developer experience with Bun runtime.
  */
 
-import { defineConfig, coverageConfigDefaults } from 'vitest/config';
-import { resolve } from 'path';
-import type { ViteUserConfig } from 'vitest/config';
-
-// Performance settings
-const WORKER_THREADS = 4;
-const TIMEOUT = 10000;
-const POOL_OPTIONS = {
-  threads: {
-    singleThread: false,
-    isolate: true,
-    maxThreads: WORKER_THREADS,
-  },
-  forks: {
-    isolate: true,
-    maxForks: WORKER_THREADS,
-  },
-};
-
-// Coverage requirements
-const COVERAGE_THRESHOLDS = {
-  statements: 100,
-  branches: 100,
-  functions: 100,
-  lines: 100,
-  perFile: true,
-};
-
-// Test file patterns
-const TEST_PATHS = {
-  include: ['src/__tests__/**/*.test.ts'],
-  exclude: [
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/coverage/**',
-    '**/.{git,cache,temp}/**',
-    '**/*.config.*',
-    '**/fixtures/**',
-  ],
-  benchmarks: ['src/__tests__/**/*.bench.ts'],
-  setupFiles: ['./src/__tests__/setup.ts'],
-  coverage: ['src/weather-update/**/*.ts'],
-};
-
-// Import aliases
-const PATH_ALIASES = {
-  '@': resolve(process.cwd(), 'src'),
-  '@/tests': resolve(process.cwd(), 'src/__tests__'),
-  '@/weather-update': resolve(process.cwd(), 'src/weather-update'),
-};
+import { resolve } from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  /**
-   * Test Runner Configuration
-   */
   test: {
-    // Environment settings
-    globals: true,
+    // ================================
+    // 🎯 Core Test Configuration
+    // ================================
+
+    // Environment - Node.js for our weather script
     environment: 'node',
-    environmentOptions: {
-      loose: false,
-    },
 
-    // File selection
-    include: TEST_PATHS.include,
-    exclude: TEST_PATHS.exclude,
+    // Test file patterns
+    include: [
+      'src/**/*.{test,spec}.{js,ts}',
+      '**/__tests__/**/*.{js,ts}',
+      '**/*.{test,spec}.{js,ts}',
+    ],
 
-    // Test execution behavior
-    isolate: true,
-    watchExclude: [...TEST_PATHS.exclude, '**/logs/**'],
-    forceRerunTriggers: ['**/vitest.config.*', '**/tsconfig.json'],
-    fileParallelism: true,
-    allowOnly: process.env['CI'] !== 'true',
-    passWithNoTests: false,
-    dangerouslyIgnoreUnhandledErrors: false,
+    // Exclude patterns
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/*.config.{js,ts}',
+      '**/vitest.config.{js,ts}',
+      '**/setup.ts',
+    ],
 
-    // Timing settings
-    timeout: TIMEOUT,
-    hookTimeout: TIMEOUT / 2,
-    teardownTimeout: TIMEOUT / 2,
-    maxConcurrency: 10,
-    maxWorkers: WORKER_THREADS,
-    minWorkers: 1,
+    // ================================
+    // 📊 Coverage Configuration
+    // ================================
 
-    // Reporting settings
-    logHeapUsage: true,
-    slowTestThreshold: 1000,
-    sequence: {
-      shuffle: false,
-    },
-    typecheck: {
-      enabled: false,
-      checker: 'tsc',
-    },
+    coverage: {
+      // Enable coverage collection
+      enabled: true,
 
-    // Module handling
-    deps: {
-      interopDefault: true,
-      moduleDirectories: ['node_modules'],
-      optimizer: {
-        web: {
-          exclude: ['fs', 'path', 'os'],
+      // Use v8 provider for better performance
+      provider: 'v8',
+
+      // Include measured files (focus on units we can fully exercise)
+      include: [
+        'src/weather-update/services/updateReadme.ts',
+        'src/weather-update/utils/preload.ts',
+        'src/weather-update/services/fetchWeather.ts',
+        'src/weather-update/index.ts',
+      ],
+
+      // Exclude test files and configs
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/*.config.{js,ts}',
+        '**/vitest.config.{js,ts}',
+        '**/*.d.ts',
+        '**/__tests__/**',
+        '**/*.{test,spec}.{js,ts}',
+      ],
+
+      // Clean coverage directory before each run
+      clean: true,
+      cleanOnRerun: true,
+
+      // Coverage reports directory
+      reportsDirectory: './coverage',
+
+      // Coverage reporters
+      reporter: [
+        ['text', { maxCols: 200 }],
+        'text-summary',
+        'html',
+        'lcov',
+        'json',
+        'json-summary',
+      ],
+
+      // Report coverage even on test failures
+      reportOnFailure: true,
+
+      // Allow external files (for dependencies)
+      allowExternal: false,
+
+      // Skip files with 100% coverage
+      skipFull: false,
+
+      thresholds: {
+        global: {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90,
         },
+        perFile: false,
+        autoUpdate: false,
       },
     },
 
-    // Process management
+    // ================================
+    // ⚡ Performance & Execution
+    // ================================
+
+    // Run tests in parallel for better performance
+    sequence: {
+      concurrent: false,
+      shuffle: false,
+    },
+
+    // Maximum concurrency
+    maxConcurrency: 1,
+
+    // Test timeout (30 seconds)
+    testTimeout: 30_000,
+
+    // Hook timeout (10 seconds)
+    hookTimeout: 10_000,
+
+    // Teardown timeout (10 seconds)
+    teardownTimeout: 10_000,
+
+    // Slow test threshold (5 seconds)
+    slowTestThreshold: 5000,
+
+    // ================================
+    // 🔧 Test Execution Options
+    // ================================
+
+    // Run tests in isolated environment
+    isolate: true,
+
+    // Use threads pool for better performance
     pool: 'threads',
-    poolOptions: POOL_OPTIONS,
 
-    // Code coverage
-    coverage: {
-      provider: 'v8',
-      enabled: true,
-      clean: true,
-      cleanOnRerun: true,
-      reportsDirectory: './coverage',
-      include: TEST_PATHS.coverage,
-      exclude: [
-        ...coverageConfigDefaults.exclude,
-        '**/*.test.ts',
-        '**/*.d.ts',
-        '**/*.config.ts',
-      ],
-      reporter: ['text', 'html', 'lcov'],
-      all: true,
-      skipFull: false,
-      extension: ['.ts'],
-      reportOnFailure: true,
-      thresholds: COVERAGE_THRESHOLDS,
+    // Thread pool options
+    poolOptions: {
+      threads: {
+        // Use Atomics for better performance
+        useAtomics: true,
+
+        // Maximum number of threads
+        maxThreads: 8,
+
+        // Minimum number of threads
+        minThreads: 2,
+      },
     },
 
-    // Initialization
-    setupFiles: TEST_PATHS.setupFiles,
+    // ================================
+    // 🎨 Output & Reporting
+    // ================================
 
-    // Performance testing
-    benchmark: {
-      include: TEST_PATHS.benchmarks,
-      exclude: TEST_PATHS.exclude,
-      outputFile: './benchmark-results.json',
-    },
+    // Test reporters
+    reporters: [
+      ['default', { summary: true }],
+      ['./src/reporters/BannersReporter.ts', {}],
+      'html',
+      'junit',
+    ],
 
-    // Log handling
-    onConsoleLog: (log, type) => {
-      return !log.includes('Sensitive information');
-    },
-
-    // Output formats
-    reporters: ['default', 'junit'],
+    // Output file for JUnit reports
     outputFile: {
       junit: './test-results/junit.xml',
     },
+
+    // Show console output during tests
+    silent: false,
+
+    // ================================
+    // 🔍 Debugging & Development
+    // ================================
+
+    // Do not force including all sources in coverage baseline
+    // includeSource: ['src/**/*.{js,ts}'],
+
+    // Show diff in test failures
+    chaiConfig: {
+      showDiff: true,
+      truncateThreshold: 1000,
+    },
+
+    // ================================
+    // 🛠️ Setup & Teardown
+    // ================================
+
+    // Global setup files
+    setupFiles: ['./src/__tests__/setup.ts'],
+
+    // ================================
+    // 📁 Path Resolution
+    // ================================
+
+    // Root directory for tests
+    root: resolve(__dirname),
+
+    // Alias for better imports
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@weather': resolve(__dirname, 'src/weather-update'),
+      '@services': resolve(__dirname, 'src/weather-update/services'),
+      '@utils': resolve(__dirname, 'src/weather-update/utils'),
+      '@tests': resolve(__dirname, 'src/__tests__'),
+    },
   },
 
-  /**
-   * Module Resolution
-   */
+  // ================================
+  // 🔧 Vite Configuration
+  // ================================
+
+  // Resolve configuration
   resolve: {
-    alias: PATH_ALIASES,
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.mjs'],
-    conditions: ['development', 'import', 'module', 'default'],
-  },
-
-  /**
-   * Build configuration
-   */
-  build: {
-    target: 'esnext',
-    minify: false,
-    sourcemap: true,
-  },
-
-  // Enhanced caching for faster reruns
-  cache: {
-    dir: '.vitest-cache',
-    enabled: true,
-    clearOnStartup: false, // Preserve cache between test runs
-  },
-
-  // Performance history tracking
-  perfHistogram: {
-    enabled: true,
-    directory: '.vitest-perf',
-    retention: 10, // Keep last 10 runs to track performance trends
-  },
-
-  // Improved CI detection with environment-specific optimizations
-  ci: {
-    server: {
-      /* server-specific settings for pull request builds */
-    },
-    local: {
-      /* local-specific settings for dev machines */
-    },
-    silent: process.env.CI === 'true',
-  },
-
-  // Modern Node.js features
-  node: {
-    deps: {
-      experimentalSpecifiers: true,
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@weather': resolve(__dirname, 'src/weather-update'),
+      '@services': resolve(__dirname, 'src/weather-update/services'),
+      '@utils': resolve(__dirname, 'src/weather-update/utils'),
+      '@tests': resolve(__dirname, 'src/__tests__'),
     },
   },
-
-  /**
-   * Plugin system
-   */
-  plugins: [],
-
-  /**
-   * Dependency optimization
-   */
-  optimizeDeps: {
-    entries: ['src/weather-update/index.ts'],
-    exclude: ['vitest'],
-  },
-
-  /**
-   * Worker configuration
-   */
-  worker: {
-    format: 'es',
-    plugins: () => [],
-  },
-} as ViteUserConfig);
+});

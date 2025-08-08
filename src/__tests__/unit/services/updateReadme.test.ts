@@ -1,413 +1,315 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+import { join } from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
+import { removeMockFile, setMockFile } from '@/__tests__/setup';
+import type { WeatherUpdatePayload } from '@/weather-update/services/fetchWeather';
 import {
+  createWeatherData,
   getSectionContent,
+  shouldProceedWithUpdate,
   updateReadme,
+  updateReadmeContent,
 } from '@/weather-update/services/updateReadme';
 
-describe('updateReadme()', () => {
-  const validWeatherData = 'Cloudy|30|06:00:00|18:00:00|60|03d';
+const WEATHER_SECTION_REGEX =
+  /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/;
 
-  const mockReadmeContent = `
-    # Weather Update
+describe('updateReadme', () => {
+  it('updates README section and refresh time when content changes', async () => {
+    // ensure default test README exists with marker
+    setMockFile(
+      './test-README.md',
+      '<!-- Hourly Weather Update -->\nPending\n<!-- End of Hourly Weather Update -->\n<em>Last refresh: old</em>'
+    );
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear Sky',
+      temperatureC: 25,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 50,
+      icon: '01d',
+    };
 
-    <!-- Hourly Weather Update -->
-    <td align="center">Sunny <img width="15" src="https://openweathermap.org/img/w/01d.png" alt=""></td>
-    <td align="center">25°C</td>
-    <td align="center">06:00:00</td>
-    <td align="center">18:00:00</td>
-    <td align="center">55%</td>
-    <!-- End of Hourly Weather Update -->
-    </tr>
-    </table>
-    <div align="center">
-      <h6>
-        <em>Last refresh: Tuesday, March 12, 2025 10:00:00 UTC+6</em>
-      </h6>
-    </div>
-    <!-- End of Dhaka's weather table -->
-  `;
-
-  const mockDivBasedReadme = `
-    # Weather Update
-
-    <!-- Hourly Weather Update -->
-    <div style="text-align: center;">
-      <img src="https://openweathermap.org/img/wn/01d@2x.png" style="width: 100px;" alt="Sunny">
-      <h3>25°C | Sunny</h3>
-      <p>Sunrise: 06:00:00 | Sunset: 18:00:00 | Humidity: 55%</p>
-    </div>
-    <!-- End of Hourly Weather Update -->
-
-    <div align="center">
-      <h6>
-        <em>Last refresh: Tuesday, March 12, 2025 10:00:00 UTC+6</em>
-      </h6>
-    </div>
-  `;
-
-  const mockPlainTextReadme = `
-    # Weather Update
-
-    <!-- Hourly Weather Update -->
-    Sunny <img width="15" src="https://openweathermap.org/img/w/01d.png" alt="">
-    25°C
-    Sunrise: 06:00:00
-    Sunset: 18:00:00
-    Humidity: 55%
-    <!-- End of Hourly Weather Update -->
-
-    <div align="center">
-      <h6>
-        <em>Last refresh: Tuesday, March 12, 2025 10:00:00 UTC+6</em>
-      </h6>
-    </div>
-  `;
-
-  beforeEach(() => {
-    vi.restoreAllMocks();
-
-    vi.stubGlobal('Bun', {
-      cwd: vi.fn(() => '/fake/path'),
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: vi.fn(() => Promise.resolve()),
-    });
+    const result = await updateReadme(payload, './test-README.md');
+    expect(result).toBe(true);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  it('skips update when no weather section exists', async () => {
+    const customPath = './no-section.md';
+    setMockFile(customPath, '# No section\n');
 
-  // Test for the helper function getSectionContent
-  describe('getSectionContent()', () => {
-    it('should return matched content when regex.exec returns a match', () => {
-      const testContent = 'Test <!-- Section -->Content<!-- End Section -->';
-      const testRegex = /<!-- Section -->.*?<!-- End Section -->/;
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear Sky',
+      temperatureC: 25,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 50,
+      icon: '01d',
+    };
 
-      const result = getSectionContent(testContent, testRegex);
-
-      expect(result).toBe('<!-- Section -->Content<!-- End Section -->');
-    });
-
-    it('should return empty string when regex.exec returns null', () => {
-      const testContent = 'Test content with no section';
-      const testRegex =
-        /<!-- Missing Section -->.*?<!-- End Missing Section -->/;
-
-      const result = getSectionContent(testContent, testRegex);
-
-      expect(result).toBe('');
-    });
-
-    // This test specifically targets the nullish coalescing branch
-    it('should handle the nullish coalescing operator branch when regex returns null', () => {
-      // Create a proper mock of RegExp that returns null from exec
-      const mockRegex = Object.create(RegExp.prototype) as RegExp;
-      // Override the exec method to return null
-      Object.defineProperty(mockRegex, 'exec', {
-        configurable: true,
-        value: (): null => null,
-        writable: true,
-      });
-
-      // This directly tests the nullish coalescing operator branch
-      const result = getSectionContent('any content', mockRegex);
-
-      expect(result).toBe('');
-    });
-  });
-
-  it('should return false if README.md file does not exist', async () => {
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(false)),
-      })),
-      write: vi.fn(),
-    });
-
-    const result = await updateReadme(validWeatherData);
+    const result = await updateReadme(payload, customPath);
     expect(result).toBe(false);
   });
 
-  it('should return false if weather data format is invalid', async () => {
-    const result = await updateReadme('Invalid|Data');
+  it('updates README when section uses <div> format', async () => {
+    const path = './readme-div.md';
+    setMockFile(
+      path,
+      '# Test\n\n<!-- Hourly Weather Update -->\n<div>old</div>\n<!-- End of Hourly Weather Update -->\n'
+    );
+    const payload: WeatherUpdatePayload = {
+      description: 'Clouds',
+      temperatureC: 22,
+      sunriseLocal: '05:50',
+      sunsetLocal: '18:10',
+      humidityPct: 60,
+      icon: '02d',
+    };
+    const result = await updateReadme(payload, path);
+    expect(result).toBe(true);
+  });
+
+  it('updates README when section uses <td> table format', async () => {
+    const path = './readme-td.md';
+    setMockFile(
+      path,
+      '# Test\n\n<!-- Hourly Weather Update -->\n<td>old</td>\n<!-- End of Hourly Weather Update -->\n'
+    );
+    const payload: WeatherUpdatePayload = {
+      description: 'Rain',
+      temperatureC: 19,
+      sunriseLocal: '06:10',
+      sunsetLocal: '17:40',
+      humidityPct: 72,
+      icon: '10d',
+    };
+    const result = await updateReadme(payload, path);
+    expect(result).toBe(true);
+  });
+
+  it('respects FORCE_UPDATE when content unchanged', async () => {
+    const path = './readme-force.md';
+    // Start with empty marker so first run writes content
+    setMockFile(
+      path,
+      '<!-- Hourly Weather Update -->\nPending\n<!-- End of Hourly Weather Update -->\n'
+    );
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear Sky',
+      temperatureC: 25,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 50,
+      icon: '01d',
+    };
+    const first = await updateReadme(payload, path);
+    expect(first).toBe(true);
+
+    // Second run with identical content would normally skip
+    process.env['FORCE_UPDATE'] = undefined as unknown as string;
+    const second = await updateReadme(payload, path);
+    expect(second).toBe(false);
+
+    // Force update should proceed even if unchanged
+    process.env['FORCE_UPDATE'] = 'true';
+    const third = await updateReadme(payload, path);
+    expect(third).toBe(true);
+    process.env['FORCE_UPDATE'] = undefined as unknown as string;
+  });
+
+  it('updateReadmeContent appends refresh when none exists', () => {
+    const readme =
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n';
+    const updated = updateReadmeContent(readme, 'REPL', '2025-01-01 10:00:00');
+    expect(updated.includes('REPL')).toBe(true);
+    expect(updated.includes('<em>Last refresh:')).toBe(false);
+  });
+
+  it('shouldProceedWithUpdate returns true when content changed or FORCE_UPDATE true', () => {
+    expect(shouldProceedWithUpdate('a', 'b')).toBe(true);
+    process.env['FORCE_UPDATE'] = 'true';
+    expect(shouldProceedWithUpdate('same', 'same')).toBe(true);
+    process.env['FORCE_UPDATE'] = undefined as unknown as string;
+    expect(shouldProceedWithUpdate('same', 'same')).toBe(false);
+  });
+
+  it('updateReadmeContent replaces existing refresh time when present', () => {
+    const content =
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n<em>Last refresh: old time</em>';
+    const updated = updateReadmeContent(content, 'NEW', '2025-01-01 10:00:00');
+    expect(updated.includes('NEW')).toBe(true);
+    expect(updated.includes('<em>Last refresh: 2025-01-01 10:00:00</em>')).toBe(
+      true
+    );
+  });
+
+  it('updateReadme returns false for invalid payload (schema failure)', async () => {
+    const path = './readme-invalid.md';
+    setMockFile(
+      path,
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n'
+    );
+    const invalidPayload = {
+      description: 'Only desc',
+    } as unknown as WeatherUpdatePayload;
+    const result = await updateReadme(invalidPayload, path);
     expect(result).toBe(false);
   });
 
-  it('should return false if weather section is missing in README.md', async () => {
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() =>
-          Promise.resolve('# Weather Update\n No weather data here'),
-        ),
-      })),
-      write: vi.fn(),
-    });
+  it('covers GITHUB_ACTIONS true branch with successful update', async () => {
+    const path = './readme-gha.md';
+    setMockFile(
+      path,
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n<em>Last refresh: old</em>'
+    );
+    process.env['GITHUB_ACTIONS'] = 'true';
+    const payload: WeatherUpdatePayload = {
+      description: 'Clouds',
+      temperatureC: 22,
+      sunriseLocal: '05:50',
+      sunsetLocal: '18:10',
+      humidityPct: 60,
+      icon: '02d',
+    };
+    const ok = await updateReadme(payload, path);
+    expect(ok).toBe(true);
+    process.env['GITHUB_ACTIONS'] = 'false';
+  });
 
-    const result = await updateReadme(validWeatherData);
+  it('returns false when new content is identical (no refresh tag, no FORCE_UPDATE)', async () => {
+    const path = './readme-noop.md';
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear Sky',
+      temperatureC: 25,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 50,
+      icon: '01d',
+    };
+    // Create current section matching createWeatherData default branch
+    const currentSection = createWeatherData(payload, '');
+    // Build README without refresh tag to keep no-op
+    const readme = `${currentSection}\n`;
+    setMockFile(path, readme);
+    process.env['FORCE_UPDATE'] = undefined as unknown as string;
+    const result = await updateReadme(payload, path);
     expect(result).toBe(false);
   });
 
-  it('should update the README successfully with valid data', async () => {
-    const writeMock = vi.fn(() => Promise.resolve());
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-  });
-
-  it('should return false if writing to README fails', async () => {
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: vi.fn(() => Promise.reject(new Error('Write failed'))),
-    });
-
-    const result = await updateReadme(validWeatherData);
+  it('returns false when table format content is identical and no FORCE_UPDATE', async () => {
+    const path = './readme-noop-td.md';
+    const payload: WeatherUpdatePayload = {
+      description: 'Clouds',
+      temperatureC: 22,
+      sunriseLocal: '05:50',
+      sunsetLocal: '18:10',
+      humidityPct: 60,
+      icon: '02d',
+    };
+    // Seed README with a table-format section that matches createWeatherData
+    const section = `<!-- Hourly Weather Update -->
+        <td align="center">${payload.description} <img width="15" src="https://openweathermap.org/img/w/${payload.icon}.png" alt="${payload.description} icon"></td>
+        <td align="center">${payload.temperatureC}°C</td>
+        <td align="center">${payload.sunriseLocal}</td>
+        <td align="center">${payload.sunsetLocal}</td>
+        <td align="center">${payload.humidityPct}%</td>
+        <!-- End of Hourly Weather Update -->`;
+    setMockFile(path, section);
+    const result = await updateReadme(payload, path);
     expect(result).toBe(false);
   });
 
-  it('should handle no changes in README appropriately', async () => {
-    // Setup spies to track function behavior
-    const consoleSpy = vi.spyOn(console, 'warn');
-    const writeMock = vi.fn(() => Promise.resolve());
-
-    // Store original FORCE_UPDATE value
-    const originalForceUpdate = process.env['FORCE_UPDATE'];
-
-    // Set FORCE_UPDATE to 'false' for this test specifically
-    process.env['FORCE_UPDATE'] = 'false';
-
-    // Mock Bun
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: writeMock,
+  it('returns false hitting catch path when Bun.file throws', async () => {
+    const path = './readme-throw.md';
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear',
+      temperatureC: 20,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 40,
+      icon: '01d',
+    };
+    const fileSpy = vi.spyOn(Bun, 'file').mockImplementation(() => {
+      throw new Error('read failure');
     });
-
-    // Instead of modifying String.prototype.replace directly,
-    // use vi.spyOn with mockImplementation
-    const replaceSpy = vi.spyOn(String.prototype, 'replace');
-
-    // This approach avoids the unbound method warning
-    replaceSpy.mockImplementation(function (this: string): string {
-      // 'this' is properly bound in the mockImplementation
-      return this.toString();
-    });
-
-    // Execute the function but don't store the return value
-    await updateReadme(validWeatherData);
-
-    // Restore the original replace method
-    replaceSpy.mockRestore();
-
-    // Restore original FORCE_UPDATE value
-    process.env['FORCE_UPDATE'] = originalForceUpdate;
-
-    // Focus on the behavior which should be consistent
-    expect(writeMock).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith('ℹ️ No changes needed to README.');
+    const ok = await updateReadme(payload, path);
+    expect(ok).toBe(false);
+    fileSpy.mockRestore();
   });
 
-  it('should update README with div-based format', async () => {
-    const writeMock = vi.fn().mockResolvedValue(undefined);
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockDivBasedReadme)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-
-    // Just use the matcher syntax which is type-safe
-    expect(writeMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining('<div style="text-align: center;">'),
-    );
-
-    expect(writeMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining(
-        `<img src="https://openweathermap.org/img/wn/${validWeatherData.split('|')[5]}@2x.png"`,
-      ),
-    );
+  it('getSectionContent returns empty string when no match', () => {
+    const content = '# No weather section here';
+    const section = getSectionContent(content, WEATHER_SECTION_REGEX);
+    expect(section).toBe('');
   });
 
-  it('should update README with plain text format', async () => {
-    const writeMock = vi.fn().mockResolvedValue(undefined);
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockPlainTextReadme)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-
-    // Verify the correct plain text format was used in the update using toHaveBeenCalledWith
-    expect(writeMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.stringContaining(
-        `${validWeatherData.split('|')[0]} <img width="15"`,
-      ),
+  it('uses default README path when custom path is not provided', async () => {
+    const defaultPath = join(process.cwd(), 'README.md');
+    setMockFile(
+      defaultPath,
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n<em>Last refresh: old</em>'
     );
-
-    // Also verify it doesn't contain the other formats
-    expect(writeMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.not.stringContaining('<div style="text-align: center;">'),
-    );
-
-    expect(writeMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.not.stringContaining('<td'),
-    );
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear',
+      temperatureC: 20,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 40,
+      icon: '01d',
+    };
+    const ok = await updateReadme(payload);
+    expect(ok).toBe(true);
   });
 
-  it('should handle README without a refresh time section', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn');
-    const writeMock = vi.fn(() => Promise.resolve());
-
-    const readmeWithoutRefreshTime = mockReadmeContent.replace(
-      /<em>Last refresh:.*?<\/em>/,
-      '',
+  it('falls back to default description and icon when empty strings provided', async () => {
+    const path = './readme-defaults.md';
+    setMockFile(
+      path,
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n<em>Last refresh: old</em>'
     );
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(readmeWithoutRefreshTime)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '⚠️ Last refresh time section not found in README',
-    );
+    const payload: WeatherUpdatePayload = {
+      description: '',
+      temperatureC: 18,
+      sunriseLocal: '06:20',
+      sunsetLocal: '17:45',
+      humidityPct: 55,
+      icon: '',
+    };
+    const ok = await updateReadme(payload, path);
+    expect(ok).toBe(true);
   });
 
-  it('should force update README when FORCE_UPDATE is true', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn');
-    const writeMock = vi.fn(() => Promise.resolve());
-    const originalEnvironment = process.env;
-
-    // Set the environment variable
-    process.env = { ...originalEnvironment, FORCE_UPDATE: 'true' };
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: writeMock,
-    });
-
-    // Mock String.prototype.replace to simulate no changes
-    const replaceSpy = vi.spyOn(String.prototype, 'replace');
-    replaceSpy.mockImplementation(function (this: string): string {
-      return this.toString();
-    });
-
-    const result = await updateReadme(validWeatherData);
-
-    // Restore the original replace method and environment
-    replaceSpy.mockRestore();
-    process.env = originalEnvironment;
-
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '⚠️ No changes detected, but forcing update due to FORCE_UPDATE flag',
-    );
+  it('returns false when README file does not exist', async () => {
+    const path = './non-existent.md';
+    removeMockFile(path);
+    const payload: WeatherUpdatePayload = {
+      description: 'Clear',
+      temperatureC: 20,
+      sunriseLocal: '06:00',
+      sunsetLocal: '18:00',
+      humidityPct: 40,
+      icon: '01d',
+    };
+    const result = await updateReadme(payload, path);
+    expect(result).toBe(false);
   });
 
-  it('should report changes to GitHub Actions', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn');
-    const writeMock = vi.fn(() => Promise.resolve());
-    const originalEnvironment = process.env;
-
-    // Set the environment variable
-    process.env = { ...originalEnvironment, GITHUB_ACTIONS: 'true' };
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(mockReadmeContent)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-
-    // Restore the original environment
-    process.env = originalEnvironment;
-
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith('CHANGES_DETECTED=true');
-  });
-
-  it('should handle the case where regex.exec returns null but the test passes', async () => {
-    const consoleSpy = vi.spyOn(console, 'warn');
-    const writeMock = vi.fn(() => Promise.resolve());
-
-    // Create a specially crafted README content
-    const emptyWeatherSectionReadme = `
-      # Weather Update
-
-      <!-- Hourly Weather Update --><!-- End of Hourly Weather Update -->
-
-      <div align="center">
-        <h6>
-          <em>Last refresh: Tuesday, March 12, 2025 10:00:00 UTC+6</em>
-        </h6>
-      </div>
-    `;
-
-    vi.stubGlobal('Bun', {
-      file: vi.fn(() => ({
-        exists: vi.fn(() => Promise.resolve(true)),
-        text: vi.fn(() => Promise.resolve(emptyWeatherSectionReadme)),
-      })),
-      write: writeMock,
-    });
-
-    const result = await updateReadme(validWeatherData);
-    expect(result).toBe(true);
-    expect(writeMock).toHaveBeenCalled();
-
-    // Check the 3rd console call contains the empty structure message
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      3,
-      expect.stringContaining('🔍 Current weather section structure:'),
+  it('returns false if write fails', async () => {
+    const path = './readme-write-fail.md';
+    setMockFile(
+      path,
+      '<!-- Hourly Weather Update -->\nold\n<!-- End of Hourly Weather Update -->\n'
     );
+    const payload: WeatherUpdatePayload = {
+      description: 'Wind',
+      temperatureC: 15,
+      sunriseLocal: '06:10',
+      sunsetLocal: '17:55',
+      humidityPct: 35,
+      icon: '50d',
+    };
+    const spy = vi.spyOn(Bun, 'write').mockRejectedValue(new Error('fail'));
+    const result = await updateReadme(payload, path);
+    expect(result).toBe(false);
+    spy.mockRestore();
   });
 });
