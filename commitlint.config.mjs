@@ -18,23 +18,25 @@ const DISABLED = RuleConfigSeverity.Disabled;
 
 // Project-specific scopes with descriptions
 const PROJECT_SCOPES = [
-  'api',      // API integration and communication
-  'build',    // Build system and compilation
-  'ci',       // Continuous integration configuration
-  'config',   // Application configuration
-  'core',     // Core application logic
-  'deps',     // Dependencies and external libraries
-  'docs',     // Documentation
-  'hooks',    // Git hooks and automation
-  'infra',    // Infrastructure and deployment
-  'perf',     // Performance improvements
-  'release',  // Release automation commits (added)
+  'actions', // GitHub Actions workflows
+  'api', // API integration and communication
+  'bun', // Bun runtime and configuration
+  'build', // Build system and compilation
+  'ci', // Continuous integration configuration
+  'config', // Application configuration
+  'core', // Core application logic
+  'deps', // Dependencies and external libraries
+  'docs', // Documentation
+  'hooks', // Git hooks and automation
+  'infra', // Infrastructure and deployment
+  'perf', // Performance improvements
+  'release', // Release automation commits
   'security', // Security enhancements
-  'test',     // Testing infrastructure and tests
-  'types',    // TypeScript types and interfaces
-  'ui',       // User interface components
-  'utils',    // Utility functions and helpers
-  'weather',  // Weather-related functionality
+  'test', // Testing infrastructure and tests
+  'types', // TypeScript types and interfaces
+  'ui', // User interface components
+  'utils', // Utility functions and helpers
+  'weather', // Weather-related functionality
 ];
 
 // Character limits for different parts of the commit message
@@ -45,13 +47,7 @@ const LIMITS = {
 };
 
 // Forbidden patterns in commit messages
-const FORBIDDEN_PATTERNS = [
-  /^fixup!/,
-  /^wip:/i,
-  /^temp:/i,
-  /TODO/,
-  /FIXME/,
-];
+const FORBIDDEN_PATTERNS = [/^fixup!/, /^wip:/i, /^temp:/i, /TODO/, /FIXME/];
 
 export default {
   // Extend conventional commits configuration
@@ -61,14 +57,19 @@ export default {
   plugins: [
     {
       rules: {
-        'no-forbidden-patterns': (parsed, _when, patterns = FORBIDDEN_PATTERNS) => {
+        'no-forbidden-patterns': (
+          parsed,
+          _when,
+          patterns = FORBIDDEN_PATTERNS
+        ) => {
           const { subject, header } = parsed;
-          const hasMatch = patterns.some(pattern =>
-            pattern.test(header) || (subject && pattern.test(subject))
+          const hasMatch = patterns.some(
+            (pattern) =>
+              pattern.test(header) || (subject && pattern.test(subject))
           );
           return [
             !hasMatch,
-            `Commit message contains forbidden pattern: ${patterns.map(p => p.toString()).join(', ')}`
+            `Commit message contains forbidden pattern: ${patterns.map((p) => p.toString()).join(', ')}`,
           ];
         },
       },
@@ -83,20 +84,24 @@ export default {
     'header-full-stop': [ERROR, 'never', '.'],
 
     // Type validations
-    'type-enum': [ERROR, 'always', [
-      'feat',     // New feature
-      'fix',      // Bug fix
-      'docs',     // Documentation
-      'style',    // Formatting changes
-      'refactor', // Code refactoring
-      'perf',     // Performance improvement
-      'test',     // Testing
-      'build',    // Build system
-      'ci',       // CI configuration
-      'chore',    // Maintenance
-      'revert',   // Revert previous commit
-      'security', // Security improvements
-    ]],
+    'type-enum': [
+      ERROR,
+      'always',
+      [
+        'feat', // New feature
+        'fix', // Bug fix
+        'docs', // Documentation
+        'style', // Formatting changes
+        'refactor', // Code refactoring
+        'perf', // Performance improvement
+        'test', // Testing
+        'build', // Build system
+        'ci', // CI configuration
+        'chore', // Maintenance
+        'revert', // Revert previous commit
+        'security', // Security improvements
+      ],
+    ],
     'type-case': [ERROR, 'always', 'lower-case'],
     'type-empty': [ERROR, 'never'],
 
@@ -106,7 +111,11 @@ export default {
     'scope-empty': [WARNING, 'never'],
 
     // Subject validations
-    'subject-case': [ERROR, 'never', ['start-case', 'pascal-case', 'upper-case']],
+    'subject-case': [
+      ERROR,
+      'never',
+      ['start-case', 'pascal-case', 'upper-case'],
+    ],
     'subject-empty': [ERROR, 'never'],
     'subject-full-stop': [ERROR, 'never', '.'],
     'subject-exclamation-mark': [WARNING, 'never'],
@@ -147,7 +156,8 @@ export default {
 
   // Default settings for prompt UI
   defaultIgnores: true,
-  helpUrl: 'https://github.com/conventional-changelog/commitlint/#what-is-commitlint',
+  helpUrl:
+    'https://github.com/conventional-changelog/commitlint/#what-is-commitlint',
 
   // Interactive commit prompt configuration
   prompt: {
@@ -201,7 +211,8 @@ export default {
               emoji: '💎',
             },
             refactor: {
-              description: 'A code change that neither fixes a bug nor adds a feature',
+              description:
+                'A code change that neither fixes a bug nor adds a feature',
               title: 'Code Refactoring',
               emoji: '📦',
             },
@@ -216,7 +227,8 @@ export default {
               emoji: '🧪',
             },
             build: {
-              description: 'Changes that affect the build system or external dependencies',
+              description:
+                'Changes that affect the build system or external dependencies',
               title: 'Builds',
               emoji: '🔧',
             },
@@ -226,7 +238,7 @@ export default {
               emoji: '⚙️',
             },
             chore: {
-              description: 'Other changes that don\'t modify src or test files',
+              description: "Other changes that don't modify src or test files",
               title: 'Chores',
               emoji: '♻️',
             },

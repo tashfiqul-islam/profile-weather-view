@@ -2,6 +2,32 @@
 
 All notable changes to profile-weather-view will be documented in this file.
 
+## v1.2.24...HEAD
+
+[compare changes](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.24...HEAD)
+
+### 🏡 Chore
+
+- **actions:** Pin dependencies ([#58](https://github.com/tashfiqul-islam/profile-weather-view/pull/58))
+- **bun:** Pin dependencies ([#59](https://github.com/tashfiqul-islam/profile-weather-view/pull/59))
+- **actions:** Update update oven-sh/setup-bun to v2 ([#63](https://github.com/tashfiqul-islam/profile-weather-view/pull/63))
+- **actions:** Update update github/codeql-action to 181d5ee ([#62](https://github.com/tashfiqul-islam/profile-weather-view/pull/62))
+- **actions:** Update GitHub Actions ([#76](https://github.com/tashfiqul-islam/profile-weather-view/pull/76))
+- **bun:** Update update bun-types to 1.2.19 ([#77](https://github.com/tashfiqul-islam/profile-weather-view/pull/77))
+- **bun:** Update TypeScript packages ([#78](https://github.com/tashfiqul-islam/profile-weather-view/pull/78))
+- **actions:** Update update github/codeql-action to 51f7732 ([#80](https://github.com/tashfiqul-islam/profile-weather-view/pull/80))
+
+### ✅ Tests
+
+- Testing pre-commit hook ([0c5490e](https://github.com/tashfiqul-islam/profile-weather-view/commit/0c5490e))
+- Testing pre-commit hook ([876baf2](https://github.com/tashfiqul-islam/profile-weather-view/commit/876baf2))
+- Cleanup ([c944aea](https://github.com/tashfiqul-islam/profile-weather-view/commit/c944aea))
+
+### ❤️ Contributors
+
+- Tashfiqul Islam ([@tashfiqul-islam](https://github.com/tashfiqul-islam))
+
+---
 
 # [1.2.24](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.23...v1.2.24)
 ## Patch (2025-06-21)
@@ -238,14 +264,14 @@ fix
 
 * **ci:** enhance PR validation and security scanning workflows (#24) ([2f758be](https://github.com/tashfiqul-islam/profile-weather-view/commit/2f758be50e605cd13eaee6c06bbc7013fa9b05c4)), closes #24
 
-## [1.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.2...v1.1.3) (2025-04-21)
+## [1.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.2...v1.1.3) (2025-04-22)
 
 
 ### fix
 
 * **ci:** automated release workflow syntax issue (#23) ([5b39ab6](https://github.com/tashfiqul-islam/profile-weather-view/commit/5b39ab6881c2b4bf891ce2f5533c9408276f1123)), closes #23
 
-## [1.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.1.1...v1.1.2) (2025-04-21)
+## [1.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.1...v1.1.2) (2025-04-21)
 
 
 ### fix

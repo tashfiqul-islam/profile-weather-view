@@ -1,81 +1,165 @@
-import { fetchWeatherData } from '@/weather-update/services/fetchWeather';
-import { updateReadme } from '@/weather-update/services/updateReadme';
-import { ensureEnvironmentVariables } from '@/weather-update/utils/preload';
+import { fetchWeatherData } from './services/fetchWeather';
+import { updateReadme } from './services/updateReadme';
+import { ensureEnvironmentVariables } from './utils/preload';
 
 /**
- * Handles error logging with specific context
+ * Enhanced error handling with detailed context for GitHub Actions
+ * @param error The error to handle
+ * @returns Error information for reporting
  */
-function handleError(error: unknown): void {
+function handleError(error: unknown): {
+  message: string;
+  details: string;
+  context: string;
+} {
+  const timestamp = new Date().toISOString();
+  const context = `[${timestamp}] Weather Update Script`;
+
   if (error instanceof Error) {
-    // Log specific error messages for known errors
-    if (error.message.includes('fetchWeatherData')) {
-      console.error('❌ Error during weather data fetch:', error.message);
-    } else if (error.message.includes('updateReadme')) {
-      console.error('❌ Error during README update:', error.message);
-    } else if (error.message.includes('Missing environment variable')) {
-      console.error(
-        '❌ Error during environment variable validation:',
-        error.message,
-      );
-    } else {
-      // Log unhandled errors with a specific message
-      console.error('❌ Unhandled error in main function:', error.message);
-    }
-  } else {
-    // Log unknown errors
-    console.error('❌ Unhandled error in main function:', error);
+    return {
+      message: error.message,
+      details: error.stack || 'No stack trace available',
+      context,
+    };
   }
-  console.error('❌ Weather update process did not complete successfully.');
+
+  return {
+    message: String(error),
+    details: 'Unknown error type',
+    context,
+  };
 }
 
 /**
- * Reports update status for GitHub Actions
+ * Enhanced logging with timestamps and GitHub Actions context
+ * @param message Log message
+ * @param type Log type (info, success, warning, error)
  */
-function reportUpdateStatus(success: boolean): void {
-  if (process.env['GITHUB_ACTIONS']) {
-    console.warn(`CHANGES_DETECTED=${success ? 'true' : 'false'}`);
+function log(
+  message: string,
+  type: 'info' | 'success' | 'warning' | 'error' = 'info'
+): void {
+  const timestamp = new Date().toISOString();
+  const prefix = `[${timestamp}] Weather Update:`;
+  const logEntry = `${prefix} ${message}\n`;
+
+  switch (type) {
+    case 'success':
+      process.stdout.write(`✅ ${logEntry}`);
+      break;
+    case 'warning':
+      process.stderr.write(`⚠️ ${logEntry}`);
+      break;
+    case 'error':
+      process.stderr.write(`❌ ${logEntry}`);
+      break;
+    default:
+      process.stdout.write(`ℹ️ ${logEntry}`);
+  }
+}
+
+/**
+ * Reports update status for GitHub Actions with detailed information
+ * @param success Whether the update was successful
+ * @param details Additional details about the update
+ */
+function reportUpdateStatus(success: boolean, details?: string): void {
+  if (success) {
+    log('Weather update process completed successfully!', 'success');
+    if (details) {
+      log(`Details: ${details}`, 'info');
+    }
+    // Emit change signal for GitHub Actions parser
+    process.stdout.write('CHANGES_DETECTED=true\n');
+  } else {
+    log('Weather update process completed with warnings', 'warning');
+    if (details) {
+      log(`Details: ${details}`, 'warning');
+    }
+    process.stdout.write('CHANGES_DETECTED=false\n');
   }
 }
 
 /**
  * Main function to fetch weather data and update the README.
+ * Uses modern async/await patterns and comprehensive error handling.
  */
 export async function main(): Promise<void> {
-  try {
-    // Ensure required environment variables are present
-    ensureEnvironmentVariables();
+  const startTime = performance.now();
 
-    console.warn('🌍 Starting weather update process...');
+  try {
+    log('Starting weather update process...', 'info');
+
+    // Log environment information
+    const envInfo = [
+      `Environment: ${process.env.NODE_ENV || 'development'}`,
+      `GitHub Actions: ${process.env['GITHUB_ACTIONS'] ? 'Yes' : 'No'}`,
+    ];
+    for (const info of envInfo) {
+      log(info, 'info');
+    }
+
+    // Ensure required environment variables are present
+    log('Validating environment variables...', 'info');
+    await ensureEnvironmentVariables();
+    log('Environment variables validated', 'success');
 
     // Fetch current weather data
+    log('Fetching weather data from OpenWeather API...', 'info');
     const weatherData = await fetchWeatherData();
-    console.warn('✅ Weather data fetched successfully:', weatherData);
+    log('Weather data fetched successfully', 'success');
 
     // Check for a custom README path from environment variable
     const customReadmePath = process.env['PROFILE_README_PATH'];
     if (customReadmePath) {
-      console.warn(`📝 Using custom README path: ${customReadmePath}`);
+      log(`Using custom README path: ${customReadmePath}`, 'info');
     }
 
     // Update the README with the new weather data
+    log('Updating README with new weather data...', 'info');
     const updateSuccess = await updateReadme(weatherData, customReadmePath);
 
-    // Report update status and log appropriate message
-    console.warn(
-      updateSuccess
-        ? '✅ README updated successfully with new weather data.'
-        : '⚠️ No changes were made to the README.',
-    );
+    if (updateSuccess) {
+      log('README updated successfully', 'success');
+    } else {
+      log('README update skipped (no changes detected)', 'warning');
+    }
+
+    // Calculate and log execution time
+    const duration = performance.now() - startTime;
+    log(`Total execution time: ${duration.toFixed(2)}ms`, 'info');
 
     // Report status for GitHub Actions
-    reportUpdateStatus(updateSuccess);
+    reportUpdateStatus(
+      updateSuccess,
+      `Execution time: ${duration.toFixed(2)}ms`
+    );
+  } catch (error) {
+    const duration = performance.now() - startTime;
+    const errorInfo = handleError(error);
 
-    console.warn('🎉 Weather update process completed successfully.');
-  } catch (error: unknown) {
-    handleError(error);
-    process.exit(1); // Ensure process.exit(1) is called on error
+    log(`Script failed after ${duration.toFixed(2)}ms`, 'error');
+    log(`Error: ${errorInfo.message}`, 'error');
+
+    // For GitHub Actions, provide more context
+    if (process.env['GITHUB_ACTIONS']) {
+      log('This error occurred during a GitHub Actions workflow run', 'error');
+      log('Check the workflow logs for more details', 'info');
+    }
+
+    throw error;
   }
 }
 
-// Execute the main function
-void main();
+// Execute the main function using top-level await with proper error handling
+// Skip automatic execution during tests to allow unit testing of main()
+if (process.env.NODE_ENV !== 'test') {
+  main().catch((error: unknown) => {
+    const errorInfo = handleError(error);
+    log(`Script execution failed: ${errorInfo.message}`, 'error');
+    log(`Context: ${errorInfo.context}`, 'error');
+
+    // Exit with error code for GitHub Actions
+    process.exit(1);
+  });
+}

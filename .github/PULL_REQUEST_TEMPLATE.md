@@ -1,49 +1,34 @@
+## Summary
+
+Describe the change and the problem it solves. Include before/after if relevant.
+
+## Type of change
+
+- [ ] feat (new feature)
+- [ ] fix (bug fix)
+- [ ] docs (documentation only)
+- [ ] chore (build, CI, toolchain)
+- [ ] refactor/perf (no behavior change)
+
+## Checklist
+
+- [ ] Conventional Commit message (e.g., feat(scope): …)
+- [ ] Tests added/updated and coverage remains 100% for changed files
+- [ ] Lint, format, type-check pass locally
+- [ ] No breaking changes, or noted below
+
+## Screenshots / Demo (optional)
+
+If UI or output changed, add a short demo.
+
+## Breaking changes (if any)
+
+Document breaking changes here.
+
+## Notes for reviewers
+
+Anything specific you want reviewers to focus on.
+
 <!--
 Thank you for contributing to Profile Weather View!
 -->
-
-## 📝 What does this PR do?
-
-<!-- Briefly describe what this PR accomplishes -->
-
-## 🔍 Type of Change
-
-<!-- Mark which type of change this is (you can select multiple) -->
-
-- [ ] 📦 New Feature
-- [ ] 🐛 Bug Fix
-- [ ] 🧹 Code Refactoring
-- [ ] 📚 Documentation Update
-- [ ] ⚡ Performance Improvement
-- [ ] 🔒 Security Enhancement
-- [ ] 🧪 Test Update
-- [ ] 🔨 Build/CI Change
-- [ ] 💥 Breaking Change
-
-## 🧪 Testing
-
-<!-- How did you test your changes? -->
-
-## 📸 Screenshots (if applicable)
-
-<!-- Add screenshots if your changes include visual updates -->
-
-## ✅ Checklist
-
-### Code Quality
-
-- [ ] My code follows project style guidelines
-- [ ] I've added/updated relevant tests
-- [ ] All existing tests pass with my changes
-- [ ] I've added comments to complex code sections
-- [ ] My changes generate no new TypeScript errors or warnings
-
-### Review Readiness
-
-- [ ] This PR is ready for review (not a draft)
-- [ ] I've addressed any feedback from previous reviews
-- [ ] This PR can be merged without conflicts
-
-## 📌 Additional Notes
-
-<!-- Any other information that might be helpful -->

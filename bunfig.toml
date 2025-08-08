@@ -1,44 +1,113 @@
 # 🚀 Bun Configuration for profile-weather-view
+# Optimized for Bun v1.2.19+ and weather profile project needs
 
 # ================================
-# Core Runtime Configuration
+# 🎯 Core Runtime Configuration
 # ================================
 
-# Performance optimization
+# Performance optimization - keep false for better performance
 smol = false
 
-# Runtime debugging and observability
+# Logging level - warn is good for production-like behavior
 logLevel = "warn"
-errorStackTraces = true
-defaultRuntimeSafety = true
 
-# Preload critical modules for fast startup
+# Enable error stack traces for better debugging
+errorStackTraces = true
+
+# Disable telemetry for privacy
+telemetry = false
+
+# ================================
+# ⚡ Preload Critical Modules
+# ================================
+
+# Preload essential modules for faster startup
 preload = [
-    "./src/weather-update/utils/preload.ts",
-    "./src/weather-update/services/fetchWeather.ts"
+    "./src/weather-update/utils/preload.ts"
 ]
 
 # ================================
-# Runtime Execution
+# 🔧 Runtime Execution
 # ================================
 
 [run]
-# Node.js compatibility layer
+# Use Bun for script execution (better performance)
 bun = true
-node_modules = true
 
-# Enable runtime hardening
-allowUserCode = true
-experimentalLifecycleHooks = true
-experimentalWorkerThreads = true
-
-# Resource limits for production safety
-maxConcurrency = 8
-readableByteLimit = "512MB"
-maxEventLoopUtilization = 0.85
+# Enable silent mode for cleaner output in CI
+silent = false
 
 # ================================
-# File Loading & Handling
+# 📦 Package Management
+# ================================
+
+[install]
+# Install all dependency types
+optional = true
+dev = true
+peer = true
+production = false
+
+# Use exact versions for reproducible builds
+exact = false
+
+# Auto-install missing dependencies
+auto = "fallback"
+
+# Use frozen lockfile for CI consistency
+frozenLockfile = false
+
+# Save text-based lockfile (more readable)
+saveTextLockfile = true
+
+# Enable ESM by default
+esm = true
+
+# Default registry
+registry = "https://registry.npmjs.org"
+
+# Concurrent script execution
+concurrentScripts = 8
+
+# ================================
+# 🧪 Testing Configuration
+# ================================
+
+[test]
+# Enable coverage by default
+coverage = true
+
+# Use Node.js environment for tests (ignored by Vitest)
+environment = "node"
+
+# Coverage thresholds for quality assurance (plural keys per current docs)
+coverageThreshold = {
+    lines = 0.8,
+    functions = 0.8,
+    statements = 0.8
+}
+
+# Coverage reporting formats
+coverageReporter = ["text", "lcov"]
+
+# Coverage output directory
+coverageDir = "coverage"
+
+# Skip test files from coverage reports
+coverageSkipTestFiles = true
+
+# Ignore patterns for coverage
+coveragePathIgnorePatterns = [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**",
+    "**/node_modules/**",
+    "**/*.config.*",
+    "**/dist/**"
+]
+
+# ================================
+# 🔍 File Loading & Handling
 # ================================
 
 [loader]
@@ -50,57 +119,23 @@ maxEventLoopUtilization = 0.85
 ".toml" = "toml"
 
 # ================================
-# Package Management
+# 🎨 Console Configuration
 # ================================
 
-[install]
-# Dependency handling configuration
-optional = true
-dev = true
-peer = true
-production = false
-exact = false
-auto = "fallback"
-frozenLockfile = false
-saveTextLockfile = false
-esm = true
-
-# Registry sources
-registry = "https://registry.npmjs.org"
-enableGlobalCache = true
-
-# Security settings
-verifySignatures = true
-allowInsecureDependencies = false
-integrityCheck = true
+[console]
+# Object inspection depth for better debugging
+depth = 3
 
 # ================================
-# Web Server Configuration
+# 🔐 Security & Cache
 # ================================
 
-[server]
-# Development server settings
-port = 3000
-hostname = "localhost"
-development = true
-staticDir = "./public"
-cors = true
-certificateMode = "auto"
+[install.cache]
+# Cache directory
+dir = "~/.bun/install/cache"
 
-# Compression and response optimization
-compression = true
-http2 = true
-etag = true
-staticCompression = true
-maxRequestBodySize = "50MB"
+# Enable global cache for faster installs
+disable = false
 
-# ================================
-# Testing Configuration
-# ================================
-
-[test]
-# Core Testing setup
-coverage = true
-includeSource = true
-environment = "node"
-watchMode = true
+# Always resolve latest versions
+disableManifest = false
