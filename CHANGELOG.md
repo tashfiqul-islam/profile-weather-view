@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.2...v2.1.3)
+### fix
+
+* **ci:** extraction of GPG Key Pt3 [skip ci] ([449c19c](https://github.com/tashfiqul-islam/profile-weather-view/commit/449c19c92c3f756d6de32c8b6431fc6ce919fd55))
+* **ci:** profile update repo path correction [skip ci] ([16128b3](https://github.com/tashfiqul-islam/profile-weather-view/commit/16128b35729e0dad93d83c1d40301a45aad06418))
+* **ci:** updated repo path ([1927c6f](https://github.com/tashfiqul-islam/profile-weather-view/commit/1927c6f7e8748a267ae912a2d34bd10ddd5cb769))
+
 # [2.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.1...v2.1.2)
 ### fix
 
