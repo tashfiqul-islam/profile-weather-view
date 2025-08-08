@@ -17,8 +17,8 @@ export default defineConfig({
     // Environment - Node.js for our weather script
     environment: 'node',
 
-    // Test file patterns
-    include: ['src/**/*.{test,spec}.{js,ts}', '**/*.{test,spec}.{js,ts}'],
+    // Test file patterns (restrict to project sources only)
+    include: ['src/**/*.{test,spec}.{js,ts}'],
 
     // Exclude patterns
     exclude: [
@@ -29,6 +29,9 @@ export default defineConfig({
       '**/*.config.{js,ts}',
       '**/vitest.config.{js,ts}',
       '**/setup.ts',
+      '**/~/**',
+      '**/.bun/**',
+      '**/.cache/**',
     ],
 
     // ================================

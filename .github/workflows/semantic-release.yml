@@ -137,8 +137,7 @@ jobs:
         if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
         run: |
           echo "::group::Project Validation"
-          bun run type-check
-          bun run test:ci
+          bun run type-check && bun run test:ci && bun run format && bun run lint
           echo "::endgroup::"
 
       # ============================================================
