@@ -37,7 +37,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  CACHE_KEY_PREFIX: "v12-profile-weather"
+  CACHE_KEY_PREFIX: "v13-profile-weather"
   TIMEZONE: "Asia/Dhaka"
   PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
   NODE_ENV: "production"
@@ -318,7 +318,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "schedule" || "${{ env.FORCE_UPDATE }}" == "true" ]]; then
             git add README.md
             git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
-            git push origin master
+            git push https://x-access-token:${{ secrets.PAT }}@github.com/${{ env.PROFILE_REPO }} HEAD:master
             echo "::notice::Changes pushed successfully with signed commit (scheduled/forced)"
           else
             # For manual runs, check if there are actual git changes
@@ -327,7 +327,7 @@ jobs:
             else
               git add README.md
               git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
-              git push origin master && echo "::notice::Changes pushed successfully with signed commit"
+              git push https://x-access-token:${{ secrets.PAT }}@github.com/${{ env.PROFILE_REPO }} HEAD:master && echo "::notice::Changes pushed successfully with signed commit"
             fi
           fi
           echo "::endgroup::"
