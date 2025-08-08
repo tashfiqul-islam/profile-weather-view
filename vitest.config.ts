@@ -18,11 +18,7 @@ export default defineConfig({
     environment: 'node',
 
     // Test file patterns
-    include: [
-      'src/**/*.{test,spec}.{js,ts}',
-      '**/__tests__/**/*.{js,ts}',
-      '**/*.{test,spec}.{js,ts}',
-    ],
+    include: ['src/**/*.{test,spec}.{js,ts}', '**/*.{test,spec}.{js,ts}'],
 
     // Exclude patterns
     exclude: [
@@ -160,7 +156,7 @@ export default defineConfig({
     // Test reporters
     reporters: [
       ['default', { summary: true }],
-      ['./src/reporters/BannersReporter.ts', {}],
+      ['./src/__tests__/reporters/BannersReporter.ts', {}],
       'html',
       'junit',
     ],
