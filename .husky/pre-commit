@@ -1,9 +1,10 @@
 #!/bin/sh
 # ==============================================================================
-# 🚀 Advanced Pre-commit Validation Hook
+# 🚀 Advanced Pre-commit Validation Hook (Ultracite Optimized)
 # ==============================================================================
 # Performs state-of-the-art code quality checks on staged files with advanced
 # caching, parallel execution, and intelligent dependency management.
+# Optimized for Ultracite integration with enhanced developer experience.
 
 # Fail-safe option that works across all shells
 set -e
@@ -13,7 +14,7 @@ set -e
 # ==============================================================================
 readonly CACHE_DIR=".git/hooks/cache"
 readonly SKIP_PATTERN="EMERGENCY"
-readonly VERSION="2.0.0"
+readonly VERSION="2.1.0"
 readonly MAX_PARALLELISM=2
 readonly MIN_FREE_MEMORY_MB=512
 readonly TIMEOUT_SECONDS=300
@@ -320,7 +321,7 @@ run_validation() {
 detect_package_runner() {
   # Try to detect the best available package runner
   if command -v bun >/dev/null 2>&1; then
-    CMD_RUNNER="bun run"
+    CMD_RUNNER="bunx"
     log "DEBUG" "Using Bun as package runner"
   elif command -v pnpm >/dev/null 2>&1; then
     CMD_RUNNER="pnpm exec"
@@ -450,13 +451,14 @@ main() {
   # Begin validation pipeline
   log "SECTION" "Starting Validation Pipeline"
 
-  # Format validation with Prettier
-  PRETTIER_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER prettier --check --cache --cache-location=$CACHE_DIR/.prettierrc"
-  run_validation "Code Formatting" "🖌️" "$PRETTIER_CMD" "$STAGED_FILES"
-
-  # Static analysis with ESLint
-  ESLINT_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER eslint --cache --cache-location=$CACHE_DIR/.eslintcache"
-  run_validation "Code Linting" "🧹" "$ESLINT_CMD" "$STAGED_FILES"
+  # Format and lint with Ultracite (OPTIMIZED for Ultracite best practices)
+  # Use manual file filtering since --staged flag may not be available in all versions
+  if [ -n "$STAGED_FILES" ]; then
+    ULTRACITE_CMD="echo \"$STAGED_FILES\" | xargs $CMD_RUNNER ultracite format"
+    run_validation "Ultracite Formatting & Linting" "✨" "$ULTRACITE_CMD" "$STAGED_FILES"
+  else
+    log "INFO" "No files to format with Ultracite"
+  fi
 
   # Type checking with TypeScript (only if TS files present)
   if [ -n "$TS_FILES" ]; then
@@ -464,9 +466,13 @@ main() {
     run_validation "TypeScript Validation" "📘" "$TS_CMD" "$TS_FILES"
   fi
 
-  # Test execution for affected modules
-  TEST_CMD="$CMD_RUNNER test:staged"
-  run_validation "Unit Tests" "🧪" "$TEST_CMD" "$STAGED_FILES"
+  # Test execution for affected modules (if test:staged script exists)
+  if grep -q '"test:staged"' package.json 2>/dev/null; then
+    TEST_CMD="$CMD_RUNNER test:staged"
+    run_validation "Unit Tests" "🧪" "$TEST_CMD" "$STAGED_FILES"
+  else
+    log "INFO" "Skipping tests: no test:staged script found in package.json"
+  fi
 
   # Display summary results
   display_results
@@ -476,6 +482,7 @@ main() {
     printf "\n"
     log "ERROR" "${BOLD}Pre-commit validation failed. Please fix the issues before committing.${RESET}"
     log "INFO" "To bypass validation in an emergency: ${YELLOW}git commit -m \"${SKIP_PATTERN}: your message\"${RESET}"
+    log "INFO" "To run Ultracite manually: ${YELLOW}$CMD_RUNNER ultracite format${RESET}"
     exit 1
   else
     printf "\n"
