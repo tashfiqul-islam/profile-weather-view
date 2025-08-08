@@ -35,7 +35,7 @@ jobs:
     if: |
       !contains(github.event.head_commit.message, '[skip actions]')
     env:
-      CACHE_KEY_PREFIX: v2-sync-readme
+      CACHE_KEY_PREFIX: v3-sync-readme
       TIMEZONE: Asia/Dhaka
     steps:
       - name: "⬇️ Checkout Repository"
