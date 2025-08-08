@@ -37,7 +37,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  CACHE_KEY_PREFIX: "v11-profile-weather"
+  CACHE_KEY_PREFIX: "v12-profile-weather"
   TIMEZONE: "Asia/Dhaka"
   PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
   NODE_ENV: "production"
@@ -286,9 +286,9 @@ jobs:
           if ! grep -q "END PGP PRIVATE KEY BLOCK" "$asc"; then
             echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
           {
-            echo "key<<'EOF'"
+            echo "key<<GPG_EOF"
             cat "$asc"
-            echo "EOF"
+            echo "GPG_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: "🔐 Setup GPG for Commit Signing"

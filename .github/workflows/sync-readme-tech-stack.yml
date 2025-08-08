@@ -35,7 +35,7 @@ jobs:
     if: |
       !contains(github.event.head_commit.message, '[skip actions]')
     env:
-      CACHE_KEY_PREFIX: v1-sync-readme
+      CACHE_KEY_PREFIX: v2-sync-readme
       TIMEZONE: Asia/Dhaka
     steps:
       - name: "⬇️ Checkout Repository"
@@ -107,9 +107,9 @@ jobs:
           if ! grep -q "END PGP PRIVATE KEY BLOCK" "$asc"; then
             echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
           {
-            echo "key<<'EOF'"
+            echo "key<<GPG_EOF"
             cat "$asc"
-            echo "EOF"
+            echo "GPG_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: "🔐 Setup GPG for Commit Signing"
