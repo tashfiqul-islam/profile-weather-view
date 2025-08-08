@@ -1,5 +1,10 @@
 # Changelog
 
+# [2.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.1...v2.1.2)
+### fix
+
+* **ci:** extraction of GPG Key Pt2 ([4ebeda2](https://github.com/tashfiqul-islam/profile-weather-view/commit/4ebeda25a16cbf4123c33ec4b8a952ae3c8e7d7c))
+
 # [2.1.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.0...v2.1.1)
 ### chore
 
