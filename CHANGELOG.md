@@ -29,6 +29,47 @@ All notable changes to profile-weather-view will be documented in this file.
 
 ---
 
+# [2.0.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.24...v2.0.0)
+## Major (2025-08-08)
+
+
+* chore(release)!: cut v2 stable (#82) ([0212ce0](https://github.com/tashfiqul-islam/profile-weather-view/commit/0212ce0e8691f0a533a3f1409c133b5efc3047e7))
+### chore
+
+* **actions:** Pin dependencies (#58) ([160dd8b](https://github.com/tashfiqul-islam/profile-weather-view/commit/160dd8bf02641e1a78c45c48a2418d50f2023e67))
+* **actions:** Update GitHub Actions (#76) ([8f19d89](https://github.com/tashfiqul-islam/profile-weather-view/commit/8f19d89da78f1e5d9b0e1fdd52c31aac636e69ae))
+* **actions:** Update update github/codeql-action to 181d5ee (#62) ([5d6c3cf](https://github.com/tashfiqul-islam/profile-weather-view/commit/5d6c3cff782dd87b2eaa618093085518a1d5880e))
+* **actions:** Update update github/codeql-action to 51f7732 (#80) ([8cefa4e](https://github.com/tashfiqul-islam/profile-weather-view/commit/8cefa4ed137295336f495c6e331fbcf9f1162613))
+* **actions:** Update update oven-sh/setup-bun to v2 (#63) ([6433027](https://github.com/tashfiqul-islam/profile-weather-view/commit/64330270c6db0e33abf7cab4688704bd5a3b84a1))
+* **bun:** Pin dependencies (#59) ([71930e0](https://github.com/tashfiqul-islam/profile-weather-view/commit/71930e03c19e911f58085de7f7ddd89a5641e887))
+* **bun:** Update TypeScript packages (#78) ([dd531ae](https://github.com/tashfiqul-islam/profile-weather-view/commit/dd531ae006cf4f5f14c9aea5e057fdf523e4785b))
+* **bun:** Update update bun-types to 1.2.19 (#77) ([9467c18](https://github.com/tashfiqul-islam/profile-weather-view/commit/9467c18440acde5f7c9158862097a891b2c30e25))
+* **deps:** migrate config renovate.json (#55) ([c76cd71](https://github.com/tashfiqul-islam/profile-weather-view/commit/c76cd718eaecaa5776a1440c0153fc1163486a23))
+* **deps:** Pin dependencies (#60) ([de11a1d](https://github.com/tashfiqul-islam/profile-weather-view/commit/de11a1d686035f452712cf215f2e2ad88bba1841))
+* **deps:** Pin dependencies (#61) ([594b109](https://github.com/tashfiqul-islam/profile-weather-view/commit/594b109c233fa552771a29751d76befc4f8bbd11))
+* **deps:** Update @eslint/js to 9.30.0 (#53) ([9855d62](https://github.com/tashfiqul-islam/profile-weather-view/commit/9855d620b653a09eaacae2f97091088f1c9be81f))
+* **deps:** Update @eslint/js to 9.30.1 (#68) ([6d6ae66](https://github.com/tashfiqul-islam/profile-weather-view/commit/6d6ae66f002bc157fd524ec694364ae6be547675))
+* **deps:** Update @eslint/js to 9.31.0 (#72) ([59401c4](https://github.com/tashfiqul-islam/profile-weather-view/commit/59401c48d90f51af6463c19cb3a4c57099688e23))
+* **deps:** Update @eslint/js to 9.32.0 (#75) ([ee4ec3d](https://github.com/tashfiqul-islam/profile-weather-view/commit/ee4ec3d608a649df6cdea63e088ee9f5d5f97714))
+* **deps:** Update @stylistic/eslint-plugin to 5.1.0 (#64) ([b1b5558](https://github.com/tashfiqul-islam/profile-weather-view/commit/b1b5558b629ae42909f9194a4a26ceefa5a4e916))
+* **deps:** Update @stylistic/eslint-plugin to 5.2.0 (#73) ([8c6051f](https://github.com/tashfiqul-islam/profile-weather-view/commit/8c6051f5bc66e00e479f130744c921391be976d7))
+* **deps:** Update @stylistic/eslint-plugin to 5.2.2 (#74) ([806a30c](https://github.com/tashfiqul-islam/profile-weather-view/commit/806a30caf90a35beeac9db4798f6f6da31633c08))
+* **deps:** Update bun to 1.2.17 (#52) ([984cfa4](https://github.com/tashfiqul-islam/profile-weather-view/commit/984cfa43ea673090def488064149843331253d10))
+* **deps:** Update bun to 1.2.18 (#69) ([fdb7033](https://github.com/tashfiqul-islam/profile-weather-view/commit/fdb7033f8a21d136d371c6dbbf83737a9b55dc50))
+* **deps:** Update bun to 1.2.19 (#70) ([db010c4](https://github.com/tashfiqul-islam/profile-weather-view/commit/db010c41a6d68d1f28ac8331f0cfab77619ea97d))
+* **deps:** Update dotenv to 17.0.0 (#65) ([3492e61](https://github.com/tashfiqul-islam/profile-weather-view/commit/3492e6106fb4b529c1e870b19bd1d32c01f2ca73))
+* **deps:** Update ESLint packages (#79) ([6610381](https://github.com/tashfiqul-islam/profile-weather-view/commit/6610381461417e683343a28c1ceb71682683f0a9))
+* **deps:** Update globals to 16.3.0 (#67) ([adab2e5](https://github.com/tashfiqul-islam/profile-weather-view/commit/adab2e530b73cfcbfe1363b50dfba37adb490f87))
+* **deps:** Update prettier to 3.6.2 (#54) ([bff0b27](https://github.com/tashfiqul-islam/profile-weather-view/commit/bff0b27d57c3e584ffbb0f15253b410c0afcd2f2))
+* **deps:** Update semantic-release to 24.2.6 (#57) ([57e095f](https://github.com/tashfiqul-islam/profile-weather-view/commit/57e095f405ab0105a2d251d085fbb8391f66a017))
+* **deps:** Update semantic-release to 24.2.7 (#71) ([23c4d2c](https://github.com/tashfiqul-islam/profile-weather-view/commit/23c4d2c50b838719457f29b5de305280aac79699))
+* **deps:** Update TypeScript packages (#81) ([78039dd](https://github.com/tashfiqul-islam/profile-weather-view/commit/78039ddc23e3a2d740174f669ca1fa0164a0c1e2))
+* **deps:** Update vite to 7.0.0 (#66) ([a468adc](https://github.com/tashfiqul-islam/profile-weather-view/commit/a468adcdf89fe444666c11aabb61e9c7fb3aa3e8))
+
+### BREAKING CHANGE
+
+* adopt v2 architecture/docs/workflows
+
 # [1.2.24](https://github.com/tashfiqul-islam/profile-weather-view/compare/v1.2.23...v1.2.24)
 ## Patch (2025-06-21)
 
