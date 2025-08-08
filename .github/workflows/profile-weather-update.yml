@@ -159,7 +159,7 @@ jobs:
         env:
           OPEN_WEATHER_KEY: ${{ secrets.OPEN_WEATHER_KEY }}
           GITHUB_ACTIONS: "true"
-          PROFILE_README_PATH: "../profile-repo/README.md"
+          PROFILE_README_PATH: "profile-repo/README.md"
           FORCE_UPDATE: ${{ env.FORCE_UPDATE }}
         run: |
           echo "::group::Weather Update Process"
