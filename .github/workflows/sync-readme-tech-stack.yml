@@ -106,11 +106,10 @@ jobs:
           fi
           if ! grep -q "END PGP PRIVATE KEY BLOCK" "$asc"; then
             echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
-          {
-            echo "key<<GPG_EOF"
-            cat "$asc"
-            echo "GPG_EOF"
-          } >> "$GITHUB_OUTPUT"
+          # Work around GitHub output parsing; write to file and append via ::set-output style syntax
+          echo "key<<GPG_EOF" >> "$GITHUB_OUTPUT"
+          cat "$asc" >> "$GITHUB_OUTPUT"
+          echo "GPG_EOF" >> "$GITHUB_OUTPUT"
 
       - name: "🔐 Setup GPG for Commit Signing"
         id: gpg
@@ -119,6 +118,7 @@ jobs:
           gpg_private_key: ${{ steps.normalize-gpg.outputs.key }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
           git_user_signingkey: true
+          git_config_global: true
           git_commit_gpgsign: true
           git_tag_gpgsign: true
           git_push_gpgsign: if-asked
