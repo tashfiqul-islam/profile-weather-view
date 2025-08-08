@@ -100,11 +100,11 @@ jobs:
       # ============================================================
       - name: "📦 Install Dependencies"
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: bun install --frozen-lockfile --production=false
+        run: bun install --frozen-lockfile
 
       - name: "⚡ Install Dependencies (Fast Path)"
         if: steps.cache-deps.outputs.cache-hit == 'true'
-        run: bun install --frozen-lockfile --production=false --no-summary
+        run: bun install --frozen-lockfile --no-summary
 
       - name: "💾 Save Bun Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
