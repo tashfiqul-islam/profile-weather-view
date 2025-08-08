@@ -37,7 +37,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  CACHE_KEY_PREFIX: "v10-profile-weather"
+  CACHE_KEY_PREFIX: "v11-profile-weather"
   TIMEZONE: "Asia/Dhaka"
   PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
   NODE_ENV: "production"
@@ -152,6 +152,16 @@ jobs:
             exit 1
           fi
           echo "::notice::Weather section found in profile README"
+          echo "::endgroup::"
+
+      - name: "📂 List workspace & profile repo"
+        run: |
+          echo "::group::Workspace listing"
+          pwd
+          ls -la
+          echo "::endgroup::"
+          echo "::group::Profile repo listing"
+          ls -la profile-repo || true
           echo "::endgroup::"
 
       - name: "🌦️ Update Weather and README"
