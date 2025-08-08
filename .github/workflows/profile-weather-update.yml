@@ -1,5 +1,5 @@
 name: "🌦️ Profile Weather Update"
-
+      
 # ============================================================
 # 🚀 Optimized triggers for reliability and performance
 # ============================================================
@@ -248,6 +248,14 @@ jobs:
             ~/.bun/install/cache
             bun.lock
           key: ${{ steps.cache-deps.outputs.cache-primary-key }}
+
+      - name: "🔎 Validate GPG secret format"
+        if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
+        run: |
+          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            echo "::error::Missing secret GPG_PRIVATE_KEY"; exit 1; fi
+          if ! grep -q "BEGIN PGP PRIVATE KEY BLOCK" <<< "${{ secrets.GPG_PRIVATE_KEY }}"; then
+            echo "::error::GPG_PRIVATE_KEY is not ASCII-armored. Re-export with 'gpg --export-secret-keys --armor KEY_ID' and paste full block including BEGIN/END lines."; exit 1; fi
 
       - name: "🔐 Setup GPG for Commit Signing"
         id: gpg-setup
