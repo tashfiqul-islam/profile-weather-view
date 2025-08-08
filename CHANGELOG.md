@@ -1,5 +1,13 @@
 # Changelog
 
+# [2.1.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.0...v2.1.1)
+### chore
+
+* **deps:** migrate config renovate.json [skip actions] (#85) ([f0a2eea](https://github.com/tashfiqul-islam/profile-weather-view/commit/f0a2eea65b88afe29821dbf5f98b35aeb79ad0ad))
+### fix
+
+* **ci:** extraction of GPG key ([29d2022](https://github.com/tashfiqul-islam/profile-weather-view/commit/29d2022d2824adf5c223a5853586707cd95944d6))
+
 # [2.1.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.0.0...v2.1.0)
 ### chore
 
