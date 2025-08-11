@@ -102,14 +102,14 @@ jobs:
         run: |
           echo "::group::Bun Installation"
           bun --version
-          bun install --frozen-lockfile
+          bun install --no-summary
           echo "::endgroup::"
 
       - name: "⚡ Install Dependencies (Fast Path)"
         if: steps.cache-deps.outputs.cache-hit == 'true'
         run: |
           echo "::notice::Using cached dependencies"
-          bun install --frozen-lockfile --no-summary
+          bun install --no-summary
 
       - name: "🔍 Code Quality Check"
         if: env.SKIP_TESTS != 'true'
