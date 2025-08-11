@@ -1,5 +1,27 @@
 # Changelog
 
+# [2.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.3...v2.1.4)
+
+* Update profile-weather-update.yml ([87cce20](https://github.com/tashfiqul-islam/profile-weather-view/commit/87cce209bdb58cd5b315a3b562af4ec2d7ee1a48))
+### chore
+
+* **deps:** Update @semantic-release/github 11.0.4 [skip actions] (#88) ([34c9602](https://github.com/tashfiqul-islam/profile-weather-view/commit/34c96022161bd517bbee98c7ae3d09addeacd3d8))
+* **deps:** Update bun 1.2.20 [skip actions] (#89) ([121a5b1](https://github.com/tashfiqul-islam/profile-weather-view/commit/121a5b1da66f00259fe9a7e80f7951fa9f189de5))
+* **deps:** Update lint-staged 16.1.5 [skip actions] (#87) ([cbc144b](https://github.com/tashfiqul-islam/profile-weather-view/commit/cbc144b1ddf56db2a3600baa2478b45de037f121))
+### docs
+
+* **readme:** sync tech stack badges and footer date [skip actions] ([679a263](https://github.com/tashfiqul-islam/profile-weather-view/commit/679a26313786c4232c5b78c8818a4a301d8f6956))
+### fix
+
+* **ci:** commit issue fix [skip ci] ([65f3c85](https://github.com/tashfiqul-islam/profile-weather-view/commit/65f3c85f6b41676aa5e3ce685621d7c6ef4cdbcb))
+* **ci:** commit issue fix [skip ci] ([09c9031](https://github.com/tashfiqul-islam/profile-weather-view/commit/09c903134e8570d679e61570e34b58c6ad555a23))
+* **ci:** GPG key fix [skip ci] ([c9c55b8](https://github.com/tashfiqul-islam/profile-weather-view/commit/c9c55b826ba999ae3798b7393b27e3c2c7035216))
+* **ci:** GPG key fix [skip ci] ([5c78f3d](https://github.com/tashfiqul-islam/profile-weather-view/commit/5c78f3d8c7185fd00e49d3c686ba8440ae0c44e1))
+* **ci:** GPG key fix [skip ci] ([208338b](https://github.com/tashfiqul-islam/profile-weather-view/commit/208338bae46cf3eb7cb28f1dcb24baf2486f12bd))
+* **ci:** GPG key fix [skip ci] ([a3c1786](https://github.com/tashfiqul-islam/profile-weather-view/commit/a3c17864eb7f521a3bfa0e51eb786f0e804b0dae))
+* **ci:** GPG key fix [skip ci] ([c2dae4a](https://github.com/tashfiqul-islam/profile-weather-view/commit/c2dae4ae0260a5eacfadbb6962470d9da8ef4e6f))
+* **ci:** GPG key fix [skip ci] ([94d2895](https://github.com/tashfiqul-islam/profile-weather-view/commit/94d289593ae7c0c341480318c4ce59c73bf4e5cf))
+
 # [2.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.2...v2.1.3)
 ### fix
 
