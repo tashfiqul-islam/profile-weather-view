@@ -1,5 +1,17 @@
 # Changelog
 
+# [2.2.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.4...v2.2.0)
+### chore
+
+* **deps:** Update @biomejs/biome 2.2.0 [skip actions] (#90) ([8422608](https://github.com/tashfiqul-islam/profile-weather-view/commit/8422608493e441cf43ed8175e5206cc08cee825c))
+* **doc:** improved README.md ([183202c](https://github.com/tashfiqul-islam/profile-weather-view/commit/183202c7372f7938fe673d8aa6d96745b413e1e8))
+### docs
+
+* **readme:** sync tech stack badges and footer date [skip actions] ([528943d](https://github.com/tashfiqul-islam/profile-weather-view/commit/528943d1ff200e840ce9bc89e80b32e1118bbd64))
+### feat
+
+* **weather:** introduce format agnostic approach for weather updates ([5d18db2](https://github.com/tashfiqul-islam/profile-weather-view/commit/5d18db259824e0ce60e6c2c06982ea8b38d3a90e))
+
 # [2.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.3...v2.1.4)
 
 * Update profile-weather-update.yml ([87cce20](https://github.com/tashfiqul-islam/profile-weather-view/commit/87cce209bdb58cd5b315a3b562af4ec2d7ee1a48))
