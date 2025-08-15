@@ -75,14 +75,14 @@
 
 <p>
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9.2-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
-  <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.2.19-000000?style=flat-square&logo=bun&logoColor=white" /></a>
+  <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.2.20-000000?style=flat-square&logo=bun&logoColor=white" /></a>
   <a href="https://vitest.dev/"><img alt="Vitest" src="https://img.shields.io/badge/Vitest-3.2.4-6E9F18?style=flat-square&logo=vitest&logoColor=white" /></a>
-  <a href="https://github.com/colinhacks/zod"><img alt="Zod" src="https://img.shields.io/badge/Zod-4.0.15-3E67B1?style=flat-square" /></a>
+  <a href="https://github.com/colinhacks/zod"><img alt="Zod" src="https://img.shields.io/badge/Zod-4.0.17-3E67B1?style=flat-square" /></a>
   <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.11.0-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
   <a href="https://github.com/tc39/proposal-temporal"><img alt="Temporal polyfill" src="https://img.shields.io/badge/Temporal-0.5.1-1F2A44?style=flat-square" /></a>
-  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.0-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
-  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.1.4-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
-  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-5.1.2-0B7285?style=flat-square" /></a>
+  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.2-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
+  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.2.0-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
+  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-5.1.6-0B7285?style=flat-square" /></a>
   <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-24.2.7-e10079?style=flat-square&logo=semantic-release" /></a>
   <a href="https://github.com/renovatebot/renovate"><img alt="Renovate" src="https://img.shields.io/badge/Renovate-enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white" /></a>
   <a href="https://github.com/features/actions"><img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white" /></a>
@@ -445,7 +445,7 @@ copies or substantial portions of the Software.
   ·
   <a href="https://github.com/tashfiqul-islam">🐦 Follow</a>
   <br>
-  <sub>Last refresh: August 8, 2025</sub>
+  <sub>Last refresh: August 15, 2025</sub>
   <br>
   <a href="#-profile-weather-view-v2">↑ Back to top</a>
 </p>
