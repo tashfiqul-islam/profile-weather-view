@@ -17,6 +17,12 @@ import { fetchWeatherData } from '@/weather-update/services/fetchWeather';
 import { updateReadme } from '@/weather-update/services/updateReadme';
 import { ensureEnvironmentVariables } from '@/weather-update/utils/preload';
 
+// ================================
+// 📊 Test Constants
+// ================================
+
+const API_KEY_MIN_LENGTH = 32;
+
 const GH_RE = /GitHub Actions workflow run/;
 const ENV_DEV_RE = /Environment: development/;
 const SCRIPT_FAILED_RE = /Script execution failed:/;
@@ -41,7 +47,7 @@ describe('index.ts main()', () => {
 
   it('runs happy path and sets CHANGES_DETECTED=true when update succeeds', async () => {
     vi.mocked(ensureEnvironmentVariables).mockResolvedValue({
-      OPEN_WEATHER_KEY: 'A'.repeat(32),
+      OPEN_WEATHER_KEY: 'A'.repeat(API_KEY_MIN_LENGTH),
     } as unknown as { OPEN_WEATHER_KEY: string });
     vi.mocked(fetchWeatherData).mockResolvedValue({
       description: 'Clear Sky',
@@ -65,7 +71,7 @@ describe('index.ts main()', () => {
 
   it('sets CHANGES_DETECTED=false when update returns false', async () => {
     vi.mocked(ensureEnvironmentVariables).mockResolvedValue({
-      OPEN_WEATHER_KEY: 'A'.repeat(32),
+      OPEN_WEATHER_KEY: 'A'.repeat(API_KEY_MIN_LENGTH),
     } as unknown as { OPEN_WEATHER_KEY: string });
     vi.mocked(fetchWeatherData).mockResolvedValue({
       description: 'Clear Sky',
@@ -136,7 +142,7 @@ describe('index.ts main()', () => {
   it('does not log custom README path message when env var is empty', async () => {
     process.env['PROFILE_README_PATH'] = '';
     vi.mocked(ensureEnvironmentVariables).mockResolvedValue({
-      OPEN_WEATHER_KEY: 'A'.repeat(32),
+      OPEN_WEATHER_KEY: 'A'.repeat(API_KEY_MIN_LENGTH),
     } as unknown as { OPEN_WEATHER_KEY: string });
     vi.mocked(fetchWeatherData).mockResolvedValue({
       description: 'Clear Sky',
@@ -162,7 +168,7 @@ describe('index.ts main()', () => {
   it('logs custom README path when env var is provided', async () => {
     process.env['PROFILE_README_PATH'] = './custom.md';
     vi.mocked(ensureEnvironmentVariables).mockResolvedValue({
-      OPEN_WEATHER_KEY: 'A'.repeat(32),
+      OPEN_WEATHER_KEY: 'A'.repeat(API_KEY_MIN_LENGTH),
     } as unknown as { OPEN_WEATHER_KEY: string });
     vi.mocked(fetchWeatherData).mockResolvedValue({
       description: 'Clear Sky',
@@ -188,7 +194,7 @@ describe('index.ts main()', () => {
     const originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = '';
     vi.mocked(ensureEnvironmentVariables).mockResolvedValue({
-      OPEN_WEATHER_KEY: 'A'.repeat(32),
+      OPEN_WEATHER_KEY: 'A'.repeat(API_KEY_MIN_LENGTH),
     } as unknown as { OPEN_WEATHER_KEY: string });
     vi.mocked(fetchWeatherData).mockResolvedValue({
       description: 'Clear Sky',

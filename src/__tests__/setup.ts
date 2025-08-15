@@ -8,13 +8,23 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 
 // ================================
+// 📊 Test Constants
+// ================================
+
+const API_KEY_MIN_LENGTH = 32;
+const HTTP_STATUS_OK = 200;
+const HTTP_STATUS_REDIRECT_THRESHOLD = 300;
+const HTTP_STATUS_SERVER_ERROR = 500;
+const MILLISECONDS_PER_SECOND = 1000;
+
+// ================================
 // 🌍 Environment Setup
 // ================================
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
 // Use a valid 32+ length alphanumeric key per schema
-process.env['OPEN_WEATHER_KEY'] = 'A'.repeat(32);
+process.env['OPEN_WEATHER_KEY'] = 'A'.repeat(API_KEY_MIN_LENGTH);
 process.env['FORCE_UPDATE'] = 'false';
 process.env['GITHUB_ACTIONS'] = 'false';
 process.env['PROFILE_README_PATH'] = './test-README.md';
@@ -162,7 +172,7 @@ export const createMockWeatherData = (
   clouds: {
     all: 20,
   },
-  dt: Math.floor(Date.now() / 1000),
+  dt: Math.floor(Date.now() / MILLISECONDS_PER_SECOND),
   sys: {
     type: 2,
     id: 2_000_314,
@@ -180,10 +190,13 @@ export const createMockWeatherData = (
 /**
  * Utility to create mock API response
  */
-export const createMockApiResponse = (data: unknown, status = 200) => ({
-  ok: status >= 200 && status < 300,
+export const createMockApiResponse = (
+  data: unknown,
+  status = HTTP_STATUS_OK
+) => ({
+  ok: status >= HTTP_STATUS_OK && status < HTTP_STATUS_REDIRECT_THRESHOLD,
   status,
-  statusText: status === 200 ? 'OK' : 'Error',
+  statusText: status === HTTP_STATUS_OK ? 'OK' : 'Error',
   json: () => Promise.resolve(data),
   text: () => Promise.resolve(JSON.stringify(data)),
   headers: new Map(),
@@ -216,7 +229,10 @@ export const TEST_DATA = {
 
   // API responses
   API_SUCCESS: createMockApiResponse(createMockWeatherData()),
-  API_ERROR: createMockApiResponse({ error: 'API Error' }, 500),
+  API_ERROR: createMockApiResponse(
+    { error: 'API Error' },
+    HTTP_STATUS_SERVER_ERROR
+  ),
 
   // File content
   README_CONTENT: `# Test Profile
@@ -273,7 +289,7 @@ export const validateWeatherData = (data: unknown) => {
       'main' in weatherData &&
       'name' in weatherData &&
       'cod' in weatherData &&
-      weatherData['cod'] === 200
+      weatherData['cod'] === HTTP_STATUS_OK
     );
   }
   return false;

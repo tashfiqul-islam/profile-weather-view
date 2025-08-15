@@ -129,33 +129,73 @@ export function createWeatherData(
     humidityPct,
     icon,
   } = payload;
-  if (currentSection.includes('<td')) {
-    return `<!-- Hourly Weather Update -->
-        <td align="center">${description} <img width="15" src="https://openweathermap.org/img/w/${icon}.png" alt="${description} icon"></td>
-        <td align="center">${temperatureC}°C</td>
-        <td align="center">${sunriseLocal}</td>
-        <td align="center">${sunsetLocal}</td>
-        <td align="center">${humidityPct}%</td>
-        <!-- End of Hourly Weather Update -->`;
+
+  // Format-agnostic approach: preserve existing structure and replace data points
+  let updatedSection = currentSection;
+
+  // Replace temperature values (e.g., "32°C", "28°C")
+  updatedSection = updatedSection.replace(/\d+°C/g, `${temperatureC}°C`);
+
+  // Replace humidity percentages (e.g., "65%", "83%")
+  updatedSection = updatedSection.replace(/\d+%/g, `${humidityPct}%`);
+
+  // Replace sunrise times (various formats: "05:34", "06:12:30")
+  updatedSection = updatedSection.replace(
+    /(Sunrise:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
+    `$1${sunriseLocal}`
+  );
+
+  // Replace sunset times (various formats: "18:31", "18:15:45")
+  updatedSection = updatedSection.replace(
+    /(Sunset:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
+    `$1${sunsetLocal}`
+  );
+
+  // Replace weather icons (preserve existing format but update icon code)
+  updatedSection = updatedSection.replace(
+    /openweathermap\.org\/img\/w\/\w+\.png/g,
+    `openweathermap.org/img/w/${icon}.png`
+  );
+
+  // Replace weather description in image alt text
+  updatedSection = updatedSection.replace(
+    /alt="[^"]*icon"/g,
+    `alt="${description} icon"`
+  );
+
+  // Replace weather description text (more complex - try to preserve position)
+  // Look for common weather terms and replace them
+  const weatherTerms = [
+    'Clear Sky',
+    'Clear',
+    'Clouds',
+    'Cloudy',
+    'Overcast',
+    'Rain',
+    'Light Rain',
+    'Moderate Rain',
+    'Heavy Rain',
+    'Snow',
+    'Light Snow',
+    'Heavy Snow',
+    'Thunderstorm',
+    'Mist',
+    'Fog',
+    'Haze',
+    'Drizzle',
+    'Sunny',
+  ];
+
+  // Find and replace weather descriptions while preserving case and context
+  for (const term of weatherTerms) {
+    const regex = new RegExp(`\\b${term}\\b`, 'gi');
+    if (regex.test(updatedSection)) {
+      updatedSection = updatedSection.replace(regex, description);
+      break; // Only replace the first match to avoid over-replacement
+    }
   }
 
-  if (currentSection.includes('<div')) {
-    return `<!-- Hourly Weather Update -->
-<div style="text-align: center;">
-  <img src="https://openweathermap.org/img/wn/${icon}@2x.png" style="width: 100px;" alt="${description} icon">
-  <h3>${temperatureC}°C | ${description}</h3>
-  <p>Sunrise: ${sunriseLocal} | Sunset: ${sunsetLocal} | Humidity: ${humidityPct}%</p>
-</div>
-<!-- End of Hourly Weather Update -->`;
-  }
-
-  return `<!-- Hourly Weather Update -->
-${description} <img width="15" src="https://openweathermap.org/img/w/${icon}.png" alt="${description} icon">
-${temperatureC}°C
-Sunrise: ${sunriseLocal}
-Sunset: ${sunsetLocal}
-Humidity: ${humidityPct}%
-<!-- End of Hourly Weather Update -->`;
+  return updatedSection;
 }
 
 /**
@@ -205,7 +245,7 @@ export function shouldProceedWithUpdate(
     GITHUB_ACTIONS: process.env['GITHUB_ACTIONS'],
   });
 
-  return !!(envResult.success && envResult.data.FORCE_UPDATE === 'true');
+  return Boolean(envResult.success && envResult.data.FORCE_UPDATE === 'true');
 }
 
 /**

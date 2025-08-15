@@ -5,7 +5,7 @@
 <h1 align="center">🌦️ Profile Weather View (v2)</h1>
 
 <p align="center">
-  Automate live weather on your GitHub profile using a modern TypeScript + Bun stack, robust CI/CD, strict quality gates, and zero‑maintenance dependency automation.
+  Automate live weather on your GitHub profile using a modern TypeScript + Bun stack, robust CI/CD, strict quality gates, and zero-maintenance dependency automation.
 </p>
 
 <p align="center">
@@ -65,9 +65,9 @@
   - Commit standards: commitlint (Conventional Commits). See [COMMIT_CONVENTION.md](./src/docs/COMMIT_CONVENTION.md)
   - Code quality: SonarCloud (JS/TS analyzer, LCOV coverage)
 - Releases: semantic-release (see [RELEASE.md](./src/docs/RELEASE.md))
- - Scripts: see [SCRIPTS.md](./src/docs/SCRIPTS.md)
- - Tests: see [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md)
-- Dependencies: Renovate with auto‑merge for safe updates and major‑update approvals
+- Scripts: see [SCRIPTS.md](./src/docs/SCRIPTS.md)
+- Tests: see [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md)
+- Dependencies: Renovate with auto-merge for safe updates and major-update approvals
 
 ---
 
@@ -96,7 +96,17 @@
 
 1. Workflow runs on a schedule (5:23, 13:23, 21:23 Asia/Dhaka) or manually.
 2. Script `src/weather-update/index.ts` validates env, fetches current weather, formats output, and updates the target README section bounded by:
-   - `<!-- Hourly Weather Update --> ... <!-- End of Hourly Weather Update -->`
+
+   ```html
+   <!-- Example Weather Update -->
+Moderate Rain <img width="15" src="https://openweathermap.org/img/w/10n.png" alt="Moderate Rain icon">
+28°C
+Sunrise: 05:34
+Sunset: 18:31
+Humidity: 84%
+<!-- End of Example Weather Update -->
+   ```
+
 3. If changes are detected (or forced), the workflow commits and pushes to your profile repo, optionally with GPG signing.
 
 ---
@@ -105,33 +115,23 @@
 
 <div align="center">
   <img src="/image/architecture.png" alt="Profile Weather View Architecture diagram showing GitHub Actions triggering index.ts orchestrator which calls preload.ts, fetchWeather.ts, and updateReadme.ts" width="900">
-  <p><em>High‑level data flow: GitHub Actions → orchestrator → weather service → README updater.</em></p>
+  <p><em>High-level data flow: GitHub Actions → orchestrator → weather service → README updater.</em></p>
 </div>
 
 See the detailed system design in [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md).
 
 ---
 
-## Example output on profile
-
-Below is how the rendered section appears in the profile README after an update.
-
-```markdown
-## Current Weather in Uttara, Dhaka
-
-| Weather | Temperature | Sunrise   | Sunset    | Humidity |
-|---------|-------------|-----------|-----------|----------|
-| Clear   | 32°C        | 06:12:30  | 18:15:45  | 65%      |
-
-Last refresh: Saturday, April 20, 2025 14:30:22 UTC+6
-```
+## 🌦️ Live Weather (Updates Automatically)
 
 The update replaces content between the markers:
 
-```text
 <!-- Hourly Weather Update -->
-...generated table and timestamp...
+| Weather | Temperature | Sunrise   | Sunset    | Humidity |
+|---------|-------------|-----------|-----------|----------|
+| Moderate Moderate Rain   | 28°C        | 05:34     | 18:31     | 84%      |
 <!-- End of Hourly Weather Update -->
+<em>Last refresh: Saturday, August 16, 2025 at 01:37:59 (UTC+6)</em>
 ```
 
 You can style this section further in your profile repo; the generator focuses on content.
@@ -144,7 +144,7 @@ You can style this section further in your profile repo; the generator focuses o
 
 - Bun ≥ 1.2.19 (recommended)
 - Node.js ≥ 22 (CI tooling)
-- OpenWeather API key (free): `https://openweathermap.org/api`
+- OpenWeather API key (free): <https://openweathermap.org/api>
 
 ### Install & Run locally
 
@@ -162,7 +162,8 @@ bun run dev
 
 ### Configure your profile repository
 
-The workflow updates a profile README hosted at `PROFILE_REPO` (defaults to `tashfiqul-islam/tashfiqul-islam`). Change this in `.github/workflows/profile-weather-update.yml` if needed.
+The workflow updates a profile README hosted at `PROFILE_REPO` (defaults to `tashfiqul-islam/tashfiqul-islam`).
+Change this in `.github/workflows/profile-weather-update.yml` if needed.
 
 ### Required GitHub secrets
 
@@ -173,7 +174,7 @@ Add these to your repository (Settings → Secrets and variables → Actions):
 
 Optional (for signed commits):
 
-- `GPG_PRIVATE_KEY`: ASCII‑armored private key
+- `GPG_PRIVATE_KEY`: ASCII-armored private key
 - `GPG_PASSPHRASE`: Passphrase for the key
 - `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`: Identity for commits
 
@@ -205,7 +206,7 @@ Change these to your latitude/longitude. The script fetches only "current" data 
 - Schedule: 3× daily (Asia/Dhaka)
 - Tooling: `oven-sh/setup-bun@v2`, `actions/setup-node@v4`
 - Caching: `actions/cache@v4` keyed by `bun.lock`
-- Quality gates (skippable via input): Ultracite lint, TS type‑check, Vitest
+- Quality gates (skippable via input): Ultracite lint, TS type-check, Vitest
 - Artifacts: uploads the updated README for traceability
 - Commit: optional GPG signing; uses `PAT` to push to the profile repo
 
@@ -216,10 +217,10 @@ Manual inputs:
 
 ### 2) Semantic Release (`.github/workflows/semantic-release.yml`)
 
-- Trigger: push to `master` and manual dispatch (supports dry‑run)
-- Runtime: Bun for install/cache, Node LTS for running semantic‑release
+- Trigger: push to `master` and manual dispatch (supports dry-run)
+- Runtime: Bun for install/cache, Node LTS for running semantic-release
 - Auth: uses `GITHUB_TOKEN` for release creation (no PAT required)
-- Skip‑CI handling: commits with `[skip ci]`/`[skip actions]` are analyzed but won’t create a release
+- Skip-CI handling: commits with `[skip ci]`/`[skip actions]` are analyzed but won't create a release
 - SLSA provenance: optional generation for released assets
 
 Release rules (from `.releaserc.js`):
@@ -235,7 +236,7 @@ Release rules (from `.releaserc.js`):
 ### 3) README Tech Stack Sync (`.github/workflows/sync-readme-tech-stack.yml`)
 
 - Trigger: on changes to `package.json` or `bun.lock` (Renovate merges included); manual dispatch supported
-- Action: updates flat‑square tech stack badges in `README.md` with the latest versions and refreshes footer date
+- Action: updates flat-square tech stack badges in `README.md` with the latest versions and refreshes footer date
 - Commit: signed commit as you (GPG), message includes `[skip actions]` to avoid loops
 - Tooling: Bun + dependency cache keyed by `bun.lock`, concurrency guard per ref
 
@@ -246,13 +247,13 @@ Release rules (from `.releaserc.js`):
 Renovate (`renovate.json`) is configured to:
 
 - Use semantic chore commits that intentionally skip CI: suffix/body `[skip actions]`
-- Auto‑merge non‑major updates directly to the base branch (`automergeType: "branch"`)
+- Auto-merge non-major updates directly to the base branch (`automergeType: "branch"`)
 - Require manual approval for majors (Dependency Dashboard)
-- Auto‑merge vulnerability fixes promptly
+- Auto-merge vulnerability fixes promptly
 - Group classes of dependencies (ESLint, Vitest, TypeScript, Actions) to reduce PR noise
 - Maintain Bun versions via `customManagers` and regex managers
 
-This preserves a clean release history: Renovate chore commits do not tag releases, and the release workflow recognizes skip‑CI semantics.
+This preserves a clean release history: Renovate chore commits do not tag releases, and the release workflow recognizes skip-CI semantics.
 
 ---
 
@@ -297,7 +298,6 @@ All files         |     100 |      100 |     100 |     100 |
 | Branches    | 100% (127/127)    |
 | Functions   | 100% (28/28)      |
 | Lines       | 100% (620/620)    |
-
 
 ### SonarCloud
 
@@ -398,6 +398,7 @@ bun run semantic-release
   - [Development Guide](./src/docs/DEVELOPMENT.md)
 
 Quick start:
+
 1) Fork and clone
 2) `bun install`
 3) Create a branch and implement changes
@@ -439,9 +440,9 @@ copies or substantial portions of the Software.
   <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=bug&title=%5Bbug%5D%3A+">🐛 Report Bug</a>
   ·
   <a href="https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=enhancement&title=%5Bfeature%5D%3A+">💡 Request Feature</a>
-    ·
-    <a href="https://github.com/sponsors/tashfiqul-islam">💖 Sponsor</a>
-    ·
+  ·
+  <a href="https://github.com/sponsors/tashfiqul-islam">💖 Sponsor</a>
+  ·
   <a href="https://github.com/tashfiqul-islam">🐦 Follow</a>
   <br>
   <sub>Last refresh: August 8, 2025</sub>

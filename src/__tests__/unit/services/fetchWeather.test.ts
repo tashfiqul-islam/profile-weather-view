@@ -1,6 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchWeatherData } from '@/weather-update/services/fetchWeather';
 
+// ================================
+// 📊 Test Constants
+// ================================
+
+const API_KEY_MIN_LENGTH = 32;
+const EXPECTED_HUMIDITY = 65;
+const HTTP_TOO_MANY_REQUESTS = 429;
+const HTTP_SERVER_ERROR = 500;
+const HTTP_NOT_FOUND = 404;
+const RETRY_DELAY_MS = 500;
+const TOTAL_RETRY_TIME_MS = 1500;
+const EXPECTED_RETRY_CALLS = 3;
+const MOCK_JSON_RESPONSE = 123;
+
 const API_URL = 'https://api.openweathermap.org/data/3.0/onecall';
 
 const validResponse = {
@@ -57,7 +71,7 @@ describe('fetchWeatherData', () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
-    process.env['OPEN_WEATHER_KEY'] = 'Z'.repeat(32);
+    process.env['OPEN_WEATHER_KEY'] = 'Z'.repeat(API_KEY_MIN_LENGTH);
     // keep performance.now deterministic
     vi.spyOn(globalThis.performance, 'now').mockReturnValue(0);
   });
@@ -79,7 +93,7 @@ describe('fetchWeatherData', () => {
     expect(payload.description).toBe('Clear Sky');
     expect(payload.temperatureC).toBeTypeOf('number');
     expect(payload.icon).toBe('01d');
-    expect(payload.humidityPct).toBe(65);
+    expect(payload.humidityPct).toBe(EXPECTED_HUMIDITY);
     expect(payload.sunriseLocal).toMatch(TIME_RE);
     expect(payload.sunsetLocal).toMatch(TIME_RE);
   });
@@ -88,7 +102,7 @@ describe('fetchWeatherData', () => {
     globalThis.fetch = mockFetch(
       false,
       { message: 'fail' },
-      429,
+      HTTP_TOO_MANY_REQUESTS,
       'Too Many Requests'
     ) as unknown as typeof fetch;
     await expect(fetchWeatherData()).rejects.toThrow(
@@ -115,7 +129,7 @@ describe('fetchWeatherData', () => {
   });
 
   it('retries on transient error and then succeeds', async () => {
-    const failing = mockFetch(false, { e: 1 }, 500, 'Internal');
+    const failing = mockFetch(false, { e: 1 }, HTTP_SERVER_ERROR, 'Internal');
     const succeeding = mockFetch(true, validResponse);
     const seq = [failing, succeeding];
     globalThis.fetch = (async (req: RequestInfo | URL) => {
@@ -126,7 +140,7 @@ describe('fetchWeatherData', () => {
     vi.useFakeTimers();
     try {
       const p = fetchWeatherData();
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS);
       await vi.runAllTimersAsync();
       const got = await p;
       expect(got.description).toBe('Clear Sky');
@@ -148,7 +162,7 @@ describe('fetchWeatherData', () => {
     vi.useFakeTimers();
     try {
       const p = fetchWeatherData();
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(RETRY_DELAY_MS);
       await vi.runAllTimersAsync();
       const got = await p;
       expect(got.description).toBe('Clear Sky');
@@ -159,7 +173,7 @@ describe('fetchWeatherData', () => {
   });
 
   it('exhausts retries on repeated 500 errors', async () => {
-    const http500 = mockFetch(false, { e: 1 }, 500, 'Internal');
+    const http500 = mockFetch(false, { e: 1 }, HTTP_SERVER_ERROR, 'Internal');
     let calls = 0;
     globalThis.fetch = (async (req: RequestInfo | URL) => {
       calls += 1;
@@ -170,13 +184,13 @@ describe('fetchWeatherData', () => {
     try {
       const resultPromise = fetchWeatherData().catch((e) => e as Error);
       // backoffs: 500ms then 1000ms
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(TOTAL_RETRY_TIME_MS);
       await vi.runAllTimersAsync();
       const err = await resultPromise;
       expect(err).toBeInstanceOf(Error);
       expect((err as Error).message).toContain('500');
       // initial + retries (2) = 3
-      expect(calls).toBeGreaterThanOrEqual(3);
+      expect(calls).toBeGreaterThanOrEqual(EXPECTED_RETRY_CALLS);
     } finally {
       vi.useRealTimers();
     }
@@ -281,7 +295,7 @@ describe('fetchWeatherData', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => Promise.resolve(123),
+        json: async () => Promise.resolve(MOCK_JSON_RESPONSE),
         text: async () => Promise.resolve(''),
       };
       return res as Response;
@@ -296,7 +310,12 @@ describe('fetchWeatherData', () => {
     const callCount = vi.fn();
     globalThis.fetch = (async (req: RequestInfo | URL) => {
       callCount();
-      return await mockFetch(false, { e: 1 }, 404, 'Not Found')(req as string);
+      return await mockFetch(
+        false,
+        { e: 1 },
+        HTTP_NOT_FOUND,
+        'Not Found'
+      )(req as string);
     }) as unknown as typeof fetch;
     await expect(fetchWeatherData()).rejects.toThrow('404');
     expect(callCount).toHaveBeenCalledTimes(1);

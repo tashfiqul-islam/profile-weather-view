@@ -1,6 +1,14 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { z } from 'zod';
 
+// ================================
+// 📊 Configuration Constants
+// ================================
+
+const HTTP_CLIENT_ERROR_START = 400;
+const HTTP_SERVER_ERROR_START = 500;
+const MILLISECONDS_PER_SECOND = 1000;
+
 /**
  * Geographic coordinates for location tracking.
  * Using const assertions for better type inference
@@ -133,8 +141,8 @@ function withRetry<T>(
       // Don't retry on client errors (4xx)
       if (
         isHttpError(error) &&
-        error.response.status >= 400 &&
-        error.response.status < 500
+        error.response.status >= HTTP_CLIENT_ERROR_START &&
+        error.response.status < HTTP_SERVER_ERROR_START
       ) {
         throw lastError;
       }
@@ -176,7 +184,9 @@ function isHttpError(
  * @returns Formatted time string in Dhaka timezone
  */
 function convertToDhakaTime(timestamp: number): string {
-  const instant = Temporal.Instant.fromEpochMilliseconds(timestamp * 1000);
+  const instant = Temporal.Instant.fromEpochMilliseconds(
+    timestamp * MILLISECONDS_PER_SECOND
+  );
   const dhakaTime = instant.toZonedDateTimeISO('Asia/Dhaka');
 
   return dhakaTime.toLocaleString('en-US', {

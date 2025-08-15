@@ -43,6 +43,7 @@ function log(
   const prefix = `[${timestamp}] Weather Update:`;
   const logEntry = `${prefix} ${message}\n`;
 
+  // biome-ignore lint/nursery/noUnnecessaryConditions: Switch on string union type is necessary for different log outputs
   switch (type) {
     case 'success':
       process.stdout.write(`✅ ${logEntry}`);

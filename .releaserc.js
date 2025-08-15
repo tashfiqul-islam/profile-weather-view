@@ -95,8 +95,12 @@ export default {
             const newCommit = { ...commit };
 
             // Create short hash for display
+            const GIT_HASH_DISPLAY_LENGTH = 7;
             if (typeof commit.hash === 'string') {
-              newCommit.shortHash = commit.hash.substring(0, 7);
+              newCommit.shortHash = commit.hash.substring(
+                0,
+                GIT_HASH_DISPLAY_LENGTH
+              );
             }
 
             // Clean up subject

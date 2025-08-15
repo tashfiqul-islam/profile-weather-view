@@ -11,16 +11,16 @@ import { execSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-interface PackageJson {
+type PackageJson = {
   scripts?: Record<string, string>;
-}
+};
 
-interface ValidationResult {
+type ValidationResult = {
   details?: string;
   message: string;
   name: string;
   status: 'fail' | 'pass' | 'warning';
-}
+};
 
 class DependencyValidator {
   private readonly results: ValidationResult[] = [];
@@ -467,7 +467,10 @@ class DependencyValidator {
       `📈 SUMMARY: ${passed} passed, ${warnings} warnings, ${failed} failed`
     );
 
-    const percentage = Math.round((passed / this.results.length) * 100);
+    const PERCENTAGE_MULTIPLIER = 100;
+    const percentage = Math.round(
+      (passed / this.results.length) * PERCENTAGE_MULTIPLIER
+    );
     this.logMessage(`🎯 System Health: ${percentage}%`);
 
     if (failed === 0) {

@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+// ================================
+// 📊 Configuration Constants
+// ================================
+
+const API_KEY_MIN_LENGTH = 32;
+const API_KEY_MAX_LENGTH = 100;
+const PREVIEW_LENGTH = 8;
+
 const NON_EMPTY_CAPTURE = /^(.)+$/;
 
 /**
@@ -141,8 +149,14 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
 const EnvironmentSchema = z.object({
   OPEN_WEATHER_KEY: z
     .string()
-    .min(32, 'API key must be at least 32 characters')
-    .max(100, 'API key must be less than 100 characters')
+    .min(
+      API_KEY_MIN_LENGTH,
+      `API key must be at least ${API_KEY_MIN_LENGTH} characters`
+    )
+    .max(
+      API_KEY_MAX_LENGTH,
+      `API key must be less than ${API_KEY_MAX_LENGTH} characters`
+    )
     .regex(
       /^[a-zA-Z0-9]+$/,
       'API key must contain only alphanumeric characters'
@@ -196,9 +210,9 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   const apiKey = envResult.data.OPEN_WEATHER_KEY;
   const debugInfo = [
     '🔍 Environment variable check:',
-    `  OPEN_WEATHER_KEY exists: ${!!apiKey}`,
+    `  OPEN_WEATHER_KEY exists: ${Boolean(apiKey)}`,
     `  OPEN_WEATHER_KEY length: ${apiKey.length}`,
-    `  OPEN_WEATHER_KEY preview: ${apiKey.substring(0, 8)}...`,
+    `  OPEN_WEATHER_KEY preview: ${apiKey.substring(0, PREVIEW_LENGTH)}...`,
   ].join('\n');
 
   process.stdout.write(`${debugInfo}\n`);

@@ -1,6 +1,10 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+// ================================
+// 📊 Configuration Constants
+// ================================
+
 type PackageJson = {
   packageManager?: string;
   dependencies?: Record<string, string>;
@@ -46,12 +50,15 @@ async function writeReadme(cwd: string, content: string): Promise<void> {
 
 function replaceBadge(
   content: string,
-  label: string,
-  version: string,
-  color: string,
-  logoSegment: string
+  badgeConfig: {
+    label: string;
+    version: string;
+    color: string;
+    logoSegment: string;
+  }
 ): string {
   // Pattern: https://img.shields.io/badge/Label-<version>-<color>?style=flat-square<logoSegment>
+  const { label, version, color, logoSegment } = badgeConfig;
   const escapedLabel = label.replace(/[-/]/g, (m) => `\\${m}`);
   const pattern = new RegExp(
     `https://img\\.shields\\.io/badge/${escapedLabel}-[^-?]+-${color}\\?style=flat-square${logoSegment.replace(/\?/g, '\\?')}`,
@@ -118,7 +125,12 @@ async function main(): Promise<void> {
   for (const seg of segments) {
     const version = versions[seg.label];
     if (version) {
-      readme = replaceBadge(readme, seg.label, version, seg.color, seg.logo);
+      readme = replaceBadge(readme, {
+        label: seg.label,
+        version,
+        color: seg.color,
+        logoSegment: seg.logo,
+      });
     }
   }
 
