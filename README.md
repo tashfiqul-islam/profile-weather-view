@@ -675,7 +675,7 @@ copies or substantial portions of the Software.
 
 <br>
 
-<sub>**Last refresh**: August 15, 2025</sub>
+<sub>**Last refresh**: August 16, 2025</sub>
 
 <br>
 
