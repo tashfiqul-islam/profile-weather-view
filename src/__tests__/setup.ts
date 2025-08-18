@@ -302,10 +302,3 @@ export const validateWeatherData = (data: unknown) => {
 export const validateApiError = (error: unknown) => {
   return error instanceof Error && error.message.includes('API');
 };
-
-// ================================
-// 🚀 Export Test Utilities
-// ================================
-
-// Re-export vitest functions for convenience
-export { vi } from 'vitest';
