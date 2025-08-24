@@ -68,7 +68,7 @@ jobs:
       # ⬇️ Checkout Repository (Optimized)
       # ============================================================
       - name: "⬇️ Checkout Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
@@ -78,7 +78,7 @@ jobs:
       # 🧰 Setup Bun (Latest Version)
       # ============================================================
       - name: "🧰 Setup Bun"
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
         with:
           bun-version: latest
 
@@ -87,7 +87,7 @@ jobs:
       # ============================================================
       - name: "📦 Restore Bun Dependencies Cache"
         id: cache-deps
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             ~/.bun/install/cache
@@ -108,7 +108,7 @@ jobs:
 
       - name: "💾 Save Bun Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             ~/.bun/install/cache
@@ -160,7 +160,7 @@ jobs:
       # 🚀 Run Semantic Release with Changelogen
       # ============================================================
       - name: "🧰 Setup Node (LTS)"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "lts/*"
 
@@ -229,7 +229,7 @@ jobs:
       # ============================================================
       - name: "📦 Upload Changelog Artifact"
         if: steps.check-release.outputs.new_release_version != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: changelog
           path: CHANGELOG.md
@@ -268,7 +268,7 @@ jobs:
     steps:
       - name: "📥 Download Changelog"
         if: needs.release.outputs.version != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: changelog
           merge-multiple: false

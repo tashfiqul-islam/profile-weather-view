@@ -59,14 +59,14 @@ jobs:
 
     steps:
       - name: "⬇️ Checkout Weather Code Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           repository: ${{ github.repository }}
           fetch-depth: 0  # Full history for better caching
           persist-credentials: false  # Security best practice
 
       - name: "⬇️ Checkout Profile Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
@@ -76,18 +76,18 @@ jobs:
           persist-credentials: false  # Security best practice
 
       - name: "🏗️ Setup Bun"
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
         with:
           bun-version: latest
 
       - name: "🧰 Setup Node (for tooling)"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "lts/*"
 
       - name: "📦 Restore Dependencies Cache"
         id: cache-deps
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             node_modules
@@ -241,7 +241,7 @@ jobs:
 
       - name: "📤 Upload Weather Output Artifact"
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: weather-output-${{ github.run_id }}
           path: profile-repo/README.md
@@ -251,7 +251,7 @@ jobs:
 
       - name: "💾 Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             node_modules
@@ -274,7 +274,7 @@ jobs:
       - name: "🔐 Setup GPG for Commit Signing"
         id: gpg-setup
         if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}

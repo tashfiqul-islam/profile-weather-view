@@ -39,19 +39,19 @@ jobs:
       TIMEZONE: Asia/Dhaka
     steps:
       - name: "⬇️ Checkout Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: "🏗️ Setup Bun"
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
         with:
           bun-version: latest
 
       - name: "📦 Restore Dependencies Cache"
         id: cache-deps
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             node_modules
@@ -94,7 +94,7 @@ jobs:
 
       - name: "🔐 Setup GPG for Commit Signing"
         id: gpg
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -133,7 +133,7 @@ jobs:
 
       - name: "💾 Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
           path: |
             node_modules
