@@ -9,7 +9,7 @@
         "axios": "^1.11.0",
         "connect": "^3.7.0",
         "dotenv": "^17.2.1",
-        "ultracite": "5.2.17",
+        "ultracite": "5.3.0",
         "vite": "^7.1.2",
         "zod": "^4.0.17",
       },
@@ -1026,7 +1026,7 @@
 
     "uglify-js": ["uglify-js@3.19.3", "", { "bin": { "uglifyjs": "bin/uglifyjs" } }, "sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ=="],
 
-    "ultracite": ["ultracite@5.2.17", "", { "dependencies": { "@clack/prompts": "^0.11.0", "deepmerge": "^4.3.1", "jsonc-parser": "^3.3.1", "nypm": "^0.6.1", "trpc-cli": "^0.10.2", "vitest": "^3.2.4", "zod": "^4.1.5" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-NQoChSZhY1eAcujTyz/h+dYR3XKv7b8SDNWM0HVO0zPFw9/WkjNCYqpyh8NSa4YLJYPrnDPCjiaQJvLtFMrbVw=="],
+    "ultracite": ["ultracite@5.3.0", "", { "dependencies": { "@clack/prompts": "^0.11.0", "deepmerge": "^4.3.1", "jsonc-parser": "^3.3.1", "nypm": "^0.6.1", "trpc-cli": "^0.10.2", "vitest": "^3.2.4", "zod": "^4.1.5" }, "bin": { "ultracite": "dist/index.js" } }, "sha512-h9EXOPoGTFOVhNALW+BI1qJ11R31mvtn+xFzn/CZ/xPBgdqfKT4BE1ZkmL+V3MNRnWDgNdNZC/fqOiIKFmvl7A=="],
 
     "undici-types": ["undici-types@7.10.0", "", {}, "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="],
 
