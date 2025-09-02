@@ -1,5 +1,30 @@
 # Changelog
 
+# [2.2.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.0...v2.2.1)
+### chore
+
+* **biome:** update schema version in biome.jsonc [skip ci] ([027dcf3](https://github.com/tashfiqul-islam/profile-weather-view/commit/027dcf34743f605e51a0b99a0c36ebb3276c0616))
+* **deps:** Pin bun-types 1.2.20 [skip actions] (#95) ([cabb12a](https://github.com/tashfiqul-islam/profile-weather-view/commit/cabb12ac7e5f7da7aa6dcd2c19fbed6e61f22e52))
+* **deps:** Pin dependencies [skip actions] (#96) ([9764ec7](https://github.com/tashfiqul-islam/profile-weather-view/commit/9764ec75446ae3366853f71117e27ce1c4dfd138))
+* **deps:** Update @biomejs/biome 2.2.2 [skip actions] (#92) ([ef958fa](https://github.com/tashfiqul-islam/profile-weather-view/commit/ef958fa42e9501ff8e1c057c9add39ff3bdd5283))
+* **deps:** Update @semantic-release/github 11.0.5 [skip actions] (#98) ([a3c516f](https://github.com/tashfiqul-islam/profile-weather-view/commit/a3c516f3ef8c8cf364d89bc2029e5c94ae6dd637))
+* **deps:** Update @types/bun 1.2.21 [skip actions] (#101) ([3c61c79](https://github.com/tashfiqul-islam/profile-weather-view/commit/3c61c799c0be48d14a5da73d5fd6563cf78f2425))
+* **deps:** Update bun 1.2.21 [skip actions] (#97) ([f15b8eb](https://github.com/tashfiqul-islam/profile-weather-view/commit/f15b8ebd0db2005eaad85711674da43037f02789))
+* **deps:** Update bun-types 1.2.21 [skip actions] (#100) ([7dd2b18](https://github.com/tashfiqul-islam/profile-weather-view/commit/7dd2b180a9a31d2e0c075e6988d648755a24f13b))
+* **deps:** Update ultracite 5.2.17 [skip actions] (#99) ([54babfd](https://github.com/tashfiqul-islam/profile-weather-view/commit/54babfd0f52e1038e8d012b235dd08a0d756ffbc))
+* **deps:** Update ultracite 5.2.4 [skip actions] (#91) ([804b953](https://github.com/tashfiqul-islam/profile-weather-view/commit/804b9536a37993593da75014b71cc87a8ed58c50))
+* **deps:** Update ultracite 5.2.5 [skip actions] (#93) ([840a2a6](https://github.com/tashfiqul-islam/profile-weather-view/commit/840a2a6fede838c6225288eb39442112fb33164a))
+* **deps:** Update ultracite 5.3.0 [skip actions] (#102) ([834c6f7](https://github.com/tashfiqul-islam/profile-weather-view/commit/834c6f75d5eb1da223ce91eb04946f2e94a648f9))
+### docs
+
+* **readme:** sync tech stack badges and footer date [skip actions] ([23890b8](https://github.com/tashfiqul-islam/profile-weather-view/commit/23890b8bc058f60c05425f0f3248f3b91631dce2))
+### fix
+
+* **ci:** fix lint issues [skip ci] ([c50f8ea](https://github.com/tashfiqul-islam/profile-weather-view/commit/c50f8ea66413ba2e1a574f01b503fe12f4b0aefe))
+* **ci:** updated ultracite & biome dependency ([3d690e5](https://github.com/tashfiqul-islam/profile-weather-view/commit/3d690e5be3e2ef844368832a2741b803a0d24d76))
+* **ci:** updated validate project step ([14eff2c](https://github.com/tashfiqul-islam/profile-weather-view/commit/14eff2cf804db943e315f196224b9765eda9e439))
+* **docs:** updated README.md [skip ci] ([151334d](https://github.com/tashfiqul-islam/profile-weather-view/commit/151334d7f0a0a2f5a0e5fa65d1c1a45cc623271f))
+
 # [2.2.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.1.4...v2.2.0)
 ### chore
 
