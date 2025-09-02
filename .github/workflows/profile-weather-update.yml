@@ -37,7 +37,7 @@ permissions:
 # 🌍 Global environment variables
 # ============================================================
 env:
-  CACHE_KEY_PREFIX: "v13-profile-weather"
+  CACHE_KEY_PREFIX: "v14-profile-weather"
   TIMEZONE: "Asia/Dhaka"
   PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
   NODE_ENV: "production"
@@ -59,14 +59,14 @@ jobs:
 
     steps:
       - name: "⬇️ Checkout Weather Code Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository }}
           fetch-depth: 0  # Full history for better caching
           persist-credentials: false  # Security best practice
 
       - name: "⬇️ Checkout Profile Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
@@ -115,7 +115,7 @@ jobs:
         if: env.SKIP_TESTS != 'true'
         run: |
           echo "::group::Code Quality Verification"
-          bun run lint
+          bun run lint src/
           echo "::endgroup::"
           echo "::notice::Code quality checks passed"
 

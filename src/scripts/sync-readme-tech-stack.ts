@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 // ================================
 // 📊 Configuration Constants
@@ -30,22 +30,22 @@ function getBunVersion(pkg: PackageJson): string | undefined {
   if (fromPm?.[1]) {
     return fromPm[1];
   }
-  const fromTypes = pkg.devDependencies?.['bun-types'];
+  const fromTypes = pkg.devDependencies?.["bun-types"];
   return coerceVersion(fromTypes);
 }
 
 async function readPackageJson(cwd: string): Promise<PackageJson> {
-  const file = await readFile(resolve(cwd, 'package.json'), 'utf8');
+  const file = await readFile(resolve(cwd, "package.json"), "utf8");
   return JSON.parse(file) as PackageJson;
 }
 
 async function readReadme(cwd: string): Promise<string> {
-  const file = await readFile(resolve(cwd, 'README.md'), 'utf8');
+  const file = await readFile(resolve(cwd, "README.md"), "utf8");
   return file;
 }
 
 async function writeReadme(cwd: string, content: string): Promise<void> {
-  await writeFile(resolve(cwd, 'README.md'), content, 'utf8');
+  await writeFile(resolve(cwd, "README.md"), content, "utf8");
 }
 
 function replaceBadge(
@@ -61,18 +61,18 @@ function replaceBadge(
   const { label, version, color, logoSegment } = badgeConfig;
   const escapedLabel = label.replace(/[-/]/g, (m) => `\\${m}`);
   const pattern = new RegExp(
-    `https://img\\.shields\\.io/badge/${escapedLabel}-[^-?]+-${color}\\?style=flat-square${logoSegment.replace(/\?/g, '\\?')}`,
-    'g'
+    `https://img\\.shields\\.io/badge/${escapedLabel}-[^-?]+-${color}\\?style=flat-square${logoSegment.replace(/\?/g, "\\?")}`,
+    "g"
   );
   const replacement = `https://img.shields.io/badge/${label}-${version}-${color}?style=flat-square${logoSegment}`;
   return content.replace(pattern, replacement);
 }
 
 function updateFooterDate(content: string, isoDate: Date): string {
-  const formatted = isoDate.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const formatted = isoDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
   return content.replace(
     FOOTER_DATE_REGEX,
@@ -88,37 +88,37 @@ async function main(): Promise<void> {
   const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
 
   const versions: Record<string, string | undefined> = {
-    TypeScript: coerceVersion(deps['typescript']),
+    TypeScript: coerceVersion(deps["typescript"]),
     Bun: getBunVersion(pkg),
-    Vitest: coerceVersion(deps['vitest']),
-    Zod: coerceVersion(deps['zod']),
-    Axios: coerceVersion(deps['axios']),
-    Temporal: coerceVersion(deps['@js-temporal/polyfill']),
-    Vite: coerceVersion(deps['vite']),
-    Biome: coerceVersion(deps['@biomejs/biome']),
-    Ultracite: coerceVersion(deps['ultracite']),
-    'semantic--release': coerceVersion(deps['semantic-release']),
+    Vitest: coerceVersion(deps["vitest"]),
+    Zod: coerceVersion(deps["zod"]),
+    Axios: coerceVersion(deps["axios"]),
+    Temporal: coerceVersion(deps["@js-temporal/polyfill"]),
+    Vite: coerceVersion(deps["vite"]),
+    Biome: coerceVersion(deps["@biomejs/biome"]),
+    Ultracite: coerceVersion(deps["ultracite"]),
+    "semantic--release": coerceVersion(deps["semantic-release"]),
   };
 
   // Badge color + logo segments must match README patterns exactly
   const segments: Array<{ label: string; color: string; logo: string }> = [
     {
-      label: 'TypeScript',
-      color: '3178C6',
-      logo: '&logo=typescript&logoColor=white',
+      label: "TypeScript",
+      color: "3178C6",
+      logo: "&logo=typescript&logoColor=white",
     },
-    { label: 'Bun', color: '000000', logo: '&logo=bun&logoColor=white' },
-    { label: 'Vitest', color: '6E9F18', logo: '&logo=vitest&logoColor=white' },
-    { label: 'Zod', color: '3E67B1', logo: '' },
-    { label: 'Axios', color: '5A29E4', logo: '&logo=axios&logoColor=white' },
-    { label: 'Temporal', color: '1F2A44', logo: '' },
-    { label: 'Vite', color: '646CFF', logo: '&logo=vite&logoColor=white' },
-    { label: 'Biome', color: '60A5FA', logo: '&logo=biome&logoColor=white' },
-    { label: 'Ultracite', color: '0B7285', logo: '' },
+    { label: "Bun", color: "000000", logo: "&logo=bun&logoColor=white" },
+    { label: "Vitest", color: "6E9F18", logo: "&logo=vitest&logoColor=white" },
+    { label: "Zod", color: "3E67B1", logo: "" },
+    { label: "Axios", color: "5A29E4", logo: "&logo=axios&logoColor=white" },
+    { label: "Temporal", color: "1F2A44", logo: "" },
+    { label: "Vite", color: "646CFF", logo: "&logo=vite&logoColor=white" },
+    { label: "Biome", color: "60A5FA", logo: "&logo=biome&logoColor=white" },
+    { label: "Ultracite", color: "0B7285", logo: "" },
     {
-      label: 'semantic--release',
-      color: 'e10079',
-      logo: '&logo=semantic-release',
+      label: "semantic--release",
+      color: "e10079",
+      logo: "&logo=semantic-release",
     },
   ];
 

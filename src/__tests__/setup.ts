@@ -5,7 +5,7 @@
  * It sets up mocks, utilities, and global configurations.
  */
 
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from "vitest";
 
 // ================================
 // 📊 Test Constants
@@ -22,12 +22,12 @@ const MILLISECONDS_PER_SECOND = 1000;
 // ================================
 
 // Set test environment variables
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";
 // Use a valid 32+ length alphanumeric key per schema
-process.env['OPEN_WEATHER_KEY'] = 'A'.repeat(API_KEY_MIN_LENGTH);
-process.env['FORCE_UPDATE'] = 'false';
-process.env['GITHUB_ACTIONS'] = 'false';
-process.env['PROFILE_README_PATH'] = './test-README.md';
+process.env["OPEN_WEATHER_KEY"] = "A".repeat(API_KEY_MIN_LENGTH);
+process.env["FORCE_UPDATE"] = "false";
+process.env["GITHUB_ACTIONS"] = "false";
+process.env["PROFILE_README_PATH"] = "./test-README.md";
 
 // ================================
 // 🔧 Global Test Configuration
@@ -49,9 +49,9 @@ const mockFs = new Map<string, MockFile>();
 
 // Provide a default README with the weather section placeholder
 const defaultReadmePath =
-  process.env['PROFILE_README_PATH'] ?? './test-README.md';
+  process.env["PROFILE_README_PATH"] ?? "./test-README.md";
 const defaultReadmeContent =
-  '# Test README\n\n<!-- Hourly Weather Update -->\nPending...\n<!-- End of Hourly Weather Update -->\n\n<em>Last refresh: old</em>\n';
+  "# Test README\n\n<!-- Hourly Weather Update -->\nPending...\n<!-- End of Hourly Weather Update -->\n\n<em>Last refresh: old</em>\n";
 mockFs.set(defaultReadmePath, { content: defaultReadmeContent });
 
 export function setMockFile(path: string, content: string): void {
@@ -62,25 +62,25 @@ export function removeMockFile(path: string): void {
   mockFs.delete(path);
 }
 
-vi.stubGlobal('Bun', {
+vi.stubGlobal("Bun", {
   env: process.env,
   file: (path: string) => ({
     exists: async () => mockFs.has(path),
-    text: async () => mockFs.get(path)?.content ?? '',
+    text: async () => mockFs.get(path)?.content ?? "",
     get size() {
-      const content = mockFs.get(path)?.content ?? '';
+      const content = mockFs.get(path)?.content ?? "";
       return content.length;
     },
   }),
   write: vi.fn(
     async (path: string | number, data: string | Blob | ArrayBufferView) => {
-      if (typeof path !== 'string') {
+      if (typeof path !== "string") {
         return;
       }
       let text: string;
-      if (typeof data === 'string') {
+      if (typeof data === "string") {
         text = data;
-      } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+      } else if (typeof Blob !== "undefined" && data instanceof Blob) {
         text = await data.text();
       } else {
         text = new TextDecoder().decode(data as ArrayBufferView);
@@ -134,8 +134,8 @@ export const captureOutput = () => {
     stdout,
     stderr,
     getOutput: () => ({
-      stdout: stdout.mock.calls.map((call) => call[0]).join(''),
-      stderr: stderr.mock.calls.map((call) => call[0]).join(''),
+      stdout: stdout.mock.calls.map((call) => call[0]).join(""),
+      stderr: stderr.mock.calls.map((call) => call[0]).join(""),
     }),
   };
 };
@@ -150,12 +150,12 @@ export const createMockWeatherData = (
   weather: [
     {
       id: 800,
-      main: 'Clear',
-      description: 'clear sky',
-      icon: '01d',
+      main: "Clear",
+      description: "clear sky",
+      icon: "01d",
     },
   ],
-  base: 'stations',
+  base: "stations",
   main: {
     temp: 20.5,
     feels_like: 19.8,
@@ -176,13 +176,13 @@ export const createMockWeatherData = (
   sys: {
     type: 2,
     id: 2_000_314,
-    country: 'US',
+    country: "US",
     sunrise: 1_643_727_600,
     sunset: 1_643_764_800,
   },
   timezone: -28_800,
   id: 5_391_959,
-  name: 'San Francisco',
+  name: "San Francisco",
   cod: 200,
   ...overrides,
 });
@@ -196,7 +196,7 @@ export const createMockApiResponse = (
 ) => ({
   ok: status >= HTTP_STATUS_OK && status < HTTP_STATUS_REDIRECT_THRESHOLD,
   status,
-  statusText: status === HTTP_STATUS_OK ? 'OK' : 'Error',
+  statusText: status === HTTP_STATUS_OK ? "OK" : "Error",
   json: () => Promise.resolve(data),
   text: () => Promise.resolve(JSON.stringify(data)),
   headers: new Map(),
@@ -212,10 +212,10 @@ export const waitFor = (ms: number) =>
  * Utility to create test environment variables
  */
 export const createTestEnv = (overrides = {}) => ({
-  OPEN_WEATHER_KEY: 'test-api-key-12345',
-  FORCE_UPDATE: 'false',
-  GITHUB_ACTIONS: 'false',
-  PROFILE_README_PATH: './test-README.md',
+  OPEN_WEATHER_KEY: "test-api-key-12345",
+  FORCE_UPDATE: "false",
+  GITHUB_ACTIONS: "false",
+  PROFILE_README_PATH: "./test-README.md",
   ...overrides,
 });
 
@@ -230,7 +230,7 @@ export const TEST_DATA = {
   // API responses
   API_SUCCESS: createMockApiResponse(createMockWeatherData()),
   API_ERROR: createMockApiResponse(
-    { error: 'API Error' },
+    { error: "API Error" },
     HTTP_STATUS_SERVER_ERROR
   ),
 
@@ -256,11 +256,11 @@ export const TEST_DATA = {
 
   // API configuration
   API_CONFIG: {
-    baseUrl: 'https://api.openweathermap.org/data/3.0/onecall',
+    baseUrl: "https://api.openweathermap.org/data/3.0/onecall",
     timeout: 8000,
     retries: 2,
     retryDelay: 500,
-    exclude: 'minutely,hourly,daily,alerts',
+    exclude: "minutely,hourly,daily,alerts",
   },
 };
 
@@ -281,15 +281,15 @@ export type TestEnv = ReturnType<typeof createTestEnv>;
  * Note: Use this inside test functions with expect imported from vitest
  */
 export const validateWeatherData = (data: unknown) => {
-  if (typeof data === 'object' && data !== null) {
+  if (typeof data === "object" && data !== null) {
     const weatherData = data as Record<string, unknown>;
     return (
-      'coord' in weatherData &&
-      'weather' in weatherData &&
-      'main' in weatherData &&
-      'name' in weatherData &&
-      'cod' in weatherData &&
-      weatherData['cod'] === HTTP_STATUS_OK
+      "coord" in weatherData &&
+      "weather" in weatherData &&
+      "main" in weatherData &&
+      "name" in weatherData &&
+      "cod" in weatherData &&
+      weatherData["cod"] === HTTP_STATUS_OK
     );
   }
   return false;
@@ -300,5 +300,5 @@ export const validateWeatherData = (data: unknown) => {
  * Note: Use this inside test functions with expect imported from vitest
  */
 export const validateApiError = (error: unknown) => {
-  return error instanceof Error && error.message.includes('API');
+  return error instanceof Error && error.message.includes("API");
 };

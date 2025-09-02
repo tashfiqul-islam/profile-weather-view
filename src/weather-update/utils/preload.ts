@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // ================================
 // 📊 Configuration Constants
@@ -15,8 +15,8 @@ const NON_EMPTY_CAPTURE = /^(.)+$/;
  */
 const RATE_LIMIT_CONFIG = {
   maxCallsPerDay: 15,
-  trackingFile: '.api-calls.json',
-  resetTime: '00:00', // Reset at midnight UTC
+  trackingFile: ".api-calls.json",
+  resetTime: "00:00", // Reset at midnight UTC
 } as const;
 
 /**
@@ -37,8 +37,8 @@ type ApiCallTracking = z.infer<typeof ApiCallTrackingSchema>;
 function getTodayDate(): string {
   const now = new Date();
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -48,8 +48,8 @@ function getTodayDate(): string {
  */
 function getCurrentTime(): string {
   const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
 }
 
@@ -83,7 +83,7 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
   } catch {
     // If file doesn't exist or is invalid, start fresh
     process.stdout.write(
-      '⚠️ API tracking file invalid or missing, starting fresh\n'
+      "⚠️ API tracking file invalid or missing, starting fresh\n"
     );
   }
 
@@ -117,9 +117,9 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
       `❌ API call limit exceeded! Maximum ${RATE_LIMIT_CONFIG.maxCallsPerDay} calls per day reached.`,
       `📅 Date: ${tracking.date}`,
       `📊 Calls made: ${tracking.calls}`,
-      `⏰ Last call: ${tracking.lastCall || 'N/A'}`,
+      `⏰ Last call: ${tracking.lastCall || "N/A"}`,
       `🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`,
-    ].join('\n');
+    ].join("\n");
 
     process.stderr.write(`${errorMessage}\n`);
     return false;
@@ -159,9 +159,9 @@ const EnvironmentSchema = z.object({
     )
     .regex(
       /^[a-zA-Z0-9]+$/,
-      'API key must contain only alphanumeric characters'
+      "API key must contain only alphanumeric characters"
     )
-    .describe('OpenWeather API key for weather data access'),
+    .describe("OpenWeather API key for weather data access"),
 });
 
 /**
@@ -189,17 +189,17 @@ OPEN_WEATHER_KEY=1234567890abcdef1234567890abcdef`;
 export function validateEnvironmentVariables(): EnvironmentVariables {
   // Validate environment variables
   const envResult = EnvironmentSchema.safeParse({
-    OPEN_WEATHER_KEY: Bun.env['OPEN_WEATHER_KEY']?.trim(),
+    OPEN_WEATHER_KEY: Bun.env["OPEN_WEATHER_KEY"]?.trim(),
   });
 
   if (!envResult.success) {
     const errorMessages = envResult.error.issues
       .map((issue) => {
-        const joinedPath = issue.path.join('.');
-        const suffix = joinedPath.replace(NON_EMPTY_CAPTURE, ' at $1');
+        const joinedPath = issue.path.join(".");
+        const suffix = joinedPath.replace(NON_EMPTY_CAPTURE, " at $1");
         return `${issue.message}${suffix}`;
       })
-      .join('; ');
+      .join("; ");
 
     throw new Error(
       `Environment validation failed: ${errorMessages}${SETUP_INSTRUCTIONS}`
@@ -209,11 +209,11 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   // Log environment variable status for debugging
   const apiKey = envResult.data.OPEN_WEATHER_KEY;
   const debugInfo = [
-    '🔍 Environment variable check:',
+    "🔍 Environment variable check:",
     `  OPEN_WEATHER_KEY exists: ${Boolean(apiKey)}`,
     `  OPEN_WEATHER_KEY length: ${apiKey.length}`,
     `  OPEN_WEATHER_KEY preview: ${apiKey.substring(0, PREVIEW_LENGTH)}...`,
-  ].join('\n');
+  ].join("\n");
 
   process.stdout.write(`${debugInfo}\n`);
 
@@ -228,7 +228,7 @@ export async function ensureEnvironmentVariables(): Promise<EnvironmentVariables
   // Check API call limit first
   if (!(await checkAndUpdateApiLimit())) {
     throw new Error(
-      'API call limit exceeded - cannot proceed with weather update'
+      "API call limit exceeded - cannot proceed with weather update"
     );
   }
 

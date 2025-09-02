@@ -1,5 +1,5 @@
-import { Temporal } from '@js-temporal/polyfill';
-import { z } from 'zod';
+import { Temporal } from "@js-temporal/polyfill";
+import { z } from "zod";
 
 // ================================
 // 📊 Configuration Constants
@@ -14,20 +14,20 @@ const MILLISECONDS_PER_SECOND = 1000;
  * Using const assertions for better type inference
  */
 const LOCATION = {
-  lat: '23.8759',
-  lon: '90.3795',
+  lat: "23.8759",
+  lon: "90.3795",
 } as const;
 
 /**
  * OpenWeather API configuration - optimized for current weather only
  */
 const API_CONFIG = {
-  baseUrl: 'https://api.openweathermap.org/data/3.0/onecall',
-  units: 'metric',
+  baseUrl: "https://api.openweathermap.org/data/3.0/onecall",
+  units: "metric",
   timeout: 8000, // Reduced timeout for faster failure detection
   retries: 2, // Reduced retries for faster overall execution
   retryDelay: 500, // Reduced delay for faster retries
-  exclude: 'minutely,hourly,daily,alerts', // Only fetch current weather
+  exclude: "minutely,hourly,daily,alerts", // Only fetch current weather
 } as const;
 
 /**
@@ -35,37 +35,37 @@ const API_CONFIG = {
  * Using Zod v4's optimized object definition with descriptions
  */
 const WeatherConditionSchema = z.object({
-  id: z.int32().describe('Weather condition ID from OpenWeather API'),
-  main: z.string().optional().describe('Main weather condition'),
-  description: z.string().describe('Detailed weather description'),
-  icon: z.string().optional().describe('Weather icon code'),
+  id: z.int32().describe("Weather condition ID from OpenWeather API"),
+  main: z.string().optional().describe("Main weather condition"),
+  description: z.string().describe("Detailed weather description"),
+  icon: z.string().optional().describe("Weather icon code"),
 });
 
 /**
  * Current weather data schema validation using Zod v4
  */
 const CurrentWeatherSchema = z.object({
-  dt: z.number().describe('Current time, Unix, UTC'),
-  sunrise: z.number().describe('Sunrise time, Unix, UTC'),
-  sunset: z.number().describe('Sunset time, Unix, UTC'),
-  temp: z.float64().describe('Temperature'),
-  feels_like: z.float64().describe('Human perception of weather'),
-  pressure: z.int32().describe('Atmospheric pressure on the sea level'),
-  humidity: z.int32().describe('Humidity, %'),
+  dt: z.number().describe("Current time, Unix, UTC"),
+  sunrise: z.number().describe("Sunrise time, Unix, UTC"),
+  sunset: z.number().describe("Sunset time, Unix, UTC"),
+  temp: z.float64().describe("Temperature"),
+  feels_like: z.float64().describe("Human perception of weather"),
+  pressure: z.int32().describe("Atmospheric pressure on the sea level"),
+  humidity: z.int32().describe("Humidity, %"),
   dew_point: z
     .float64()
     .describe(
-      'Atmospheric temperature below which water droplets begin to condense'
+      "Atmospheric temperature below which water droplets begin to condense"
     ),
-  uvi: z.float64().describe('Current UV index'),
-  clouds: z.int32().describe('Cloudiness, %'),
-  visibility: z.int32().describe('Average visibility, metres'),
-  wind_speed: z.float64().describe('Wind speed'),
-  wind_deg: z.int32().describe('Wind direction, degrees'),
+  uvi: z.float64().describe("Current UV index"),
+  clouds: z.int32().describe("Cloudiness, %"),
+  visibility: z.int32().describe("Average visibility, metres"),
+  wind_speed: z.float64().describe("Wind speed"),
+  wind_deg: z.int32().describe("Wind direction, degrees"),
   weather: z
     .tuple([WeatherConditionSchema])
     .rest(WeatherConditionSchema)
-    .describe('Weather conditions'),
+    .describe("Weather conditions"),
 });
 
 /**
@@ -110,9 +110,9 @@ function toTitleCase(str: string): string {
 
   return str
     .toLowerCase()
-    .split(' ')
+    .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
 /**
@@ -169,12 +169,12 @@ function withRetry<T>(
 function isHttpError(
   error: unknown
 ): error is Error & { response: { status: number; statusText?: string } } {
-  if (typeof error !== 'object' || error === null) {
+  if (typeof error !== "object" || error === null) {
     return false;
   }
   const maybe = error as { response?: unknown };
   const response = maybe.response as { status?: unknown } | undefined;
-  return typeof response?.status === 'number';
+  return typeof response?.status === "number";
 }
 
 /**
@@ -187,11 +187,11 @@ function convertToDhakaTime(timestamp: number): string {
   const instant = Temporal.Instant.fromEpochMilliseconds(
     timestamp * MILLISECONDS_PER_SECOND
   );
-  const dhakaTime = instant.toZonedDateTimeISO('Asia/Dhaka');
+  const dhakaTime = instant.toZonedDateTimeISO("Asia/Dhaka");
 
-  return dhakaTime.toLocaleString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return dhakaTime.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   });
 }
@@ -218,10 +218,10 @@ function validateWeatherData(data: unknown): WeatherData {
   if (!result.success) {
     const errorMessages = result.error.issues
       .map((issue) => {
-        const path = issue.path.length > 0 ? ` at ${issue.path.join('.')}` : '';
+        const path = issue.path.length > 0 ? ` at ${issue.path.join(".")}` : "";
         return `${issue.message}${path}`;
       })
-      .join('; ');
+      .join("; ");
 
     throw new Error(`Weather data validation failed: ${errorMessages}`);
   }
@@ -238,28 +238,28 @@ function validateWeatherData(data: unknown): WeatherData {
  */
 export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   try {
-    const apiKey = Bun.env['OPEN_WEATHER_KEY']?.trim();
+    const apiKey = Bun.env["OPEN_WEATHER_KEY"]?.trim();
     if (!apiKey) {
-      throw new Error('OpenWeather API key is required');
+      throw new Error("OpenWeather API key is required");
     }
 
     // Construct URL with modern URLSearchParams - optimized for current weather only
     const url = new URL(API_CONFIG.baseUrl);
-    url.searchParams.set('lat', LOCATION.lat);
-    url.searchParams.set('lon', LOCATION.lon);
-    url.searchParams.set('appid', apiKey);
-    url.searchParams.set('units', API_CONFIG.units);
-    url.searchParams.set('exclude', API_CONFIG.exclude); // Only fetch current weather
+    url.searchParams.set("lat", LOCATION.lat);
+    url.searchParams.set("lon", LOCATION.lon);
+    url.searchParams.set("appid", apiKey);
+    url.searchParams.set("units", API_CONFIG.units);
+    url.searchParams.set("exclude", API_CONFIG.exclude); // Only fetch current weather
 
     // Fetch data with retry logic using Bun's optimized fetch
     const response = await withRetry(async () => {
       const startTime = performance.now(); // Use performance.now() for higher precision
 
       const fetchResponse = await fetch(url.toString(), {
-        method: 'GET',
+        method: "GET",
         headers: {
-          Accept: 'application/json',
-          'User-Agent': 'Weather-Update-App/1.0',
+          Accept: "application/json",
+          "User-Agent": "Weather-Update-App/1.0",
         },
         signal: AbortSignal.timeout(API_CONFIG.timeout),
       });
@@ -296,7 +296,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     // Extract weather information with safe fallbacks and proper capitalization
     const [firstCondition] = current.weather;
     const description = toTitleCase(firstCondition.description);
-    const icon = firstCondition.icon ?? '01d';
+    const icon = firstCondition.icon ?? "01d";
     const temperatureC = formatTemperature(current.temp);
     const sunriseLocal = convertToDhakaTime(current.sunrise);
     const sunsetLocal = convertToDhakaTime(current.sunset);
@@ -316,7 +316,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     }
 
     throw new Error(
-      '[fetchWeather.ts] ❌ Unexpected error during weather data fetch'
+      "[fetchWeather.ts] ❌ Unexpected error during weather data fetch"
     );
   }
 }

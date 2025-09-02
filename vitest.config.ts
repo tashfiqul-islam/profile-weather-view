@@ -5,8 +5,8 @@
  * and developer experience with Bun runtime.
  */
 
-import { resolve } from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { resolve } from "node:path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -15,23 +15,23 @@ export default defineConfig({
     // ================================
 
     // Environment - Node.js for our weather script
-    environment: 'node',
+    environment: "node",
 
     // Test file patterns (restrict to project sources only)
-    include: ['src/**/*.{test,spec}.{js,ts}'],
+    include: ["src/**/*.{test,spec}.{js,ts}"],
 
     // Exclude patterns
     exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/coverage/**',
-      '**/.{idea,git,cache,output,temp}/**',
-      '**/*.config.{js,ts}',
-      '**/vitest.config.{js,ts}',
-      '**/setup.ts',
-      '**/~/**',
-      '**/.bun/**',
-      '**/.cache/**',
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/coverage/**",
+      "**/.{idea,git,cache,output,temp}/**",
+      "**/*.config.{js,ts}",
+      "**/vitest.config.{js,ts}",
+      "**/setup.ts",
+      "**/~/**",
+      "**/.bun/**",
+      "**/.cache/**",
     ],
 
     // ================================
@@ -43,26 +43,26 @@ export default defineConfig({
       enabled: true,
 
       // Use v8 provider for better performance
-      provider: 'v8',
+      provider: "v8",
 
       // Include measured files (focus on units we can fully exercise)
       include: [
-        'src/weather-update/services/updateReadme.ts',
-        'src/weather-update/utils/preload.ts',
-        'src/weather-update/services/fetchWeather.ts',
-        'src/weather-update/index.ts',
+        "src/weather-update/services/updateReadme.ts",
+        "src/weather-update/utils/preload.ts",
+        "src/weather-update/services/fetchWeather.ts",
+        "src/weather-update/index.ts",
       ],
 
       // Exclude test files and configs
       exclude: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/coverage/**',
-        '**/*.config.{js,ts}',
-        '**/vitest.config.{js,ts}',
-        '**/*.d.ts',
-        '**/__tests__/**',
-        '**/*.{test,spec}.{js,ts}',
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/coverage/**",
+        "**/*.config.{js,ts}",
+        "**/vitest.config.{js,ts}",
+        "**/*.d.ts",
+        "**/__tests__/**",
+        "**/*.{test,spec}.{js,ts}",
       ],
 
       // Clean coverage directory before each run
@@ -70,16 +70,16 @@ export default defineConfig({
       cleanOnRerun: true,
 
       // Coverage reports directory
-      reportsDirectory: './coverage',
+      reportsDirectory: "./coverage",
 
       // Coverage reporters
       reporter: [
-        ['text', { maxCols: 200 }],
-        'text-summary',
-        'html',
-        'lcov',
-        'json',
-        'json-summary',
+        ["text", { maxCols: 200 }],
+        "text-summary",
+        "html",
+        "lcov",
+        "json",
+        "json-summary",
       ],
 
       // Report coverage even on test failures
@@ -136,7 +136,7 @@ export default defineConfig({
     isolate: true,
 
     // Use threads pool for better performance
-    pool: 'threads',
+    pool: "threads",
 
     // Thread pool options
     poolOptions: {
@@ -158,15 +158,15 @@ export default defineConfig({
 
     // Test reporters
     reporters: [
-      ['default', { summary: true }],
-      ['./src/__tests__/reporters/BannersReporter.ts', {}],
-      'html',
-      'junit',
+      ["default", { summary: true }],
+      ["./src/__tests__/reporters/BannersReporter.ts", {}],
+      "html",
+      "junit",
     ],
 
     // Output file for JUnit reports
     outputFile: {
-      junit: './test-results/junit.xml',
+      junit: "./test-results/junit.xml",
     },
 
     // Show console output during tests
@@ -190,7 +190,7 @@ export default defineConfig({
     // ================================
 
     // Global setup files
-    setupFiles: ['./src/__tests__/setup.ts'],
+    setupFiles: ["./src/__tests__/setup.ts"],
 
     // ================================
     // 📁 Path Resolution
@@ -201,11 +201,11 @@ export default defineConfig({
 
     // Alias for better imports
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@weather': resolve(__dirname, 'src/weather-update'),
-      '@services': resolve(__dirname, 'src/weather-update/services'),
-      '@utils': resolve(__dirname, 'src/weather-update/utils'),
-      '@tests': resolve(__dirname, 'src/__tests__'),
+      "@": resolve(__dirname, "src"),
+      "@weather": resolve(__dirname, "src/weather-update"),
+      "@services": resolve(__dirname, "src/weather-update/services"),
+      "@utils": resolve(__dirname, "src/weather-update/utils"),
+      "@tests": resolve(__dirname, "src/__tests__"),
     },
   },
 
@@ -216,11 +216,11 @@ export default defineConfig({
   // Resolve configuration
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@weather': resolve(__dirname, 'src/weather-update'),
-      '@services': resolve(__dirname, 'src/weather-update/services'),
-      '@utils': resolve(__dirname, 'src/weather-update/utils'),
-      '@tests': resolve(__dirname, 'src/__tests__'),
+      "@": resolve(__dirname, "src"),
+      "@weather": resolve(__dirname, "src/weather-update"),
+      "@services": resolve(__dirname, "src/weather-update/services"),
+      "@utils": resolve(__dirname, "src/weather-update/utils"),
+      "@tests": resolve(__dirname, "src/__tests__"),
     },
   },
 });

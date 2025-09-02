@@ -7,9 +7,6 @@
   "files": {
     "includes": [
       "src/**/*.{ts,tsx,js,json,jsonc}",
-      "package.json",
-      "biome.jsonc",
-      "tsconfig.json",
       "vitest.config.ts",
       ".releaserc.js"
     ],

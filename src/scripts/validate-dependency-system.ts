@@ -7,9 +7,9 @@
  * dependency management system are properly configured.
  */
 
-import { execSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 type PackageJson = {
   scripts?: Record<string, string>;
@@ -19,7 +19,7 @@ type ValidationResult = {
   details?: string;
   message: string;
   name: string;
-  status: 'fail' | 'pass' | 'warning';
+  status: "fail" | "pass" | "warning";
 };
 
 class DependencyValidator {
@@ -28,7 +28,7 @@ class DependencyValidator {
    * Run all validation checks
    */
   validate(): void {
-    this.logMessage('🔍 Validating Dependency Automation System...\n');
+    this.logMessage("🔍 Validating Dependency Automation System...\n");
 
     this.checkWorkflowFiles();
     this.checkDependabotConfig();
@@ -44,28 +44,28 @@ class DependencyValidator {
    */
   private checkWorkflowFiles(): void {
     const requiredWorkflows = [
-      'pr-validation.yml',
-      'profile-weather-update.yml',
-      'semantic-release.yml',
-      'update-dependencies.yml',
-      'update-github-actions.yml',
+      "pr-validation.yml",
+      "profile-weather-update.yml",
+      "semantic-release.yml",
+      "update-dependencies.yml",
+      "update-github-actions.yml",
     ];
 
     for (const workflow of requiredWorkflows) {
-      const path = join('.github', 'workflows', workflow);
+      const path = join(".github", "workflows", workflow);
 
       if (existsSync(path)) {
         this.results.push({
-          message: 'File exists and accessible',
+          message: "File exists and accessible",
           name: `Workflow: ${workflow}`,
-          status: 'pass',
+          status: "pass",
         });
       } else {
         this.results.push({
           details: `Expected at: ${path}`,
-          message: 'File missing or inaccessible',
+          message: "File missing or inaccessible",
           name: `Workflow: ${workflow}`,
-          status: 'fail',
+          status: "fail",
         });
       }
     }
@@ -83,74 +83,74 @@ class DependencyValidator {
    * Check Renovate configuration file
    */
   private checkRenovateConfig(): void {
-    const renovateConfigPath = 'renovate.json';
+    const renovateConfigPath = "renovate.json";
 
     if (!existsSync(renovateConfigPath)) {
       this.results.push({
-        message: 'renovate.json not found',
-        name: 'Renovate Config',
-        status: 'fail',
+        message: "renovate.json not found",
+        name: "Renovate Config",
+        status: "fail",
       });
 
       return;
     }
 
     try {
-      const config = readFileSync(renovateConfigPath, 'utf8');
+      const config = readFileSync(renovateConfigPath, "utf8");
       const renovateConfig = JSON.parse(config) as Record<string, unknown>;
 
       // Check for best practices preset
-      const extendsArray = renovateConfig['extends'] as string[] | undefined;
-      if (extendsArray?.includes('config:best-practices')) {
+      const extendsArray = renovateConfig["extends"] as string[] | undefined;
+      if (extendsArray?.includes("config:best-practices")) {
         this.results.push({
-          message: 'Configuration found',
-          name: 'Renovate: Best practices preset',
-          status: 'pass',
+          message: "Configuration found",
+          name: "Renovate: Best practices preset",
+          status: "pass",
         });
       } else {
         this.results.push({
-          message: 'Configuration may be missing',
-          name: 'Renovate: Best practices preset',
-          status: 'warning',
+          message: "Configuration may be missing",
+          name: "Renovate: Best practices preset",
+          status: "warning",
         });
       }
 
       // Check for automerge in package rules
-      const packageRules = renovateConfig['packageRules'] as
+      const packageRules = renovateConfig["packageRules"] as
         | Record<string, unknown>[]
         | undefined;
       const hasAutomerge = packageRules?.some(
-        (rule) => rule['automerge'] === true
+        (rule) => rule["automerge"] === true
       );
 
       this.results.push({
         message: hasAutomerge
-          ? 'Configuration found'
-          : 'Configuration may be missing',
-        name: 'Renovate: Automerge configuration',
-        status: hasAutomerge ? 'pass' : 'warning',
+          ? "Configuration found"
+          : "Configuration may be missing",
+        name: "Renovate: Automerge configuration",
+        status: hasAutomerge ? "pass" : "warning",
       });
 
       // Check for GitHub Actions updates
       const hasGitHubActions = packageRules?.some((rule) => {
-        const managers = rule['matchManagers'] as string[] | undefined;
+        const managers = rule["matchManagers"] as string[] | undefined;
 
-        return managers?.includes('github-actions');
+        return managers?.includes("github-actions");
       });
 
       this.results.push({
         message: hasGitHubActions
-          ? 'Configuration found'
-          : 'Configuration may be missing',
-        name: 'Renovate: GitHub Actions updates',
-        status: hasGitHubActions ? 'pass' : 'warning',
+          ? "Configuration found"
+          : "Configuration may be missing",
+        name: "Renovate: GitHub Actions updates",
+        status: hasGitHubActions ? "pass" : "warning",
       });
     } catch (error: unknown) {
       this.results.push({
         details: error instanceof Error ? error.message : String(error),
-        message: 'Failed to parse configuration',
-        name: 'Renovate Config',
-        status: 'fail',
+        message: "Failed to parse configuration",
+        name: "Renovate Config",
+        status: "fail",
       });
     }
   }
@@ -159,22 +159,22 @@ class DependencyValidator {
    * Check if Dependabot is properly disabled
    */
   private checkDependabotDisabled(): void {
-    const dependabotConfigPath = join('.github', 'dependabot.yml');
+    const dependabotConfigPath = join(".github", "dependabot.yml");
 
     if (!existsSync(dependabotConfigPath)) {
       // Show warnings for missing dependabot config elements (legacy)
       const legacyChecks = [
-        'NPM ecosystem',
-        'Auto-merge labels',
-        'PR limit configured',
-        'Update schedule',
+        "NPM ecosystem",
+        "Auto-merge labels",
+        "PR limit configured",
+        "Update schedule",
       ];
 
       for (const check of legacyChecks) {
         this.results.push({
-          message: 'Configuration may be missing',
+          message: "Configuration may be missing",
           name: `Dependabot: ${check}`,
-          status: 'warning',
+          status: "warning",
         });
       }
 
@@ -182,30 +182,30 @@ class DependencyValidator {
     }
 
     try {
-      const config = readFileSync(dependabotConfigPath, 'utf8');
+      const config = readFileSync(dependabotConfigPath, "utf8");
 
       if (
-        config.includes('Dependabot is disabled') ||
-        config.includes('Replaced by Renovate')
+        config.includes("Dependabot is disabled") ||
+        config.includes("Replaced by Renovate")
       ) {
         this.results.push({
-          message: 'Properly disabled in favor of Renovate',
-          name: 'Dependabot: Disabled',
-          status: 'pass',
+          message: "Properly disabled in favor of Renovate",
+          name: "Dependabot: Disabled",
+          status: "pass",
         });
       } else {
         this.results.push({
-          message: 'Should be disabled when using Renovate',
-          name: 'Dependabot: Active',
-          status: 'warning',
+          message: "Should be disabled when using Renovate",
+          name: "Dependabot: Active",
+          status: "warning",
         });
       }
     } catch (error: unknown) {
       this.results.push({
         details: error instanceof Error ? error.message : String(error),
-        message: 'Failed to parse configuration',
-        name: 'Dependabot Config',
-        status: 'fail',
+        message: "Failed to parse configuration",
+        name: "Dependabot Config",
+        status: "fail",
       });
     }
   } /**
@@ -215,13 +215,13 @@ class DependencyValidator {
     try {
       // Check if bun is available using absolute path to avoid PATH injection
       const homeDirectory =
-        process.env['HOME'] ?? process.env['USERPROFILE'] ?? '';
+        process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
       const possibleBunPaths = [
-        '/usr/local/bin/bun',
-        '/usr/bin/bun',
+        "/usr/local/bin/bun",
+        "/usr/bin/bun",
         `${homeDirectory}/.bun/bin/bun`,
         // Windows paths
-        'C:\\Program Files\\bun\\bin\\bun.exe',
+        "C:\\Program Files\\bun\\bin\\bun.exe",
         `${homeDirectory}\\AppData\\Local\\bun\\bin\\bun.exe`,
         `${homeDirectory}\\.bun\\bin\\bun.exe`,
       ];
@@ -237,24 +237,24 @@ class DependencyValidator {
       }
 
       if (bunExecutable === null) {
-        throw new Error('Bun executable not found in expected locations');
+        throw new Error("Bun executable not found in expected locations");
       } // Execute bun with absolute path to avoid PATH security issues
       // Using absolute path instead of PATH to prevent security vulnerabilities
       // eslint-disable-next-line sonarjs/os-command
       execSync(`"${bunExecutable}" --version`, {
-        stdio: 'pipe',
+        stdio: "pipe",
         timeout: 5000, // 5 second timeout
       });
 
       this.results.push({
-        message: 'Bun is installed and accessible',
-        name: 'Bun Package Manager',
-        status: 'pass',
+        message: "Bun is installed and accessible",
+        name: "Bun Package Manager",
+        status: "pass",
       });
 
       // Check package.json
-      if (existsSync('package.json')) {
-        const packageContent = readFileSync('package.json', 'utf8');
+      if (existsSync("package.json")) {
+        const packageContent = readFileSync("package.json", "utf8");
         const packageJson = JSON.parse(packageContent) as PackageJson;
 
         if (
@@ -263,38 +263,38 @@ class DependencyValidator {
         ) {
           this.results.push({
             message: `${Object.keys(packageJson.scripts).length} scripts available`,
-            name: 'Package Scripts',
-            status: 'pass',
+            name: "Package Scripts",
+            status: "pass",
           });
         } else {
           this.results.push({
-            message: 'No npm scripts found',
-            name: 'Package Scripts',
-            status: 'warning',
+            message: "No npm scripts found",
+            name: "Package Scripts",
+            status: "warning",
           });
         }
       }
 
       // Check lockfile
-      if (existsSync('bun.lockb')) {
+      if (existsSync("bun.lockb")) {
         this.results.push({
-          message: 'bun.lockb present',
-          name: 'Lockfile',
-          status: 'pass',
+          message: "bun.lockb present",
+          name: "Lockfile",
+          status: "pass",
         });
       } else {
         this.results.push({
-          message: 'No lockfile found',
-          name: 'Lockfile',
-          status: 'warning',
+          message: "No lockfile found",
+          name: "Lockfile",
+          status: "warning",
         });
       }
     } catch {
       this.results.push({
-        details: 'Install Bun: curl -fsSL https://bun.sh/install | bash',
-        message: 'Bun not available',
-        name: 'Bun Package Manager',
-        status: 'fail',
+        details: "Install Bun: curl -fsSL https://bun.sh/install | bash",
+        message: "Bun not available",
+        name: "Bun Package Manager",
+        status: "fail",
       });
     }
   }
@@ -306,9 +306,9 @@ class DependencyValidator {
     // The required secrets are now validated dynamically by workflow runs
     // No longer checking EMAIL_* secrets as they're not used in current workflows
     this.results.push({
-      message: 'Secrets validated by workflow requirements',
-      name: 'GitHub Secrets',
-      status: 'pass',
+      message: "Secrets validated by workflow requirements",
+      name: "GitHub Secrets",
+      status: "pass",
     });
   }
 
@@ -316,13 +316,13 @@ class DependencyValidator {
    * Basic workflow syntax validation
    */
   private checkWorkflowSyntax(): void {
-    const workflowDirectory = join('.github', 'workflows');
+    const workflowDirectory = join(".github", "workflows");
 
     if (!existsSync(workflowDirectory)) {
       this.results.push({
-        message: 'Workflows directory not found',
-        name: 'Workflow Syntax',
-        status: 'fail',
+        message: "Workflows directory not found",
+        name: "Workflow Syntax",
+        status: "fail",
       });
 
       return;
@@ -330,50 +330,50 @@ class DependencyValidator {
 
     try {
       const workflowFiles = readdirSync(workflowDirectory).filter(
-        (file: string) => file.endsWith('.yml') || file.endsWith('.yaml')
+        (file: string) => file.endsWith(".yml") || file.endsWith(".yaml")
       );
 
       for (const workflow of workflowFiles) {
         try {
           const content = readFileSync(
             join(workflowDirectory, workflow),
-            'utf8'
+            "utf8"
           );
 
           // Basic YAML structure checks
           if (
-            content.includes('name:') &&
-            content.includes('on:') &&
-            content.includes('jobs:')
+            content.includes("name:") &&
+            content.includes("on:") &&
+            content.includes("jobs:")
           ) {
             this.results.push({
-              message: 'Basic YAML structure valid',
+              message: "Basic YAML structure valid",
               name: `Syntax: ${workflow}`,
-              status: 'pass',
+              status: "pass",
             });
           } else {
             this.results.push({
-              message: 'Missing required YAML sections',
+              message: "Missing required YAML sections",
               name: `Syntax: ${workflow}`,
-              status: 'fail',
+              status: "fail",
             });
           }
         } catch {
           this.results.push({
-            message: 'Failed to parse workflow file',
+            message: "Failed to parse workflow file",
             name: `Syntax: ${workflow}`,
-            status: 'fail',
+            status: "fail",
           });
         }
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+        error instanceof Error ? error.message : "Unknown error";
       this.results.push({
         details: errorMessage,
-        message: 'Failed to read workflows directory',
-        name: 'Workflow Syntax',
-        status: 'fail',
+        message: "Failed to read workflows directory",
+        name: "Workflow Syntax",
+        status: "fail",
       });
     }
   }
@@ -382,18 +382,18 @@ class DependencyValidator {
    * Display validation results with reduced complexity
    */
   private displayResults(): void {
-    this.logMessage(`\n${'='.repeat(60)}`);
-    this.logMessage('📊 VALIDATION RESULTS');
-    this.logMessage('='.repeat(60));
+    this.logMessage(`\n${"=".repeat(60)}`);
+    this.logMessage("📊 VALIDATION RESULTS");
+    this.logMessage("=".repeat(60));
 
     const passed = this.results.filter(
-      (result) => result.status === 'pass'
+      (result) => result.status === "pass"
     ).length;
     const failed = this.results.filter(
-      (result) => result.status === 'fail'
+      (result) => result.status === "fail"
     ).length;
     const warnings = this.results.filter(
-      (result) => result.status === 'warning'
+      (result) => result.status === "warning"
     ).length;
 
     // Display results by status
@@ -408,10 +408,10 @@ class DependencyValidator {
    */
   private displayPassedChecks(): void {
     const passedResults = this.results.filter(
-      (result) => result.status === 'pass'
+      (result) => result.status === "pass"
     );
     if (passedResults.length > 0) {
-      this.logMessage('\n✅ PASSED CHECKS:');
+      this.logMessage("\n✅ PASSED CHECKS:");
       for (const result of passedResults) {
         this.logMessage(`  ✓ ${result.name}: ${result.message}`);
       }
@@ -423,10 +423,10 @@ class DependencyValidator {
    */
   private displayWarnings(): void {
     const warningResults = this.results.filter(
-      (result) => result.status === 'warning'
+      (result) => result.status === "warning"
     );
     if (warningResults.length > 0) {
-      this.logMessage('\n⚠️  WARNINGS:');
+      this.logMessage("\n⚠️  WARNINGS:");
       for (const result of warningResults) {
         this.logMessage(`  ⚠ ${result.name}: ${result.message}`);
         if (result.details) {
@@ -441,10 +441,10 @@ class DependencyValidator {
    */
   private displayFailures(): void {
     const failedResults = this.results.filter(
-      (result) => result.status === 'fail'
+      (result) => result.status === "fail"
     );
     if (failedResults.length > 0) {
-      this.logMessage('\n❌ FAILED CHECKS:');
+      this.logMessage("\n❌ FAILED CHECKS:");
       for (const result of failedResults) {
         this.logMessage(`  ✗ ${result.name}: ${result.message}`);
         if (result.details) {
@@ -462,7 +462,7 @@ class DependencyValidator {
     warnings: number,
     failed: number
   ): void {
-    this.logMessage(`\n${'-'.repeat(60)}`);
+    this.logMessage(`\n${"-".repeat(60)}`);
     this.logMessage(
       `📈 SUMMARY: ${passed} passed, ${warnings} warnings, ${failed} failed`
     );
@@ -474,12 +474,12 @@ class DependencyValidator {
     this.logMessage(`🎯 System Health: ${percentage}%`);
 
     if (failed === 0) {
-      this.logMessage('\n🎉 Dependency automation system is ready!');
+      this.logMessage("\n🎉 Dependency automation system is ready!");
     } else {
-      this.logMessage('\n🔧 Please fix the failed checks before proceeding.');
+      this.logMessage("\n🔧 Please fix the failed checks before proceeding.");
     }
 
-    this.logMessage('📖 Full documentation: .github/DEVELOPMENT.md');
+    this.logMessage("📖 Full documentation: .github/DEVELOPMENT.md");
   }
 
   /**

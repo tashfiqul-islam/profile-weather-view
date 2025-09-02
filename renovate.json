@@ -13,19 +13,10 @@
     ":semanticCommitScope(bun)"
   ],
   "timezone": "Asia/Dhaka",
-  "schedule": [
-    "* 2-4 * * 1"
-  ],
-  "labels": [
-    "dependencies",
-    "renovate"
-  ],
-  "assignees": [
-    "tashfiqul-islam"
-  ],
-  "reviewers": [
-    "tashfiqul-islam"
-  ],
+  "schedule": ["* 2-4 * * 1"],
+  "labels": ["dependencies", "renovate"],
+  "assignees": ["tashfiqul-islam"],
+  "reviewers": ["tashfiqul-islam"],
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "🔄 Dependency Dashboard",
   "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
@@ -46,201 +37,107 @@
   "commitBody": "[skip actions]",
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": [
-      "before 3am on the first day of the month"
-    ]
+    "schedule": ["before 3am on the first day of the month"]
   },
   "packageRules": [
     {
       "description": "🔄 Auto-merge non-major updates for production dependencies (direct commit)",
-      "matchDepTypes": [
-        "dependencies"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "branch",
       "automergeStrategy": "auto",
       "ignoreTests": true,
-      "labels": [
-        "dependencies",
-        "auto-merge",
-        "{{updateType}}"
-      ],
+      "labels": ["dependencies", "auto-merge", "{{updateType}}"],
       "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🔧 Auto-merge non-major updates for dev dependencies (direct commit)",
-      "matchDepTypes": [
-        "devDependencies"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "branch",
       "automergeStrategy": "auto",
       "ignoreTests": true,
-      "labels": [
-        "dependencies",
-        "dev",
-        "auto-merge",
-        "{{updateType}}"
-      ],
+      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"],
       "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🚨 Major updates require manual approval",
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchUpdateTypes": ["major"],
       "automerge": false,
       "dependencyDashboardApproval": true,
-      "labels": [
-        "dependencies",
-        "major",
-        "needs-approval"
-      ],
-      "addLabels": [
-        "breaking-change"
-      ],
+      "labels": ["dependencies", "major", "needs-approval"],
+      "addLabels": ["breaking-change"],
       "prTitle": "feat(deps): update {{depName}} to {{newVersion}}"
     },
     {
       "description": "🔒 Security updates - always auto-merge",
-      "matchDatasources": [
-        "npm"
-      ],
+      "matchDatasources": ["npm"],
       "vulnerabilityAlerts": {
         "enabled": true,
         "vulnerabilityFixStrategy": "highest"
       },
       "automerge": true,
       "automergeType": "pr",
-      "schedule": [
-        "at any time"
-      ],
-      "labels": [
-        "dependencies",
-        "security",
-        "auto-merge"
-      ],
-      "addLabels": [
-        "critical"
-      ],
+      "schedule": ["at any time"],
+      "labels": ["dependencies", "security", "auto-merge"],
+      "addLabels": ["critical"],
       "prTitle": "fix(security): patch {{depName}} to {{newVersion}}",
-      "matchPackageNames": [
-        "*"
-      ]
+      "matchPackageNames": ["*"]
     },
     {
       "description": "📦 Bun runtime updates - weekly check",
-      "matchPackageNames": [
-        "bun",
-        "bun-types",
-        "@types/bun"
-      ],
-      "matchDepTypes": [
-        "packageManager",
-        "devDependencies"
-      ],
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
+      "matchPackageNames": ["bun", "bun-types", "@types/bun"],
+      "matchDepTypes": ["packageManager", "devDependencies"],
+      "schedule": ["after 2am and before 4am on monday"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
-      "labels": [
-        "dependencies",
-        "bun",
-        "runtime",
-        "auto-merge"
-      ],
+      "labels": ["dependencies", "bun", "runtime", "auto-merge"],
       "semanticCommitScope": "bun",
       "commitMessageTopic": "{{depName}}",
       "prTitle": "chore(bun): update bun runtime to {{newVersion}}"
     },
     {
       "description": "⚡ Group ESLint packages together",
-      "matchPackageNames": [
-        "/^@typescript-eslint/",
-        "/^eslint/"
-      ],
+      "matchPackageNames": ["/^@typescript-eslint/", "/^eslint/"],
       "groupName": "ESLint packages",
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
-      "labels": [
-        "dependencies",
-        "eslint",
-        "linting",
-        "auto-merge"
-      ],
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "eslint", "linting", "auto-merge"],
       "prTitle": "chore(deps): update eslint packages"
     },
     {
       "description": "🧪 Group Vitest packages together",
-      "matchPackageNames": [
-        "/^@vitest/",
-        "vitest"
-      ],
+      "matchPackageNames": ["/^@vitest/", "vitest"],
       "groupName": "Vitest packages",
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
-      "labels": [
-        "dependencies",
-        "vitest",
-        "testing",
-        "auto-merge"
-      ],
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "vitest", "testing", "auto-merge"],
       "prTitle": "chore(deps): update vitest packages"
     },
     {
       "description": "🔧 Group TypeScript packages together",
-      "matchPackageNames": [
-        "/^@types/",
-        "typescript",
-        "typescript-eslint"
-      ],
+      "matchPackageNames": ["/^@types/", "typescript", "typescript-eslint"],
       "groupName": "TypeScript packages",
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
-      "labels": [
-        "dependencies",
-        "typescript",
-        "types",
-        "auto-merge"
-      ],
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "typescript", "types", "auto-merge"],
       "prTitle": "chore(deps): update typescript packages"
     },
     {
       "description": "⚙️ GitHub Actions - weekly updates with auto-merge",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
+      "matchManagers": ["github-actions"],
+      "schedule": ["after 2am and before 4am on monday"],
       "automerge": true,
       "automergeType": "pr",
-      "labels": [
-        "dependencies",
-        "github-actions",
-        "auto-merge"
-      ],
+      "labels": ["dependencies", "github-actions", "auto-merge"],
       "semanticCommitScope": "actions",
       "commitMessageTopic": "{{depName}}",
       "prTitle": "ci(actions): update github actions",
@@ -248,30 +145,18 @@
     },
     {
       "description": "🔐 Pin GitHub Action digests for security",
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "rangeStrategy": "pin",
       "pinDigests": true
     },
     {
       "description": "⏰ Node.js LTS updates only",
-      "matchPackageNames": [
-        "node",
-        "@types/node"
-      ],
+      "matchPackageNames": ["node", "@types/node"],
       "allowedVersions": "/^(18|20|22)\\./",
-      "schedule": [
-        "after 2am and before 4am on monday"
-      ],
+      "schedule": ["after 2am and before 4am on monday"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "labels": [
-        "dependencies",
-        "node",
-        "lts",
-        "auto-merge"
-      ],
+      "labels": ["dependencies", "node", "lts", "auto-merge"],
       "prTitle": "chore(deps): update node.js lts"
     }
   ],
@@ -279,9 +164,7 @@
     {
       "customType": "regex",
       "description": "Update Bun version in package.json packageManager field",
-      "managerFilePatterns": [
-        "/^package\\.json$/"
-      ],
+      "managerFilePatterns": ["/^package\\.json$/"],
       "matchStrings": [
         "\"packageManager\":\\s*\"bun@(?<currentValue>[^\"]+)\""
       ],
@@ -293,22 +176,15 @@
     {
       "customType": "regex",
       "description": "Update Bun version in package.json engines field",
-      "managerFilePatterns": [
-        "/^package\\.json$/"
-      ],
-      "matchStrings": [
-        "\"bun\":\\s*\">=(?<currentValue>[^\"]+)\""
-      ],
+      "managerFilePatterns": ["/^package\\.json$/"],
+      "matchStrings": ["\"bun\":\\s*\">=(?<currentValue>[^\"]+)\""],
       "autoReplaceStringTemplate": "\"bun\": \">={{newValue}}\"",
       "datasourceTemplate": "npm",
       "depNameTemplate": "bun",
       "versioningTemplate": "semver"
     }
   ],
-  "postUpdateOptions": [
-    "npmDedupe",
-    "bunDedupe"
-  ],
+  "postUpdateOptions": ["npmDedupe", "bunDedupe"],
   "ignorePaths": [
     "**/node_modules/**",
     "**/dist/**",
@@ -323,11 +199,7 @@
     "^bun run format$"
   ],
   "postUpgradeTasks": {
-    "commands": [
-      "bun install",
-      "bun run lint --fix",
-      "bun run format"
-    ],
+    "commands": ["bun install", "bun run lint --fix", "bun run format"],
     "fileFilters": [
       "package.json",
       "bun.lock",

@@ -1,15 +1,15 @@
-import { join } from 'node:path';
-import { Temporal } from '@js-temporal/polyfill';
-import { z } from 'zod';
-import type { WeatherUpdatePayload } from './fetchWeather';
+import { join } from "node:path";
+import { Temporal } from "@js-temporal/polyfill";
+import { z } from "zod";
+import type { WeatherUpdatePayload } from "./fetchWeather";
 
 /**
  * Configuration constants using const assertions
  */
 const CONFIG = {
-  timezone: 'Asia/Dhaka',
-  defaultIcon: '01d',
-  defaultDescription: 'Unknown',
+  timezone: "Asia/Dhaka",
+  defaultIcon: "01d",
+  defaultDescription: "Unknown",
 } as const;
 
 /**
@@ -48,7 +48,7 @@ const WeatherDataSchema = z.object({
  * @returns The matched content or empty string
  */
 export function getSectionContent(content: string, regex: RegExp): string {
-  return regex.exec(content)?.[0] ?? '';
+  return regex.exec(content)?.[0] ?? "";
 }
 
 /**
@@ -59,15 +59,15 @@ export function getSectionContent(content: string, regex: RegExp): string {
 export function createRefreshTime(): string {
   const now = Temporal.Now.zonedDateTimeISO(CONFIG.timezone);
 
-  const formattedTime = now.toLocaleString('en-US', {
-    day: '2-digit',
-    hour: '2-digit',
+  const formattedTime = now.toLocaleString("en-US", {
+    day: "2-digit",
+    hour: "2-digit",
     hour12: false,
-    minute: '2-digit',
-    month: 'long',
-    second: '2-digit',
-    weekday: 'long',
-    year: 'numeric',
+    minute: "2-digit",
+    month: "long",
+    second: "2-digit",
+    weekday: "long",
+    year: "numeric",
   });
 
   return `${formattedTime} (UTC+6)`;
@@ -166,29 +166,29 @@ export function createWeatherData(
   // Replace weather description text (more complex - try to preserve position)
   // Look for common weather terms and replace them
   const weatherTerms = [
-    'Clear Sky',
-    'Clear',
-    'Clouds',
-    'Cloudy',
-    'Overcast',
-    'Rain',
-    'Light Rain',
-    'Moderate Rain',
-    'Heavy Rain',
-    'Snow',
-    'Light Snow',
-    'Heavy Snow',
-    'Thunderstorm',
-    'Mist',
-    'Fog',
-    'Haze',
-    'Drizzle',
-    'Sunny',
+    "Clear Sky",
+    "Clear",
+    "Clouds",
+    "Cloudy",
+    "Overcast",
+    "Rain",
+    "Light Rain",
+    "Moderate Rain",
+    "Heavy Rain",
+    "Snow",
+    "Light Snow",
+    "Heavy Snow",
+    "Thunderstorm",
+    "Mist",
+    "Fog",
+    "Haze",
+    "Drizzle",
+    "Sunny",
   ];
 
   // Find and replace weather descriptions while preserving case and context
   for (const term of weatherTerms) {
-    const regex = new RegExp(`\\b${term}\\b`, 'gi');
+    const regex = new RegExp(`\\b${term}\\b`, "gi");
     if (regex.test(updatedSection)) {
       updatedSection = updatedSection.replace(regex, description);
       break; // Only replace the first match to avoid over-replacement
@@ -241,11 +241,11 @@ export function shouldProceedWithUpdate(
 
   // Use Zod v4 for better environment variable parsing
   const envResult = EnvironmentSchema.safeParse({
-    FORCE_UPDATE: process.env['FORCE_UPDATE'],
-    GITHUB_ACTIONS: process.env['GITHUB_ACTIONS'],
+    FORCE_UPDATE: process.env["FORCE_UPDATE"],
+    GITHUB_ACTIONS: process.env["GITHUB_ACTIONS"],
   });
 
-  return Boolean(envResult.success && envResult.data.FORCE_UPDATE === 'true');
+  return Boolean(envResult.success && envResult.data.FORCE_UPDATE === "true");
 }
 
 /**
@@ -261,7 +261,7 @@ export async function updateReadme(
   customReadmePath?: string
 ): Promise<boolean> {
   try {
-    const readmePath = customReadmePath ?? join(process.cwd(), 'README.md');
+    const readmePath = customReadmePath ?? join(process.cwd(), "README.md");
     const readmeFile = Bun.file(readmePath);
 
     // Check if file exists using Bun's optimized file operations
@@ -325,11 +325,11 @@ export async function updateReadme(
 
     // For GitHub Actions, report that changes were detected
     const envResult = EnvironmentSchema.safeParse({
-      FORCE_UPDATE: process.env['FORCE_UPDATE'],
-      GITHUB_ACTIONS: process.env['GITHUB_ACTIONS'],
+      FORCE_UPDATE: process.env["FORCE_UPDATE"],
+      GITHUB_ACTIONS: process.env["GITHUB_ACTIONS"],
     });
 
-    if (envResult.success && envResult.data.GITHUB_ACTIONS === 'true') {
+    if (envResult.success && envResult.data.GITHUB_ACTIONS === "true") {
       // GitHub Actions status reporting
       // This could be extended to use GitHub's API for status updates
     }
