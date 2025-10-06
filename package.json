@@ -87,7 +87,7 @@
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "10.0.1",
     "@semantic-release/github": "11.0.6",
-    "@types/bun": "1.2.22",
+    "@types/bun": "1.2.23",
     "@types/node": "24.3.0",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/expect": "3.2.4",
@@ -97,7 +97,7 @@
     "lint-staged": "16.2.3",
     "semantic-release": "24.2.9",
     "ts-node": "10.9.2",
-    "typescript": "5.9.2",
+    "typescript": "5.9.3",
     "vitest": "3.2.4"
   },
   "lint-staged": {
