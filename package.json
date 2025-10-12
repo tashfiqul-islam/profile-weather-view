@@ -94,7 +94,7 @@
     "@vitest/ui": "3.2.4",
     "bun-types": "1.2.23",
     "husky": "9.1.7",
-    "lint-staged": "16.2.3",
+    "lint-staged": "16.2.4",
     "semantic-release": "24.2.9",
     "ts-node": "10.9.2",
     "typescript": "5.9.3",
