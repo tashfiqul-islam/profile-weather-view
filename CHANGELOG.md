@@ -1,5 +1,38 @@
 # Changelog
 
+# [2.2.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.1...v2.2.2)
+### chore
+
+* **deps:** Pin dependencies [skip actions] (#123) ([ad5f27a](https://github.com/tashfiqul-islam/profile-weather-view/commit/ad5f27a188ef8a189e4e086ce7db9da4eb9a7b9e))
+* **deps:** Pin lint-staged 16.1.6 [skip actions] (#104) ([dbb391b](https://github.com/tashfiqul-islam/profile-weather-view/commit/dbb391b361da612c0afbd1c203d976d21ad4aff5))
+* **deps:** Update @biomejs/biome 2.2.3 [skip actions] (#105) ([8c53a7c](https://github.com/tashfiqul-islam/profile-weather-view/commit/8c53a7c8a7098d0dc861527fb0f85ca0a8a9d829))
+* **deps:** Update @biomejs/biome 2.2.4 [skip actions] (#106) ([85e02c6](https://github.com/tashfiqul-islam/profile-weather-view/commit/85e02c6c1e7f83fdf19a7b5e30a33835a595c6a9))
+* **deps:** Update @biomejs/biome 2.2.5 [skip actions] (#116) ([8cc9427](https://github.com/tashfiqul-islam/profile-weather-view/commit/8cc94273da33487c9deeb4caa761993d2d98b0b5))
+* **deps:** Update @types/bun 1.2.22 [skip actions] (#110) ([b28b068](https://github.com/tashfiqul-islam/profile-weather-view/commit/b28b068bf16350d30ca067608bf68b8ff64de00e))
+* **deps:** Update bun 1.2.22 [skip actions] (#108) ([abd20bc](https://github.com/tashfiqul-islam/profile-weather-view/commit/abd20bcbc4e471375a9ea751f7678b9e7fef8b93))
+* **deps:** Update bun 1.2.23 [skip actions] (#114) ([f59cc0d](https://github.com/tashfiqul-islam/profile-weather-view/commit/f59cc0d6fd699b4f81985d05f5b5ba7121983f83))
+* **deps:** Update bun 1.3.0 [skip actions] (#120) ([8f03509](https://github.com/tashfiqul-islam/profile-weather-view/commit/8f0350990e17f29a5dba8519badfef67cb45bfd0))
+* **deps:** Update bun-types 1.2.22 [skip actions] (#109) ([fe41093](https://github.com/tashfiqul-islam/profile-weather-view/commit/fe41093fec2707c7ddd07f3752e0293f15936714))
+* **deps:** Update bun-types 1.2.23 [skip actions] (#117) ([590457e](https://github.com/tashfiqul-islam/profile-weather-view/commit/590457eed50ee0efecd10f514212fa7341ec8f5d))
+* **deps:** Update bun-types 1.3.0 [skip actions] (#121) ([a74a48b](https://github.com/tashfiqul-islam/profile-weather-view/commit/a74a48b0e82697199e6023de90c15f4cf54bcb62))
+* **deps:** Update lint-staged 16.2.0 [skip actions] (#112) ([9cd8188](https://github.com/tashfiqul-islam/profile-weather-view/commit/9cd81888f89a7d4dd47d7db773372c200775b1b7))
+* **deps:** Update lint-staged 16.2.1 [skip actions] (#113) ([28a5a7a](https://github.com/tashfiqul-islam/profile-weather-view/commit/28a5a7aa80ebfe0cc20f8177ea682660a5bfd88a))
+* **deps:** Update lint-staged 16.2.3 [skip actions] (#115) ([e597d5b](https://github.com/tashfiqul-islam/profile-weather-view/commit/e597d5b853c6d2137698a6b83dfe94e29f57c1d8))
+* **deps:** Update lint-staged 16.2.4 [skip actions] (#119) ([f5897a8](https://github.com/tashfiqul-islam/profile-weather-view/commit/f5897a8b1427185c889c2451ba5106b94668e43e))
+* **deps:** Update semantic-release 24.2.9 [skip actions] (#111) ([c8d7687](https://github.com/tashfiqul-islam/profile-weather-view/commit/c8d7687b0114df513afb0668d98be0682e6ee43c))
+* **deps:** Update semantic-release monorepo [skip actions] (#107) ([ce321bd](https://github.com/tashfiqul-islam/profile-weather-view/commit/ce321bd82c8de7f1e0b4f1d72d7a68e84d80ef73))
+* **deps:** Update TypeScript packages [skip actions] (#118) ([4752049](https://github.com/tashfiqul-islam/profile-weather-view/commit/475204937d3f76051337dc0768eb9fa7814afc9b))
+### docs
+
+* **readme:** sync tech stack badges and footer date [skip actions] ([ce5895c](https://github.com/tashfiqul-islam/profile-weather-view/commit/ce5895c784ef06c95597886cb60944f6c63d8d05))
+### fix
+
+* **ci:** branch sync with remote ([8b28114](https://github.com/tashfiqul-islam/profile-weather-view/commit/8b28114f8f170e32c3f88b43a6f36e34443349c8))
+* **ci:** branch sync with remote ([0ab8c3f](https://github.com/tashfiqul-islam/profile-weather-view/commit/0ab8c3f876140190bd9da7407dbb2832f1e5f159))
+* **ci:** fixed cicde pipeline ([7d12123](https://github.com/tashfiqul-islam/profile-weather-view/commit/7d12123820d592e49310952d3880ae78f20dbbb1))
+* **ci:** push tags/commits without rejection ([ef7a903](https://github.com/tashfiqul-islam/profile-weather-view/commit/ef7a903b6546b82952d781d3cac5f9b8a740b100))
+* **ci:** switch to node for vitest ([3c9e9a0](https://github.com/tashfiqul-islam/profile-weather-view/commit/3c9e9a0197f611735a6cab36f7e427ad7a37951a))
+
 # [2.2.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.0...v2.2.1)
 ### chore
 
