@@ -170,7 +170,15 @@ jobs:
         run: |
           git fetch --prune --tags origin
           git checkout master
-          git pull --rebase origin master
+          # Stash any local/untracked changes (e.g., buildinfo) to allow rebase
+          git stash push -u -m "ci-autostash-before-rebase" || true
+          if ! git pull --rebase origin master; then
+            echo "Rebase failed, aborting and hard resetting to origin/master"
+            git rebase --abort || true
+            git reset --hard origin/master
+          fi
+          # Drop the stash (we don't need build artifacts)
+          git stash drop || true
 
       - name: "🚀 Run Semantic Release"
         id: semantic-release
