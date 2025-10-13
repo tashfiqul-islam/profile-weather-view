@@ -127,7 +127,7 @@ jobs:
         if: env.SKIP_TESTS != 'true'
         run: |
           echo "::group::Test Execution"
-          bun run test
+          bunx vitest --run
           echo "::endgroup::"
         env:
           OPEN_WEATHER_KEY: "mock-api-key-for-tests"

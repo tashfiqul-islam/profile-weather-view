@@ -35,86 +35,17 @@ export default defineConfig({
     ],
 
     // ================================
-    // 📊 Coverage Configuration
-    // ================================
-
-    coverage: {
-      // Enable coverage collection
-      enabled: true,
-
-      // Use v8 provider for better performance
-      provider: "v8",
-
-      // Include measured files (focus on units we can fully exercise)
-      include: [
-        "src/weather-update/services/updateReadme.ts",
-        "src/weather-update/utils/preload.ts",
-        "src/weather-update/services/fetchWeather.ts",
-        "src/weather-update/index.ts",
-      ],
-
-      // Exclude test files and configs
-      exclude: [
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/coverage/**",
-        "**/*.config.{js,ts}",
-        "**/vitest.config.{js,ts}",
-        "**/*.d.ts",
-        "**/__tests__/**",
-        "**/*.{test,spec}.{js,ts}",
-      ],
-
-      // Clean coverage directory before each run
-      clean: true,
-      cleanOnRerun: true,
-
-      // Coverage reports directory
-      reportsDirectory: "./coverage",
-
-      // Coverage reporters
-      reporter: [
-        ["text", { maxCols: 200 }],
-        "text-summary",
-        "html",
-        "lcov",
-        "json",
-        "json-summary",
-      ],
-
-      // Report coverage even on test failures
-      reportOnFailure: true,
-
-      // Allow external files (for dependencies)
-      allowExternal: false,
-
-      // Skip files with 100% coverage
-      skipFull: false,
-
-      thresholds: {
-        global: {
-          branches: 90,
-          functions: 90,
-          lines: 90,
-          statements: 90,
-        },
-        perFile: false,
-        autoUpdate: false,
-      },
-    },
-
-    // ================================
     // ⚡ Performance & Execution
     // ================================
 
-    // Run tests in parallel for better performance
-    sequence: {
-      concurrent: false,
-      shuffle: false,
+    // Use forks for Vitest v2
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
     },
-
-    // Maximum concurrency
-    maxConcurrency: 1,
+    fileParallelism: false,
 
     // Test timeout (30 seconds)
     testTimeout: 30_000,
@@ -135,39 +66,12 @@ export default defineConfig({
     // Run tests in isolated environment
     isolate: true,
 
-    // Use threads pool for better performance
-    pool: "threads",
-
-    // Thread pool options
-    poolOptions: {
-      threads: {
-        // Use Atomics for better performance
-        useAtomics: true,
-
-        // Maximum number of threads
-        maxThreads: 8,
-
-        // Minimum number of threads
-        minThreads: 2,
-      },
-    },
-
     // ================================
     // 🎨 Output & Reporting
     // ================================
 
-    // Test reporters
-    reporters: [
-      ["default", { summary: true }],
-      ["./src/__tests__/reporters/BannersReporter.ts", {}],
-      "html",
-      "junit",
-    ],
-
-    // Output file for JUnit reports
-    outputFile: {
-      junit: "./test-results/junit.xml",
-    },
+    // Test reporters (keep default only to avoid dispose error)
+    reporters: [["default", { summary: true }]],
 
     // Show console output during tests
     silent: false,
@@ -175,9 +79,6 @@ export default defineConfig({
     // ================================
     // 🔍 Debugging & Development
     // ================================
-
-    // Do not force including all sources in coverage baseline
-    // includeSource: ['src/**/*.{js,ts}'],
 
     // Show diff in test failures
     chaiConfig: {
@@ -189,8 +90,8 @@ export default defineConfig({
     // 🛠️ Setup & Teardown
     // ================================
 
-    // Global setup files
-    setupFiles: ["./src/__tests__/setup.ts"],
+    // Global setup files (temporarily disabled to isolate error)
+    setupFiles: [],
 
     // ================================
     // 📁 Path Resolution

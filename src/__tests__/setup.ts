@@ -299,6 +299,5 @@ export const validateWeatherData = (data: unknown) => {
  * Custom assertion for API error responses
  * Note: Use this inside test functions with expect imported from vitest
  */
-export const validateApiError = (error: unknown) => {
-  return error instanceof Error && error.message.includes("API");
-};
+export const validateApiError = (error: unknown) =>
+  error instanceof Error && error.message.includes("API");

@@ -1,0 +1,62 @@
+# Lefthook configuration
+min_version: "0.7.0"
+
+# Reduce noisy spinner/summary output while keeping failures visible
+skip_output:
+  - execution_info
+  - summary
+
+pre-commit:
+  parallel: true
+  commands:
+    ultracite:
+      # Format only relevant staged files and re-stage after fixes
+      run: |
+        if command -v bunx >/dev/null 2>&1; then bunx ultracite fix {staged_files}; 
+        elif command -v npx >/dev/null 2>&1; then npx ultracite fix {staged_files}; 
+        else echo "ultracite not found"; fi
+      stage_fixed: true
+      # Only run for code and docs we actually keep formatted
+      glob:
+        - "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
+    typecheck:
+      # Run only when TS files are staged
+      files:
+        - "*.{ts,tsx}"
+      run: bun run type-check
+    tests_staged:
+      skip:
+        - merge
+        - rebase
+      run: bunx vitest --run
+
+commit-msg:
+  commands:
+    commitlint:
+      # Validate using the commit message file path passed as {1}
+      run: |
+        if command -v bunx >/dev/null 2>&1; then bunx commitlint --edit {1}; 
+        elif command -v npx >/dev/null 2>&1; then npx commitlint --edit {1}; 
+        else echo "commitlint not found, skipping"; fi
+      # Help commitlint match your scopes/types from commitlint.config.mjs
+      # No files/globs here; it always runs on the commit message
+
+# Interactive commit message builder (Commitizen-compatible)
+prepare-commit-msg:
+  commands:
+    commitizen:
+      interactive: true
+      run: |
+        if command -v npx >/dev/null 2>&1; then npx commitizen --hook; 
+        elif command -v bunx >/dev/null 2>&1; then bunx commitizen --hook; 
+        else echo "commitizen CLI not found (npx commitizen)"; fi
+      env:
+        LEFTHOOK: 0
+
+# Optional: prevent bad pushes by running a quick gate
+pre-push:
+  commands:
+    typecheck-before-push:
+      run: bun run type-check
+    unit-tests-before-push:
+      run: bunx vitest --run

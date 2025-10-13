@@ -100,6 +100,7 @@ export default {
         "test", // Testing
         "build", // Build system
         "ci", // CI configuration
+        "types", // Types-only changes (matches release notes grouping)
         "chore", // Maintenance
         "revert", // Revert previous commit
         "security", // Security improvements
