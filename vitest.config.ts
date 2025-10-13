@@ -28,7 +28,6 @@ export default defineConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "**/*.config.{js,ts}",
       "**/vitest.config.{js,ts}",
-      "**/setup.ts",
       "**/~/**",
       "**/.bun/**",
       "**/.cache/**",
@@ -90,8 +89,8 @@ export default defineConfig({
     // 🛠️ Setup & Teardown
     // ================================
 
-    // Global setup files (temporarily disabled to isolate error)
-    setupFiles: [],
+    // Global setup files (mock Bun and set env for Node runner)
+    setupFiles: ["./src/__tests__/setup.ts"],
 
     // ================================
     // 📁 Path Resolution
