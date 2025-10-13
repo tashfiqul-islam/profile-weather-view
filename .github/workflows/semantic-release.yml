@@ -48,6 +48,7 @@ env:
   GIT_AUTHOR_EMAIL: "github-actions@github.com"
   GIT_COMMITTER_NAME: "GitHub Actions"
   GIT_COMMITTER_EMAIL: "github-actions@github.com"
+  LEFTHOOK: "0"
 
 # ============================================================
 # 🔄 Jobs
@@ -163,6 +164,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
+
+      # Ensure local branch is up-to-date to avoid non-fast-forward push failures
+      - name: "🔄 Sync branch with remote (rebase)"
+        run: |
+          git fetch --prune --tags origin
+          git checkout master
+          git pull --rebase origin master
 
       - name: "🚀 Run Semantic Release"
         id: semantic-release

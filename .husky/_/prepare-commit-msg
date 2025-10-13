@@ -32,7 +32,7 @@ call_lefthook()
   fi
 }
 
-# lefthook_version: ddf339a7aa9d08753c02b55d40ddac80
+# lefthook_version: 151d05984ed530331cd31abc1bd1616d
 
 call_lefthook "install"
 
