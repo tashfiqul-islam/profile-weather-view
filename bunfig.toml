@@ -1,6 +1,9 @@
 # Bun Configuration File
 # https://bun.sh/docs/runtime/bunfig
 
+# ============================================================
+# 🧪 Test Configuration
+# ============================================================
 [test]
 # Test discovery patterns (Bun's default patterns)
 # *.test.{js|jsx|ts|tsx}
@@ -20,6 +23,23 @@ coverageSkipTestFiles = true  # Exclude test files from coverage
 
 # Coverage thresholds (90% for all metrics)
 coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
+
+# Coverage reporters (text for console, lcov for CI)
+coverageReporter = ["text", "lcov"]
+
+# Coverage output directory
+coverageDir = "coverage"
+
+# Exclude patterns from coverage reports
+coveragePathIgnorePatterns = [
+  "**/*.test.ts",
+  "**/*.spec.ts",
+  "**/tests/**",
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/*.config.*",
+  "**/coverage/**"
+]
 
 # Test execution configuration
 randomize = true  # Randomize test order to catch dependencies
@@ -41,10 +61,66 @@ concurrentTestGlob = [
   "**/e2e/*.test.ts"
 ]
 
-# Reporter configuration
-# Default reporter is used, can be overridden with CLI flags
-
 # Environment variables for tests
 [test.env]
 NODE_ENV = "test"
 CI = "true"
+
+# ============================================================
+# 📦 Package Management Configuration
+# ============================================================
+[install]
+# Default registry
+registry = "https://registry.npmjs.org"
+
+# Install behavior
+production = false  # Include devDependencies by default
+dev = true         # Install devDependencies
+optional = true    # Install optionalDependencies
+peer = true        # Install peerDependencies
+
+# Lockfile configuration
+[install.lockfile]
+save = true  # Generate bun.lock file
+print = "yarn"  # Also generate yarn.lock for compatibility
+
+# Cache configuration
+[install.cache]
+dir = "~/.bun/install/cache"
+disable = false  # Use global cache
+disableManifest = false  # Always resolve latest versions
+
+# Global installation directories
+globalDir = "~/.bun/install/global"
+globalBinDir = "~/.bun/bin"
+
+# ============================================================
+# 🚀 Runtime Configuration
+# ============================================================
+# Preload scripts for all Bun executions
+preload = ["./src/weather-update/utils/preload.ts"]
+
+# Console configuration
+[console]
+depth = 3  # Object inspection depth
+
+# Log level
+logLevel = "warn"  # "debug" | "warn" | "error"
+
+# ============================================================
+# 🔧 Development Configuration
+# ============================================================
+[run]
+# Use Bun for all bun run commands (Node.js compatibility)
+bun = true
+
+# Shell configuration
+shell = "system"  # Use system shell (not bun shell)
+
+# ============================================================
+# 🎯 Define Global Constants
+# ============================================================
+[define]
+# Environment-specific constants
+"process.env.NODE_ENV" = "\"test\""
+"process.env.BUN_TEST" = "true"
