@@ -1,5 +1,22 @@
 # Changelog
 
+# [2.4.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.3.0...v2.4.0)
+### chore
+
+* **deps:** Pin dependencies [skip actions] (#128) ([91e0c1e](https://github.com/tashfiqul-islam/profile-weather-view/commit/91e0c1e7fcffd2b5e8cfd1e1a61656738a451780))
+### docs
+
+* **readme:** update tech stack badges and project structure ([01079fb](https://github.com/tashfiqul-islam/profile-weather-view/commit/01079fbf10be1cbc77dce51a7734a20fbb74ef6a))
+### feat
+
+* **config:** enhance bunfig.toml with comprehensive 2025 configuration ([3db9f7a](https://github.com/tashfiqul-islam/profile-weather-view/commit/3db9f7a0254563bcc6d7943b5756f5fc5886691a))
+* **sync:** enhance README timestamp format with detailed date and time ([9ceb22e](https://github.com/tashfiqul-islam/profile-weather-view/commit/9ceb22e0ac709ae8bb37262886a0f89e0ddd4962))
+### fix
+
+* **ci:** update semantic-release workflow to use bun test instead of vitest ([cef5c06](https://github.com/tashfiqul-islam/profile-weather-view/commit/cef5c069db8c01516f57d96375f61ecfdf7e7bdc))
+* **ci:** updated readme tech stack workflow ([cdedf79](https://github.com/tashfiqul-islam/profile-weather-view/commit/cdedf795670bb02e02ec9dca78032526c5e0d0c3))
+* **ci:** updated readme tech stack workflow ([0c99ea4](https://github.com/tashfiqul-islam/profile-weather-view/commit/0c99ea40a4310fb642d4f74e12d938055aff2584))
+
 # [2.3.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.2...v2.3.0)
 ### chore
 
