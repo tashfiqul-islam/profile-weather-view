@@ -5,10 +5,10 @@ name: "🛠️ Sync README Tech Stack"
 # ============================================================
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
-      - 'package.json'
-      - 'bun.lock'
+      - "package.json"
+      - "bun.lock"
   workflow_dispatch:
 
 # ============================================================
@@ -66,20 +66,31 @@ jobs:
         run: |
           echo "::group::Bun Installation"
           bun --version
-          bun install --frozen-lockfile
+          bun install
           echo "::endgroup::"
 
       - name: "⚡ Install Dependencies (Fast Path)"
         if: steps.cache-deps.outputs.cache-hit == 'true'
         run: |
           echo "::notice::Using cached dependencies"
-          bun install --frozen-lockfile --no-summary
+          bun install --no-summary
 
       - name: "🧩 Sync README tech stack badges & footer"
         run: |
           echo "::group::Sync README"
           bun run sync-readme-tech-stack
           echo "::endgroup::"
+
+      - name: "📝 Check for lockfile changes"
+        id: lockfile-check
+        run: |
+          if [[ -n "$(git status --porcelain bun.lock)" ]]; then
+            echo "lockfile_changed=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Lockfile has changes, will be committed"
+          else
+            echo "lockfile_changed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No lockfile changes detected"
+          fi
 
       - name: "🔎 Validate GPG secret format"
         env:
@@ -115,6 +126,11 @@ jobs:
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git add README.md
+            # Add lockfile if it changed
+            if [[ "${{ steps.lockfile-check.outputs.lockfile_changed }}" == "true" ]]; then
+              git add bun.lock
+              echo "::notice::Including lockfile changes in commit"
+            fi
             if git commit -S --no-verify -m "docs(readme): sync tech stack badges and footer date [skip actions]"; then
               echo "did_commit=true" >> "$GITHUB_OUTPUT"
             else
@@ -139,6 +155,4 @@ jobs:
             node_modules
             ~/.bun/install/cache
             bun.lock
-          key: ${{ steps.cache-deps.outputs.cache-primary-key }}
-
-
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
