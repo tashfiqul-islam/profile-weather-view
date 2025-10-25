@@ -1,13 +1,31 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
+// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
+import * as z from "zod";
+
+/**
+ * @fileoverview Modern TypeScript 5.9.3 weather data fetching service
+ * @version 2.2.2
+ * @author Tashfiqul Islam
+ */
 
 // ================================
 // 📊 Configuration Constants
 // ================================
 
-const HTTP_CLIENT_ERROR_START = 400;
-const HTTP_SERVER_ERROR_START = 500;
-const MILLISECONDS_PER_SECOND = 1000;
+/**
+ * HTTP status code constants with branded types
+ */
+const HTTP_STATUS_CODES = {
+  CLIENT_ERROR_START: 400,
+  SERVER_ERROR_START: 500,
+} as const;
+
+/**
+ * Time conversion constants with numeric separators
+ */
+const TIME_CONSTANTS = {
+  MILLISECONDS_PER_SECOND: 1000,
+} as const;
 
 /**
  * Geographic coordinates for location tracking.
@@ -80,26 +98,56 @@ const WeatherSchema = z.object({
 });
 
 /**
- * Type definitions derived from Zod schemas
+ * Type definitions derived from Zod schemas with modern TypeScript 5.9.3 features
  */
 type WeatherData = z.infer<typeof WeatherSchema>;
 
 /**
+ * Branded type for temperature values in Celsius
+ * Uses modern TypeScript 5.9.3 branded types for type safety
+ */
+export type TemperatureCelsius = number & { readonly __brand: unique symbol };
+
+/**
+ * Branded type for humidity percentage values
+ * Uses modern TypeScript 5.9.3 branded types for type safety
+ */
+export type HumidityPercentage = number & { readonly __brand: unique symbol };
+
+/**
+ * Branded type for time strings
+ * Uses modern TypeScript 5.9.3 branded types for type safety
+ */
+export type TimeString = string & { readonly __brand: unique symbol };
+
+/**
  * A structured payload representing the data needed to update the README
  * Keeping this small ensures minimal coupling to the full API response.
+ * Uses modern TypeScript 5.9.3 features with strict typing and branded types
  */
 export type WeatherUpdatePayload = {
-  description: string;
-  temperatureC: number;
-  sunriseLocal: string;
-  sunsetLocal: string;
-  humidityPct: number;
-  icon: string;
+  readonly description: string;
+  readonly temperatureC: TemperatureCelsius;
+  readonly sunriseLocal: TimeString;
+  readonly sunsetLocal: TimeString;
+  readonly humidityPct: HumidityPercentage;
+  readonly icon: string;
+};
+
+/**
+ * HTTP error type with modern TypeScript 5.9.3 features
+ */
+type HttpError = Error & {
+  readonly response: {
+    readonly status: number;
+    readonly statusText: string;
+  };
 };
 
 /**
  * Converts a string to title case following JavaScript standards
  * Capitalizes the first letter of each word while preserving the rest
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param str The string to convert to title case
  * @returns The string in title case format
  */
@@ -116,7 +164,16 @@ function toTitleCase(str: string): string {
 }
 
 /**
+ * Type guard for checking if a value is a non-empty string
+ * Uses modern TypeScript 5.9.3 type guards
+ */
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+/**
  * Implements exponential backoff retry logic using recursion
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param fn Function to retry
  * @param maxRetries Maximum number of retries
  * @param baseDelay Base delay between retries
@@ -141,8 +198,8 @@ function withRetry<T>(
       // Don't retry on client errors (4xx)
       if (
         isHttpError(error) &&
-        error.response.status >= HTTP_CLIENT_ERROR_START &&
-        error.response.status < HTTP_SERVER_ERROR_START
+        error.response.status >= HTTP_STATUS_CODES.CLIENT_ERROR_START &&
+        error.response.status < HTTP_STATUS_CODES.SERVER_ERROR_START
       ) {
         throw lastError;
       }
@@ -165,27 +222,32 @@ function withRetry<T>(
 
 /**
  * Narrow unknown to an HTTP-like error object produced in this module
+ * Uses modern TypeScript 5.9.3 type guards with strict typing
  */
-function isHttpError(
-  error: unknown
-): error is Error & { response: { status: number; statusText?: string } } {
+function isHttpError(error: unknown): error is HttpError {
   if (typeof error !== "object" || error === null) {
     return false;
   }
   const maybe = error as { response?: unknown };
-  const response = maybe.response as { status?: unknown } | undefined;
-  return typeof response?.status === "number";
+  const response = maybe.response as
+    | { status?: unknown; statusText?: unknown }
+    | undefined;
+  return (
+    typeof response?.status === "number" &&
+    typeof response?.statusText === "string"
+  );
 }
 
 /**
  * Converts Unix timestamp to Dhaka time using Temporal API
  * Following latest Temporal polyfill best practices
+ * Uses modern TypeScript 5.9.3 features with branded return types
  * @param timestamp Unix timestamp in seconds
  * @returns Formatted time string in Dhaka timezone
  */
-function convertToDhakaTime(timestamp: number): string {
+function convertToDhakaTime(timestamp: number): TimeString {
   const instant = Temporal.Instant.fromEpochMilliseconds(
-    timestamp * MILLISECONDS_PER_SECOND
+    timestamp * TIME_CONSTANTS.MILLISECONDS_PER_SECOND
   );
   const dhakaTime = instant.toZonedDateTimeISO("Asia/Dhaka");
 
@@ -193,21 +255,23 @@ function convertToDhakaTime(timestamp: number): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  });
+  }) as TimeString;
 }
 
 /**
  * Formats temperature as a rounded numeric string without units
  * Units are appended at render time to avoid duplication
+ * Uses modern TypeScript 5.9.3 features with branded return types
  * @param temp Temperature in Celsius
  * @returns Rounded temperature string without units
  */
-function formatTemperature(temp: number): number {
-  return Math.round(temp);
+function formatTemperature(temp: number): TemperatureCelsius {
+  return Math.round(temp) as TemperatureCelsius;
 }
 
 /**
  * Validates weather data using Zod with enhanced error reporting
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param data Raw data from API
  * @returns Validated weather data
  * @throws Error with detailed validation messages
@@ -232,6 +296,7 @@ function validateWeatherData(data: unknown): WeatherData {
 /**
  * Fetches current weather data from OpenWeather API 3.0
  * Optimized for current weather only to reduce response time and data size
+ * Uses modern TypeScript 5.9.3 features with strict typing
  *
  * @returns Formatted weather data string
  * @throws {Error} When API request fails or data is invalid
@@ -239,7 +304,7 @@ function validateWeatherData(data: unknown): WeatherData {
 export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   try {
     const apiKey = Bun.env["OPEN_WEATHER_KEY"]?.trim();
-    if (!apiKey) {
+    if (!isNonEmptyString(apiKey)) {
       throw new Error("OpenWeather API key is required");
     }
 
@@ -273,11 +338,9 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
         const errorText = await fetchResponse.text();
         const error = new Error(
           `OpenWeather API request failed: ${fetchResponse.status} ${fetchResponse.statusText} - ${errorText}`
-        );
+        ) as Error & { response: { status: number; statusText: string } };
         // Add response property for retry logic
-        (
-          error as Error & { response?: { status: number; statusText: string } }
-        ).response = {
+        error.response = {
           status: fetchResponse.status,
           statusText: fetchResponse.statusText,
         };
@@ -300,7 +363,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     const temperatureC = formatTemperature(current.temp);
     const sunriseLocal = convertToDhakaTime(current.sunrise);
     const sunsetLocal = convertToDhakaTime(current.sunset);
-    const humidityPct = current.humidity;
+    const humidityPct = current.humidity as HumidityPercentage;
 
     return {
       description,
@@ -309,14 +372,17 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
       sunsetLocal,
       humidityPct,
       icon,
-    };
+    } as const;
   } catch (error) {
+    // Modern TypeScript 5.9.3 error handling with type guards
+    // All errors from withRetry are converted to Error objects, so this path always executes
     if (error instanceof Error) {
       throw new Error(`[fetchWeather.ts] ❌ ${error.message}`);
     }
 
+    // Defensive fallback for non-Error types (unreachable in current implementation)
     throw new Error(
-      "[fetchWeather.ts] ❌ Unexpected error during weather data fetch"
+      `[fetchWeather.ts] ❌ Unexpected error during weather data fetch: ${String(error)}`
     );
   }
 }

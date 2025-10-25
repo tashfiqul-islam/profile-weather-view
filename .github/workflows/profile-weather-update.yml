@@ -1,12 +1,12 @@
 name: "🌦️ Profile Weather Update"
-      
+
 # ============================================================
 # 🚀 Optimized triggers for reliability and performance
 # ============================================================
 on:
   schedule:
     # Strategic times that capture meaningful weather changes while conserving resources
-    - cron: "23 5,13,21 * * *"  # 3 times daily: morning (5:23), afternoon (13:23), evening (21:23)
+    - cron: "23 5,13,21 * * *" # 3 times daily: morning (5:23), afternoon (13:23), evening (21:23)
 
   workflow_dispatch:
     inputs:
@@ -30,8 +30,8 @@ concurrency:
 # 🔒 Explicit permissions (Principle of least privilege)
 # ============================================================
 permissions:
-  contents: write  # For repository updates
-  id-token: write  # For OIDC token (keyless signing)
+  contents: write # For repository updates
+  id-token: write # For OIDC token (keyless signing)
 
 # ============================================================
 # 🌍 Global environment variables
@@ -39,7 +39,7 @@ permissions:
 env:
   CACHE_KEY_PREFIX: "v14-profile-weather"
   TIMEZONE: "Asia/Dhaka"
-  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam"  # README.md repository
+  PROFILE_REPO: "tashfiqul-islam/tashfiqul-islam" # README.md repository
   NODE_ENV: "production"
   FORCE_UPDATE: ${{ github.event.inputs.force_update || 'false' }}
   SKIP_TESTS: ${{ github.event.inputs.skip_tests || 'false' }}
@@ -62,8 +62,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: ${{ github.repository }}
-          fetch-depth: 0  # Full history for better caching
-          persist-credentials: false  # Security best practice
+          fetch-depth: 0 # Full history for better caching
+          persist-credentials: false # Security best practice
 
       - name: "⬇️ Checkout Profile Repository"
         uses: actions/checkout@v5
@@ -71,9 +71,9 @@ jobs:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
           token: ${{ secrets.PAT }}
-          fetch-depth: 1  # Shallow for profile repo (we only need latest)
+          fetch-depth: 1 # Shallow for profile repo (we only need latest)
           ref: master
-          persist-credentials: false  # Security best practice
+          persist-credentials: false # Security best practice
 
       - name: "🏗️ Setup Bun"
         uses: oven-sh/setup-bun@v2
@@ -127,7 +127,7 @@ jobs:
         if: env.SKIP_TESTS != 'true'
         run: |
           echo "::group::Test Execution"
-          bunx vitest --run
+          bun test --coverage
           echo "::endgroup::"
         env:
           OPEN_WEATHER_KEY: "mock-api-key-for-tests"
@@ -173,11 +173,11 @@ jobs:
           FORCE_UPDATE: ${{ env.FORCE_UPDATE }}
         run: |
           echo "::group::Weather Update Process"
-          
+
           # Performance monitoring setup
           START_TIME=$(date +%s.%N)
           echo "🚀 Starting weather update at $(date)"
-          
+
           # Log the README path to verify it's correct
           echo "README path: $PROFILE_README_PATH"
           if [[ -f "$PROFILE_README_PATH" ]]; then
@@ -196,7 +196,7 @@ jobs:
           ELAPSED_TIME=$(echo "$END_TIME - $START_TIME" | bc)
           echo "API_RESPONSE_TIME=$ELAPSED_TIME" >> $GITHUB_OUTPUT
           echo "⏱️ Total execution time: ${ELAPSED_TIME}s"
-          
+
           # Performance thresholds
           if (( $(echo "$ELAPSED_TIME < 1.0" | bc -l) )); then
             echo "🚀 Excellent performance: < 1s"
@@ -299,14 +299,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           echo "::group::Git Operations"
-          
+
           # Optimize Git configuration for CI
           git config --global core.compression 9
           git config --global core.loosecompression 9
           git config --global pack.deltaCacheSize 2047m
           git config --global pack.packSizeLimit 2047m
           git config --global pack.windowMemory 2047m
-          
+
           # Apply correct commit timestamp in Dhaka timezone
           export GIT_AUTHOR_DATE="$(TZ='Asia/Dhaka' date)"
           export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE"

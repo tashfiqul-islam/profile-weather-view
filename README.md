@@ -101,6 +101,7 @@
 <td width="50%">
 
 ### 🚀 **Performance & Runtime**
+
 - **Bun 1.2+** for fast startup and fetch performance
 - **TypeScript 5.x** with strict configuration
 - **Zod 4 schemas** for runtime validation
@@ -110,6 +111,7 @@
 <td width="50%">
 
 ### 🌤️ **Weather Integration**
+
 - **OpenWeather One Call 3.0** current weather API
 - **Retry logic** with configurable timeouts
 - **Error handling** with graceful fallbacks
@@ -121,6 +123,7 @@
 <td width="50%">
 
 ### 🔄 **CI/CD Pipeline**
+
 - **Two dedicated workflows** for updates and releases
 - **GitHub Actions** with intelligent caching
 - **Optional GPG signing** for authenticated commits
@@ -130,6 +133,7 @@
 <td width="50%">
 
 ### 🛡️ **Quality Assurance**
+
 - **100% test coverage** with Vitest and v8
 - **Ultracite preset** (Biome) for linting/formatting
 - **Conventional commits** with commitlint validation
@@ -154,6 +158,7 @@
 <div align="center">
 
 ### Core Technologies
+
 <p>
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
   <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.3.0-000000?style=flat-square&logo=bun&logoColor=white" /></a>
@@ -162,6 +167,7 @@
 </p>
 
 ### Development & Build Tools
+
 <p>
   <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.12.2-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
   <a href="https://github.com/tc39/proposal-temporal"><img alt="Temporal polyfill" src="https://img.shields.io/badge/Temporal-0.5.1-1F2A44?style=flat-square" /></a>
@@ -170,6 +176,7 @@
 </p>
 
 ### Quality & Automation
+
 <p>
   <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-5.6.2-0B7285?style=flat-square" /></a>
   <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-24.2.9-e10079?style=flat-square&logo=semantic-release" /></a>
@@ -177,6 +184,7 @@
 </p>
 
 ### Infrastructure & Services
+
 <p>
   <a href="https://github.com/features/actions"><img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white" /></a>
   <a href="https://www.sonarsource.com/products/sonarcloud/"><img alt="SonarCloud" src="https://img.shields.io/badge/SonarCloud-configured-F3702A?style=flat-square&logo=sonarcloud&logoColor=white" /></a>
@@ -199,6 +207,7 @@
 1. **Scheduled Trigger**: Workflow runs on a schedule (5:23, 13:23, 21:23 Asia/Dhaka) or manually
 2. **Weather Processing**: Script `src/weather-update/index.ts` validates environment, fetches current weather, formats output
 3. **README Update**: Updates the target README section bounded by HTML comments:
+
    ```html
    <!-- Example Weather Update -->
    Moderate Rain <img width="15" src="https://openweathermap.org/img/w/10n.png" alt="Moderate Rain icon">
@@ -208,6 +217,7 @@
    Humidity: 84%
    <!-- End of Example Weather Update -->
    ```
+
 4. **Commit & Push**: If changes are detected (or forced), commits and pushes to your profile repo with optional GPG signing
 
 > 📖 **Detailed Documentation**: See the complete system design in [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md)
@@ -221,9 +231,9 @@
 <!-- Hourly Weather Update -->
 | Weather | Temperature | Sunrise   | Sunset    | Humidity |
 |---------|-------------|-----------|-----------|----------|
-| Moderate Moderate Rain   | 28°C        | 05:34     | 18:31     | 84%      |
+| Moderate Moderate Partly Partly Haze   | 26°C        | 05:34     | 18:31     | 83%      |
 <!-- End of Hourly Weather Update -->
-<em>Last refresh: Saturday, August 16, 2025 at 01:37:59 (UTC+6)</em>
+<em>Last refresh: Sunday, October 26, 2025 at 02:48:37 (UTC+6)</em>
 
 > 💡 **Customization**: You can style this section further in your profile repository; the generator focuses on content generation.
 
@@ -261,6 +271,7 @@ bun run dev
 The workflow updates a profile README hosted at `PROFILE_REPO` (defaults to `tashfiqul-islam/tashfiqul-islam`).
 
 **To configure for your profile:**
+
 1. Open `.github/workflows/profile-weather-update.yml`
 2. Update the `PROFILE_REPO` environment variable to your username/username repository
 
@@ -364,16 +375,19 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 **Renovate Configuration** (`renovate.json`) provides:
 
 ### 🔄 **Auto-Merge Strategy**
+
 - **Non-major updates**: Auto-merged directly to base branch (`automergeType: "branch"`)
 - **Major updates**: Require manual approval via Dependency Dashboard
 - **Security fixes**: Auto-merged promptly for immediate protection
 
 ### 📝 **Semantic Commits**
+
 - Uses semantic chore commits with `[skip actions]` suffix/body
 - Prevents CI triggering for dependency updates
 - Maintains clean release history (chore commits don't tag releases)
 
 ### 📦 **Dependency Grouping**
+
 - **ESLint ecosystem**: All ESLint-related packages
 - **Vitest ecosystem**: Testing framework and related tools
 - **TypeScript ecosystem**: TypeScript and type definitions
@@ -381,6 +395,7 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 - **Bun versions**: Custom managers with regex for Bun runtime updates
 
 ### 🛡️ **Quality Gates**
+
 - Vulnerability fixes prioritized
 - Compatibility checks before auto-merge
 - Maintains lockfile integrity
@@ -394,7 +409,7 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 #### 🎯 **Ultracite (Biome)**
 
 - **Configuration**: `biome.jsonc` (extends `ultracite` preset)
-- **Commands**: 
+- **Commands**:
   - `bunx ultracite lint` - Lint with automatic fixes
   - `bunx ultracite format` - Code formatting
 - **Features**: JavaScript globals configured for Bun, file include rules, style/suspicious overrides
@@ -575,17 +590,20 @@ We welcome contributions! Please see our comprehensive guides:
 ### 🚀 **Quick Contribution Start**
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/profile-weather-view.git
    cd profile-weather-view
    ```
 
 2. **Install Dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -596,11 +614,13 @@ We welcome contributions! Please see our comprehensive guides:
    - Update documentation as needed
 
 5. **Run Quality Checks**
+
    ```bash
    bun run check-all
    ```
 
 6. **Commit Using Conventional Commits**
+
    ```bash
    git commit -m "feat(scope): your feature description"
    ```
@@ -641,6 +661,7 @@ copies or substantial portions of the Software.
 <div align="center">
 
 ### 🌟 **Thanks for visiting!**
+
 *Feedback and support are always welcome.*
 
 <br>

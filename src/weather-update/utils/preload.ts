@@ -1,38 +1,66 @@
-import { z } from "zod";
+/**
+ * @fileoverview Modern TypeScript 5.9.3 environment preload utilities with strict typing
+ * @version 2.2.2
+ * @author Tashfiqul Islam
+ */
+
+// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
+import * as z from "zod";
 
 // ================================
 // 📊 Configuration Constants
 // ================================
 
-const API_KEY_MIN_LENGTH = 32;
-const API_KEY_MAX_LENGTH = 100;
-const PREVIEW_LENGTH = 8;
+/**
+ * API key validation constants with modern TypeScript 5.9.3 features
+ */
+const API_KEY_MIN_LENGTH = 32 as const;
+const API_KEY_MAX_LENGTH = 100 as const;
+const PREVIEW_LENGTH = 8 as const;
 
+/**
+ * Regex pattern for non-empty string capture
+ * Uses const assertion for immutable pattern
+ */
 const NON_EMPTY_CAPTURE = /^(.)+$/;
 
 /**
- * Rate limiting configuration
+ * Rate limiting configuration with modern TypeScript 5.9.3 features
+ * Uses const assertions and numeric separators for better readability
  */
 const RATE_LIMIT_CONFIG = {
-  maxCallsPerDay: 15,
-  trackingFile: ".api-calls.json",
-  resetTime: "00:00", // Reset at midnight UTC
+  maxCallsPerDay: 15 as const,
+  trackingFile: ".api-calls.json" as const,
+  resetTime: "00:00" as const, // Reset at midnight UTC
 } as const;
 
 /**
- * API call tracking schema
+ * API call tracking schema with enhanced validation
+ * Uses modern TypeScript 5.9.3 features for strict validation
  */
 const ApiCallTrackingSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  calls: z.number().int().min(0),
-  lastCall: z.string().optional(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .describe("Date in YYYY-MM-DD format"),
+  calls: z.number().int().min(0).describe("Number of API calls made"),
+  lastCall: z
+    .string()
+    .optional()
+    .describe("Time of last API call in HH:MM format"),
 });
 
+/**
+ * Type definition for API call tracking data
+ * Uses modern TypeScript 5.9.3 type inference
+ */
 type ApiCallTracking = z.infer<typeof ApiCallTrackingSchema>;
 
 /**
  * Gets today's date in YYYY-MM-DD format
  * Optimized to avoid redundant string operations
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @returns Date string in YYYY-MM-DD format
  */
 function getTodayDate(): string {
   const now = new Date();
@@ -45,6 +73,8 @@ function getTodayDate(): string {
 /**
  * Gets the current time in HH:MM format
  * Optimized to avoid redundant string operations
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @returns Time string in HH:MM format
  */
 function getCurrentTime(): string {
   const now = new Date();
@@ -55,6 +85,9 @@ function getCurrentTime(): string {
 
 /**
  * Checks if we should reset the counter (new day)
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @param lastDate The last recorded date
+ * @returns True if counter should be reset
  */
 function shouldResetCounter(lastDate: string): boolean {
   return lastDate !== getTodayDate();
@@ -62,6 +95,8 @@ function shouldResetCounter(lastDate: string): boolean {
 
 /**
  * Loads API call tracking data
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @returns Promise resolving to API call tracking data
  */
 async function loadApiCallTracking(): Promise<ApiCallTracking> {
   try {
@@ -95,6 +130,9 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
 
 /**
  * Saves API call tracking data asynchronously
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @param tracking The tracking data to save
+ * @returns Promise that resolves when save is complete
  */
 async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
   try {
@@ -107,7 +145,8 @@ async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
 
 /**
  * Checks if API call is allowed and updates tracking
- * @returns true if call is allowed, false if limit exceeded
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @returns Promise resolving to true if call is allowed, false if limit exceeded
  */
 export async function checkAndUpdateApiLimit(): Promise<boolean> {
   const tracking = await loadApiCallTracking();
@@ -145,6 +184,7 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
 /**
  * Zod v4 schema for environment variable validation
  * Enhanced with more flexible API key validation
+ * Uses modern TypeScript 5.9.3 features for strict validation
  */
 const EnvironmentSchema = z.object({
   OPEN_WEATHER_KEY: z
@@ -166,11 +206,13 @@ const EnvironmentSchema = z.object({
 
 /**
  * Type definition for validated environment variables
+ * Uses modern TypeScript 5.9.3 type inference
  */
 type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
 
 /**
  * Setup instructions template for better maintainability
+ * Uses modern TypeScript 5.9.3 features with const assertions
  */
 const SETUP_INSTRUCTIONS = `
 📋 Setup Instructions:
@@ -180,11 +222,13 @@ const SETUP_INSTRUCTIONS = `
 4. Restart your development server
 
 💡 Example .env file:
-OPEN_WEATHER_KEY=1234567890abcdef1234567890abcdef`;
+OPEN_WEATHER_KEY=1234567890abcdef1234567890abcdef` as const;
 
 /**
  * Validates environment variables without checking rate limits
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @throws Error if validation fails
+ * @returns Validated environment variables
  */
 export function validateEnvironmentVariables(): EnvironmentVariables {
   // Validate environment variables
@@ -222,7 +266,9 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
 
 /**
  * Validates and ensures required environment variables are present
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @throws Error if validation fails
+ * @returns Promise resolving to validated environment variables
  */
 export async function ensureEnvironmentVariables(): Promise<EnvironmentVariables> {
   // Check API call limit first

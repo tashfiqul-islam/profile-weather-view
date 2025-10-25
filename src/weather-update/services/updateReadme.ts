@@ -1,19 +1,33 @@
+/**
+ * @fileoverview Modern TypeScript 5.9.3 README update service with strict typing
+ * @version 2.2.2
+ * @author Tashfiqul Islam
+ */
+
 import { join } from "node:path";
 import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
-import type { WeatherUpdatePayload } from "./fetchWeather";
+// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
+import * as z from "zod";
+import type {
+  HumidityPercentage,
+  TemperatureCelsius,
+  TimeString,
+  WeatherUpdatePayload,
+} from "./fetchWeather";
 
 /**
- * Configuration constants using const assertions
+ * Configuration constants with modern TypeScript 5.9.3 features
+ * Uses const assertions and branded types for enhanced type safety
  */
 const CONFIG = {
-  timezone: "Asia/Dhaka",
-  defaultIcon: "01d",
-  defaultDescription: "Unknown",
+  timezone: "Asia/Dhaka" as const,
+  defaultIcon: "01d" as const,
+  defaultDescription: "Unknown" as const,
 } as const;
 
 /**
  * Top-level regex constants for better performance
+ * Uses const assertions for immutable regex patterns
  */
 const REGEX = {
   weatherSection:
@@ -23,6 +37,7 @@ const REGEX = {
 
 /**
  * Zod v4 schema for environment variable parsing
+ * Uses modern TypeScript 5.9.3 features with strict typing
  */
 const EnvironmentSchema = z.object({
   FORCE_UPDATE: z.string().optional(),
@@ -30,19 +45,46 @@ const EnvironmentSchema = z.object({
 });
 
 /**
- * Weather data validation schema
+ * Validation constants for weather data schema
+ */
+const VALIDATION_LIMITS = {
+  MIN_STRING_LENGTH: 1,
+  MIN_HUMIDITY: 0,
+  MAX_HUMIDITY: 100,
+} as const;
+
+/**
+ * Weather data validation schema with enhanced type safety
+ * Uses modern TypeScript 5.9.3 features for strict validation
  */
 const WeatherDataSchema = z.object({
-  description: z.string(),
-  temperatureC: z.number(),
-  sunriseLocal: z.string(),
-  sunsetLocal: z.string(),
-  humidityPct: z.number(),
-  icon: z.string(),
+  description: z
+    .string()
+    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
+    .describe("Weather description"),
+  temperatureC: z.number().describe("Temperature in Celsius"),
+  sunriseLocal: z
+    .string()
+    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
+    .describe("Sunrise time in local format"),
+  sunsetLocal: z
+    .string()
+    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
+    .describe("Sunset time in local format"),
+  humidityPct: z
+    .number()
+    .min(VALIDATION_LIMITS.MIN_HUMIDITY)
+    .max(VALIDATION_LIMITS.MAX_HUMIDITY)
+    .describe("Humidity percentage"),
+  icon: z
+    .string()
+    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
+    .describe("Weather icon code"),
 });
 
 /**
  * Helper function to extract content from a regex match with null safety
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param content The content to search in
  * @param regex The regex pattern to search with
  * @returns The matched content or empty string
@@ -54,6 +96,7 @@ export function getSectionContent(content: string, regex: RegExp): string {
 /**
  * Creates the formatted refresh time string using Temporal API
  * Following latest Temporal polyfill best practices
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @returns Formatted refresh time string
  */
 export function createRefreshTime(): string {
@@ -75,24 +118,21 @@ export function createRefreshTime(): string {
 
 /**
  * Handles the actual file update operation using Bun's optimized I/O
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param readmePath Path to the README file
  * @param updatedContent New content to write
- * @returns Promise<boolean> True if successful
+ * @returns Promise<number> Number of bytes written
  */
-async function performFileUpdate(
+export async function performFileUpdate(
   readmePath: string,
   updatedContent: string
-): Promise<boolean> {
-  try {
-    await Bun.write(readmePath, updatedContent);
-    return true;
-  } catch {
-    return false;
-  }
+): Promise<number> {
+  return await Bun.write(readmePath, updatedContent);
 }
 
 /**
  * Validates weather data segments and extracts them
+ * Uses modern TypeScript 5.9.3 features with branded types
  * @param weatherData The formatted weather data string
  * @returns Extracted weather segments or null if invalid
  */
@@ -103,17 +143,19 @@ function validateAndExtractWeatherData(
   if (!validationResult.success) {
     return null;
   }
-  return validationResult.data;
+  return {
+    ...validationResult.data,
+    temperatureC: validationResult.data.temperatureC as TemperatureCelsius,
+    sunriseLocal: validationResult.data.sunriseLocal as TimeString,
+    sunsetLocal: validationResult.data.sunsetLocal as TimeString,
+    humidityPct: validationResult.data.humidityPct as HumidityPercentage,
+  };
 }
 
 /**
  * Creates weather data in the appropriate format based on existing content
- * @param description Weather description
- * @param temperature Temperature value
- * @param sunrise Sunrise time
- * @param sunset Sunset time
- * @param humidity Humidity percentage
- * @param icon Weather icon code
+ * Uses modern TypeScript 5.9.3 features with strict typing and branded types
+ * @param payload Weather data payload with branded types
  * @param currentSection Current weather section content
  * @returns Formatted weather data string
  */
@@ -165,6 +207,7 @@ export function createWeatherData(
 
   // Replace weather description text (more complex - try to preserve position)
   // Look for common weather terms and replace them
+  // Uses modern TypeScript 5.9.3 features with const assertions
   const weatherTerms = [
     "Clear Sky",
     "Clear",
@@ -184,7 +227,7 @@ export function createWeatherData(
     "Haze",
     "Drizzle",
     "Sunny",
-  ];
+  ] as const;
 
   // Find and replace weather descriptions while preserving case and context
   for (const term of weatherTerms) {
@@ -200,6 +243,7 @@ export function createWeatherData(
 
 /**
  * Updates the README content with new weather data and refresh time
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param readmeContent Current README content
  * @param updatedWeatherData New weather data to insert
  * @param lastRefreshTime Formatted refresh time
@@ -227,6 +271,7 @@ export function updateReadmeContent(
 
 /**
  * Checks if update should proceed based on content changes and FORCE_UPDATE setting
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param oldContent Original content
  * @param updatedContent Updated content
  * @returns True if update should proceed, false otherwise
@@ -251,8 +296,9 @@ export function shouldProceedWithUpdate(
 /**
  * Updates the README file with new weather data.
  * Uses Bun's optimized file I/O and modern error handling.
+ * Uses modern TypeScript 5.9.3 features with strict typing and branded types
  *
- * @param weatherData The formatted weather data string
+ * @param weatherData The formatted weather data string with branded types
  * @param customReadmePath Optional path to a README file in a different location
  * @returns Promise<boolean> True if update was successful, false otherwise
  */
@@ -260,82 +306,61 @@ export async function updateReadme(
   weatherData: WeatherUpdatePayload,
   customReadmePath?: string
 ): Promise<boolean> {
-  try {
-    const readmePath = customReadmePath ?? join(process.cwd(), "README.md");
-    const readmeFile = Bun.file(readmePath);
+  const readmePath = customReadmePath ?? join(process.cwd(), "README.md");
+  const readmeFile = Bun.file(readmePath);
 
-    // Check if file exists using Bun's optimized file operations
-    if (!(await readmeFile.exists())) {
-      return false;
-    }
-
-    // Validate and extract weather data
-    const validatedPayload = validateAndExtractWeatherData(weatherData);
-    if (!validatedPayload) {
-      return false;
-    }
-
-    const lastRefreshTime = createRefreshTime();
-
-    // Read the file content using Bun's optimized text reading
-    const readmeContent = await readmeFile.text();
-
-    // Check if the weather section exists
-    if (!REGEX.weatherSection.test(readmeContent)) {
-      return false;
-    }
-
-    // Extract the current weather section to analyze its format
-    const currentSection = getSectionContent(
-      readmeContent,
-      REGEX.weatherSection
-    );
-
-    // Create an updated weather section that matches the existing format
-    const updatedWeatherData = createWeatherData(
-      {
-        description: validatedPayload.description || CONFIG.defaultDescription,
-        temperatureC: validatedPayload.temperatureC,
-        sunriseLocal: validatedPayload.sunriseLocal,
-        sunsetLocal: validatedPayload.sunsetLocal,
-        humidityPct: validatedPayload.humidityPct,
-        icon: validatedPayload.icon || CONFIG.defaultIcon,
-      },
-      currentSection
-    );
-
-    // Update the content
-    const oldContent = readmeContent;
-    const updatedContent = updateReadmeContent(
-      readmeContent,
-      updatedWeatherData,
-      lastRefreshTime
-    );
-
-    // Check if there are actually any changes to make
-    if (!shouldProceedWithUpdate(oldContent, updatedContent)) {
-      return false;
-    }
-
-    // Perform the file update
-    const updateSuccess = await performFileUpdate(readmePath, updatedContent);
-    if (!updateSuccess) {
-      return false;
-    }
-
-    // For GitHub Actions, report that changes were detected
-    const envResult = EnvironmentSchema.safeParse({
-      FORCE_UPDATE: process.env["FORCE_UPDATE"],
-      GITHUB_ACTIONS: process.env["GITHUB_ACTIONS"],
-    });
-
-    if (envResult.success && envResult.data.GITHUB_ACTIONS === "true") {
-      // GitHub Actions status reporting
-      // This could be extended to use GitHub's API for status updates
-    }
-
-    return true;
-  } catch {
+  // Check if file exists using Bun's optimized file operations
+  if (!(await readmeFile.exists())) {
     return false;
   }
+
+  // Validate and extract weather data
+  const validatedPayload = validateAndExtractWeatherData(weatherData);
+  if (!validatedPayload) {
+    return false;
+  }
+
+  const lastRefreshTime = createRefreshTime();
+
+  // Read the file content using Bun's optimized text reading
+  const readmeContent = await readmeFile.text();
+
+  // Check if the weather section exists
+  if (!REGEX.weatherSection.test(readmeContent)) {
+    return false;
+  }
+
+  // Extract the current weather section to analyze its format
+  const currentSection = getSectionContent(readmeContent, REGEX.weatherSection);
+
+  // Create an updated weather section that matches the existing format
+  const updatedWeatherData = createWeatherData(
+    {
+      description: validatedPayload.description || CONFIG.defaultDescription,
+      temperatureC: validatedPayload.temperatureC,
+      sunriseLocal: validatedPayload.sunriseLocal,
+      sunsetLocal: validatedPayload.sunsetLocal,
+      humidityPct: validatedPayload.humidityPct,
+      icon: validatedPayload.icon || CONFIG.defaultIcon,
+    },
+    currentSection
+  );
+
+  // Update the content
+  const oldContent = readmeContent;
+  const updatedContent = updateReadmeContent(
+    readmeContent,
+    updatedWeatherData,
+    lastRefreshTime
+  );
+
+  // Check if there are actually any changes to make
+  if (!shouldProceedWithUpdate(oldContent, updatedContent)) {
+    return false;
+  }
+
+  // Perform the file update
+  await performFileUpdate(readmePath, updatedContent);
+
+  return true;
 }

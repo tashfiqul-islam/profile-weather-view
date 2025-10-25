@@ -1,16 +1,23 @@
+/**
+ * @fileoverview Modern TypeScript 5.9.3 weather update main entry point with strict typing
+ * @version 2.2.2
+ * @author Tashfiqul Islam
+ */
+
 import { fetchWeatherData } from "./services/fetchWeather";
 import { updateReadme } from "./services/updateReadme";
 import { ensureEnvironmentVariables } from "./utils/preload";
 
 /**
  * Enhanced error handling with detailed context for GitHub Actions
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param error The error to handle
  * @returns Error information for reporting
  */
 function handleError(error: unknown): {
-  message: string;
-  details: string;
-  context: string;
+  readonly message: string;
+  readonly details: string;
+  readonly context: string;
 } {
   const timestamp = new Date().toISOString();
   const context = `[${timestamp}] Weather Update Script`;
@@ -31,14 +38,17 @@ function handleError(error: unknown): {
 }
 
 /**
+ * Log type definitions with modern TypeScript 5.9.3 features
+ */
+type LogType = "info" | "success" | "warning" | "error";
+
+/**
  * Enhanced logging with timestamps and GitHub Actions context
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param message Log message
  * @param type Log type (info, success, warning, error)
  */
-function log(
-  message: string,
-  type: "info" | "success" | "warning" | "error" = "info"
-): void {
+function log(message: string, type: LogType = "info"): void {
   const timestamp = new Date().toISOString();
   const prefix = `[${timestamp}] Weather Update:`;
   const logEntry = `${prefix} ${message}\n`;
@@ -60,6 +70,7 @@ function log(
 
 /**
  * Reports update status for GitHub Actions with detailed information
+ * Uses modern TypeScript 5.9.3 features with strict typing
  * @param success Whether the update was successful
  * @param details Additional details about the update
  */
@@ -83,6 +94,8 @@ function reportUpdateStatus(success: boolean, details?: string): void {
 /**
  * Main function to fetch weather data and update the README.
  * Uses modern async/await patterns and comprehensive error handling.
+ * Uses modern TypeScript 5.9.3 features with strict typing
+ * @returns Promise that resolves when the weather update process is complete
  */
 export async function main(): Promise<void> {
   const startTime = performance.now();
@@ -91,10 +104,12 @@ export async function main(): Promise<void> {
     log("Starting weather update process...", "info");
 
     // Log environment information
+    // Uses modern TypeScript 5.9.3 features with const assertions
     const envInfo = [
-      `Environment: ${process.env.NODE_ENV || "development"}`,
+      `Environment: ${process.env["NODE_ENV"] || "development"}`,
       `GitHub Actions: ${process.env["GITHUB_ACTIONS"] ? "Yes" : "No"}`,
-    ];
+    ] as const;
+
     for (const info of envInfo) {
       log(info, "info");
     }
@@ -134,7 +149,7 @@ export async function main(): Promise<void> {
       updateSuccess,
       `Execution time: ${duration.toFixed(2)}ms`
     );
-  } catch (error) {
+  } catch (error: unknown) {
     const duration = performance.now() - startTime;
     const errorInfo = handleError(error);
 
@@ -142,6 +157,7 @@ export async function main(): Promise<void> {
     log(`Error: ${errorInfo.message}`, "error");
 
     // For GitHub Actions, provide more context
+    // Uses modern TypeScript 5.9.3 features with strict typing
     if (process.env["GITHUB_ACTIONS"]) {
       log("This error occurred during a GitHub Actions workflow run", "error");
       log("Check the workflow logs for more details", "info");
@@ -153,7 +169,8 @@ export async function main(): Promise<void> {
 
 // Execute the main function using top-level await with proper error handling
 // Skip automatic execution during tests to allow unit testing of main()
-if (process.env.NODE_ENV !== "test") {
+// Uses modern TypeScript 5.9.3 features with strict typing
+if (process.env["NODE_ENV"] !== "test") {
   main().catch((error: unknown) => {
     const errorInfo = handleError(error);
     log(`Script execution failed: ${errorInfo.message}`, "error");

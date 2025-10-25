@@ -1,141 +1,50 @@
-# 🚀 Bun Configuration for profile-weather-view
-# Optimized for Bun v1.2.19+ and weather profile project needs
-
-# ================================
-# 🎯 Core Runtime Configuration
-# ================================
-
-# Performance optimization - keep false for better performance
-smol = false
-
-# Logging level - warn is good for production-like behavior
-logLevel = "warn"
-
-# Enable error stack traces for better debugging
-errorStackTraces = true
-
-# Disable telemetry for privacy
-telemetry = false
-
-# ================================
-# ⚡ Preload Critical Modules
-# ================================
-
-# Preload essential modules for faster startup
-preload = [
-    "./src/weather-update/utils/preload.ts"
-]
-
-# ================================
-# 🔧 Runtime Execution
-# ================================
-
-[run]
-# Use Bun for script execution (better performance)
-bun = true
-
-# Enable silent mode for cleaner output in CI
-silent = false
-
-# ================================
-# 📦 Package Management
-# ================================
-
-[install]
-# Install all dependency types
-optional = true
-dev = true
-peer = true
-production = false
-
-# Use exact versions for reproducible builds
-exact = false
-
-# Auto-install missing dependencies
-auto = "fallback"
-
-# Use frozen lockfile for CI consistency
-frozenLockfile = false
-
-# Save text-based lockfile (more readable)
-saveTextLockfile = true
-
-# Enable ESM by default
-esm = true
-
-# Default registry
-registry = "https://registry.npmjs.org"
-
-# Concurrent script execution
-concurrentScripts = 8
-
-# ================================
-# 🧪 Testing Configuration
-# ================================
+# Bun Configuration File
+# https://bun.sh/docs/runtime/bunfig
 
 [test]
-# Enable coverage by default
+# Test discovery patterns (Bun's default patterns)
+# *.test.{js|jsx|ts|tsx}
+# *_test.{js|jsx|ts|tsx}
+# *.spec.{js|jsx|ts|tsx}
+# *_spec.{js|jsx|ts|tsx}
+
+# Root directory for test discovery
+root = "tests"
+
+# Preload scripts for global test setup
+preload = ["./tests/setup.ts"]
+
+# Coverage configuration
 coverage = true
+coverageSkipTestFiles = true  # Exclude test files from coverage
 
-# Use Node.js environment for tests (ignored by Vitest)
-environment = "node"
+# Coverage thresholds (90% for all metrics)
+coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
 
-# Coverage thresholds for quality assurance (plural keys per current docs)
-coverageThreshold = {
-    lines = 0.8,
-    functions = 0.8,
-    statements = 0.8
-}
+# Test execution configuration
+randomize = true  # Randomize test order to catch dependencies
+rerunEach = 1    # Number of times to rerun each test file
 
-# Coverage reporting formats
-coverageReporter = ["text", "lcov"]
+# Timeout configuration (15 seconds for API calls)
+timeout = 15000
 
-# Coverage output directory
-coverageDir = "coverage"
+# Enable concurrent test execution for better performance
+# Tests will run concurrently unless marked with .serial
 
-# Skip test files from coverage reports
-coverageSkipTestFiles = true
+# Enable smol mode for reduced memory usage
+smol = false  # Keep false for better performance in CI
 
-# Ignore patterns for coverage
-coveragePathIgnorePatterns = [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/__tests__/**",
-    "**/node_modules/**",
-    "**/*.config.*",
-    "**/dist/**"
+# Test file patterns for concurrent execution
+# Run integration tests concurrently, unit tests sequentially
+concurrentTestGlob = [
+  "**/integration/*.test.ts",
+  "**/e2e/*.test.ts"
 ]
 
-# ================================
-# 🔍 File Loading & Handling
-# ================================
+# Reporter configuration
+# Default reporter is used, can be overridden with CLI flags
 
-[loader]
-# TypeScript and modern formats
-".ts" = "ts"
-".tsx" = "tsx"
-".mts" = "ts"
-".json" = "json"
-".toml" = "toml"
-
-# ================================
-# 🎨 Console Configuration
-# ================================
-
-[console]
-# Object inspection depth for better debugging
-depth = 3
-
-# ================================
-# 🔐 Security & Cache
-# ================================
-
-[install.cache]
-# Cache directory
-dir = "~/.bun/install/cache"
-
-# Enable global cache for faster installs
-disable = false
-
-# Always resolve latest versions
-disableManifest = false
+# Environment variables for tests
+[test.env]
+NODE_ENV = "test"
+CI = "true"

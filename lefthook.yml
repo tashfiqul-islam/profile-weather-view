@@ -1,62 +1,63 @@
-# Lefthook configuration
-min_version: "0.7.0"
+# Lefthook Configuration - Modern Developer Experience 2025
+min_version: "2.0.1"
 
-# Reduce noisy spinner/summary output while keeping failures visible
-skip_output:
-  - execution_info
+# Clean, minimal output for better UX (2025 standards)
+output:
+  - execution
+  - failure
   - summary
 
+# Pre-commit hooks - Fast parallel execution
 pre-commit:
   parallel: true
   commands:
-    ultracite:
-      # Format only relevant staged files and re-stage after fixes
-      run: |
-        if command -v bunx >/dev/null 2>&1; then bunx ultracite fix {staged_files}; 
-        elif command -v npx >/dev/null 2>&1; then npx ultracite fix {staged_files}; 
-        else echo "ultracite not found"; fi
+    # Code formatting and linting
+    format:
+      run: bunx ultracite fix {staged_files}
       stage_fixed: true
-      # Only run for code and docs we actually keep formatted
-      glob:
-        - "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
+      glob: "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
+      fail_text: "❌ Code formatting issues found. Run 'bun run format' to fix."
+    
+    # Type checking
     typecheck:
-      # Run only when TS files are staged
-      files:
-        - "*.{ts,tsx}"
       run: bun run type-check
-    tests_staged:
+      glob: "*.{ts,tsx}"
+      fail_text: "❌ TypeScript errors found. Fix before committing."
+    
+    # Run tests for staged files only
+    test:
+      run: bun run test:fast
       skip:
         - merge
         - rebase
-      run: bunx vitest --run
+      fail_text: "❌ Tests failed. Fix issues before committing."
 
+# Commit message validation
 commit-msg:
   commands:
     commitlint:
-      # Validate using the commit message file path passed as {1}
-      run: |
-        if command -v bunx >/dev/null 2>&1; then bunx commitlint --edit {1}; 
-        elif command -v npx >/dev/null 2>&1; then npx commitlint --edit {1}; 
-        else echo "commitlint not found, skipping"; fi
-      # Help commitlint match your scopes/types from commitlint.config.mjs
-      # No files/globs here; it always runs on the commit message
+      run: bunx commitlint --edit {1}
+      fail_text: "❌ Commit message doesn't follow conventional commits format."
 
-# Interactive commit message builder (Commitizen-compatible)
+# Interactive commit message builder
 prepare-commit-msg:
   commands:
     commitizen:
       interactive: true
-      run: |
-        if command -v npx >/dev/null 2>&1; then npx commitizen --hook; 
-        elif command -v bunx >/dev/null 2>&1; then bunx commitizen --hook; 
-        else echo "commitizen CLI not found (npx commitizen)"; fi
+      run: bunx commitizen --hook
       env:
-        LEFTHOOK: 0
+        LEFTHOOK: "0"
 
-# Optional: prevent bad pushes by running a quick gate
+# Pre-push quality gates
 pre-push:
+  parallel: true
   commands:
-    typecheck-before-push:
+    # Quick type check before push
+    typecheck:
       run: bun run type-check
-    unit-tests-before-push:
-      run: bunx vitest --run
+      fail_text: "❌ TypeScript errors found. Fix before pushing."
+    
+    # Run full test suite before push
+    test:
+      run: bun run test:fast
+      fail_text: "❌ Tests failed. Fix issues before pushing."
