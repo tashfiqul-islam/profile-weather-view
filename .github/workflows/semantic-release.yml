@@ -138,7 +138,7 @@ jobs:
         if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
         run: |
           echo "::group::Project Validation"
-          bun run type-check && npx vitest --run && bunx ultracite fix src && bunx ultracite check src
+          bun run type-check && bun test --run && bunx ultracite fix src && bunx ultracite check src
           echo "::endgroup::"
 
       # ============================================================
@@ -193,15 +193,15 @@ jobs:
           if [[ "${{ github.event.inputs.debug }}" == "true" ]]; then
             FLAGS="${FLAGS} --debug"
           fi
-          
+
           echo "::group::Running Semantic Release"
-          
+
           # Handle skip CI gracefully - semantic-release will still run but won't create releases
           if [[ "${{ steps.skip-ci-check.outputs.skip_ci }}" == "true" ]]; then
             echo "ℹ️ Skip CI detected - semantic-release will analyze commits but won't create releases"
             echo "This is expected behavior for [skip ci] commits"
           fi
-          
+
           npx semantic-release $FLAGS
           echo "::endgroup::"
 
@@ -215,10 +215,10 @@ jobs:
         run: |
           LATEST_TAG_AFTER=$(git describe --tags --abbrev=0 2>/dev/null || echo 'none')
           echo "latest_tag=${LATEST_TAG_AFTER}" >> $GITHUB_OUTPUT
-          
+
           # Get the tag before semantic-release ran
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo 'none')
-          
+
           if [ "$PREVIOUS_TAG" != "$LATEST_TAG_AFTER" ] && [ "$LATEST_TAG_AFTER" != "none" ]; then
             echo "✅ New release detected: $LATEST_TAG_AFTER"
             echo "new_release_version=${LATEST_TAG_AFTER#v}" >> $GITHUB_OUTPUT
@@ -298,7 +298,7 @@ jobs:
           VERSION="${{ needs.release.outputs.version }}"
           SKIP_CI="${{ needs.release.outputs.skip_ci }}"
           echo "# Semantic Release Results" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "$VERSION" != "" ]]; then
             echo "✅ **Version $VERSION released successfully**" >> $GITHUB_STEP_SUMMARY
             if [ -f "CHANGELOG.md" ]; then
@@ -319,10 +319,10 @@ jobs:
               echo "The commit analyzer determined no release was needed based on the commit messages." >> $GITHUB_STEP_SUMMARY
             fi
           fi
-          
+
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "N/A")
           echo "- **Previous Release:** $LAST_TAG" >> $GITHUB_STEP_SUMMARY
-          
+
           # Add commit analysis information
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Commit Analysis" >> $GITHUB_STEP_SUMMARY
