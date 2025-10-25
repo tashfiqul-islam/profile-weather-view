@@ -1,5 +1,16 @@
 # Changelog
 
+# [2.3.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.2...v2.3.0)
+### chore
+
+* **deps:** Pin dependencies [skip actions] (#124) ([5cb3d14](https://github.com/tashfiqul-islam/profile-weather-view/commit/5cb3d149a46e4e65df6689ebe6c03a1c4739010c))
+* **deps:** Update @biomejs/biome 2.3.0 [skip actions] (#127) ([ad1c5bc](https://github.com/tashfiqul-islam/profile-weather-view/commit/ad1c5bcad77168571c8b42bda1bce5d66c330ac7))
+* **deps:** Update bun 1.3.1 [skip actions] (#125) ([3234c90](https://github.com/tashfiqul-islam/profile-weather-view/commit/3234c9061c1b1872385beb101098ebff7084b723))
+* **deps:** Update lint-staged 16.2.6 [skip actions] (#126) ([ac9b419](https://github.com/tashfiqul-islam/profile-weather-view/commit/ac9b419c0c317817d82b38b50eaaf0745308ff06))
+### refactor
+
+* **dev:** modernize lefthook config and add dev workflow script ([82d0db4](https://github.com/tashfiqul-islam/profile-weather-view/commit/82d0db462f9df7e391bc5b6c5f3b54ae2d10c25e))
+
 # [2.2.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.2.1...v2.2.2)
 ### chore
 
