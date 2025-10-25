@@ -701,7 +701,7 @@ copies or substantial portions of the Software.
 
 <br>
 
-<sub>**Last refresh**: October 26, 2025</sub>
+<sub>**Last refresh**: Sunday, October 26, 2025 at 03:30:55 AM (UTC+6)</sub>
 
 <br>
 

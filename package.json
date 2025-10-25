@@ -116,5 +116,8 @@
     "commitizen": {
       "path": "@commitlint/cz-commitlint"
     }
+  },
+  "overrides": {
+    "tmp": ">=0.2.4"
   }
 }

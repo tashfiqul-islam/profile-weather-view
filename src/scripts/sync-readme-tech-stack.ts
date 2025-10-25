@@ -14,7 +14,7 @@ type PackageJson = {
 // Lift regex to top-level per performance rule
 const VERSION_REGEX = /\d+(?:\.\d+){0,2}/;
 const BUN_PM_REGEX = /bun@([\d.]+)/;
-const FOOTER_DATE_REGEX = /<sub>Last refresh: [^<]+<\/sub>/;
+const FOOTER_DATE_REGEX = /<sub>\*\*Last refresh\*\*: [^<]+<\/sub>/;
 
 function coerceVersion(versionRange: string | undefined): string | undefined {
   if (!versionRange) {
@@ -70,13 +70,20 @@ function replaceBadge(
 
 function updateFooterDate(content: string, isoDate: Date): string {
   const formatted = isoDate.toLocaleDateString("en-US", {
+    weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+  const timeFormatted = isoDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "Asia/Dhaka",
+  });
   return content.replace(
     FOOTER_DATE_REGEX,
-    `<sub>Last refresh: ${formatted}</sub>`
+    `<sub>**Last refresh**: ${formatted} at ${timeFormatted} (UTC+6)</sub>`
   );
 }
 
