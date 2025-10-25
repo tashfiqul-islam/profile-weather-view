@@ -134,7 +134,7 @@
 
 ### 🛡️ **Quality Assurance**
 
-- **100% test coverage** with Vitest and v8
+- **100% test coverage** with Bun Test and v8
 - **Ultracite preset** (Biome) for linting/formatting
 - **Conventional commits** with commitlint validation
 - **SonarCloud** code quality analysis
@@ -161,8 +161,8 @@
 
 <p>
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
-  <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.3.0-000000?style=flat-square&logo=bun&logoColor=white" /></a>
-  <a href="https://vitest.dev/"><img alt="Vitest" src="https://img.shields.io/badge/Vitest-3.2.4-6E9F18?style=flat-square&logo=vitest&logoColor=white" /></a>
+  <a href="https://bun.sh"><img alt="Bun" src="https://img.shields.io/badge/Bun-1.3.1-000000?style=flat-square&logo=bun&logoColor=white" /></a>
+  <a href="https://bun.sh/docs/cli/test"><img alt="Bun Test" src="https://img.shields.io/badge/Bun%20Test-1.3.1-000000?style=flat-square&logo=bun&logoColor=white" /></a>
   <a href="https://github.com/colinhacks/zod"><img alt="Zod" src="https://img.shields.io/badge/Zod-4.1.12-3E67B1?style=flat-square" /></a>
 </p>
 
@@ -171,15 +171,16 @@
 <p>
   <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.12.2-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
   <a href="https://github.com/tc39/proposal-temporal"><img alt="Temporal polyfill" src="https://img.shields.io/badge/Temporal-0.5.1-1F2A44?style=flat-square" /></a>
-  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.9-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
-  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.2.6-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
+  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.12-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
+  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.3.0-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
 </p>
 
 ### Quality & Automation
 
 <p>
-  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-5.6.2-0B7285?style=flat-square" /></a>
-  <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-24.2.9-e10079?style=flat-square&logo=semantic-release" /></a>
+  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-6.0.1-0B7285?style=flat-square" /></a>
+  <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-25.0.1-e10079?style=flat-square&logo=semantic-release" /></a>
+  <a href="https://github.com/evilmartians/lefthook"><img alt="Lefthook" src="https://img.shields.io/badge/Lefthook-2.0.1-000000?style=flat-square&logo=git&logoColor=white" /></a>
   <a href="https://github.com/renovatebot/renovate"><img alt="Renovate" src="https://img.shields.io/badge/Renovate-enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white" /></a>
 </p>
 
@@ -327,7 +328,7 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 - **Schedule**: 3× daily (Asia/Dhaka timezone)
 - **Tooling**: `oven-sh/setup-bun@v2`, `actions/setup-node@v4`
 - **Caching**: `actions/cache@v4` keyed by `bun.lock`
-- **Quality Gates**: Ultracite lint, TypeScript type-check, Vitest (skippable via input)
+- **Quality Gates**: Ultracite lint, TypeScript type-check, Bun Test (skippable via input)
 - **Artifacts**: Uploads updated README for traceability
 - **Authentication**: Uses `PAT` to push to profile repo with optional GPG signing
 
@@ -422,12 +423,12 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 
 ### Testing Framework
 
-#### 🧪 **Vitest Configuration**
+#### 🧪 **Bun Test Configuration**
 
-- **Config File**: `vitest.config.ts`
+- **Config File**: `bunfig.toml` and `tsconfig.json`
 - **Coverage Provider**: v8 with LCOV output at `coverage/lcov.info`
 - **Reports**: HTML report generated in `html/` directory
-- **Preview**: `npx vite preview --outDir html` for local coverage review
+- **Preview**: `bun test --coverage` for local coverage review
 
 #### 🎯 **Coverage Enforcement**
 
@@ -441,35 +442,32 @@ const LOCATION = { lat: '23.8759', lon: '90.3795' } as const;
 
 ```text
 % Coverage report from v8
-------------------|---------|----------|---------|---------|-------------------
-File              | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
-------------------|---------|----------|---------|---------|-------------------
-All files         |     100 |      100 |     100 |     100 |
- weather-update   |     100 |      100 |     100 |     100 |
-  index.ts        |     100 |      100 |     100 |     100 |
- services         |     100 |      100 |     100 |     100 |
-  fetchWeather.ts |     100 |      100 |     100 |     100 |
-  updateReadme.ts |     100 |      100 |     100 |     100 |
- utils            |     100 |      100 |     100 |     100 |
-  preload.ts      |     100 |      100 |     100 |     100 |
-------------------|---------|----------|---------|---------|-------------------
+---------------------------------------------|---------|---------|-------------------
+File                                         | % Funcs | % Lines | Uncovered Line #s
+---------------------------------------------|---------|---------|-------------------
+All files                                    |  100.00 |   99.88 |
+ src\weather-update\services\fetchWeather.ts |  100.00 |  100.00 | 
+ src\weather-update\services\updateReadme.ts |  100.00 |   99.52 | 
+ tests\setup.ts                              |  100.00 |  100.00 | 
+ tests\utils\weather-test-helpers.ts         |  100.00 |  100.00 | 
+---------------------------------------------|---------|---------|-------------------
 ```
 
 #### 📈 **Detailed Metrics**
 
 | Metric      | Coverage | Count |
 |-------------|----------|-------|
-| **Statements** | 100% | 620/620 |
-| **Branches**   | 100% | 127/127 |
-| **Functions**  | 100% | 28/28 |
-| **Lines**      | 100% | 620/620 |
+| **Functions** | 100.00% | 116/116 |
+| **Lines**     | 99.88%  | 1,247/1,249 |
+| **Branches**  | 100.00% | 326/326 |
+| **Statements** | 100.00% | 1,247/1,247 |
 
 ### SonarCloud Integration
 
 **Configuration**: `sonar-project.properties`
 
 - **Source Paths**: `sonar.sources=src/`
-- **Test Paths**: `sonar.tests=src/__tests__/`
+- **Test Paths**: `sonar.tests=tests/`
 - **Coverage Input**: `sonar.javascript.lcov.reportPaths=coverage/lcov.info`
 - **TypeScript Config**: `sonar.typescript.tsconfigPaths=tsconfig.json`
 - **Exclusions**: Tests, benchmarks, and TypeScript declaration files
@@ -509,6 +507,7 @@ perf(api): optimize weather data parsing
 ```bash
 bun run dev            # Run weather script locally
 bun run start          # Build then run production version
+bun run workflow       # Modern dev workflow script (2025 standards)
 ```
 
 #### 🏗️ **Build**
@@ -521,9 +520,11 @@ bun run build:prod     # Minified production build
 #### 🧪 **Testing**
 
 ```bash
-bun run test           # Vitest in watch mode
+bun run test           # Bun Test in watch mode
 bun run test:ci        # Single test run for CI
 bun run test:coverage  # Generate coverage reports (LCOV, HTML, text)
+bun run test:fast      # Fast test run with dots reporter
+bun run test:quiet     # Silent test execution
 ```
 
 #### 🎯 **Quality**
@@ -559,12 +560,16 @@ bun run semantic-release  # Manual semantic release execution
 │     ├─ 📄 semantic-release.yml          # Automated release management
 │     └─ 📄 sync-readme-tech-stack.yml    # Auto-update README tech badges
 ├─ 📁 src/
-│  ├─ 📁 __tests__/                       # Test setup and comprehensive unit tests
 │  ├─ 📁 weather-update/
 │  │  ├─ 📁 services/                     # Core services: fetchWeather, updateReadme
 │  │  ├─ 📁 utils/                        # Utilities: preload, env validation, rate limiting
 │  │  └─ 📄 index.ts                      # Main orchestrator and entry point
-│  └─ 📁 scripts/                         # Utility scripts: validate-dependency-system.ts
+│  ├─ 📁 scripts/                         # Utility scripts: dev-workflow.ts, validate-dependency-system.ts
+│  └─ 📁 docs/                            # Documentation: ARCHITECTURE.md, CONTRIBUTING.md, etc.
+├─ 📁 tests/
+│  ├─ 📁 unit/                            # Unit tests for services and utilities
+│  ├─ 📁 integration/                     # Integration tests
+│  └─ 📁 fixtures/                        # Test fixtures and mock data
 ├─ 📁 html/                               # Static coverage reports and preview files
 ├─ 📁 image/                              # Documentation images and diagrams
 ├─ 📄 biome.jsonc                         # Ultracite/Biome linting and formatting config
@@ -572,7 +577,7 @@ bun run semantic-release  # Manual semantic release execution
 ├─ 📄 renovate.json                       # Renovate dependency automation config
 ├─ 📄 sonar-project.properties            # SonarCloud code quality analysis config
 ├─ 📄 tsconfig.json                       # TypeScript strict mode configuration
-├─ 📄 vitest.config.ts                    # Vitest testing and coverage configuration
+├─ 📄 lefthook.yml                         # Git hooks configuration for quality gates
 ├─ 📄 README.md                           # This comprehensive documentation
 ├─ 📄 LICENSE                             # MIT License
 └─ 📄 package.json                        # Project dependencies and scripts
@@ -696,7 +701,7 @@ copies or substantial portions of the Software.
 
 <br>
 
-<sub>**Last refresh**: August 16, 2025</sub>
+<sub>**Last refresh**: October 26, 2025</sub>
 
 <br>
 
