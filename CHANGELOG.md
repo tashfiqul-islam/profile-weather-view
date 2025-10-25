@@ -1,5 +1,13 @@
 # Changelog
 
+# [2.4.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.4.0...v2.4.1)
+### chore
+
+* resolve merge conflicts and complete merge ([9294c50](https://github.com/tashfiqul-islam/profile-weather-view/commit/9294c50266453cc84e60daa154dd72ddb6c083d4))
+### fix
+
+* **ci:** resolve lockfile frozen error in sync-readme-tech-stack workflow ([56d9f0f](https://github.com/tashfiqul-islam/profile-weather-view/commit/56d9f0fa76fb7092047de83b9b300b75c87ade72))
+
 # [2.4.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.3.0...v2.4.0)
 ### chore
 
