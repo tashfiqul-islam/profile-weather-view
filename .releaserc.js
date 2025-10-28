@@ -50,6 +50,8 @@ export default {
           { type: "perf", release: "patch" },
           { type: "build", release: "patch" },
           { type: "ci", release: "patch" },
+          // Types-only changes should produce patch releases (matches commitlint types)
+          { type: "types", release: "patch" },
           { type: "test", release: "patch" },
           // Dependency updates - be more specific and handle various formats
           { type: "chore", scope: "deps", release: "patch" },

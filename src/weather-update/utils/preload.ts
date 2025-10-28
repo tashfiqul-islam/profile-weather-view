@@ -1,43 +1,28 @@
 /**
- * @fileoverview Modern TypeScript 5.9.3 environment preload utilities with strict typing
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Preload utilities for environment validation and simple API rate limiting.
+ * Comments focus on intent, constraints, and non-obvious behavior.
  */
 
-// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
+import "dotenv/config";
+// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for schema typing
 import * as z from "zod";
 
-// ================================
-// 📊 Configuration Constants
-// ================================
-
-/**
- * API key validation constants with modern TypeScript 5.9.3 features
- */
+// API key boundaries and debug preview length
 const API_KEY_MIN_LENGTH = 32 as const;
 const API_KEY_MAX_LENGTH = 100 as const;
 const PREVIEW_LENGTH = 8 as const;
 
-/**
- * Regex pattern for non-empty string capture
- * Uses const assertion for immutable pattern
- */
+// Used to append a location suffix when reporting validation errors
 const NON_EMPTY_CAPTURE = /^(.)+$/;
 
-/**
- * Rate limiting configuration with modern TypeScript 5.9.3 features
- * Uses const assertions and numeric separators for better readability
- */
+// Simple per-day limit stored locally to avoid accidental overuse
 const RATE_LIMIT_CONFIG = {
   maxCallsPerDay: 15 as const,
   trackingFile: ".api-calls.json" as const,
   resetTime: "00:00" as const, // Reset at midnight UTC
 } as const;
 
-/**
- * API call tracking schema with enhanced validation
- * Uses modern TypeScript 5.9.3 features for strict validation
- */
+// Tracking file schema for persisted counters
 const ApiCallTrackingSchema = z.object({
   date: z
     .string()
@@ -50,18 +35,9 @@ const ApiCallTrackingSchema = z.object({
     .describe("Time of last API call in HH:MM format"),
 });
 
-/**
- * Type definition for API call tracking data
- * Uses modern TypeScript 5.9.3 type inference
- */
 type ApiCallTracking = z.infer<typeof ApiCallTrackingSchema>;
 
-/**
- * Gets today's date in YYYY-MM-DD format
- * Optimized to avoid redundant string operations
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Date string in YYYY-MM-DD format
- */
+/** Returns today's date in YYYY-MM-DD format. */
 function getTodayDate(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -70,12 +46,7 @@ function getTodayDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * Gets the current time in HH:MM format
- * Optimized to avoid redundant string operations
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Time string in HH:MM format
- */
+/** Returns the current time in HH:MM. */
 function getCurrentTime(): string {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
@@ -83,21 +54,12 @@ function getCurrentTime(): string {
   return `${hours}:${minutes}`;
 }
 
-/**
- * Checks if we should reset the counter (new day)
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param lastDate The last recorded date
- * @returns True if counter should be reset
- */
+/** True when the stored date differs from today. */
 function shouldResetCounter(lastDate: string): boolean {
   return lastDate !== getTodayDate();
 }
 
-/**
- * Loads API call tracking data
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Promise resolving to API call tracking data
- */
+/** Loads tracking data from disk; resets counters on a new day. */
 async function loadApiCallTracking(): Promise<ApiCallTracking> {
   try {
     const trackingFile = Bun.file(RATE_LIMIT_CONFIG.trackingFile);
@@ -116,7 +78,7 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
       return validated;
     }
   } catch {
-    // If file doesn't exist or is invalid, start fresh
+    // If file is missing or invalid, start fresh
     process.stdout.write(
       "⚠️ API tracking file invalid or missing, starting fresh\n"
     );
@@ -128,12 +90,7 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
   };
 }
 
-/**
- * Saves API call tracking data asynchronously
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param tracking The tracking data to save
- * @returns Promise that resolves when save is complete
- */
+/** Persists tracking counters; logs to STDERR on failure. */
 async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
   try {
     const data = JSON.stringify(tracking, null, 2);
@@ -144,9 +101,8 @@ async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
 }
 
 /**
- * Checks if API call is allowed and updates tracking
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Promise resolving to true if call is allowed, false if limit exceeded
+ * Increments the daily counter and prevents calls after the limit is reached.
+ * Useful for CI and local runs to avoid accidental API overuse.
  */
 export async function checkAndUpdateApiLimit(): Promise<boolean> {
   const tracking = await loadApiCallTracking();
@@ -181,11 +137,7 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   return true;
 }
 
-/**
- * Zod v4 schema for environment variable validation
- * Enhanced with more flexible API key validation
- * Uses modern TypeScript 5.9.3 features for strict validation
- */
+// Validates OPEN_WEATHER_KEY format before use
 const EnvironmentSchema = z.object({
   OPEN_WEATHER_KEY: z
     .string()
@@ -204,16 +156,9 @@ const EnvironmentSchema = z.object({
     .describe("OpenWeather API key for weather data access"),
 });
 
-/**
- * Type definition for validated environment variables
- * Uses modern TypeScript 5.9.3 type inference
- */
 type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
 
-/**
- * Setup instructions template for better maintainability
- * Uses modern TypeScript 5.9.3 features with const assertions
- */
+// Printed as guidance when env validation fails
 const SETUP_INSTRUCTIONS = `
 📋 Setup Instructions:
 1. Create a .env file in your project root
@@ -224,12 +169,7 @@ const SETUP_INSTRUCTIONS = `
 💡 Example .env file:
 OPEN_WEATHER_KEY=1234567890abcdef1234567890abcdef` as const;
 
-/**
- * Validates environment variables without checking rate limits
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @throws Error if validation fails
- * @returns Validated environment variables
- */
+/** Validates OPEN_WEATHER_KEY and prints a short debug summary. */
 export function validateEnvironmentVariables(): EnvironmentVariables {
   // Validate environment variables
   const envResult = EnvironmentSchema.safeParse({
@@ -250,7 +190,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     );
   }
 
-  // Log environment variable status for debugging
+  // Log environment variable status for debugging (no secrets exposed)
   const apiKey = envResult.data.OPEN_WEATHER_KEY;
   const debugInfo = [
     "🔍 Environment variable check:",
@@ -264,12 +204,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   return envResult.data;
 }
 
-/**
- * Validates and ensures required environment variables are present
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @throws Error if validation fails
- * @returns Promise resolving to validated environment variables
- */
+/** Ensures API limit allows execution, then validates environment variables. */
 export async function ensureEnvironmentVariables(): Promise<EnvironmentVariables> {
   // Check API call limit first
   if (!(await checkAndUpdateApiLimit())) {

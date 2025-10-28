@@ -1,7 +1,7 @@
-name: "🚀 Semantic Release"
+name: "Semantic Release"
 
 # ============================================================
-# ⚡ Trigger Configuration
+# Workflow triggers
 # ============================================================
 on:
   push:
@@ -20,14 +20,14 @@ on:
         default: false
 
 # ============================================================
-# 🚫 Prevent Redundant Runs
+# Concurrency control
 # ============================================================
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 # ============================================================
-# 🔒 Permissions (Least Privilege Principle)
+# Permissions
 # ============================================================
 permissions:
   contents: write
@@ -36,10 +36,9 @@ permissions:
   id-token: write
 
 # ============================================================
-# 🌍 Environment Variables
+# Environment variables
 # ============================================================
 env:
-  GH_TOKEN: ${{ secrets.PAT }}
   NODE_ENV: "production"
   BUN_RUNTIME_SAFETY: "true"
   DEBUG: ${{ (github.event.inputs.debug == 'true' && 'semantic-release:*') || '' }}
@@ -51,7 +50,7 @@ env:
   LEFTHOOK: "0"
 
 # ============================================================
-# 🔄 Jobs
+# Jobs
 # ============================================================
 jobs:
   release:
@@ -66,27 +65,26 @@ jobs:
       skip_ci: ${{ steps.skip-ci-check.outputs.skip_ci }}
     steps:
       # ============================================================
-      # ⬇️ Checkout Repository (Optimized)
+      # Checkout Repository
       # ============================================================
-      - name: "⬇️ Checkout Repository"
+      - name: "Checkout Repository"
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT }}
           persist-credentials: false
 
       # ============================================================
-      # 🧰 Setup Bun (Latest Version)
+      # Setup Bun
       # ============================================================
-      - name: "🧰 Setup Bun"
+      - name: "Setup Bun"
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       # ============================================================
-      # 📦 Cache Dependencies (Advanced Caching Strategy)
+      # Restore Dependencies Cache
       # ============================================================
-      - name: "📦 Restore Bun Dependencies Cache"
+      - name: "Restore Dependencies Cache"
         id: cache-deps
         uses: actions/cache/restore@v4
         with:
@@ -97,17 +95,19 @@ jobs:
             ${{ runner.os }}-bun-
 
       # ============================================================
-      # 📦 Install Dependencies (Conditional)
+      # Install Dependencies
       # ============================================================
-      - name: "📦 Install Dependencies"
-        if: steps.cache-deps.outputs.cache-hit != 'true'
-        run: bun install --frozen-lockfile
+      - name: "Install Dependencies"
+        run: |
+          if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
+            echo "::group::Installing dependencies"
+          else
+            echo "::notice::Using cached dependencies"
+          fi
+          bun install --frozen-lockfile --no-summary
+          echo "::endgroup::"
 
-      - name: "⚡ Install Dependencies (Fast Path)"
-        if: steps.cache-deps.outputs.cache-hit == 'true'
-        run: bun install --frozen-lockfile --no-summary
-
-      - name: "💾 Save Bun Dependencies Cache"
+      - name: "Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
@@ -116,9 +116,9 @@ jobs:
           key: ${{ steps.cache-deps.outputs.cache-primary-key }}
 
       # ============================================================
-      # 🔍 Check for Skip CI Commits
+      # Check for Skip CI Commits
       # ============================================================
-      - name: "🔍 Check for Skip CI Commits"
+      - name: "Check for Skip CI Commits"
         id: skip-ci-check
         run: |
           # Check if the current commit message contains [skip ci] or similar
@@ -132,9 +132,9 @@ jobs:
           fi
 
       # ============================================================
-      # 🔍 Validate Project (Only if not dry-run and not skip ci)
+      # Validate Project (only if not dry-run and not skip ci)
       # ============================================================
-      - name: "🔍 Validate Project"
+      - name: "Validate Project"
         if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
         run: |
           echo "::group::Project Validation"
@@ -142,9 +142,9 @@ jobs:
           echo "::endgroup::"
 
       # ============================================================
-      # 🔒 Security Audit (Optional, Continue on Error)
+      # Security Audit (optional, continue on error)
       # ============================================================
-      - name: "🔒 Security Audit"
+      - name: "Security Audit"
         if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
         continue-on-error: true
         run: |
@@ -158,29 +158,14 @@ jobs:
           echo "::endgroup::"
 
       # ============================================================
-      # 🚀 Run Semantic Release with Changelogen
+      # Run Semantic Release
       # ============================================================
-      - name: "🧰 Setup Node (LTS)"
+      - name: "Setup Node"
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
 
-      # Ensure local branch is up-to-date to avoid non-fast-forward push failures
-      - name: "🔄 Sync branch with remote (rebase)"
-        run: |
-          git fetch --prune --tags origin
-          git checkout master
-          # Stash any local/untracked changes (e.g., buildinfo) to allow rebase
-          git stash push -u -m "ci-autostash-before-rebase" || true
-          if ! git pull --rebase origin master; then
-            echo "Rebase failed, aborting and hard resetting to origin/master"
-            git rebase --abort || true
-            git reset --hard origin/master
-          fi
-          # Drop the stash (we don't need build artifacts)
-          git stash drop || true
-
-      - name: "🚀 Run Semantic Release"
+      - name: "Run Semantic Release"
         id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -202,13 +187,13 @@ jobs:
             echo "This is expected behavior for [skip ci] commits"
           fi
 
-          npx semantic-release $FLAGS
+          npx semantic-release@latest $FLAGS
           echo "::endgroup::"
 
       # ============================================================
-      # 🔍 Check for New Release
+      # Check for New Release
       # ============================================================
-      - name: "🔍 Check for New Release"
+      - name: "Check for New Release"
         id: check-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -241,9 +226,9 @@ jobs:
           fi
 
       # ============================================================
-      # 📦 Upload Changelog Artifact (Only if Release Created)
+      # Upload Changelog Artifact (only if release created)
       # ============================================================
-      - name: "📦 Upload Changelog Artifact"
+      - name: "Upload Changelog Artifact"
         if: steps.check-release.outputs.new_release_version != ''
         uses: actions/upload-artifact@v4
         with:
@@ -251,9 +236,9 @@ jobs:
           path: CHANGELOG.md
 
       # ============================================================
-      # 🔍 Generate Provenance Assets (Only if Release Created)
+      # Generate Provenance Assets (only if release created)
       # ============================================================
-      - name: "🔍 Generate Provenance Assets"
+      - name: "Generate Provenance Assets"
         id: generate-provenance
         if: steps.check-release.outputs.new_release_version != ''
         run: |
@@ -274,15 +259,15 @@ jobs:
   # SLSA provenance temporarily disabled to avoid failing the workflow when no subjects are present.
 
   # ============================================================
-  # 📊 Generate Release Summary
+  # Generate Release Summary
   # ============================================================
   generate-summary:
-    name: "📊 Generate Release Summary"
+    name: "Generate Release Summary"
     needs: [release]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: "📥 Download Changelog"
+      - name: "Download Changelog"
         if: needs.release.outputs.version != ''
         uses: actions/download-artifact@v4
         with:
@@ -292,7 +277,7 @@ jobs:
           run-id: ${{ github.run_id }}
         continue-on-error: true
 
-      - name: "📊 Generate Summary"
+      - name: "Generate Summary"
         id: summary
         run: |
           VERSION="${{ needs.release.outputs.version }}"

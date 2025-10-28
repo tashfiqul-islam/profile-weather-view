@@ -31,16 +31,15 @@ bun run <script>
 
 | Script | Purpose | When to use | CI |
 |---|---|---|---|
-| `test` | Vitest in watch mode | Local TDD | No |
-| `test:ci` | One-shot tests | CI and local verification | Yes |
-| `test:watch` | Watch mode alias | When iterating quickly | No |
-| `test:coverage` | Coverage (text, html, lcov) | Validate coverage locally | Yes |
+| `test` | Run all tests with Bun’s test runner | Local runs | Yes (variant) |
+| `test:ci` | One-shot tests (non-watch) | CI and local verification | Yes |
+| `test:watch` | Watch mode | Fast iteration | No |
+| `test:coverage` | Coverage (text, lcov) | Validate coverage locally | Yes |
 | `test:staged` | Run tests for staged files | Pre-commit focused checks | Optional |
 
 Notes
 
-- Coverage provider: v8; reports at `coverage/lcov.info` and `html/`
-- HTML preview: `npx vite preview --outDir html`
+- Coverage: Bun writes text and LCOV to `coverage/` (e.g., `coverage/lcov.info`).
 - `test:staged` uses a POSIX pipeline (works in Git Bash on Windows). If it doesn’t match your shell, use `test:ci`.
 
 ## Quality
@@ -99,7 +98,6 @@ Notes
 
   ```bash
   bun run test:coverage
-  npx vite preview --outDir html
   ```
 
 ## CI interaction

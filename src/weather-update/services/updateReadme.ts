@@ -1,7 +1,6 @@
 /**
- * @fileoverview Modern TypeScript 5.9.3 README update service with strict typing
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Updates README weather section by validating payload,
+ * preserving existing format, and writing only when content changes.
  */
 
 import { join } from "node:path";
@@ -15,48 +14,34 @@ import type {
   WeatherUpdatePayload,
 } from "./fetchWeather";
 
-/**
- * Configuration constants with modern TypeScript 5.9.3 features
- * Uses const assertions and branded types for enhanced type safety
- */
+// Display and formatting defaults
 const CONFIG = {
   timezone: "Asia/Dhaka" as const,
   defaultIcon: "01d" as const,
   defaultDescription: "Unknown" as const,
 } as const;
 
-/**
- * Top-level regex constants for better performance
- * Uses const assertions for immutable regex patterns
- */
+// Markers and fields we replace inside README
 const REGEX = {
   weatherSection:
     /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
   refreshTime: /<em>Last refresh:.*?<\/em>/,
 } as const;
 
-/**
- * Zod v4 schema for environment variable parsing
- * Uses modern TypeScript 5.9.3 features with strict typing
- */
+// Narrow env flags we care about for control flow
 const EnvironmentSchema = z.object({
   FORCE_UPDATE: z.string().optional(),
   GITHUB_ACTIONS: z.string().optional(),
 });
 
-/**
- * Validation constants for weather data schema
- */
+// Input boundaries for simple payload validation
 const VALIDATION_LIMITS = {
   MIN_STRING_LENGTH: 1,
   MIN_HUMIDITY: 0,
   MAX_HUMIDITY: 100,
 } as const;
 
-/**
- * Weather data validation schema with enhanced type safety
- * Uses modern TypeScript 5.9.3 features for strict validation
- */
+// Validates the minimal payload consumed by README rendering
 const WeatherDataSchema = z.object({
   description: z
     .string()
@@ -82,23 +67,12 @@ const WeatherDataSchema = z.object({
     .describe("Weather icon code"),
 });
 
-/**
- * Helper function to extract content from a regex match with null safety
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param content The content to search in
- * @param regex The regex pattern to search with
- * @returns The matched content or empty string
- */
+/** Extracts the first match or returns empty string. */
 export function getSectionContent(content: string, regex: RegExp): string {
   return regex.exec(content)?.[0] ?? "";
 }
 
-/**
- * Creates the formatted refresh time string using Temporal API
- * Following latest Temporal polyfill best practices
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Formatted refresh time string
- */
+/** Returns a human-readable refresh timestamp for the configured timezone. */
 export function createRefreshTime(): string {
   const now = Temporal.Now.zonedDateTimeISO(CONFIG.timezone);
 
@@ -116,13 +90,7 @@ export function createRefreshTime(): string {
   return `${formattedTime} (UTC+6)`;
 }
 
-/**
- * Handles the actual file update operation using Bun's optimized I/O
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param readmePath Path to the README file
- * @param updatedContent New content to write
- * @returns Promise<number> Number of bytes written
- */
+/** Writes updated README content to disk. */
 export async function performFileUpdate(
   readmePath: string,
   updatedContent: string
@@ -130,12 +98,7 @@ export async function performFileUpdate(
   return await Bun.write(readmePath, updatedContent);
 }
 
-/**
- * Validates weather data segments and extracts them
- * Uses modern TypeScript 5.9.3 features with branded types
- * @param weatherData The formatted weather data string
- * @returns Extracted weather segments or null if invalid
- */
+/** Validates payload; returns normalized payload or null if invalid. */
 function validateAndExtractWeatherData(
   weatherData: WeatherUpdatePayload
 ): WeatherUpdatePayload | null {
@@ -153,11 +116,8 @@ function validateAndExtractWeatherData(
 }
 
 /**
- * Creates weather data in the appropriate format based on existing content
- * Uses modern TypeScript 5.9.3 features with strict typing and branded types
- * @param payload Weather data payload with branded types
- * @param currentSection Current weather section content
- * @returns Formatted weather data string
+ * Produces an updated weather section while preserving existing structure.
+ * Replaces only known tokens to avoid layout drift.
  */
 export function createWeatherData(
   payload: WeatherUpdatePayload,
@@ -172,42 +132,40 @@ export function createWeatherData(
     icon,
   } = payload;
 
-  // Format-agnostic approach: preserve existing structure and replace data points
+  // Preserve structure; replace only values
   let updatedSection = currentSection;
 
-  // Replace temperature values (e.g., "32°C", "28°C")
+  // Temperature (e.g., "32°C")
   updatedSection = updatedSection.replace(/\d+°C/g, `${temperatureC}°C`);
 
-  // Replace humidity percentages (e.g., "65%", "83%")
+  // Humidity percentage
   updatedSection = updatedSection.replace(/\d+%/g, `${humidityPct}%`);
 
-  // Replace sunrise times (various formats: "05:34", "06:12:30")
+  // Sunrise time (supports HH:mm and HH:mm:ss)
   updatedSection = updatedSection.replace(
     /(Sunrise:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
     `$1${sunriseLocal}`
   );
 
-  // Replace sunset times (various formats: "18:31", "18:15:45")
+  // Sunset time (supports HH:mm and HH:mm:ss)
   updatedSection = updatedSection.replace(
     /(Sunset:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
     `$1${sunsetLocal}`
   );
 
-  // Replace weather icons (preserve existing format but update icon code)
+  // Icon code inside image URL
   updatedSection = updatedSection.replace(
     /openweathermap\.org\/img\/w\/\w+\.png/g,
     `openweathermap.org/img/w/${icon}.png`
   );
 
-  // Replace weather description in image alt text
+  // Description inside alt text
   updatedSection = updatedSection.replace(
     /alt="[^"]*icon"/g,
     `alt="${description} icon"`
   );
 
-  // Replace weather description text (more complex - try to preserve position)
-  // Look for common weather terms and replace them
-  // Uses modern TypeScript 5.9.3 features with const assertions
+  // Replace a known weather term in free text, if present
   const weatherTerms = [
     "Clear Sky",
     "Clear",
@@ -229,7 +187,6 @@ export function createWeatherData(
     "Sunny",
   ] as const;
 
-  // Find and replace weather descriptions while preserving case and context
   for (const term of weatherTerms) {
     const regex = new RegExp(`\\b${term}\\b`, "gi");
     if (regex.test(updatedSection)) {
@@ -241,14 +198,7 @@ export function createWeatherData(
   return updatedSection;
 }
 
-/**
- * Updates the README content with new weather data and refresh time
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param readmeContent Current README content
- * @param updatedWeatherData New weather data to insert
- * @param lastRefreshTime Formatted refresh time
- * @returns Updated content with refresh time
- */
+/** Inserts the updated section and refresh timestamp into README content. */
 export function updateReadmeContent(
   readmeContent: string,
   updatedWeatherData: string,
@@ -270,11 +220,8 @@ export function updateReadmeContent(
 }
 
 /**
- * Checks if update should proceed based on content changes and FORCE_UPDATE setting
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param oldContent Original content
- * @param updatedContent Updated content
- * @returns True if update should proceed, false otherwise
+ * Returns true when content changed, or FORCE_UPDATE=true is set.
+ * Avoids unnecessary writes in CI and local runs.
  */
 export function shouldProceedWithUpdate(
   oldContent: string,
@@ -284,7 +231,7 @@ export function shouldProceedWithUpdate(
     return true;
   }
 
-  // Use Zod v4 for better environment variable parsing
+  // Parse env flags safely (undefined tolerated)
   const envResult = EnvironmentSchema.safeParse({
     FORCE_UPDATE: process.env["FORCE_UPDATE"],
     GITHUB_ACTIONS: process.env["GITHUB_ACTIONS"],
@@ -294,13 +241,8 @@ export function shouldProceedWithUpdate(
 }
 
 /**
- * Updates the README file with new weather data.
- * Uses Bun's optimized file I/O and modern error handling.
- * Uses modern TypeScript 5.9.3 features with strict typing and branded types
- *
- * @param weatherData The formatted weather data string with branded types
- * @param customReadmePath Optional path to a README file in a different location
- * @returns Promise<boolean> True if update was successful, false otherwise
+ * Reads README, applies replacements, and writes back if needed.
+ * Returns false when the file is missing, data is invalid, or nothing changed.
  */
 export async function updateReadme(
   weatherData: WeatherUpdatePayload,
@@ -309,12 +251,12 @@ export async function updateReadme(
   const readmePath = customReadmePath ?? join(process.cwd(), "README.md");
   const readmeFile = Bun.file(readmePath);
 
-  // Check if file exists using Bun's optimized file operations
+  // Ensure the file exists before proceeding
   if (!(await readmeFile.exists())) {
     return false;
   }
 
-  // Validate and extract weather data
+  // Validate input payload
   const validatedPayload = validateAndExtractWeatherData(weatherData);
   if (!validatedPayload) {
     return false;
@@ -322,10 +264,10 @@ export async function updateReadme(
 
   const lastRefreshTime = createRefreshTime();
 
-  // Read the file content using Bun's optimized text reading
+  // Read the file content
   const readmeContent = await readmeFile.text();
 
-  // Check if the weather section exists
+  // Ensure the weather section markers exist
   if (!REGEX.weatherSection.test(readmeContent)) {
     return false;
   }
@@ -336,12 +278,12 @@ export async function updateReadme(
   // Create an updated weather section that matches the existing format
   const updatedWeatherData = createWeatherData(
     {
-      description: validatedPayload.description || CONFIG.defaultDescription,
+      description: validatedPayload.description,
       temperatureC: validatedPayload.temperatureC,
       sunriseLocal: validatedPayload.sunriseLocal,
       sunsetLocal: validatedPayload.sunsetLocal,
       humidityPct: validatedPayload.humidityPct,
-      icon: validatedPayload.icon || CONFIG.defaultIcon,
+      icon: validatedPayload.icon,
     },
     currentSection
   );
@@ -354,7 +296,7 @@ export async function updateReadme(
     lastRefreshTime
   );
 
-  // Check if there are actually any changes to make
+  // Skip write if content is unchanged and FORCE_UPDATE is not set
   if (!shouldProceedWithUpdate(oldContent, updatedContent)) {
     return false;
   }

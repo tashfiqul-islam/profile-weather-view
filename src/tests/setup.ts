@@ -1,23 +1,14 @@
 /**
- * Global Test Setup for Bun Test Runner
- * This file is automatically loaded before all tests via bunfig.toml
- *
- * Features:
- * - Global test environment configuration
- * - Mock setup for Bun-specific APIs
- * - Test utilities and helpers
- * - Performance monitoring
- *
- * @fileoverview Modern TypeScript 5.9.3 test setup with strict typing
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Global test setup for Bun: configures env, wires helpers, and sets hooks.
+ * Comments focus on intent and non-obvious behavior.
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach } from "bun:test";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
-// ================================
-// 🌍 Environment Configuration
-// ================================
+// Environment configuration used by tests
 
 // Set test environment variables
 process.env["NODE_ENV"] = "test";
@@ -32,17 +23,13 @@ process.env["FORCE_UPDATE"] = "true";
 // Disable GitHub Actions mode for testing
 process.env["GITHUB_ACTIONS"] = "false";
 
-// ================================
-// 🧪 Test Utilities
-// ================================
+// Test utilities available to all suites
 
 /**
  * Test utilities for weather update project
  */
 export const testUtils = {
-  /**
-   * Create mock weather data for testing
-   */
+  /** Creates a basic weather payload for tests. */
   createMockWeatherData: () => {
     const MOCK_TEMPERATURE = 25;
     const MOCK_HUMIDITY = 60;
@@ -61,9 +48,7 @@ export const testUtils = {
     };
   },
 
-  /**
-   * Create mock API response for OpenWeather API
-   */
+  /** Produces a minimal OpenWeather-like response. */
   createMockApiResponse: () => {
     const MOCK_LAT = 23.8759;
     const MOCK_LON = 90.3795;
@@ -119,9 +104,7 @@ export const testUtils = {
     };
   },
 
-  /**
-   * Create mock README content for testing
-   */
+  /** Returns a README snippet with a weather section. */
   createMockReadmeContent: () => `
 # Profile README
 
@@ -137,9 +120,7 @@ Sunrise: 06:00 | Sunset: 18:00
 This is other content that should not be modified.
 `,
 
-  /**
-   * Performance monitoring utilities
-   */
+  /** Minimal performance helpers for timing in tests. */
   performance: {
     startTimer: (label: string) => {
       performance.mark(`${label}-start`);
@@ -152,31 +133,26 @@ This is other content that should not be modified.
     },
   },
 
-  /**
-   * Reset all mocks and test state
-   */
+  /** Hook to reset any global mocks or state (placeholder). */
   resetMocks: () => {
     // Clear any global mocks or test state
     // This is a placeholder for future mock reset functionality
   },
 
-  /**
-   * File system utilities for testing
-   */
+  /** Convenience helpers for creating and cleaning temp files. */
   fs: {
     createTempFile: async (content: string, filename = "temp.md") => {
-      const tempPath = `./tests/fixtures/${filename}`;
+      const TEMP_ROOT = path.join(os.tmpdir(), "profile-weather-view-tests");
+      await fs.mkdir(TEMP_ROOT, { recursive: true });
+      const tempPath = path.join(TEMP_ROOT, filename);
       await Bun.write(tempPath, content);
       return tempPath;
     },
     cleanupTempFiles: async () => {
-      // Clean up any temporary test files
+      // Remove all temporary files created during tests
       try {
-        const files = await Bun.file("./tests/fixtures").exists();
-        if (files) {
-          // In a real implementation, you'd clean up temp files here
-          // Test cleanup completed
-        }
+        const TEMP_ROOT = path.join(os.tmpdir(), "profile-weather-view-tests");
+        await fs.rm(TEMP_ROOT, { recursive: true, force: true });
       } catch {
         // Ignore cleanup errors
       }
@@ -184,47 +160,29 @@ This is other content that should not be modified.
   },
 };
 
-// ================================
-// 🔧 Global Test Hooks
-// ================================
+// Global test hooks
 
-/**
- * Global setup - runs once before all tests
- */
+/** Runs once before all tests. */
 beforeAll(() => {
-  // Bun Test Runner - Global Setup
-  // Test root: process.cwd()
-  // Environment: process.env.NODE_ENV
-  // API Key configured: Boolean(process.env.OPEN_WEATHER_KEY)
+  // Placeholder for any global setup validation if needed
 });
 
-/**
- * Global teardown - runs once after all tests
- */
+/** Runs once after all tests. */
 afterAll(() => {
-  // Bun Test Runner - Global Teardown
-  // Test execution completed
+  // Placeholder for any global teardown if needed
 });
 
-/**
- * Per-test setup - runs before each test
- */
+/** Runs before each test. */
 beforeEach(() => {
-  // Reset any global state if needed
-  // Clear any mocks or timers
+  // Placeholder for per-test setup
 });
 
-/**
- * Per-test teardown - runs after each test
- */
+/** Runs after each test. */
 afterEach(() => {
-  // Clean up after each test
-  // Reset any modified global state
+  // Placeholder for per-test cleanup
 });
 
-// ================================
-// 🎯 Export Test Configuration
-// ================================
+// Exported test configuration for shared thresholds and data
 
 export const testConfig = {
   // Test timeouts

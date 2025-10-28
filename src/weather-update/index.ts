@@ -1,19 +1,14 @@
 /**
- * @fileoverview Modern TypeScript 5.9.3 weather update main entry point with strict typing
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Entry point: validates env, fetches weather, updates README, reports status.
+ * Comments focus on intent and non-obvious behavior.
  */
 
+import "dotenv/config";
 import { fetchWeatherData } from "./services/fetchWeather";
 import { updateReadme } from "./services/updateReadme";
 import { ensureEnvironmentVariables } from "./utils/preload";
 
-/**
- * Enhanced error handling with detailed context for GitHub Actions
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param error The error to handle
- * @returns Error information for reporting
- */
+/** Builds a serializable error shape with timestamped context. */
 function handleError(error: unknown): {
   readonly message: string;
   readonly details: string;
@@ -37,17 +32,9 @@ function handleError(error: unknown): {
   };
 }
 
-/**
- * Log type definitions with modern TypeScript 5.9.3 features
- */
 type LogType = "info" | "success" | "warning" | "error";
 
-/**
- * Enhanced logging with timestamps and GitHub Actions context
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param message Log message
- * @param type Log type (info, success, warning, error)
- */
+/** Logs with ISO timestamp and severity. */
 function log(message: string, type: LogType = "info"): void {
   const timestamp = new Date().toISOString();
   const prefix = `[${timestamp}] Weather Update:`;
@@ -68,12 +55,7 @@ function log(message: string, type: LogType = "info"): void {
   }
 }
 
-/**
- * Reports update status for GitHub Actions with detailed information
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param success Whether the update was successful
- * @param details Additional details about the update
- */
+/** Emits a CHANGES_DETECTED flag and human-readable summary for CI. */
 function reportUpdateStatus(success: boolean, details?: string): void {
   if (success) {
     log("Weather update process completed successfully!", "success");
@@ -91,20 +73,14 @@ function reportUpdateStatus(success: boolean, details?: string): void {
   }
 }
 
-/**
- * Main function to fetch weather data and update the README.
- * Uses modern async/await patterns and comprehensive error handling.
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @returns Promise that resolves when the weather update process is complete
- */
+/** Orchestrates validation, fetch, update, timing, and CI reporting. */
 export async function main(): Promise<void> {
   const startTime = performance.now();
 
   try {
     log("Starting weather update process...", "info");
 
-    // Log environment information
-    // Uses modern TypeScript 5.9.3 features with const assertions
+    // Basic environment context for troubleshooting
     const envInfo = [
       `Environment: ${process.env["NODE_ENV"] || "development"}`,
       `GitHub Actions: ${process.env["GITHUB_ACTIONS"] ? "Yes" : "No"}`,
@@ -124,7 +100,7 @@ export async function main(): Promise<void> {
     const weatherData = await fetchWeatherData();
     log("Weather data fetched successfully", "success");
 
-    // Check for a custom README path from environment variable
+    // Allow override of README path via env
     const customReadmePath = process.env["PROFILE_README_PATH"];
     if (customReadmePath) {
       log(`Using custom README path: ${customReadmePath}`, "info");
@@ -156,8 +132,7 @@ export async function main(): Promise<void> {
     log(`Script failed after ${duration.toFixed(2)}ms`, "error");
     log(`Error: ${errorInfo.message}`, "error");
 
-    // For GitHub Actions, provide more context
-    // Uses modern TypeScript 5.9.3 features with strict typing
+    // Provide extra guidance when running inside CI
     if (process.env["GITHUB_ACTIONS"]) {
       log("This error occurred during a GitHub Actions workflow run", "error");
       log("Check the workflow logs for more details", "info");
@@ -167,9 +142,7 @@ export async function main(): Promise<void> {
   }
 }
 
-// Execute the main function using top-level await with proper error handling
-// Skip automatic execution during tests to allow unit testing of main()
-// Uses modern TypeScript 5.9.3 features with strict typing
+// Execute unless running tests; surface failures with exit code for CI
 if (process.env["NODE_ENV"] !== "test") {
   main().catch((error: unknown) => {
     const errorInfo = handleError(error);

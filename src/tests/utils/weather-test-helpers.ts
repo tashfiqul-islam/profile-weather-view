@@ -1,10 +1,6 @@
 /**
- * Weather Test Helpers
- * Specialized utilities for testing weather update functionality
- *
- * @fileoverview Modern TypeScript 5.9.3 test utilities with strict typing
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Weather test helpers: payload builders, mock responses, and perf utilities.
+ * Comments emphasize intent and reuse across tests.
  */
 
 import type {
@@ -12,15 +8,11 @@ import type {
   TemperatureCelsius,
   TimeString,
   WeatherUpdatePayload,
-} from "../../src/weather-update/services/fetchWeather";
+} from "../../../src/weather-update/services/fetchWeather";
 
-// ================================
-// 🎯 TypeScript 5.9.3 Modern Types
-// ================================
+// Types and constants used for shaping test data
 
-/**
- * HTTP status code constants
- */
+/** HTTP status code constants. */
 const HTTP_STATUS_CODES = {
   OK: 200,
   CREATED: 201,
@@ -31,9 +23,7 @@ const HTTP_STATUS_CODES = {
   SERVER_ERROR: 500,
 } as const;
 
-/**
- * Template literal type for weather conditions
- */
+/** Template literal type for weather conditions. */
 type WeatherCondition =
   | "Clear Sky"
   | "Clouds"
@@ -44,9 +34,7 @@ type WeatherCondition =
   | "Fog"
   | "Mist";
 
-/**
- * Mapped type for test configuration
- */
+/** Mapped type for test configuration. */
 type TestConfig<T extends Record<string, unknown>> = {
   readonly [K in keyof T]: T[K] extends infer U
     ? U extends (...args: unknown[]) => unknown
@@ -55,18 +43,14 @@ type TestConfig<T extends Record<string, unknown>> = {
     : never;
 };
 
-/**
- * Conditional type for performance thresholds
- */
+/** Conditional type for performance thresholds. */
 type PerformanceThreshold = "disabled" | "fast" | "normal" | "slow";
 
 // ================================
 // 🌦️ Weather Data Test Utilities
 // ================================
 
-/**
- * Weather test data constants
- */
+/** Centralized test constants for weather scenarios and thresholds. */
 export const WEATHER_TEST_CONSTANTS: {
   readonly LOCATION: {
     readonly LAT: string;
@@ -141,7 +125,7 @@ export const WEATHER_TEST_CONSTANTS: {
     readonly SLOW: number;
   };
 } = {
-  // Location constants with branded types
+  // Location constants
   LOCATION: {
     LAT: "23.8759" as const,
     LON: "90.3795" as const,
@@ -152,7 +136,7 @@ export const WEATHER_TEST_CONSTANTS: {
     } as const,
   },
 
-  // API response constants with literal types
+  // API response constants
   API_RESPONSE: {
     STATUS_OK: HTTP_STATUS_CODES.OK,
     STATUS_UNAUTHORIZED: HTTP_STATUS_CODES.UNAUTHORIZED,
@@ -171,14 +155,14 @@ export const WEATHER_TEST_CONSTANTS: {
     ] as const,
   },
 
-  // Time constants with numeric separators
+  // Time constants
   TIME: {
     HOUR_IN_SECONDS: 3600 as const,
     UTC_OFFSET_DHAKA: 21_600 as const, // UTC+6
     MILLISECONDS_TO_SECONDS: 1000 as const,
   },
 
-  // HTTP status constants with range types
+  // HTTP status ranges used for ok/error
   HTTP_STATUS: {
     OK_MIN: 200 as const,
     OK_MAX: 299 as const,
@@ -188,7 +172,7 @@ export const WEATHER_TEST_CONSTANTS: {
     SERVER_ERROR_MAX: 599 as const,
   },
 
-  // Weather condition constants with template literal types
+  // Weather condition names
   WEATHER_CONDITIONS: {
     CLEAR_SKY: "Clear Sky" as const,
     CLOUDS: "Clouds" as const,
@@ -200,7 +184,7 @@ export const WEATHER_TEST_CONSTANTS: {
     FOG: "Fog" as const,
   } as const,
 
-  // Icon constants with branded types
+  // Icon codes
   ICONS: {
     CLEAR_DAY: "01d" as const,
     CLEAR_NIGHT: "01n" as const,
@@ -211,7 +195,7 @@ export const WEATHER_TEST_CONSTANTS: {
     THUNDERSTORM: "11d" as const,
   } as const,
 
-  // Temperature constants with branded types
+  // Temperature constants
   TEMPERATURE: {
     DEFAULT: 25 as const,
     MIN: -50 as const,
@@ -220,14 +204,14 @@ export const WEATHER_TEST_CONSTANTS: {
     BOILING: 100 as const,
   } as const,
 
-  // Humidity constants with branded types
+  // Humidity constants
   HUMIDITY: {
     DEFAULT: 60 as const,
     MIN: 0 as const,
     MAX: 100 as const,
   } as const,
 
-  // Test configuration constants with performance thresholds
+  // Test configuration thresholds
   TEST_CONFIG: {
     TIMEOUT: 15_000 as const,
     API_CALL_THRESHOLD: 2000 as const,
@@ -235,7 +219,7 @@ export const WEATHER_TEST_CONSTANTS: {
     TOTAL_TEST_THRESHOLD: 5000 as const,
   } as const,
 
-  // Performance threshold types
+  // Performance thresholds
   PERFORMANCE: {
     FAST: 1000 as const,
     NORMAL: 5000 as const,
@@ -243,10 +227,7 @@ export const WEATHER_TEST_CONSTANTS: {
   } as const,
 } as const satisfies TestConfig<typeof WEATHER_TEST_CONSTANTS>;
 
-/**
- * Creates a valid WeatherUpdatePayload for testing
- * Uses modern TypeScript 5.9.3 features with strict typing
- */
+/** Builds a valid WeatherUpdatePayload for tests (overrides allowed). */
 export function createTestWeatherPayload(
   overrides: Partial<WeatherUpdatePayload> = {}
 ): WeatherUpdatePayload {
@@ -263,10 +244,7 @@ export function createTestWeatherPayload(
   return { ...DEFAULT_PAYLOAD, ...overrides };
 }
 
-/**
- * Creates a mock OpenWeather API response
- * Uses modern TypeScript 5.9.3 features with strict typing
- */
+/** Produces a minimal OpenWeather-like API response (overrides allowed). */
 export function createMockOpenWeatherResponse(
   overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
@@ -307,13 +285,9 @@ export function createMockOpenWeatherResponse(
   return { ...DEFAULT_RESPONSE, ...overrides };
 }
 
-// ================================
-// 📝 README Test Utilities
-// ================================
+// README test utilities
 
-/**
- * README test constants
- */
+/** README constants used across tests. */
 export const README_TEST_CONSTANTS = {
   WEATHER_SECTION_START: "<!-- Hourly Weather Update -->",
   WEATHER_SECTION_END: "<!-- End of Hourly Weather Update -->",
@@ -326,9 +300,7 @@ export const README_TEST_CONSTANTS = {
   ALT_TEXT_PATTERN: /alt="[^"]*icon"/g,
 } as const;
 
-/**
- * Creates a test README content with weather section
- */
+/** Creates a README with a weather section for testing. */
 export function createTestReadmeContent(
   weatherData?: WeatherUpdatePayload
 ): string {
@@ -353,9 +325,7 @@ This is other content that should not be modified.
 `;
 }
 
-/**
- * Validates that README content contains weather section
- */
+/** Returns true if content contains the weather section markers. */
 export function validateReadmeWeatherSection(content: string): boolean {
   return (
     content.includes(README_TEST_CONSTANTS.WEATHER_SECTION_START) &&
@@ -363,13 +333,9 @@ export function validateReadmeWeatherSection(content: string): boolean {
   );
 }
 
-// ================================
-// 🔧 API Test Utilities
-// ================================
+// API test utilities
 
-/**
- * Creates a mock fetch response for testing
- */
+/** Creates a mock fetch response. */
 export function createMockFetchResponse(
   status: number = WEATHER_TEST_CONSTANTS.API_RESPONSE.STATUS_OK,
   data: unknown = createMockOpenWeatherResponse()
@@ -387,9 +353,7 @@ export function createMockFetchResponse(
   };
 }
 
-/**
- * Creates a mock fetch function for testing
- */
+/** Cycles through provided responses; falls back to default when missing. */
 export function createMockFetch(responses: Array<() => Response> = []) {
   let callCount = 0;
 
@@ -412,17 +376,11 @@ export function createMockFetch(responses: Array<() => Response> = []) {
   };
 }
 
-// ================================
-// ⏱️ Performance Test Utilities
-// ================================
+// Performance test utilities
 
-/**
- * Performance test utilities with modern TypeScript 5.9.3 features
- */
+/** Performance helpers for measuring and asserting durations. */
 export const performanceTestUtils = {
-  /**
-   * Measures execution time of a function with branded return type
-   */
+  /** Measures execution time and classifies the duration. */
   measureExecutionTime: async <T>(
     fn: () => Promise<T> | T
   ): Promise<{
@@ -447,9 +405,7 @@ export const performanceTestUtils = {
     return { result, duration, threshold } as const;
   },
 
-  /**
-   * Creates a performance threshold checker with branded types
-   */
+  /** Returns helpers to check and message against a single threshold. */
   createThresholdChecker: (threshold: number) =>
     ({
       check: (duration: number): boolean => duration <= threshold,
@@ -459,9 +415,7 @@ export const performanceTestUtils = {
         duration <= threshold,
     }) as const,
 
-  /**
-   * Creates a performance benchmark with multiple thresholds
-   */
+  /** Compares a duration against a set of thresholds. */
   createBenchmark: <T extends Record<string, number>>(thresholds: T) =>
     ({
       checkAll: (duration: number) =>

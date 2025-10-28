@@ -12,10 +12,10 @@
 # *_spec.{js|jsx|ts|tsx}
 
 # Root directory for test discovery
-root = "tests"
+root = "src/tests"
 
 # Preload scripts for global test setup
-preload = ["./tests/setup.ts"]
+preload = ["./src/tests/setup.ts"]
 
 # Coverage configuration
 coverage = true
@@ -117,10 +117,4 @@ bun = true
 # Shell configuration
 shell = "system"  # Use system shell (not bun shell)
 
-# ============================================================
-# 🎯 Define Global Constants
-# ============================================================
-[define]
-# Environment-specific constants
-"process.env.NODE_ENV" = "\"test\""
-"process.env.BUN_TEST" = "true"
+ 

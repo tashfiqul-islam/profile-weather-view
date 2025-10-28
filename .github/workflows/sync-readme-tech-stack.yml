@@ -1,7 +1,7 @@
-name: "🛠️ Sync README Tech Stack"
+name: "Sync README Tech Stack"
 
 # ============================================================
-# 🚀 Triggers
+# Workflow triggers
 # ============================================================
 on:
   push:
@@ -12,24 +12,24 @@ on:
   workflow_dispatch:
 
 # ============================================================
-# 🔁 Concurrency (single run per ref)
+# Concurrency control
 # ============================================================
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 # ============================================================
-# 🔒 Permissions (least privilege)
+# Permissions
 # ============================================================
 permissions:
   contents: write
 
 # ============================================================
-# 📌 Job: Sync README
+# Jobs
 # ============================================================
 jobs:
   sync:
-    name: "🔄 Sync Versions & Footer"
+    name: "Sync Versions & Footer"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     if: |
@@ -38,44 +38,39 @@ jobs:
       CACHE_KEY_PREFIX: v4-sync-readme
       TIMEZONE: Asia/Dhaka
     steps:
-      - name: "⬇️ Checkout Repository"
+      - name: "Checkout Repository"
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: "🏗️ Setup Bun"
+      - name: "Setup Bun"
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: "📦 Restore Dependencies Cache"
+      - name: "Restore Dependencies Cache"
         id: cache-deps
         uses: actions/cache/restore@v4
         with:
           path: |
-            node_modules
             ~/.bun/install/cache
-            bun.lock
-          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
 
-      - name: "🔄 Install Dependencies"
-        if: steps.cache-deps.outputs.cache-hit != 'true'
+      - name: "Install Dependencies"
         run: |
-          echo "::group::Bun Installation"
-          bun --version
-          bun install
+          if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
+            echo "::group::Installing dependencies"
+            bun --version
+          else
+            echo "::notice::Using cached dependencies"
+          fi
+          bun install --no-summary
           echo "::endgroup::"
 
-      - name: "⚡ Install Dependencies (Fast Path)"
-        if: steps.cache-deps.outputs.cache-hit == 'true'
-        run: |
-          echo "::notice::Using cached dependencies"
-          bun install --no-summary
-
-      - name: "🧩 Sync README tech stack badges & footer"
+      - name: "Sync README tech stack badges & footer"
         run: |
           echo "::group::Sync README"
           bun run sync-readme-tech-stack
@@ -92,7 +87,7 @@ jobs:
             echo "::notice::No lockfile changes detected"
           fi
 
-      - name: "🔎 Validate GPG secret format"
+      - name: "Validate GPG secret format"
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
@@ -103,9 +98,9 @@ jobs:
           if ! grep -q "END PGP PRIVATE KEY BLOCK" <<< "${GPG_PRIVATE_KEY}"; then
             echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
 
-      - name: "🔐 Setup GPG for Commit Signing"
+      - name: "Setup GPG for Commit Signing"
         id: gpg
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -116,12 +111,12 @@ jobs:
         env:
           GPG_TTY: /dev/console
 
-      - name: "👤 Configure Git Identity"
+      - name: "Configure Git Identity"
         run: |
           git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
           git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
 
-      - name: "💾 Commit Changes"
+      - name: "Commit Changes"
         id: commit
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
@@ -140,19 +135,17 @@ jobs:
             echo "did_commit=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: "⬆️ Push"
+      - name: "Push"
         if: steps.commit.outputs.did_commit == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
 
-      - name: "💾 Save Dependencies Cache"
+      - name: "Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
-            node_modules
             ~/.bun/install/cache
-            bun.lock
-          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}

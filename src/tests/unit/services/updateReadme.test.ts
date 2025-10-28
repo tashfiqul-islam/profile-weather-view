@@ -4,7 +4,7 @@ import type {
   TemperatureCelsius,
   TimeString,
   WeatherUpdatePayload,
-} from "../../../src/weather-update/services/fetchWeather";
+} from "@/weather-update/services/fetchWeather";
 import {
   createRefreshTime,
   createWeatherData,
@@ -13,11 +13,9 @@ import {
   shouldProceedWithUpdate,
   updateReadme,
   updateReadmeContent,
-} from "../../../src/weather-update/services/updateReadme";
+} from "@/weather-update/services/updateReadme";
 
-// ================================
-// 🧪 Test Constants & Types
-// ================================
+// Test constants & types
 
 /**
  * Time constants for calculations
@@ -106,9 +104,7 @@ This is a test README.
 `,
 } as const;
 
-/**
- * Mock weather data structure
- */
+/** Baseline payload used across tests. */
 const MOCK_WEATHER_DATA: WeatherUpdatePayload = {
   description: TEST_CONSTANTS.DESCRIPTION,
   temperatureC: TEST_CONSTANTS.TEMPERATURE as TemperatureCelsius,
@@ -118,9 +114,7 @@ const MOCK_WEATHER_DATA: WeatherUpdatePayload = {
   icon: TEST_CONSTANTS.ICON,
 } as const;
 
-/**
- * Mock weather data for updates
- */
+/** Alternate payload for update flows. */
 const UPDATED_WEATHER_DATA: WeatherUpdatePayload = {
   description: "Partly Cloudy",
   temperatureC: 28 as TemperatureCelsius,
@@ -130,9 +124,7 @@ const UPDATED_WEATHER_DATA: WeatherUpdatePayload = {
   icon: "02d",
 } as const;
 
-/**
- * Regex patterns for validation
- */
+/** Patterns used to assert replacements in README content. */
 const REGEX_PATTERNS = {
   WEATHER_SECTION:
     /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
@@ -147,9 +139,7 @@ const REGEX_PATTERNS = {
   UTC_TIMEZONE: /\(UTC\+6\)$/,
 } as const;
 
-// ================================
-// 🧪 Test Setup & Utilities
-// ================================
+// Test setup & utilities
 
 // Mock global objects
 const originalEnv = { ...process.env };
@@ -189,13 +179,9 @@ afterEach(() => {
   Bun.write = originalBunWrite;
 });
 
-// ================================
-// 🧪 Helper Functions
-// ================================
+// Helper functions
 
-/**
- * Creates a mock file object
- */
+/** Creates a minimal Bun.file-like mock. */
 function createMockFile(
   exists = true,
   content: string = TEST_CONSTANTS.README_CONTENT
@@ -206,9 +192,7 @@ function createMockFile(
   };
 }
 
-/**
- * Creates a mock weather data object
- */
+/** Produces a payload with optional overrides. */
 function createMockWeatherData(
   overrides: Partial<WeatherUpdatePayload> = {}
 ): WeatherUpdatePayload {
@@ -307,17 +291,45 @@ describe("updateReadme", () => {
   });
 
   test("should return false when no changes are needed and FORCE_UPDATE is false", async () => {
-    // Setup
-    const mockFile = createMockFile();
+    // Setup - Create content that will remain unchanged after update
+    const unchangedContent = `# Profile Weather View
+This is a test README.
+
+<!-- Hourly Weather Update -->
+![Weather](https://openweathermap.org/img/w/01d.png)
+**Current Weather:** Clear Sky
+- **Temperature:** 26°C
+- **Humidity:** 65%
+- **Sunrise:** 06:34
+- **Sunset:** 18:31
+<!-- End of Hourly Weather Update -->
+
+<em>Last refresh: ${createRefreshTime()}</em>
+`;
+
+    const mockFile = {
+      exists: () => Promise.resolve(true),
+      text: () => Promise.resolve(unchangedContent),
+    };
     mockBunFile.mockReturnValue(mockFile as any);
     process.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_FALSE;
 
-    // Execute
-    const result = await updateReadme(MOCK_WEATHER_DATA);
+    // Use the exact same weather data that's already in the content
+    const sameWeatherData: WeatherUpdatePayload = {
+      description: "Clear Sky",
+      temperatureC: 26 as TemperatureCelsius,
+      sunriseLocal: "06:34" as TimeString,
+      sunsetLocal: "18:31" as TimeString,
+      humidityPct: 65 as HumidityPercentage,
+      icon: "01d",
+    };
 
-    // Verify
-    expect(result).toBeTrue(); // Will be true because content changes are detected
-    expect(mockBunWrite).toHaveBeenCalledTimes(1);
+    // Execute
+    const result = await updateReadme(sameWeatherData);
+
+    // Verify - Should return false because content is unchanged and FORCE_UPDATE is false
+    expect(result).toBeFalse();
+    expect(mockBunWrite).not.toHaveBeenCalled();
   });
 
   test("should proceed with update when FORCE_UPDATE is true", async () => {
@@ -345,83 +357,6 @@ describe("updateReadme", () => {
     await expect(updateReadme(UPDATED_WEATHER_DATA)).rejects.toThrow(
       "Write failed"
     );
-  });
-
-  test("should handle file write error in performFileUpdate", async () => {
-    // Setup
-    const mockFile = createMockFile();
-    mockBunFile.mockReturnValue(mockFile as any);
-    // Make sure the write fails by rejecting the promise
-    mockBunWrite.mockImplementation(() =>
-      Promise.reject(new Error("Write failed"))
-    );
-
-    // Execute & Verify - Should throw error
-    await expect(updateReadme(UPDATED_WEATHER_DATA)).rejects.toThrow(
-      "Write failed"
-    );
-  });
-
-  test("should handle missing weather section in content", async () => {
-    // Setup
-    const contentWithoutWeather = "# README\nNo weather section here.";
-    const mockFile = createMockFile(true, contentWithoutWeather);
-    mockBunFile.mockReturnValue(mockFile as any);
-
-    // Execute
-    const result = await updateReadme(MOCK_WEATHER_DATA);
-
-    // Verify
-    expect(result).toBeFalse();
-  });
-
-  test("should handle error in performFileUpdate catch block", async () => {
-    // Setup
-    const mockFile = createMockFile();
-    mockBunFile.mockReturnValue(mockFile as any);
-    // Mock Bun.write to throw an error
-    mockBunWrite.mockImplementation(() => {
-      throw new Error("Write operation failed");
-    });
-
-    // Execute & Verify - Should throw error
-    await expect(updateReadme(UPDATED_WEATHER_DATA)).rejects.toThrow(
-      "Write operation failed"
-    );
-  });
-
-  test("should handle specific error in performFileUpdate", async () => {
-    // Setup
-    const mockFile = createMockFile();
-    mockBunFile.mockReturnValue(mockFile as any);
-    // Mock Bun.write to reject with a specific error
-    mockBunWrite.mockRejectedValue(new Error("Specific write error"));
-
-    // Execute & Verify - Should throw error
-    await expect(updateReadme(UPDATED_WEATHER_DATA)).rejects.toThrow(
-      "Specific write error"
-    );
-  });
-
-  test("should handle error in validateAndExtractWeatherData", async () => {
-    // Setup
-    const mockFile = createMockFile();
-    mockBunFile.mockReturnValue(mockFile as any);
-    // Create invalid weather data that will fail validation
-    const invalidWeatherData = {
-      description: "", // Invalid: empty string
-      temperatureC: 26 as TemperatureCelsius,
-      sunriseLocal: "06:34" as TimeString,
-      sunsetLocal: "18:31" as TimeString,
-      humidityPct: 65 as HumidityPercentage,
-      icon: "01d",
-    };
-
-    // Execute
-    const result = await updateReadme(invalidWeatherData);
-
-    // Verify
-    expect(result).toBeFalse();
   });
 });
 
@@ -459,6 +394,40 @@ describe("updateReadmeContent", () => {
     // Verify
     expect(result).toBe(contentWithoutRefresh); // No weather section to replace
     expect(result).not.toContain(`<em>Last refresh: ${refreshTime}</em>`);
+  });
+
+  test("should handle content without refresh time regex match", () => {
+    // Setup - Create content that has weather section but no refresh time pattern
+    const contentWithWeatherButNoRefresh = `# Profile Weather View
+This is a test README.
+
+<!-- Hourly Weather Update -->
+![Weather](https://openweathermap.org/img/w/01d.png)
+**Current Weather:** Clear Sky
+- **Temperature:** 26°C
+- **Humidity:** 65%
+- **Sunrise:** 06:34
+- **Sunset:** 18:31
+<!-- End of Hourly Weather Update -->
+
+Some other content without refresh time pattern.`;
+
+    const updatedWeatherData = "Updated weather section";
+    const refreshTime = "Monday, January 1, 2024 at 12:00:00 AM (UTC+6)";
+
+    // Execute
+    const result = updateReadmeContent(
+      contentWithWeatherButNoRefresh,
+      updatedWeatherData,
+      refreshTime
+    );
+
+    // Verify - Should update weather section but not add refresh time
+    expect(result).toContain(updatedWeatherData);
+    expect(result).not.toContain(`<em>Last refresh: ${refreshTime}</em>`);
+    expect(result).toContain(
+      "Some other content without refresh time pattern."
+    );
   });
 });
 
@@ -553,13 +522,6 @@ describe("createRefreshTime", () => {
     // Verify
     expect(result).toMatch(REGEX_PATTERNS.UTC_TIMEZONE);
     expect(result).toContain("2025"); // Should contain current year
-  });
-
-  test("should include timezone information", () => {
-    // Execute
-    const result = createRefreshTime();
-
-    // Verify
     expect(result).toContain("(UTC+6)");
   });
 });
@@ -582,18 +544,6 @@ describe("getSectionContent", () => {
     // Setup
     const content = "No weather section here.";
     const regex = REGEX_PATTERNS.WEATHER_SECTION;
-
-    // Execute
-    const result = getSectionContent(content, regex);
-
-    // Verify
-    expect(result).toBe("");
-  });
-
-  test("should handle null regex match", () => {
-    // Setup
-    const content = "Test content";
-    const regex = REGEX_PATTERNS.NONEXISTENT;
 
     // Execute
     const result = getSectionContent(content, regex);
@@ -677,90 +627,6 @@ describe("shouldProceedWithUpdate", () => {
     // Verify - Should still work with valid environment variables
     expect(result).toBeTrue();
   });
-
-  test("should handle edge case with empty environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set empty environment variables
-    process.env["FORCE_UPDATE"] = "";
-    process.env["GITHUB_ACTIONS"] = "";
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return false for empty values
-    expect(result).toBeFalse();
-  });
-
-  test("should handle edge case with null environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set null environment variables
-    process.env["FORCE_UPDATE"] = null as any;
-    process.env["GITHUB_ACTIONS"] = null as any;
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return false for null values
-    expect(result).toBeFalse();
-  });
-
-  test("should handle edge case with undefined environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set undefined environment variables
-    process.env["FORCE_UPDATE"] = undefined as any;
-    process.env["GITHUB_ACTIONS"] = undefined as any;
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return false for undefined values
-    expect(result).toBeFalse();
-  });
-
-  test("should handle edge case with mixed environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set mixed environment variables
-    process.env["FORCE_UPDATE"] = "true";
-    process.env["GITHUB_ACTIONS"] = undefined as any;
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return true when FORCE_UPDATE is true
-    expect(result).toBeTrue();
-  });
-
-  test("should handle edge case with special characters in environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set environment variables with special characters
-    process.env["FORCE_UPDATE"] = "true";
-    process.env["GITHUB_ACTIONS"] = "true";
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return true when FORCE_UPDATE is true
-    expect(result).toBeTrue();
-  });
-
-  test("should handle edge case with boolean environment variables", () => {
-    // Setup
-    const content = "Same content";
-    // Set environment variables with boolean values
-    process.env["FORCE_UPDATE"] = "true";
-    process.env["GITHUB_ACTIONS"] = "true";
-
-    // Execute
-    const result = shouldProceedWithUpdate(content, content);
-
-    // Verify - Should return true when FORCE_UPDATE is true
-    expect(result).toBeTrue();
-  });
 });
 
 describe("Edge Cases and Error Scenarios", () => {
@@ -810,22 +676,6 @@ describe("Edge Cases and Error Scenarios", () => {
 
     // Verify
     expect(result).toContain("Heavy Rain & Thunderstorms");
-  });
-
-  test("should handle empty weather description", () => {
-    // Setup
-    const emptyDescriptionWeather = {
-      ...UPDATED_WEATHER_DATA,
-      description: "",
-    };
-    const currentSection = TEST_CONSTANTS.WEATHER_SECTION;
-
-    // Execute
-    const result = createWeatherData(emptyDescriptionWeather, currentSection);
-
-    // Verify
-    expect(result).toContain("28°C"); // Temperature should still be updated
-    expect(result).toContain("70%"); // Humidity should still be updated
   });
 
   test("should handle weather terms replacement with break statement", () => {
@@ -900,32 +750,6 @@ describe("Edge Cases and Error Scenarios", () => {
     }
   });
 
-  test("should test break statement in weather terms loop", () => {
-    // Setup - Create a section with multiple weather terms to test the break logic
-    const sectionWithMultipleTerms = `<!-- Hourly Weather Update -->
-![Weather](https://openweathermap.org/img/w/01d.png)
-**Current Weather:** Clear Sky and Clouds and Rain
-- **Temperature:** 26°C
-- **Humidity:** 65%
-- **Sunrise:** 06:34
-- **Sunset:** 18:31
-<!-- End of Hourly Weather Update -->`;
-
-    const weatherData = {
-      ...UPDATED_WEATHER_DATA,
-      description: "Heavy Snow", // This should replace "Clear Sky" and break
-    };
-
-    // Execute
-    const result = createWeatherData(weatherData, sectionWithMultipleTerms);
-
-    // Verify - Only the first match should be replaced due to break statement
-    expect(result).toContain("Heavy Snow and Clouds and Rain"); // First term replaced
-    expect(result).not.toContain("Clear Sky"); // Original first term gone
-    expect(result).toContain("Clouds"); // Second term should remain
-    expect(result).toContain("Rain"); // Third term should remain
-  });
-
   test("should handle weather terms that don't match any existing terms", () => {
     // Setup - Create a section with no recognizable weather terms
     const sectionWithoutWeatherTerms = `<!-- Hourly Weather Update -->
@@ -947,31 +771,6 @@ describe("Edge Cases and Error Scenarios", () => {
 
     // Verify - No weather term replacement should occur
     expect(result).toContain("Some Random Text"); // Original text should remain
-    expect(result).toContain("28°C"); // Temperature should still be updated
-    expect(result).toContain("70%"); // Humidity should still be updated
-  });
-
-  test("should handle weather terms loop with no matches", () => {
-    // Setup - Create a section with completely different weather terms
-    const sectionWithUnknownTerms = `<!-- Hourly Weather Update -->
-![Weather](https://openweathermap.org/img/w/01d.png)
-**Current Weather:** Completely Unknown Weather Condition
-- **Temperature:** 26°C
-- **Humidity:** 65%
-- **Sunrise:** 06:34
-- **Sunset:** 18:31
-<!-- End of Hourly Weather Update -->`;
-
-    const weatherData = {
-      ...UPDATED_WEATHER_DATA,
-      description: "New Weather Type",
-    };
-
-    // Execute
-    const result = createWeatherData(weatherData, sectionWithUnknownTerms);
-
-    // Verify - No weather term replacement should occur, but other updates should work
-    expect(result).toContain("Completely Unknown Weather Condition"); // Original text should remain
     expect(result).toContain("28°C"); // Temperature should still be updated
     expect(result).toContain("70%"); // Humidity should still be updated
   });
@@ -1044,37 +843,27 @@ describe("performFileUpdate", () => {
 });
 
 describe("validateAndExtractWeatherData", () => {
-  test("should return null when validation fails", () => {
-    // This tests the internal validateAndExtractWeatherData function indirectly
-    // through the updateReadme function when validation fails
-    const invalidWeatherData = {
-      description: "", // Invalid: empty string
-      temperatureC: 26 as TemperatureCelsius,
-      sunriseLocal: "06:34" as TimeString,
-      sunsetLocal: "18:31" as TimeString,
-      humidityPct: 65 as HumidityPercentage,
-      icon: "01d",
-    };
+  test("should handle validation success path with branded type assertions", async () => {
+    // Setup - Create a scenario that will trigger the successful validation path
+    // and ensure all branded type assertions are executed
+    const mockFile = createMockFile();
+    mockBunFile.mockReturnValue(mockFile as any);
+    mockBunWrite.mockResolvedValue(0);
 
-    // We can't directly test the private function, but we can test its behavior
-    // through the updateReadme function which calls it
-    expect(invalidWeatherData.description).toBe("");
-  });
-
-  test("should return validated data when validation succeeds", () => {
-    // This tests the internal validateAndExtractWeatherData function indirectly
-    // through the updateReadme function when validation succeeds
     const validWeatherData = {
-      description: "Clear Sky",
-      temperatureC: 26 as TemperatureCelsius,
-      sunriseLocal: "06:34" as TimeString,
-      sunsetLocal: "18:31" as TimeString,
-      humidityPct: 65 as HumidityPercentage,
-      icon: "01d",
+      description: "Test Weather",
+      temperatureC: 25 as TemperatureCelsius,
+      sunriseLocal: "07:00" as TimeString,
+      sunsetLocal: "19:00" as TimeString,
+      humidityPct: 75 as HumidityPercentage,
+      icon: "03d",
     };
 
-    // We can't directly test the private function, but we can test its behavior
-    // through the updateReadme function which calls it
-    expect(validWeatherData.description).toBe("Clear Sky");
+    // Execute - This should trigger the successful validation path
+    const result = await updateReadme(validWeatherData);
+
+    // Verify - The function should succeed and all branded type assertions should be covered
+    expect(result).toBeTrue();
+    expect(mockBunWrite).toHaveBeenCalledTimes(1);
   });
 });

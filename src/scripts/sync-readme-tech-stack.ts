@@ -1,46 +1,44 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-// ================================
-// 📊 Configuration Constants
-// ================================
+// Configuration
 
 type PackageJson = {
-  packageManager?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
+  readonly packageManager?: string;
+  readonly dependencies?: Record<string, string>;
+  readonly devDependencies?: Record<string, string>;
 };
 
-// Lift regex to top-level per performance rule
-const VERSION_REGEX = /\d+(?:\.\d+){0,2}/;
-const BUN_PM_REGEX = /bun@([\d.]+)/;
-const FOOTER_DATE_REGEX = /<sub>\*\*Last refresh\*\*: [^<]+<\/sub>/;
+// Precompiled regex for parsing versions and footer date
+const VERSION_REGEX: RegExp = /\d+(?:\.\d+){0,2}/;
+const BUN_PM_REGEX: RegExp = /bun@([\d.]+)/;
+const FOOTER_DATE_REGEX: RegExp = /<sub>\*\*Last refresh\*\*: [^<]+<\/sub>/;
 
-function coerceVersion(versionRange: string | undefined): string | undefined {
-  if (!versionRange) {
+function coerceVersion(versionRange?: string): string | undefined {
+  if (versionRange === undefined) {
     return;
   }
-  const match = VERSION_REGEX.exec(versionRange);
+  const match: RegExpExecArray | null = VERSION_REGEX.exec(versionRange);
   return match ? match[0] : undefined;
 }
 
 function getBunVersion(pkg: PackageJson): string | undefined {
-  const pm = pkg.packageManager;
-  const fromPm = pm && BUN_PM_REGEX.exec(pm);
+  const pm: string | undefined = pkg.packageManager;
+  const fromPm: RegExpMatchArray | null | undefined = pm?.match(BUN_PM_REGEX);
   if (fromPm?.[1]) {
     return fromPm[1];
   }
-  const fromTypes = pkg.devDependencies?.["bun-types"];
+  const fromTypes: string | undefined = pkg.devDependencies?.["bun-types"];
   return coerceVersion(fromTypes);
 }
 
 async function readPackageJson(cwd: string): Promise<PackageJson> {
-  const file = await readFile(resolve(cwd, "package.json"), "utf8");
+  const file: string = await readFile(resolve(cwd, "package.json"), "utf8");
   return JSON.parse(file) as PackageJson;
 }
 
 async function readReadme(cwd: string): Promise<string> {
-  const file = await readFile(resolve(cwd, "README.md"), "utf8");
+  const file: string = await readFile(resolve(cwd, "README.md"), "utf8");
   return file;
 }
 
@@ -48,34 +46,36 @@ async function writeReadme(cwd: string, content: string): Promise<void> {
   await writeFile(resolve(cwd, "README.md"), content, "utf8");
 }
 
+/**
+ * Replace a shields.io badge version segment while preserving color and logo.
+ */
 function replaceBadge(
   content: string,
-  badgeConfig: {
+  badgeConfig: Readonly<{
     label: string;
     version: string;
     color: string;
     logoSegment: string;
-  }
+  }>
 ): string {
-  // Pattern: https://img.shields.io/badge/Label-<version>-<color>?style=flat-square<logoSegment>
   const { label, version, color, logoSegment } = badgeConfig;
-  const escapedLabel = label.replace(/[-/]/g, (m) => `\\${m}`);
-  const pattern = new RegExp(
+  const escapedLabel: string = label.replace(/[-/]/g, (m: string) => `\\${m}`);
+  const pattern: RegExp = new RegExp(
     `https://img\\.shields\\.io/badge/${escapedLabel}-[^-?]+-${color}\\?style=flat-square${logoSegment.replace(/\?/g, "\\?")}`,
     "g"
   );
-  const replacement = `https://img.shields.io/badge/${label}-${version}-${color}?style=flat-square${logoSegment}`;
+  const replacement: string = `https://img.shields.io/badge/${label}-${version}-${color}?style=flat-square${logoSegment}`;
   return content.replace(pattern, replacement);
 }
 
 function updateFooterDate(content: string, isoDate: Date): string {
-  const formatted = isoDate.toLocaleDateString("en-US", {
+  const formatted: string = isoDate.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-  const timeFormatted = isoDate.toLocaleTimeString("en-US", {
+  const timeFormatted: string = isoDate.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -88,27 +88,17 @@ function updateFooterDate(content: string, isoDate: Date): string {
 }
 
 async function main(): Promise<void> {
-  const cwd = process.cwd();
-  const pkg = await readPackageJson(cwd);
-  let readme = await readReadme(cwd);
+  const cwd: string = process.cwd();
+  const pkg: PackageJson = await readPackageJson(cwd);
+  const originalReadme: string = await readReadme(cwd);
+  let updatedReadme: string = originalReadme;
 
-  const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
-
-  const versions: Record<string, string | undefined> = {
-    TypeScript: coerceVersion(deps["typescript"]),
-    Bun: getBunVersion(pkg),
-    Vitest: coerceVersion(deps["vitest"]),
-    Zod: coerceVersion(deps["zod"]),
-    Axios: coerceVersion(deps["axios"]),
-    Temporal: coerceVersion(deps["@js-temporal/polyfill"]),
-    Vite: coerceVersion(deps["vite"]),
-    Biome: coerceVersion(deps["@biomejs/biome"]),
-    Ultracite: coerceVersion(deps["ultracite"]),
-    "semantic--release": coerceVersion(deps["semantic-release"]),
+  const deps: Readonly<Record<string, string>> = {
+    ...(pkg.dependencies ?? {}),
+    ...(pkg.devDependencies ?? {}),
   };
 
-  // Badge color + logo segments must match README patterns exactly
-  const segments: Array<{ label: string; color: string; logo: string }> = [
+  const segments = [
     {
       label: "TypeScript",
       color: "3178C6",
@@ -127,12 +117,27 @@ async function main(): Promise<void> {
       color: "e10079",
       logo: "&logo=semantic-release",
     },
-  ];
+  ] as const;
+
+  type Label = (typeof segments)[number]["label"];
+
+  const versions: Readonly<Record<Label, string | undefined>> = {
+    TypeScript: coerceVersion(deps["typescript"]),
+    Bun: getBunVersion(pkg),
+    Vitest: coerceVersion(deps["vitest"]),
+    Zod: coerceVersion(deps["zod"]),
+    Axios: coerceVersion(deps["axios"]),
+    Temporal: coerceVersion(deps["@js-temporal/polyfill"]),
+    Vite: coerceVersion(deps["vite"]),
+    Biome: coerceVersion(deps["@biomejs/biome"]),
+    Ultracite: coerceVersion(deps["ultracite"]),
+    "semantic--release": coerceVersion(deps["semantic-release"]),
+  } as const;
 
   for (const seg of segments) {
     const version = versions[seg.label];
     if (version) {
-      readme = replaceBadge(readme, {
+      updatedReadme = replaceBadge(updatedReadme, {
         label: seg.label,
         version,
         color: seg.color,
@@ -141,10 +146,14 @@ async function main(): Promise<void> {
     }
   }
 
-  // Update footer last refresh date
-  readme = updateFooterDate(readme, new Date());
+  updatedReadme = updateFooterDate(updatedReadme, new Date());
 
-  await writeReadme(cwd, readme);
+  if (updatedReadme !== originalReadme) {
+    await writeReadme(cwd, updatedReadme);
+  }
 }
 
-await main();
+main().catch(() => {
+  // Avoid console; set exit code for CI visibility
+  process.exitCode = 1;
+});

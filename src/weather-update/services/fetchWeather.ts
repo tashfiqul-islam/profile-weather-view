@@ -1,44 +1,29 @@
+import "dotenv/config";
 import { Temporal } from "@js-temporal/polyfill";
 // biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
 import * as z from "zod";
 
 /**
- * @fileoverview Modern TypeScript 5.9.3 weather data fetching service
- * @version 2.2.2
- * @author Tashfiqul Islam
+ * Fetches current weather and shapes a minimal payload for README updates.
+ * Comments focus on intent, constraints, and non-obvious choices.
  */
 
-// ================================
-// 📊 Configuration Constants
-// ================================
-
-/**
- * HTTP status code constants with branded types
- */
+// Used to decide when not to retry (skip 4xx) vs retry (5xx/network)
 const HTTP_STATUS_CODES = {
   CLIENT_ERROR_START: 400,
   SERVER_ERROR_START: 500,
 } as const;
 
-/**
- * Time conversion constants with numeric separators
- */
 const TIME_CONSTANTS = {
   MILLISECONDS_PER_SECOND: 1000,
 } as const;
 
-/**
- * Geographic coordinates for location tracking.
- * Using const assertions for better type inference
- */
 const LOCATION = {
   lat: "23.8759",
   lon: "90.3795",
 } as const;
 
-/**
- * OpenWeather API configuration - optimized for current weather only
- */
+// Request only what we need to keep payloads small and responses fast
 const API_CONFIG = {
   baseUrl: "https://api.openweathermap.org/data/3.0/onecall",
   units: "metric",
@@ -48,10 +33,7 @@ const API_CONFIG = {
   exclude: "minutely,hourly,daily,alerts", // Only fetch current weather
 } as const;
 
-/**
- * Weather condition schema - reusable across different weather arrays
- * Using Zod v4's optimized object definition with descriptions
- */
+// Validates each weather condition entry returned by the API
 const WeatherConditionSchema = z.object({
   id: z.int32().describe("Weather condition ID from OpenWeather API"),
   main: z.string().optional().describe("Main weather condition"),
@@ -59,9 +41,6 @@ const WeatherConditionSchema = z.object({
   icon: z.string().optional().describe("Weather icon code"),
 });
 
-/**
- * Current weather data schema validation using Zod v4
- */
 const CurrentWeatherSchema = z.object({
   dt: z.number().describe("Current time, Unix, UTC"),
   sunrise: z.number().describe("Sunrise time, Unix, UTC"),
@@ -86,9 +65,6 @@ const CurrentWeatherSchema = z.object({
     .describe("Weather conditions"),
 });
 
-/**
- * Simplified weather data schema - only current weather for faster parsing
- */
 const WeatherSchema = z.object({
   lat: z.float64(),
   lon: z.float64(),
@@ -97,33 +73,16 @@ const WeatherSchema = z.object({
   current: CurrentWeatherSchema,
 });
 
-/**
- * Type definitions derived from Zod schemas with modern TypeScript 5.9.3 features
- */
 type WeatherData = z.infer<typeof WeatherSchema>;
 
-/**
- * Branded type for temperature values in Celsius
- * Uses modern TypeScript 5.9.3 branded types for type safety
- */
 export type TemperatureCelsius = number & { readonly __brand: unique symbol };
 
-/**
- * Branded type for humidity percentage values
- * Uses modern TypeScript 5.9.3 branded types for type safety
- */
 export type HumidityPercentage = number & { readonly __brand: unique symbol };
 
-/**
- * Branded type for time strings
- * Uses modern TypeScript 5.9.3 branded types for type safety
- */
 export type TimeString = string & { readonly __brand: unique symbol };
 
 /**
- * A structured payload representing the data needed to update the README
- * Keeping this small ensures minimal coupling to the full API response.
- * Uses modern TypeScript 5.9.3 features with strict typing and branded types
+ * Minimal payload used to update the README without coupling to raw API shape.
  */
 export type WeatherUpdatePayload = {
   readonly description: string;
@@ -134,9 +93,7 @@ export type WeatherUpdatePayload = {
   readonly icon: string;
 };
 
-/**
- * HTTP error type with modern TypeScript 5.9.3 features
- */
+// Lightweight shape for errors that carry HTTP response info
 type HttpError = Error & {
   readonly response: {
     readonly status: number;
@@ -144,13 +101,7 @@ type HttpError = Error & {
   };
 };
 
-/**
- * Converts a string to title case following JavaScript standards
- * Capitalizes the first letter of each word while preserving the rest
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param str The string to convert to title case
- * @returns The string in title case format
- */
+/** Title-cases a sentence for user-facing display. */
 function toTitleCase(str: string): string {
   if (!str) {
     return str;
@@ -163,21 +114,14 @@ function toTitleCase(str: string): string {
     .join(" ");
 }
 
-/**
- * Type guard for checking if a value is a non-empty string
- * Uses modern TypeScript 5.9.3 type guards
- */
+/** Narrows to a non-empty string; avoids empty env and headers. */
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
 /**
- * Implements exponential backoff retry logic using recursion
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param fn Function to retry
- * @param maxRetries Maximum number of retries
- * @param baseDelay Base delay between retries
- * @returns Promise with the result of the function
+ * Retries an async operation with exponential backoff.
+ * Skips retries for client errors (4xx) to fail fast on bad requests.
  */
 function withRetry<T>(
   fn: () => Promise<T>,
@@ -195,7 +139,7 @@ function withRetry<T>(
         throw lastError;
       }
 
-      // Don't retry on client errors (4xx)
+      // Do not retry on client errors (4xx)
       if (
         isHttpError(error) &&
         error.response.status >= HTTP_STATUS_CODES.CLIENT_ERROR_START &&
@@ -220,10 +164,7 @@ function withRetry<T>(
   return attemptRetry(0);
 }
 
-/**
- * Narrow unknown to an HTTP-like error object produced in this module
- * Uses modern TypeScript 5.9.3 type guards with strict typing
- */
+/** Determines whether an error carries HTTP status context. */
 function isHttpError(error: unknown): error is HttpError {
   if (typeof error !== "object" || error === null) {
     return false;
@@ -238,13 +179,7 @@ function isHttpError(error: unknown): error is HttpError {
   );
 }
 
-/**
- * Converts Unix timestamp to Dhaka time using Temporal API
- * Following latest Temporal polyfill best practices
- * Uses modern TypeScript 5.9.3 features with branded return types
- * @param timestamp Unix timestamp in seconds
- * @returns Formatted time string in Dhaka timezone
- */
+/** Formats epoch seconds to HH:mm in Asia/Dhaka for consistent display. */
 function convertToDhakaTime(timestamp: number): TimeString {
   const instant = Temporal.Instant.fromEpochMilliseconds(
     timestamp * TIME_CONSTANTS.MILLISECONDS_PER_SECOND
@@ -258,24 +193,12 @@ function convertToDhakaTime(timestamp: number): TimeString {
   }) as TimeString;
 }
 
-/**
- * Formats temperature as a rounded numeric string without units
- * Units are appended at render time to avoid duplication
- * Uses modern TypeScript 5.9.3 features with branded return types
- * @param temp Temperature in Celsius
- * @returns Rounded temperature string without units
- */
+/** Rounds temperature for compact display; units are added at render time. */
 function formatTemperature(temp: number): TemperatureCelsius {
   return Math.round(temp) as TemperatureCelsius;
 }
 
-/**
- * Validates weather data using Zod with enhanced error reporting
- * Uses modern TypeScript 5.9.3 features with strict typing
- * @param data Raw data from API
- * @returns Validated weather data
- * @throws Error with detailed validation messages
- */
+/** Validates API response and aggregates issues into a readable error. */
 function validateWeatherData(data: unknown): WeatherData {
   const result = WeatherSchema.safeParse(data);
 
@@ -294,31 +217,27 @@ function validateWeatherData(data: unknown): WeatherData {
 }
 
 /**
- * Fetches current weather data from OpenWeather API 3.0
- * Optimized for current weather only to reduce response time and data size
- * Uses modern TypeScript 5.9.3 features with strict typing
- *
- * @returns Formatted weather data string
- * @throws {Error} When API request fails or data is invalid
+ * Fetches current weather and returns a minimal payload for README updates.
+ * Requires OPEN_WEATHER_KEY; retries on transient failures; no retries on 4xx.
  */
 export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   try {
-    const apiKey = Bun.env["OPEN_WEATHER_KEY"]?.trim();
+    const apiKey = process.env["OPEN_WEATHER_KEY"]?.trim();
     if (!isNonEmptyString(apiKey)) {
       throw new Error("OpenWeather API key is required");
     }
 
-    // Construct URL with modern URLSearchParams - optimized for current weather only
+    // Build a minimal request targeting only current conditions
     const url = new URL(API_CONFIG.baseUrl);
     url.searchParams.set("lat", LOCATION.lat);
     url.searchParams.set("lon", LOCATION.lon);
     url.searchParams.set("appid", apiKey);
     url.searchParams.set("units", API_CONFIG.units);
-    url.searchParams.set("exclude", API_CONFIG.exclude); // Only fetch current weather
+    url.searchParams.set("exclude", API_CONFIG.exclude); // only current weather
 
-    // Fetch data with retry logic using Bun's optimized fetch
+    // Perform the request with retry/backoff
     const response = await withRetry(async () => {
-      const startTime = performance.now(); // Use performance.now() for higher precision
+      const startTime = performance.now();
 
       const fetchResponse = await fetch(url.toString(), {
         method: "GET",
@@ -339,7 +258,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
         const error = new Error(
           `OpenWeather API request failed: ${fetchResponse.status} ${fetchResponse.statusText} - ${errorText}`
         ) as Error & { response: { status: number; statusText: string } };
-        // Add response property for retry logic
+        // Attach status context so retry logic can decide properly
         error.response = {
           status: fetchResponse.status,
           statusText: fetchResponse.statusText,
@@ -352,11 +271,11 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
 
     const rawData = await response.json();
 
-    // Validate response data
+    // Validate and extract the fields we actually render
     const weatherData = validateWeatherData(rawData);
     const current = weatherData.current;
 
-    // Extract weather information with safe fallbacks and proper capitalization
+    // Extract display-friendly values with safe fallbacks
     const [firstCondition] = current.weather;
     const description = toTitleCase(firstCondition.description);
     const icon = firstCondition.icon ?? "01d";
@@ -374,13 +293,12 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
       icon,
     } as const;
   } catch (error) {
-    // Modern TypeScript 5.9.3 error handling with type guards
-    // All errors from withRetry are converted to Error objects, so this path always executes
+    // All errors from withRetry are normalized to Error
     if (error instanceof Error) {
       throw new Error(`[fetchWeather.ts] ❌ ${error.message}`);
     }
 
-    // Defensive fallback for non-Error types (unreachable in current implementation)
+    // Defensive fallback for non-Error types
     throw new Error(
       `[fetchWeather.ts] ❌ Unexpected error during weather data fetch: ${String(error)}`
     );

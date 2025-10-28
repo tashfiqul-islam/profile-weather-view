@@ -1,10 +1,8 @@
 #!/usr/bin/env bun
 
 /**
- * 🧪 Dependency Automation System Validator
- *
- * This script validates that all components of the automated
- * dependency management system are properly configured.
+ * Validates the dependency automation setup: workflows, Renovate, PM, secrets.
+ * Comments focus on intent and non-obvious checks.
  */
 
 import { execSync } from "node:child_process";
@@ -24,9 +22,7 @@ type ValidationResult = {
 
 class DependencyValidator {
   private readonly results: ValidationResult[] = [];
-  /**
-   * Run all validation checks
-   */
+  /** Runs all validation checks. */
   validate(): void {
     this.logMessage("🔍 Validating Dependency Automation System...\n");
 
@@ -39,9 +35,7 @@ class DependencyValidator {
     this.displayResults();
   }
 
-  /**
-   * Check if all required workflow files exist
-   */
+  /** Verifies presence of expected workflow files. */
   private checkWorkflowFiles(): void {
     const requiredWorkflows = [
       "pr-validation.yml",
@@ -49,7 +43,7 @@ class DependencyValidator {
       "semantic-release.yml",
       "update-dependencies.yml",
       "update-github-actions.yml",
-    ];
+    ] as const;
 
     for (const workflow of requiredWorkflows) {
       const path = join(".github", "workflows", workflow);
@@ -71,17 +65,13 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Check Renovate configuration
-   */
+  /** Top-level Renovate checks. */
   private checkDependabotConfig(): void {
     this.checkRenovateConfig();
     this.checkDependabotDisabled();
   }
 
-  /**
-   * Check Renovate configuration file
-   */
+  /** Parses renovate.json and flags common best-practice settings. */
   private checkRenovateConfig(): void {
     const renovateConfigPath = "renovate.json";
 
@@ -99,7 +89,7 @@ class DependencyValidator {
       const config = readFileSync(renovateConfigPath, "utf8");
       const renovateConfig = JSON.parse(config) as Record<string, unknown>;
 
-      // Check for best practices preset
+      // Best-practices preset
       const extendsArray = renovateConfig["extends"] as string[] | undefined;
       if (extendsArray?.includes("config:best-practices")) {
         this.results.push({
@@ -115,7 +105,7 @@ class DependencyValidator {
         });
       }
 
-      // Check for automerge in package rules
+      // Automerge presence in package rules
       const packageRules = renovateConfig["packageRules"] as
         | Record<string, unknown>[]
         | undefined;
@@ -131,7 +121,7 @@ class DependencyValidator {
         status: hasAutomerge ? "pass" : "warning",
       });
 
-      // Check for GitHub Actions updates
+      // Ensure GitHub Actions updates rule exists
       const hasGitHubActions = packageRules?.some((rule) => {
         const managers = rule["matchManagers"] as string[] | undefined;
 
@@ -155,9 +145,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Check if Dependabot is properly disabled
-   */
+  /** Confirms Dependabot is disabled when using Renovate. */
   private checkDependabotDisabled(): void {
     const dependabotConfigPath = join(".github", "dependabot.yml");
 
@@ -168,7 +156,7 @@ class DependencyValidator {
         "Auto-merge labels",
         "PR limit configured",
         "Update schedule",
-      ];
+      ] as const;
 
       for (const check of legacyChecks) {
         this.results.push({
@@ -208,13 +196,12 @@ class DependencyValidator {
         status: "fail",
       });
     }
-  } /**
-   * Check package manager setup
-   */
+  }
+  /** Checks package manager setup and lockfile presence. */
   private checkPackageManager(): void {
     try {
       // Check if bun is available using absolute path to avoid PATH injection
-      const homeDirectory =
+      const homeDirectory: string =
         process.env["HOME"] ?? process.env["USERPROFILE"] ?? "";
       const possibleBunPaths = [
         "/usr/local/bin/bun",
@@ -224,7 +211,7 @@ class DependencyValidator {
         "C:\\Program Files\\bun\\bin\\bun.exe",
         `${homeDirectory}\\AppData\\Local\\bun\\bin\\bun.exe`,
         `${homeDirectory}\\.bun\\bin\\bun.exe`,
-      ];
+      ] as const;
 
       let bunExecutable: null | string = null;
 
@@ -238,8 +225,8 @@ class DependencyValidator {
 
       if (bunExecutable === null) {
         throw new Error("Bun executable not found in expected locations");
-      } // Execute bun with absolute path to avoid PATH security issues
-      // Using absolute path instead of PATH to prevent security vulnerabilities
+      }
+      // Execute bun with absolute path to avoid PATH issues
       // eslint-disable-next-line sonarjs/os-command
       execSync(`"${bunExecutable}" --version`, {
         stdio: "pipe",
@@ -252,10 +239,12 @@ class DependencyValidator {
         status: "pass",
       });
 
-      // Check package.json
+      // Check for presence of npm scripts
       if (existsSync("package.json")) {
-        const packageContent = readFileSync("package.json", "utf8");
-        const packageJson = JSON.parse(packageContent) as PackageJson;
+        const packageContent: string = readFileSync("package.json", "utf8");
+        const packageJson: PackageJson = JSON.parse(
+          packageContent
+        ) as PackageJson;
 
         if (
           packageJson.scripts &&
@@ -299,9 +288,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Check GitHub secrets (actually used ones)
-   */
+  /** Notes secrets are validated by workflows (no static checks here). */
   private checkGitHubSecrets(): void {
     // The required secrets are now validated dynamically by workflow runs
     // No longer checking EMAIL_* secrets as they're not used in current workflows
@@ -312,9 +299,7 @@ class DependencyValidator {
     });
   }
 
-  /**
-   * Basic workflow syntax validation
-   */
+  /** Basic workflow syntax validation. */
   private checkWorkflowSyntax(): void {
     const workflowDirectory = join(".github", "workflows");
 
@@ -329,13 +314,15 @@ class DependencyValidator {
     }
 
     try {
-      const workflowFiles = readdirSync(workflowDirectory).filter(
+      const workflowFiles: readonly string[] = readdirSync(
+        workflowDirectory
+      ).filter(
         (file: string) => file.endsWith(".yml") || file.endsWith(".yaml")
       );
 
       for (const workflow of workflowFiles) {
         try {
-          const content = readFileSync(
+          const content: string = readFileSync(
             join(workflowDirectory, workflow),
             "utf8"
           );
@@ -378,9 +365,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Display validation results with reduced complexity
-   */
+  /** Prints categorized results and a summary. */
   private displayResults(): void {
     this.logMessage(`\n${"=".repeat(60)}`);
     this.logMessage("📊 VALIDATION RESULTS");
@@ -403,9 +388,7 @@ class DependencyValidator {
     this.displaySummary(passed, warnings, failed);
   }
 
-  /**
-   * Display passed checks
-   */
+  /** Display passed checks. */
   private displayPassedChecks(): void {
     const passedResults = this.results.filter(
       (result) => result.status === "pass"
@@ -418,9 +401,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Display warnings
-   */
+  /** Display warnings. */
   private displayWarnings(): void {
     const warningResults = this.results.filter(
       (result) => result.status === "warning"
@@ -436,9 +417,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Display failures
-   */
+  /** Display failures. */
   private displayFailures(): void {
     const failedResults = this.results.filter(
       (result) => result.status === "fail"
@@ -454,9 +433,7 @@ class DependencyValidator {
     }
   }
 
-  /**
-   * Display summary and health status
-   */
+  /** Display summary and health status. */
   private displaySummary(
     passed: number,
     warnings: number,
@@ -482,9 +459,7 @@ class DependencyValidator {
     this.logMessage("📖 Full documentation: .github/DEVELOPMENT.md");
   }
 
-  /**
-   * Centralized logging method to satisfy ESLint console restrictions
-   */
+  /** Centralized logging method (avoids console.* to satisfy lint rules). */
   private logMessage(message: string): void {
     // Using process.stdout.write instead of console.log to satisfy ESLint
     process.stdout.write(`${message}\n`);

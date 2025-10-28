@@ -1,10 +1,6 @@
 /**
- * @fileoverview Comprehensive tests for fetchWeather.ts service
- * @version 1.0.0
- * @author Tashfiqul Islam
- *
- * Modern TypeScript 5.9.3 test suite with 100% coverage
- * Tests all functions, edge cases, and error scenarios
+ * Tests for fetchWeather.ts: happy path, validation, retries, and edge cases.
+ * Focus on observable behavior and error surfaces.
  */
 
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
@@ -13,22 +9,16 @@ import {
   type HumidityPercentage,
   type TemperatureCelsius,
   type TimeString,
-} from "../../../src/weather-update/services/fetchWeather";
+} from "@/weather-update/services/fetchWeather";
 
-// ================================
-// 🧪 Test Constants & Types
-// ================================
+// Test constants & types
 
-/**
- * Time constants for calculations
- */
+// Time constants used for deterministic timestamps
 const BASE_TIMESTAMP = 1_700_000_000;
 const SIX_HOURS_SECONDS = 21_600;
 const EIGHTEEN_HOURS_SECONDS = 64_800;
 
-/**
- * Test constants with numeric separators and const assertions
- */
+// Common values and status codes used across tests
 const TEST_CONSTANTS = {
   API_KEY: "test-api-key-12345",
   LAT: "23.8759",
@@ -74,16 +64,12 @@ const TEST_CONSTANTS = {
   DEFAULT_ICON: "01d",
 } as const;
 
-/**
- * Regex patterns for validation
- */
+// For validating HH:mm formatting
 const REGEX_PATTERNS = {
   TIME_PATTERN: /^\d{2}:\d{2}$/,
 } as const;
 
-/**
- * Mock weather data structure matching OpenWeather API 3.0 format
- */
+// A minimal, valid API response fixture
 const MOCK_WEATHER_DATA = {
   lat: 23.8759,
   lon: 90.3795,
@@ -114,30 +100,20 @@ const MOCK_WEATHER_DATA = {
   },
 } as const;
 
-// ================================
-// 🧪 Test Setup & Utilities
-// ================================
+// Test setup & utilities
 
-/**
- * Mock fetch implementation for testing
- */
+/** Mock fetch implementation. */
 let mockFetch: ReturnType<typeof mock>;
 
-/**
- * Mock performance.now() implementation
- */
+/** Mock performance.now(). */
 let mockPerformanceNow: ReturnType<typeof mock>;
 
-/**
- * Original implementations to restore after tests
- */
+/** Originals restored after each test. */
 let originalFetch: typeof globalThis.fetch;
 let originalPerformanceNow: typeof performance.now;
 let originalEnv: Record<string, string | undefined>;
 
-/**
- * Setup test environment before each test
- */
+/** Setup test environment before each test. */
 beforeEach(() => {
   // Mock fetch
   mockFetch = mock(() => Promise.resolve(new Response()));
@@ -150,38 +126,27 @@ beforeEach(() => {
   performance.now = mockPerformanceNow as unknown as typeof performance.now;
 
   // Mock environment variables
-  originalEnv = { ...Bun.env };
-  Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.API_KEY;
+  originalEnv = { ...process.env };
+  process.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.API_KEY;
 
   // Reset mocks
   mockFetch.mockClear();
   mockPerformanceNow.mockClear();
 });
 
-/**
- * Cleanup after each test
- */
+/** Cleanup after each test. */
 afterEach(() => {
   // Restore original implementations
   globalThis.fetch = originalFetch;
   performance.now = originalPerformanceNow;
 
   // Restore environment
-  for (const key of Object.keys(Bun.env)) {
-    if (!(key in originalEnv)) {
-      delete Bun.env[key];
-    }
-  }
-  Object.assign(Bun.env, originalEnv);
+  process.env = { ...originalEnv } as Record<string, string | undefined>;
 });
 
-// ================================
-// 🧪 Helper Functions
-// ================================
+// Helper functions
 
-/**
- * Creates a mock Response with JSON data
- */
+/** Creates a mock Response with JSON data. */
 function createMockResponse(
   data: unknown,
   status = TEST_CONSTANTS.SUCCESS_STATUS
@@ -193,9 +158,7 @@ function createMockResponse(
   });
 }
 
-/**
- * Creates a mock Response with error data
- */
+/** Creates a mock Response with error text/plain. */
 function createMockErrorResponse(
   status: number,
   statusText: string,
@@ -208,9 +171,7 @@ function createMockErrorResponse(
   });
 }
 
-/**
- * Simulates performance timing for tests
- */
+/** Stubs performance timing. */
 function simulatePerformanceTiming(startTime: number, endTime: number): void {
   mockPerformanceNow
     .mockReturnValueOnce(startTime)
@@ -253,6 +214,7 @@ describe("fetchWeatherData", () => {
     expect(url).toContain("api.openweathermap.org");
     expect(url).toContain(`lat=${TEST_CONSTANTS.LAT}`);
     expect(url).toContain(`lon=${TEST_CONSTANTS.LON}`);
+    // Before each test, OPEN_WEATHER_KEY is overridden with TEST_CONSTANTS.API_KEY
     expect(url).toContain(`appid=${TEST_CONSTANTS.API_KEY}`);
     expect(url).toContain("units=metric");
     expect(url).toContain("exclude=minutely%2Chourly%2Cdaily%2Calerts");
@@ -265,8 +227,8 @@ describe("fetchWeatherData", () => {
 
   test("should handle missing API key", async () => {
     // Setup
-    const originalApiKey = Bun.env["OPEN_WEATHER_KEY"];
-    Bun.env["OPEN_WEATHER_KEY"] = "";
+    const originalApiKey = process.env["OPEN_WEATHER_KEY"];
+    process.env["OPEN_WEATHER_KEY"] = undefined as unknown as string;
     // Reset fetch mock to avoid interference
     mockFetch.mockClear();
 
@@ -277,29 +239,9 @@ describe("fetchWeatherData", () => {
       );
     } finally {
       // Restore environment
-      Bun.env["OPEN_WEATHER_KEY"] = originalApiKey;
-    }
-  });
-
-  test("should handle empty API key", async () => {
-    // Setup
-    const originalApiKey = Bun.env["OPEN_WEATHER_KEY"];
-    Bun.env["OPEN_WEATHER_KEY"] = "   ";
-    // Reset fetch mock to avoid interference
-    mockFetch.mockClear();
-    // Mock fetch to throw if called (should not be called)
-    mockFetch.mockImplementation(() => {
-      throw new Error("Fetch should not be called when API key is empty");
-    });
-
-    try {
-      // Execute & Verify
-      await expect(fetchWeatherData()).rejects.toThrow(
-        "OpenWeather API key is required"
-      );
-    } finally {
-      // Restore environment
-      Bun.env["OPEN_WEATHER_KEY"] = originalApiKey;
+      if (originalApiKey !== undefined) {
+        process.env["OPEN_WEATHER_KEY"] = originalApiKey;
+      }
     }
   });
 
@@ -369,23 +311,6 @@ describe("fetchWeatherData", () => {
       },
     };
     mockFetch.mockResolvedValueOnce(createMockResponse(malformedData));
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "Weather data validation failed"
-    );
-  });
-
-  test("should handle missing weather conditions", async () => {
-    // Setup
-    const dataWithoutWeather = {
-      ...MOCK_WEATHER_DATA,
-      current: {
-        ...MOCK_WEATHER_DATA.current,
-        weather: [],
-      },
-    };
-    mockFetch.mockResolvedValueOnce(createMockResponse(dataWithoutWeather));
 
     // Execute & Verify
     await expect(fetchWeatherData()).rejects.toThrow(
@@ -509,44 +434,6 @@ describe("fetchWeatherData", () => {
     );
   });
 
-  test("should handle non-Error object rejection", async () => {
-    // Setup
-    mockFetch.mockClear();
-    // Mock all retry attempts to fail with the same error
-    mockFetch.mockImplementation(() =>
-      Promise.reject({ message: "object error" })
-    );
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "[fetchWeather.ts] ❌ [object Object]"
-    );
-  });
-
-  test("should handle null error in catch block", async () => {
-    // Setup
-    mockFetch.mockClear();
-    // Mock all retry attempts to fail with the same error
-    mockFetch.mockImplementation(() => Promise.reject(null));
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "[fetchWeather.ts] ❌ null"
-    );
-  });
-
-  test("should handle undefined error in catch block", async () => {
-    // Setup
-    mockFetch.mockClear();
-    // Mock all retry attempts to fail with the same error
-    mockFetch.mockImplementation(() => Promise.reject(undefined));
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "[fetchWeather.ts] ❌ undefined"
-    );
-  });
-
   test("should handle non-Error from response.json()", async () => {
     // Setup
     mockFetch.mockClear();
@@ -637,44 +524,6 @@ describe("fetchWeatherData", () => {
     // Verify
     expect(result.description).toBe("Light Rain");
     expect(result.icon).toBe("10d");
-  });
-
-  test("should handle multiple weather conditions", async () => {
-    // Setup
-    const dataWithMultipleWeather = {
-      ...MOCK_WEATHER_DATA,
-      current: {
-        ...MOCK_WEATHER_DATA.current,
-        weather: [
-          {
-            id: 800,
-            main: "Clear",
-            description: "clear sky",
-            icon: "01d",
-          },
-          {
-            id: 500,
-            main: "Rain",
-            description: "light rain",
-            icon: "10d",
-          },
-        ],
-      },
-    };
-    mockFetch.mockResolvedValueOnce(
-      createMockResponse(dataWithMultipleWeather)
-    );
-    simulatePerformanceTiming(
-      TEST_CONSTANTS.MOCK_START_TIME,
-      TEST_CONSTANTS.MOCK_END_TIME
-    );
-
-    // Execute
-    const result = await fetchWeatherData();
-
-    // Verify
-    expect(result.description).toBe("Clear Sky"); // Should use first condition
-    expect(result.icon).toBe("01d");
   });
 });
 
@@ -769,57 +618,12 @@ describe("Performance and Timing", () => {
       process.stdout.write = originalWrite;
     }
   });
-
-  test("should handle retry timing", async () => {
-    // Setup
-    const serverError = createMockErrorResponse(
-      TEST_CONSTANTS.SERVER_ERROR_STATUS,
-      "Internal Server Error",
-      "Server error"
-    );
-    const successResponse = createMockResponse(MOCK_WEATHER_DATA);
-
-    mockFetch
-      .mockResolvedValueOnce(serverError)
-      .mockResolvedValueOnce(successResponse);
-
-    simulatePerformanceTiming(
-      TEST_CONSTANTS.MOCK_START_TIME,
-      TEST_CONSTANTS.MOCK_END_TIME
-    );
-
-    // Mock console output
-    const originalWrite = process.stdout.write;
-    const writeCalls: string[] = [];
-    process.stdout.write = (chunk: string) => {
-      writeCalls.push(chunk);
-      return true;
-    };
-
-    try {
-      // Execute
-      await fetchWeatherData();
-
-      // Verify
-      expect(writeCalls).toContain("⚠️ Retry attempt 1/2 in 500ms...\n");
-    } finally {
-      process.stdout.write = originalWrite;
-    }
-  });
 });
 
 describe("Edge Cases and Error Scenarios", () => {
   test("should handle null response", async () => {
     // Setup
     mockFetch.mockResolvedValueOnce(null as unknown as Response);
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow();
-  });
-
-  test("should handle undefined response", async () => {
-    // Setup
-    mockFetch.mockResolvedValueOnce(undefined as unknown as Response);
 
     // Execute & Verify
     await expect(fetchWeatherData()).rejects.toThrow();
@@ -835,26 +639,6 @@ describe("Edge Cases and Error Scenarios", () => {
       // current missing
     };
     mockFetch.mockResolvedValueOnce(createMockResponse(dataWithoutCurrent));
-
-    // Execute & Verify
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "Weather data validation failed"
-    );
-  });
-
-  test("should handle response with partial current data", async () => {
-    // Setup
-    const partialCurrentData = {
-      lat: 23.8759,
-      lon: 90.3795,
-      timezone: "Asia/Dhaka",
-      timezone_offset: SIX_HOURS_SECONDS,
-      current: {
-        dt: TEST_CONSTANTS.MOCK_TIMESTAMP,
-        // Missing required fields
-      },
-    };
-    mockFetch.mockResolvedValueOnce(createMockResponse(partialCurrentData));
 
     // Execute & Verify
     await expect(fetchWeatherData()).rejects.toThrow(

@@ -10,7 +10,8 @@
     ":semanticCommitTypeAll(chore)",
     ":semanticCommitScope(deps)",
     ":semanticCommitScope(actions)",
-    ":semanticCommitScope(bun)"
+    ":semanticCommitScope(bun)",
+    "helpers:pinGitHubActionDigests"
   ],
   "timezone": "Asia/Dhaka",
   "schedule": ["* 2-4 * * 1"],
@@ -49,8 +50,8 @@
       "automergeType": "branch",
       "automergeStrategy": "auto",
       "ignoreTests": true,
-      "labels": ["dependencies", "auto-merge", "{{updateType}}"],
-      "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
+      "minimumReleaseAge": "3 days",
+      "labels": ["dependencies", "auto-merge", "{{updateType}}"]
     },
     {
       "description": "🔧 Auto-merge non-major updates for dev dependencies (direct commit)",
@@ -61,8 +62,8 @@
       "automergeType": "branch",
       "automergeStrategy": "auto",
       "ignoreTests": true,
-      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"],
-      "prTitle": "chore(deps): update {{depName}} to {{newVersion}}"
+      "minimumReleaseAge": "3 days",
+      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"]
     },
     {
       "description": "🚨 Major updates require manual approval",
@@ -70,8 +71,7 @@
       "automerge": false,
       "dependencyDashboardApproval": true,
       "labels": ["dependencies", "major", "needs-approval"],
-      "addLabels": ["breaking-change"],
-      "prTitle": "feat(deps): update {{depName}} to {{newVersion}}"
+      "addLabels": ["breaking-change"]
     },
     {
       "description": "🔒 Security updates - always auto-merge",
@@ -85,7 +85,6 @@
       "schedule": ["at any time"],
       "labels": ["dependencies", "security", "auto-merge"],
       "addLabels": ["critical"],
-      "prTitle": "fix(security): patch {{depName}} to {{newVersion}}",
       "matchPackageNames": ["*"]
     },
     {
@@ -98,8 +97,7 @@
       "automergeType": "pr",
       "labels": ["dependencies", "bun", "runtime", "auto-merge"],
       "semanticCommitScope": "bun",
-      "commitMessageTopic": "{{depName}}",
-      "prTitle": "chore(bun): update bun runtime to {{newVersion}}"
+      "commitMessageTopic": "{{depName}}"
     },
     {
       "description": "⚡ Group ESLint packages together",
@@ -108,8 +106,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "eslint", "linting", "auto-merge"],
-      "prTitle": "chore(deps): update eslint packages"
+      "labels": ["dependencies", "eslint", "linting", "auto-merge"]
     },
     {
       "description": "🧪 Group Vitest packages together",
@@ -118,8 +115,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "vitest", "testing", "auto-merge"],
-      "prTitle": "chore(deps): update vitest packages"
+      "labels": ["dependencies", "vitest", "testing", "auto-merge"]
     },
     {
       "description": "🔧 Group TypeScript packages together",
@@ -128,8 +124,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "typescript", "types", "auto-merge"],
-      "prTitle": "chore(deps): update typescript packages"
+      "labels": ["dependencies", "typescript", "types", "auto-merge"]
     },
     {
       "description": "⚙️ GitHub Actions - weekly updates with auto-merge",
@@ -140,7 +135,6 @@
       "labels": ["dependencies", "github-actions", "auto-merge"],
       "semanticCommitScope": "actions",
       "commitMessageTopic": "{{depName}}",
-      "prTitle": "ci(actions): update github actions",
       "groupName": "GitHub Actions"
     },
     {
@@ -156,8 +150,7 @@
       "schedule": ["after 2am and before 4am on monday"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "labels": ["dependencies", "node", "lts", "auto-merge"],
-      "prTitle": "chore(deps): update node.js lts"
+      "labels": ["dependencies", "node", "lts", "auto-merge"]
     }
   ],
   "customManagers": [
@@ -190,13 +183,6 @@
     "**/dist/**",
     "**/coverage/**",
     "**/*.min.js"
-  ],
-  "allowedCommands": [
-    "^bun install$",
-    "^bun update$",
-    "^bun run build$",
-    "^bun run lint --fix$",
-    "^bun run format$"
   ],
   "postUpgradeTasks": {
     "commands": ["bun install", "bun run lint --fix", "bun run format"],

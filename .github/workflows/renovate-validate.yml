@@ -1,0 +1,99 @@
+name: "Renovate Config Validation"
+
+# ============================================================
+# Workflow triggers
+# ============================================================
+on:
+  pull_request:
+    paths:
+      - renovate.json
+  push:
+    paths:
+      - renovate.json
+  workflow_dispatch: {}
+
+# ============================================================
+# Concurrency control
+# ============================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ============================================================
+# Permissions (least privilege)
+# ============================================================
+permissions:
+  contents: read
+
+# ============================================================
+# Environment variables
+# ============================================================
+env:
+  CACHE_KEY_PREFIX: "v1-renovate-validate"
+  TIMEZONE: "Asia/Dhaka"
+
+# ============================================================
+# Jobs
+# ============================================================
+jobs:
+  validate:
+    name: "Validate renovate.json"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Restore Dependencies Cache"
+        id: cache-deps
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+            bun.lock
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
+
+      - name: "Install Dependencies"
+        run: |
+          echo "::group::Installing dependencies"
+          if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
+            bun --version
+          else
+            echo "::notice::Using cached dependencies"
+          fi
+          bun install --no-summary
+          echo "::endgroup::"
+
+      - name: "Validate Config"
+        run: |
+          echo "::group::Renovate validation"
+          bun run renovate:validate
+          echo "::endgroup::"
+
+      - name: "Save Dependencies Cache"
+        if: always() && steps.cache-deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+            bun.lock
+          key: ${{ steps.cache-deps.outputs.cache-primary-key }}
+
+      - name: "Report Summary"
+        if: always()
+        run: |
+          echo "# Renovate Config Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ref:** ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(TZ='${{ env.TIMEZONE }}' date '+%Y-%m-%d %Z')" >> $GITHUB_STEP_SUMMARY
