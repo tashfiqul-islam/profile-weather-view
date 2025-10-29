@@ -114,7 +114,7 @@ jobs:
         if: env.SKIP_TESTS != 'true'
         run: |
           echo "::group::Test execution"
-          bun test --coverage
+          bun run src/scripts/test-pretty.ts --no-live
           echo "::endgroup::"
         env:
           OPEN_WEATHER_KEY: "mock-api-key-for-tests"

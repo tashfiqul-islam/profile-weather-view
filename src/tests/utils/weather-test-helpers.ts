@@ -362,7 +362,7 @@ export function createMockFetch(responses: Array<() => Response> = []) {
     _init?: RequestInit
   ): Promise<Response> => {
     const responseIndex = callCount % responses.length;
-    callCount++;
+    callCount += 1;
 
     if (responses.length === 0) {
       return Promise.resolve(createMockFetchResponse() as Response);

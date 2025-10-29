@@ -24,11 +24,22 @@ const MIN_COVERAGE_PARTS = 3;
 const WIDTH_FILE_MIN = 20;
 const WIDTH_COL_MIN = 7;
 const DEFAULT_BANNER_WIDTH = 66;
+const CONTENT_WIDTH_MAX = 100;
+const MIN_TERMINAL_WIDTH = 40;
+const MAX_TERMINAL_WIDTH = 160;
+const MIN_BORDER_PADDING = 1;
+const MS_PER_SECOND = 1000;
 const BORDER_CHAR = "─";
 // Kept for future layout decisions (currently not used)
 // const SUMMARY_MIN_WIDTH = 20;
 
+let NO_COLOR = false;
+let USE_UNICODE = true;
+
 function c(text: string, code: keyof typeof ANSI) {
+  if (NO_COLOR) {
+    return text;
+  }
   return `${ANSI[code]}${text}${ANSI.reset}`;
 }
 
@@ -36,31 +47,27 @@ function dim(text: string) {
   return c(text, "gray");
 }
 
+function getTerminalWidth(): number {
+  const w =
+    typeof process.stdout.columns === "number"
+      ? process.stdout.columns
+      : DEFAULT_BANNER_WIDTH;
+  return Math.max(MIN_TERMINAL_WIDTH, Math.min(MAX_TERMINAL_WIDTH, w));
+}
+
 function hr(char = BORDER_CHAR, width = DEFAULT_BANNER_WIDTH) {
   return char.repeat(width);
 }
 
-// Reserved for future dynamic width header; currently unused after compact header change
-// function getTerminalWidth(): number {
-//   const stdout: { columns?: number } = process.stdout as unknown as {
-//     columns?: number;
-//   };
-//   const cols =
-//     typeof stdout?.columns === "number"
-//       ? (stdout.columns as number)
-//       : DEFAULT_BANNER_WIDTH;
-//   return Math.max(
-//     MIN_BANNER_WIDTH,
-//     Math.min(cols - BANNER_SIDE_PADDING, MAX_BANNER_WIDTH)
-//   );
-// }
-
 function banner(title: string) {
-  // Compact, single-line header centered to the default content width
-  const usable = DEFAULT_BANNER_WIDTH;
+  // Header centered to a clamped width so it doesn't dwarf content
+  const usable = Math.min(getTerminalWidth(), CONTENT_WIDTH_MAX);
   const label = ` ${title} `;
-  const left = Math.max(1, Math.floor((usable - label.length) / 2));
-  const right = Math.max(1, usable - label.length - left);
+  const left = Math.max(
+    MIN_BORDER_PADDING,
+    Math.floor((usable - label.length) / 2)
+  );
+  const right = Math.max(MIN_BORDER_PADDING, usable - label.length - left);
   const line = `${hr(BORDER_CHAR, left)}${label}${hr(BORDER_CHAR, right)}`;
   console.log(c(line, "blue"));
 }
@@ -128,7 +135,6 @@ async function runBunTestsStreaming(reporter: "dots" = "dots") {
   const handle = async (stream: ReadableStream) => {
     const reader = stream.getReader();
     let pending = "";
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
@@ -268,32 +274,40 @@ let lastErrorLocation = "";
 
 // Per-file live mode (sequential) — opt-in via env PER_FILE_LIVE (default on in TTY)
 // Returns null if not run; otherwise returns the aggregate exit code from per-file execution
-async function runPerFileLiveIfEnabled(): Promise<number | null> {
+async function runPerFileLiveIfEnabled(
+  forceLive?: boolean,
+  globOverride?: string
+): Promise<number | null> {
   const liveEnv = process.env["PER_FILE_LIVE"] as string | undefined;
-  const wantLive = liveEnv !== "0"; // default on in TTY
-  const enabled =
-    wantLive &&
-    typeof process.stdout.isTTY === "boolean" &&
-    process.stdout.isTTY;
-  if (!enabled) {
+  const wantLiveDefault = liveEnv !== "0"; // default on in TTY
+  const wantLive = typeof forceLive === "boolean" ? forceLive : wantLiveDefault;
+  const isTty =
+    typeof process.stdout.isTTY === "boolean" && process.stdout.isTTY;
+  if (!(wantLive && isTty)) {
     return null;
   }
   // Discover test files: prefer PER_FILE_GLOB, else a default glob under src/tests
-  const globEnv = process.env["PER_FILE_GLOB"] as string | undefined;
-  let files: string[] = [];
-  if (globEnv) {
-    files = globEnv
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  } else {
-    const defaultGlobs = ["src/tests/**/*.test.ts", "src/tests/**/*.test.tsx"];
-    for (const g of defaultGlobs) {
+  const files = ((): string[] => {
+    const globEnv =
+      globOverride ?? (process.env["PER_FILE_GLOB"] as string | undefined);
+    if (globEnv) {
+      return globEnv
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    const acc: string[] = [];
+    const defaults = [
+      "src/tests/**/*.test.ts",
+      "src/tests/**/*.test.tsx",
+    ] as const;
+    for (const g of defaults) {
       for (const p of new Bun.Glob(g).scanSync({ dot: false })) {
-        files.push(p);
+        acc.push(p);
       }
     }
-  }
+    return acc;
+  })();
   if (files.length === 0) {
     return null;
   }
@@ -335,7 +349,7 @@ function parseCoverageRows(
   if (coverageStart < 0) {
     return rows;
   }
-  for (let i = coverageStart + 2; i < lines.length; i++) {
+  for (let i = coverageStart + 2; i < lines.length; i += 1) {
     const row = lines[i] ?? "";
     if (row.startsWith("--")) {
       break;
@@ -368,13 +382,77 @@ function extractSummary(text: string) {
   return { coverageTable, passedLine, failedLine, totalSummary, coverageRows };
 }
 
-const TITLE =
-  (process.env["PRETTY_TEST_TITLE"] as string | undefined) ?? "Bun Tests";
-banner(TITLE);
-const perFileCode = await runPerFileLiveIfEnabled();
-if (perFileCode !== null) {
-  // Continue to unified run for summarized names, failures and coverage
+function parseCliArgs(argv: string[]) {
+  const args: Record<string, string | boolean> = {};
+  const NO_PREFIX_LEN = 5; // length of "--no-"
+  for (const raw of argv) {
+    if (!raw.startsWith("--")) {
+      continue;
+    }
+    if (raw.startsWith("--no-")) {
+      args[raw.slice(NO_PREFIX_LEN)] = false;
+      continue;
+    }
+    const pair = raw.slice(2);
+    const eqIndex = pair.indexOf("=");
+    if (eqIndex === -1) {
+      args[pair] = true;
+    } else {
+      const key = pair.slice(0, eqIndex);
+      const value = pair.slice(eqIndex + 1);
+      args[key] = value;
+    }
+  }
+  return args as {
+    live?: boolean | string;
+    glob?: string | boolean;
+    title?: string | boolean;
+    json?: boolean | string;
+    "no-color"?: boolean | string;
+    ascii?: boolean | string;
+  };
 }
+
+const cli = parseCliArgs(process.argv.slice(2));
+// Theme toggles
+NO_COLOR =
+  (typeof cli["no-color"] === "boolean" ? cli["no-color"] : false) ||
+  Boolean(process.env["NO_COLOR"]?.length);
+const asciiFlag = typeof cli.ascii === "boolean" ? cli.ascii : false;
+USE_UNICODE = !asciiFlag && process.platform !== "win32";
+const BOX = USE_UNICODE
+  ? {
+      tl: "╭",
+      tr: "╮",
+      bl: "╰",
+      br: "╯",
+      v: "│",
+      h: "─",
+      cross: "┼",
+      t: "┬",
+      b: "┴",
+    }
+  : ({
+      tl: "+",
+      tr: "+",
+      bl: "+",
+      br: "+",
+      v: "|",
+      h: "-",
+      cross: "+",
+      t: "+",
+      b: "+",
+    } as const);
+const TITLE =
+  (typeof cli.title === "string" ? cli.title : undefined) ??
+  (process.env["PRETTY_TEST_TITLE"] as string | undefined) ??
+  "Bun Tests";
+banner(TITLE);
+const liveFlag = typeof cli.live === "boolean" ? cli.live : undefined;
+const globFlag = typeof cli.glob === "string" ? cli.glob : undefined;
+await runPerFileLiveIfEnabled(liveFlag ?? undefined, globFlag ?? undefined);
+
+const START = Date.now();
 
 const interactive =
   typeof process.stdout.isTTY === "boolean" && process.stdout.isTTY;
@@ -392,12 +470,28 @@ const combined = `${result.stdout}\n${result.stderr}`.trimEnd();
 const cleaned = filterOutput(combined);
 const summary = extractSummary(cleaned);
 
+// Optional machine-readable output
+if (cli.json === true) {
+  const payload = {
+    interactive,
+    code: result.code,
+    summary: {
+      passedLine: summary.passedLine,
+      failedLine: summary.failedLine,
+      totalSummary: summary.totalSummary,
+    },
+    coverageRows: summary.coverageRows,
+  } as const;
+  console.log(JSON.stringify(payload));
+  console.log("");
+  process.exit(result.code);
+}
+
 // Parse JUnit only when available (non-interactive path)
 const testsPassed: Array<{ name: string; time: string }> = [];
 const testsFailed: Array<{ name: string; time: string }> = [];
 if (junit) {
   let match: RegExpExecArray | null;
-  // eslint-disable-next-line no-cond-assign
   while (true) {
     match = TESTCASE_RE.exec(junit.stdout);
     if (match === null) {
@@ -455,13 +549,13 @@ if (summary.coverageRows.length > 0) {
   );
   const padEnd = (s: string, w: number) =>
     s.length < w ? s + " ".repeat(w - s.length) : s.slice(0, w);
-  const top = `╭${"─".repeat(fileW)}┬${"─".repeat(funcsW + 2)}┬${"─".repeat(linesW + 2)}╮`;
-  const mid = `├${"─".repeat(fileW)}┼${"─".repeat(funcsW + 2)}┼${"─".repeat(linesW + 2)}┤`;
-  const bot = `╰${"─".repeat(fileW)}┴${"─".repeat(funcsW + 2)}┴${"─".repeat(linesW + 2)}╯`;
+  const top = `${BOX.tl}${BOX.h.repeat(fileW)}${BOX.t}${BOX.h.repeat(funcsW + 2)}${BOX.t}${BOX.h.repeat(linesW + 2)}${BOX.tr}`;
+  const mid = `${USE_UNICODE ? "├" : "+"}${BOX.h.repeat(fileW)}${BOX.cross}${BOX.h.repeat(funcsW + 2)}${BOX.cross}${BOX.h.repeat(linesW + 2)}${USE_UNICODE ? "┤" : "+"}`;
+  const bot = `${BOX.bl}${BOX.h.repeat(fileW)}${BOX.b}${BOX.h.repeat(funcsW + 2)}${BOX.b}${BOX.h.repeat(linesW + 2)}${BOX.br}`;
   console.log(c(top, "blue"));
   console.log(
     c(
-      `│${padEnd(headers[0] ?? "File", fileW)}│ ${padEnd(headers[1] ?? "% Funcs", funcsW)} │ ${padEnd(headers[2] ?? "% Lines", linesW)} │`,
+      `${BOX.v}${padEnd(headers[0] ?? "File", fileW)}${BOX.v} ${padEnd(headers[1] ?? "% Funcs", funcsW)} ${BOX.v} ${padEnd(headers[2] ?? "% Lines", linesW)} ${BOX.v}`,
       "cyan"
     )
   );
@@ -469,7 +563,7 @@ if (summary.coverageRows.length > 0) {
   for (const r of rows) {
     const file = r.file.replace(/^src\\/i, "src/").replace(/\\/g, "/");
     console.log(
-      `│${padEnd(file, fileW)}│ ${padEnd(r.funcs, funcsW)} │ ${padEnd(r.linesPct, linesW)} │`
+      `${BOX.v}${padEnd(file, fileW)}${BOX.v} ${padEnd(r.funcs, funcsW)} ${BOX.v} ${padEnd(r.linesPct, linesW)} ${BOX.v}`
     );
   }
   console.log(c(bot, "blue"));
@@ -486,6 +580,9 @@ if (summary.failedLine) {
 if (summary.totalSummary) {
   parts.push(c(summary.totalSummary, "cyan"));
 }
+const elapsedMs = Math.max(0, Date.now() - START);
+const elapsed = `${(elapsedMs / MS_PER_SECOND).toFixed(2)}s`;
+parts.push(c(`elapsed ${elapsed}`, "yellow"));
 if (parts.length) {
   console.log(`\n${c("Summary", "magenta")}`);
   const sep = c("  •  ", "gray");
@@ -493,9 +590,9 @@ if (parts.length) {
   const ESC = "\u001B";
   const ANSI_RE = new RegExp(`${ESC}\\[[0-9;]*m`, "g");
   const raw = text.replace(ANSI_RE, "");
-  const top = `╭${hr("─", raw.length)}╮`;
-  const mid = `│${text}│`;
-  const bot = `╰${hr("─", raw.length)}╯`;
+  const top = `${BOX.tl}${hr(BOX.h, raw.length)}${BOX.tr}`;
+  const mid = `${BOX.v}${text}${BOX.v}`;
+  const bot = `${BOX.bl}${hr(BOX.h, raw.length)}${BOX.br}`;
   console.log(c(top, "blue"));
   console.log(mid);
   console.log(c(bot, "blue"));
