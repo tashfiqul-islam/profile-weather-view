@@ -1,5 +1,15 @@
 # Changelog
 
+# [2.5.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.4.2...v2.5.0)
+### chore
+
+* **deps:** Pin @biomejs/biome 2.3.2 [skip actions] (#130) ([133ca31](https://github.com/tashfiqul-islam/profile-weather-view/commit/133ca311c57203f3d2710224f7d25415363c230a))
+* **deps:** Pin dependencies [skip actions] (#129) ([dfd8e64](https://github.com/tashfiqul-islam/profile-weather-view/commit/dfd8e64db5e32bf3e02cc0cbbb6ae45f2e887d3f))
+### feat
+
+* **cli:** enahced bun test CLI ([4046454](https://github.com/tashfiqul-islam/profile-weather-view/commit/40464544715dcb1574ad5f66b35b6141a963b233))
+* **cli:** enhanced bun test CLI ([7678f9f](https://github.com/tashfiqul-islam/profile-weather-view/commit/7678f9f115dceda257fa1fbf49fc6652ad1f1dec))
+
 # [2.4.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.4.1...v2.4.2)
 ### fix
 
