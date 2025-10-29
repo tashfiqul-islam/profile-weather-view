@@ -169,16 +169,16 @@
 ### Development & Build Tools
 
 <p>
-  <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.12.2-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
+  <a href="https://axios-http.com/"><img alt="Axios" src="https://img.shields.io/badge/Axios-1.13.1-5A29E4?style=flat-square&logo=axios&logoColor=white" /></a>
   <a href="https://github.com/tc39/proposal-temporal"><img alt="Temporal polyfill" src="https://img.shields.io/badge/Temporal-0.5.1-1F2A44?style=flat-square" /></a>
   <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.1.12-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
-  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.3.0-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
+  <a href="https://biomejs.dev/"><img alt="Biome" src="https://img.shields.io/badge/Biome-2.3.2-60A5FA?style=flat-square&logo=biome&logoColor=white" /></a>
 </p>
 
 ### Quality & Automation
 
 <p>
-  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-6.0.1-0B7285?style=flat-square" /></a>
+  <a href="https://github.com/haydenbleasel/ultracite"><img alt="Ultracite" src="https://img.shields.io/badge/Ultracite-6.0.5-0B7285?style=flat-square" /></a>
   <a href="https://github.com/semantic-release/semantic-release"><img alt="semantic-release" src="https://img.shields.io/badge/semantic--release-25.0.1-e10079?style=flat-square&logo=semantic-release" /></a>
   <a href="https://github.com/evilmartians/lefthook"><img alt="Lefthook" src="https://img.shields.io/badge/Lefthook-2.0.1-000000?style=flat-square&logo=git&logoColor=white" /></a>
   <a href="https://github.com/renovatebot/renovate"><img alt="Renovate" src="https://img.shields.io/badge/Renovate-enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white" /></a>
@@ -701,7 +701,7 @@ copies or substantial portions of the Software.
 
 <br>
 
-<sub>**Last refresh**: Sunday, October 26, 2025 at 03:39:11 AM (UTC+6)</sub>
+<sub>**Last refresh**: Wednesday, October 29, 2025 at 02:07:05 AM (UTC+6)</sub>
 
 <br>
 
