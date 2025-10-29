@@ -1,5 +1,10 @@
 # Changelog
 
+# [2.4.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.4.1...v2.4.2)
+### fix
+
+* **ci:** fixed cicd pipeline ([45b25ff](https://github.com/tashfiqul-islam/profile-weather-view/commit/45b25ff498503173d8725fd919253b34f8cef24e))
+
 # [2.4.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.4.0...v2.4.1)
 ### chore
 
