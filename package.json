@@ -45,7 +45,7 @@
     "check": "bun run format && bun run check",
     "check-all": "bun run type-check && bun run format:check && bun run lint:check && bun run test:ci",
     "format-all": "bun run type-check && bun run test:ci && bun run format && bun run lint",
-    "renovate:validate": "bunx -p renovate renovate-config-validator || bunx -p renovate renovate --version",
+    "renovate:validate": "npx -y renovate renovate-config-validator || npx -y renovate --version",
     "// Security": "",
     "security": "bunx biome check --apply",
     "audit": "bun audit",
@@ -85,7 +85,6 @@
     "connect": "^3.7.0",
     "dotenv": "^17.2.3",
     "lefthook": "^2.0.2",
-    "profile-weather-view": ".",
     "ultracite": "^6.0.5",
     "vite": "^7.1.12",
     "zod": "^4.1.12"

@@ -46,49 +46,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Setup Bun"
-        uses: oven-sh/setup-bun@v2
+      - name: "Setup Node"
+        uses: actions/setup-node@v6
         with:
-          bun-version: latest
-
-      - name: "Restore Dependencies Cache"
-        id: cache-deps
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            ~/.bun/install/cache
-            bun.lock
-          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
-          restore-keys: |
-            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
-
-      - name: "Install Dependencies"
-        run: |
-          echo "::group::Installing dependencies"
-          if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
-            bun --version
-          else
-            echo "::notice::Using cached dependencies"
-          fi
-          bun install --no-summary
-          echo "::endgroup::"
+          node-version: "lts/"
+          cache: "npm"
 
       - name: "Validate Config"
         run: |
           echo "::group::Renovate validation"
-          bun run renovate:validate
+          npx -y renovate renovate-config-validator || npx -y renovate --version
           echo "::endgroup::"
-
-      - name: "Save Dependencies Cache"
-        if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            node_modules
-            ~/.bun/install/cache
-            bun.lock
-          key: ${{ steps.cache-deps.outputs.cache-primary-key }}
 
       - name: "Report Summary"
         if: always()
