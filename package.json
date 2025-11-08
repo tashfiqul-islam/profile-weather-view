@@ -6,10 +6,10 @@
   "description": "TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically",
   "main": "src/weather-update/index.ts",
   "engines": {
-    "bun": ">=1.3.1",
+    "bun": ">=1.3.2",
     "node": ">=22.0.0"
   },
-  "packageManager": "bun@1.3.1",
+  "packageManager": "bun@1.3.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/tashfiqul-islam/profile-weather-view"
