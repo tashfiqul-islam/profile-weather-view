@@ -58,14 +58,14 @@ jobs:
 
     steps:
       - name: "Checkout Weather Repository"
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: ${{ github.repository }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: "Checkout Profile Repository"
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
@@ -75,13 +75,13 @@ jobs:
           persist-credentials: false
 
       - name: "Setup Bun"
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
         with:
           bun-version: latest
 
       - name: "Restore Dependencies Cache"
         id: cache-deps
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             node_modules
@@ -183,7 +183,7 @@ jobs:
 
       - name: "Save Dependencies Cache"
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             node_modules
@@ -212,7 +212,7 @@ jobs:
       - name: "Setup GPG for Commit Signing"
         id: gpg-setup
         if: github.event_name == 'schedule' || steps.update-weather-and-readme.outputs.changes_detected == 'true'
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
