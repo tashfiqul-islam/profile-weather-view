@@ -19,15 +19,15 @@ import {
 import type {
   HumidityPercentage,
   TemperatureCelsius,
-} from "@/weather-update/services/fetchWeather";
+} from "@/weather-update/services/fetch-weather";
+import type { MeteoconIconName } from "@/weather-update/services/wmo-mapper";
 
 describe("Bun Test Infrastructure", () => {
   test("should have proper test environment", () => {
-    // Set NODE_ENV to test for this test
     process.env["NODE_ENV"] = "test";
     expect(process.env["NODE_ENV"]).toBe("test");
     expect(process.env["CI"]).toBe("true");
-    expect(process.env["OPEN_WEATHER_KEY"]).toBeDefined();
+    expect(process.env["NODE_ENV"]).toBeDefined();
   });
 });
 
@@ -158,7 +158,7 @@ describe("Weather Test Helpers - Comprehensive Coverage", () => {
       description: "Thunderstorm",
       temperatureC: 30 as TemperatureCelsius,
       humidityPct: 85 as HumidityPercentage,
-      icon: "11d",
+      icon: "thunderstorms-day" as MeteoconIconName,
     });
 
     const readmeContent = createTestReadmeContent(customWeather);
@@ -166,7 +166,7 @@ describe("Weather Test Helpers - Comprehensive Coverage", () => {
     expect(readmeContent).toContain("Thunderstorm");
     expect(readmeContent).toContain("30°C");
     expect(readmeContent).toContain("Humidity: 85%");
-    expect(readmeContent).toContain("11d.png");
+    expect(readmeContent).toContain("thunderstorms-day.svg");
     expect(readmeContent).toContain("<!-- Hourly Weather Update -->");
     expect(readmeContent).toContain("<!-- End of Hourly Weather Update -->");
   });
@@ -177,7 +177,7 @@ describe("Weather Test Helpers - Comprehensive Coverage", () => {
     expect(readmeContent).toContain("Clear Sky");
     expect(readmeContent).toContain("25°C");
     expect(readmeContent).toContain("Humidity: 60%");
-    expect(readmeContent).toContain("01d.png");
+    expect(readmeContent).toContain("clear-day.svg");
   });
 
   test("should validate README weather section", () => {

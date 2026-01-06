@@ -10,17 +10,9 @@ import path from "node:path";
 
 // Environment configuration used by tests
 
-// Set test environment variables
 process.env["NODE_ENV"] = "test";
 process.env["CI"] = "true";
-
-// Mock API key for testing (validates format but doesn't make real calls)
-process.env["OPEN_WEATHER_KEY"] = "mock-api-key-for-testing-1234567890abcdef";
-
-// Disable rate limiting in tests
 process.env["FORCE_UPDATE"] = "true";
-
-// Disable GitHub Actions mode for testing
 process.env["GITHUB_ACTIONS"] = "false";
 
 // Test utilities available to all suites
@@ -35,7 +27,7 @@ export const testUtils = {
     const MOCK_HUMIDITY = 60;
     const MOCK_SUNRISE = "06:00";
     const MOCK_SUNSET = "18:00";
-    const MOCK_ICON = "01d";
+    const MOCK_ICON = "clear-day"; // Meteocons icon name
     const MOCK_DESCRIPTION = "Clear Sky";
 
     return {
@@ -110,7 +102,7 @@ export const testUtils = {
 
 ## Weather Information
 <!-- Hourly Weather Update -->
-![Weather](https://openweathermap.org/img/w/01d.png)
+![Weather](https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-day.svg)
 **Clear Sky** | 25°C | Humidity: 60%
 Sunrise: 06:00 | Sunset: 18:00
 <em>Last refresh: Monday, January 01, 2024 at 12:00:00 (UTC+6)</em>
@@ -193,7 +185,6 @@ export const testConfig = {
   mockApiResponse: testUtils.createMockApiResponse(),
   mockReadmeContent: testUtils.createMockReadmeContent(),
 
-  // Test environment
   isTest: true,
   isCI: process.env["CI"] === "true",
 

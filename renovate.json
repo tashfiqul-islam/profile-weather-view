@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "🔄 Renovate configuration for automated dependency updates",
+  "description": "Automated dependency management for profile-weather-view",
   "extends": [
     "config:best-practices",
     "group:monorepos",
@@ -8,13 +8,10 @@
     "workarounds:all",
     ":semanticCommits",
     ":semanticCommitTypeAll(chore)",
-    ":semanticCommitScope(deps)",
-    ":semanticCommitScope(actions)",
-    ":semanticCommitScope(bun)",
-    "helpers:pinGitHubActionDigests"
+    ":semanticCommitScope(deps)"
   ],
   "timezone": "Asia/Dhaka",
-  "schedule": ["* 2-4 * * 1"],
+  "schedule": ["after 2am and before 4am on monday"],
   "labels": ["dependencies", "renovate"],
   "assignees": ["tashfiqul-islam"],
   "reviewers": ["tashfiqul-islam"],
@@ -27,7 +24,6 @@
   "separateMajorMinor": true,
   "separateMultipleMajor": true,
   "separateMinorPatch": false,
-  "ignoreTests": true,
   "commitMessagePrefix": "chore(deps):",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "{{newVersion}}",
@@ -40,117 +36,106 @@
     "enabled": true,
     "schedule": ["before 3am on the first day of the month"]
   },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "vulnerability"],
+    "automerge": true,
+    "schedule": ["at any time"]
+  },
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
-      "description": "🔄 Auto-merge non-major updates for production dependencies (direct commit)",
+      "description": "Auto-merge minor/patch updates for production dependencies",
       "matchDepTypes": ["dependencies"],
       "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "branch",
-      "automergeStrategy": "auto",
-      "ignoreTests": true,
       "minimumReleaseAge": "3 days",
-      "labels": ["dependencies", "auto-merge", "{{updateType}}"]
+      "labels": ["dependencies", "{{updateType}}"]
     },
     {
-      "description": "🔧 Auto-merge non-major updates for dev dependencies (direct commit)",
+      "description": "Auto-merge minor/patch updates for dev dependencies",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["minor", "patch"],
-      "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "branch",
-      "automergeStrategy": "auto",
-      "ignoreTests": true,
       "minimumReleaseAge": "3 days",
-      "labels": ["dependencies", "dev", "auto-merge", "{{updateType}}"]
+      "labels": ["dependencies", "dev", "{{updateType}}"]
     },
     {
-      "description": "🚨 Major updates require manual approval",
+      "description": "Major updates require manual approval",
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "dependencyDashboardApproval": true,
-      "labels": ["dependencies", "major", "needs-approval"],
-      "addLabels": ["breaking-change"]
+      "labels": ["dependencies", "major", "breaking-change"]
     },
     {
-      "description": "🔒 Security updates - always auto-merge",
-      "matchDatasources": ["npm"],
-      "vulnerabilityAlerts": {
-        "enabled": true,
-        "vulnerabilityFixStrategy": "highest"
-      },
-      "automerge": true,
-      "automergeType": "pr",
-      "schedule": ["at any time"],
-      "labels": ["dependencies", "security", "auto-merge"],
-      "addLabels": ["critical"],
-      "matchPackageNames": ["*"]
-    },
-    {
-      "description": "📦 Bun runtime updates - weekly check",
+      "description": "Bun runtime updates - weekly check",
       "matchPackageNames": ["bun", "bun-types", "@types/bun"],
       "matchDepTypes": ["packageManager", "devDependencies"],
       "schedule": ["after 2am and before 4am on monday"],
-      "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
-      "labels": ["dependencies", "bun", "runtime", "auto-merge"],
+      "labels": ["dependencies", "bun", "runtime"],
       "semanticCommitScope": "bun",
       "commitMessageTopic": "{{depName}}"
     },
     {
-      "description": "⚡ Group ESLint packages together",
-      "matchPackageNames": ["/^@typescript-eslint/", "/^eslint/"],
-      "groupName": "ESLint packages",
-      "matchCurrentVersion": "!/^0/",
+      "description": "Group Biome packages together",
+      "matchPackageNames": ["/^@biomejs/"],
+      "groupName": "Biome packages",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "eslint", "linting", "auto-merge"]
+      "labels": ["dependencies", "biome", "linting"]
     },
     {
-      "description": "🧪 Group Vitest packages together",
-      "matchPackageNames": ["/^@vitest/", "vitest"],
-      "groupName": "Vitest packages",
-      "matchCurrentVersion": "!/^0/",
-      "automerge": true,
-      "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "vitest", "testing", "auto-merge"]
-    },
-    {
-      "description": "🔧 Group TypeScript packages together",
-      "matchPackageNames": ["/^@types/", "typescript", "typescript-eslint"],
+      "description": "Group TypeScript packages together",
+      "matchPackageNames": ["/^@types/", "typescript"],
       "groupName": "TypeScript packages",
-      "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "typescript", "types", "auto-merge"]
+      "labels": ["dependencies", "typescript", "types"]
     },
     {
-      "description": "⚙️ GitHub Actions - weekly updates with auto-merge",
+      "description": "Group semantic-release packages together",
+      "matchPackageNames": ["/^@semantic-release/", "semantic-release"],
+      "groupName": "semantic-release packages",
+      "automerge": true,
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "release"]
+    },
+    {
+      "description": "Group commitlint packages together",
+      "matchPackageNames": ["/^@commitlint/"],
+      "groupName": "commitlint packages",
+      "automerge": true,
+      "schedule": ["after 2am and before 4am on monday"],
+      "labels": ["dependencies", "commitlint"]
+    },
+    {
+      "description": "GitHub Actions - weekly updates with auto-merge",
       "matchManagers": ["github-actions"],
       "schedule": ["after 2am and before 4am on monday"],
       "automerge": true,
       "automergeType": "pr",
-      "labels": ["dependencies", "github-actions", "auto-merge"],
+      "labels": ["dependencies", "github-actions"],
       "semanticCommitScope": "actions",
       "commitMessageTopic": "{{depName}}",
       "groupName": "GitHub Actions"
     },
     {
-      "description": "🔐 Pin GitHub Action digests for security",
+      "description": "Pin GitHub Action digests for security",
       "matchManagers": ["github-actions"],
       "rangeStrategy": "pin",
       "pinDigests": true
     },
     {
-      "description": "⏰ Node.js LTS updates only",
+      "description": "Node.js LTS updates only",
       "matchPackageNames": ["node", "@types/node"],
-      "allowedVersions": "/^(18|20|22)\\./",
+      "allowedVersions": "/^(20|22|24)\\./",
       "schedule": ["after 2am and before 4am on monday"],
-      "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "labels": ["dependencies", "node", "lts", "auto-merge"]
+      "labels": ["dependencies", "node", "lts"]
     }
   ],
   "customManagers": [
@@ -177,7 +162,7 @@
       "versioningTemplate": "semver"
     }
   ],
-  "postUpdateOptions": ["npmDedupe", "bunDedupe"],
+  "postUpdateOptions": [],
   "ignorePaths": [
     "**/node_modules/**",
     "**/dist/**",
@@ -185,14 +170,8 @@
     "**/*.min.js"
   ],
   "postUpgradeTasks": {
-    "commands": ["bun install", "bun run lint --fix", "bun run format"],
-    "fileFilters": [
-      "package.json",
-      "bun.lock",
-      "**/*.ts",
-      "**/*.js",
-      "**/*.json"
-    ],
+    "commands": ["bun install --frozen-lockfile || bun install"],
+    "fileFilters": ["package.json", "bun.lock"],
     "executionMode": "update"
   }
 }

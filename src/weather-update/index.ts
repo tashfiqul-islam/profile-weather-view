@@ -4,8 +4,8 @@
  */
 
 import "dotenv/config";
-import { fetchWeatherData } from "./services/fetchWeather";
-import { updateReadme } from "./services/updateReadme";
+import { fetchWeatherData } from "./services/fetch-weather";
+import { updateReadme } from "./services/update-readme";
 import { ensureEnvironmentVariables } from "./utils/preload";
 
 /** Builds a serializable error shape with timestamped context. */
@@ -80,9 +80,8 @@ export async function main(): Promise<void> {
   try {
     log("Starting weather update process...", "info");
 
-    // Basic environment context for troubleshooting
     const envInfo = [
-      `Environment: ${process.env["NODE_ENV"] || "development"}`,
+      `Environment: ${process.env["NODE_ENV"] ?? "development"}`,
       `GitHub Actions: ${process.env["GITHUB_ACTIONS"] ? "Yes" : "No"}`,
     ] as const;
 
@@ -96,11 +95,10 @@ export async function main(): Promise<void> {
     log("Environment variables validated", "success");
 
     // Fetch current weather data
-    log("Fetching weather data from OpenWeather API...", "info");
+    log("Fetching weather data from Open-Meteo API...", "info");
     const weatherData = await fetchWeatherData();
     log("Weather data fetched successfully", "success");
 
-    // Allow override of README path via env
     const customReadmePath = process.env["PROFILE_README_PATH"];
     if (customReadmePath) {
       log(`Using custom README path: ${customReadmePath}`, "info");
@@ -132,7 +130,6 @@ export async function main(): Promise<void> {
     log(`Script failed after ${duration.toFixed(2)}ms`, "error");
     log(`Error: ${errorInfo.message}`, "error");
 
-    // Provide extra guidance when running inside CI
     if (process.env["GITHUB_ACTIONS"]) {
       log("This error occurred during a GitHub Actions workflow run", "error");
       log("Check the workflow logs for more details", "info");
@@ -142,8 +139,7 @@ export async function main(): Promise<void> {
   }
 }
 
-// Execute unless running tests; surface failures with exit code for CI
-if (process.env["NODE_ENV"] !== "test") {
+if (process.env.NODE_ENV !== "test") {
   main().catch((error: unknown) => {
     const errorInfo = handleError(error);
     log(`Script execution failed: ${errorInfo.message}`, "error");

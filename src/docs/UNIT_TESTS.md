@@ -5,7 +5,7 @@ This guide explains how we write, run, and measure unit tests using Bun's built�
 ## Goals & principles
 
 - Deterministic and fast: no real network or filesystem I/O in unit tests
-- 100% coverage on core modules; CI threshold set to 90% global to avoid flakes
+- 100% coverage on all modules; CI enforces this threshold
 - Clear Arrange–Act–Assert structure, minimal mocking surface
 - Small, focused tests that validate behavior and error handling
 
@@ -15,65 +15,84 @@ This guide explains how we write, run, and measure unit tests using Bun's built�
 
 - Run all tests: `bun test`
 - Run all tests (watch): `bun test --watch`
-- Coverage (text, html, lcov): `bun test --coverage`
-- Run a specific file: `bun test tests/unit/services/fetchWeather.test.ts`
-- Filter by name: `bun test -t "retries on transient error"`
+- Coverage (text, lcov): `bun test --coverage`
+- Run a specific file: `bun test src/tests/unit/services/fetch-weather.test.ts`
+- Filter by name: `bun test -t "should fetch and transform"`
 
-HTML coverage is written to `coverage/`. Preview an exported HTML folder if present:
-
-```bash
-npx vite preview --outDir html
-```
+Coverage is written to `coverage/`. LCOV file at `coverage/lcov.info`.
 
 ---
 
 ## Directory layout & naming
 
-- Unit tests live under `tests/unit/**`. Fixtures and helpers live under `tests/fixtures` and `tests/utils`.
-- File naming: `*.test.ts` or `*.spec.ts`.
-- Colocate small tests when it improves readability; keep larger suites in `tests/unit/`.
+Tests live under `src/tests/`:
+
+```text
+src/tests/
+├── setup.ts                        # Global test setup (preloaded via bunfig.toml)
+├── unit/
+│   ├── basic.test.ts               # Infrastructure and helper tests
+│   ├── services/
+│   │   ├── fetch-weather.test.ts   # Open-Meteo API integration tests
+│   │   ├── update-readme.test.ts   # README update logic tests
+│   │   └── wmo-mapper.test.ts      # WMO code → Meteocons mapping tests
+│   └── utils/
+│       └── preload.test.ts         # Environment validation and rate limit tests
+└── utils/
+    └── weather-test-helpers.ts     # Shared test utilities and factories
+```
+
+File naming: `*.test.ts` or `*.spec.ts`.
 
 ---
 
 ## Environment & setup
 
-Global setup file: `tests/setup.ts` (loaded via `bunfig.toml` `test.preload`).
+Global setup file: `src/tests/setup.ts` (loaded via `bunfig.toml` `test.preload`).
 
-- Sets `NODE_ENV=test` and safe defaults for: `OPEN_WEATHER_KEY`, `FORCE_UPDATE`, `GITHUB_ACTIONS`.
-- Provides helpers for performance timing and temp file creation.
-- Uses `bun:test` primitives like `beforeAll`, `afterAll`, `beforeEach`, `afterEach`.
+- Sets `NODE_ENV=test` and safe defaults for environment variables
+- Provides helpers for performance timing and temp file creation
+- Uses `bun:test` primitives like `beforeAll`, `afterAll`, `beforeEach`, `afterEach`
 
 Execution environment:
 
-- Bun test runtime with isolated contexts.
-- Timeouts and coverage thresholds are configured in `bunfig.toml` under the `[test]` section.
+- Bun test runtime with isolated contexts
+- Timeouts and coverage thresholds are configured in `bunfig.toml` under the `[test]` section
 
-Aliases (if configured):
+Path aliases (configured in `tsconfig.json`):
 
-- Keep path usage consistent with `tsconfig.json` if using path aliases.
+- `@/*` → `src/*`
 
 ---
 
 ## Mocking strategy
 
-- Use `mock` from `bun:test` to create function mocks.
-- Replace `globalThis.fetch` with a small mock that validates URL, status, and returns `json()`/`text()`.
-- Prefer minimal, behavior‑focused stubs over broad module mocks.
-- Avoid real network and filesystem I/O in unit tests.
+- Use `mock` from `bun:test` to create function mocks
+- Replace `globalThis.fetch` with a mock that validates URL, status, and returns JSON
+- Prefer minimal, behavior‑focused stubs over broad module mocks
+- Avoid real network and filesystem I/O in unit tests
 
-Example (simplified):
+Example:
 
 ```ts
 import { describe, expect, mock, test } from "bun:test";
 
-// Example: mocking a dependency function
-const ensureEnvironmentVariables = mock(() => Promise.resolve({ OPEN_WEATHER_KEY: "X".repeat(32) }));
-const updateReadme = mock(() => Promise.resolve(true));
+describe("fetchWeatherData", () => {
+  test("should fetch and transform weather data successfully", async () => {
+    const mockResponse = {
+      current: { temperature_2m: 25, relative_humidity_2m: 60, weather_code: 0, is_day: 1 },
+      daily: { sunrise: [1704153600], sunset: [1704196800] },
+      utc_offset_seconds: 21600,
+    };
 
-test("sets CHANGES_DETECTED=true on successful update", async () => {
-  // Arrange mocks and call the unit under test
-  // Assert on output signals or return values
-  expect(await updateReadme()).toBe(true);
+    global.fetch = mock(() =>
+      Promise.resolve(Response.json(mockResponse))
+    ) as unknown as typeof fetch;
+
+    const result = await fetchWeatherData();
+    expect(result.temperatureC).toBe(25);
+    expect(result.icon).toBe("clear-day");
+  });
 });
 ```
 
@@ -83,17 +102,13 @@ test("sets CHANGES_DETECTED=true on successful update", async () => {
 
 Coverage settings (see `bunfig.toml` `[test]`):
 
-- Coverage enabled by default; Bun writes coverage artifacts to `coverage/`.
-- Thresholds (global): 90% branches/functions/lines/statements.
-- See `bunfig.toml` for `coverage`, `coverageSkipTestFiles`, and `coverageThreshold`.
+- Coverage enabled by default; Bun writes coverage artifacts to `coverage/`
+- Thresholds: 90% branches/functions/lines/statements (targeting 100%)
+- See `bunfig.toml` for `coverage`, `coverageSkipTestFiles`, and `coverageThreshold`
 
 Integration:
 
-- SonarCloud consumes `coverage/lcov.info` when configured.
-
-Raising the bar:
-
-- Increase `coverageThreshold` in `bunfig.toml` to 1.0 for stricter gates.
+- SonarCloud consumes `coverage/lcov.info` when configured
 
 ---
 
@@ -101,37 +116,52 @@ Raising the bar:
 
 Guidelines:
 
-- One behavior per test; name with intent (e.g., "throws when API key missing").
-- Keep asserts focused; prefer strict equality and specific messages.
-- Validate both success paths and failure modes (network, schema, rate limit).
-- Prefer shared factories/utilities from `tests/setup.ts` and `tests/utils`.
+- One behavior per test; name with intent (e.g., "should throw when array is empty")
+- Keep asserts focused; prefer strict equality and specific messages
+- Validate both success paths and failure modes
+- Prefer shared factories/utilities from `src/tests/setup.ts` and `src/tests/utils/`
 
 Typical pattern:
 
 ```ts
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
-describe("fetchWeatherData", () => {
-  test("retries on transient error then succeeds", async () => {
-    // arrange: first call fails, second succeeds
-    // act: call function under test
-    // assert: result is successful and call count matches
+describe("getFirstElement", () => {
+  test("should return first element from non-empty array", () => {
+    expect(getFirstElement([42, 100], "test")).toBe(42);
+  });
+
+  test("should throw error for empty array", () => {
+    expect(() => getFirstElement([], "sunrise")).toThrow(
+      "Missing sunrise data in API response"
+    );
   });
 });
 ```
 
-What to cover in this project:
+---
 
-- `fetchWeather.ts`
-  - Success mapping (description casing, icon defaults)
-  - Non‑OK responses (4xx without retry, 5xx with backoff retries)
+## What to cover
+
+- `fetch-weather.ts`
+  - Success mapping (temperature, humidity, WMO code → icon)
+  - Non‑OK responses (4xx, 5xx error handling)
   - Non‑Error rejections and JSON parse failures
   - Zod schema validation failures
-- `updateReadme.ts`
+  - `getFirstElement` helper for array extraction
+
+- `wmo-mapper.ts`
+  - Day/night icon mapping for all WMO codes
+  - Unknown code fallback
+  - URL generation for Meteocons CDN
+  - Description formatting
+
+- `update-readme.ts`
   - Marker detection and content replacement
   - Idempotency when content is identical; `FORCE_UPDATE` semantics
-  - Fallbacks for empty description/icon, refresh timestamp replacement
+  - Refresh timestamp replacement
   - Error paths: missing file, read/write failures
+
 - `preload.ts`
   - Env validation behavior and messages
   - Daily API call limit tracking and rollovers
@@ -141,23 +171,23 @@ What to cover in this project:
 
 ## Reporters
 
-Use Bun reporters via `--reporter` (e.g., `verbose`). Custom reporters require a separate runner; keep defaults unless needed.
+Use Bun reporters via `--reporter` (e.g., `verbose`). Default reporter provides clear pass/fail output.
 
 ---
 
 ## CI usage
 
-- `bun test --coverage` generates LCOV for SonarCloud.
-- Global thresholds guard quality; failing thresholds fail CI.
+- `bun test --coverage` generates LCOV for SonarCloud
+- Coverage thresholds guard quality; failing thresholds fail CI
 
 ---
 
 ## Troubleshooting
 
-- Tests exit early or hang: ensure no real network/file I/O; use stubs.
-- Coverage missing files: verify `bunfig.toml` coverage settings and paths.
-- Path alias errors: ensure aliases match both `bunfig.toml` (preload root) and `tsconfig.json`.
-- Timing flakiness: minimize reliance on real timers; isolate retry behavior and assert outcomes.
+- Tests exit early or hang: ensure no real network/file I/O; use stubs
+- Coverage missing files: verify `bunfig.toml` coverage settings and paths
+- Path alias errors: ensure aliases match both `bunfig.toml` (preload root) and `tsconfig.json`
+- Mock not working: use `as unknown as typeof fetch` for type casting
 
 ---
 

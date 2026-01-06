@@ -1,0 +1,75 @@
+name: Renovate Config Validation
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Workflow triggers
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  pull_request:
+    paths:
+      - "renovate.json"
+      - ".github/workflows/renovate-validation.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "renovate.json"
+  workflow_dispatch:
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Concurrency control
+# ─────────────────────────────────────────────────────────────────────────────
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Permissions (least privilege)
+# ─────────────────────────────────────────────────────────────────────────────
+permissions:
+  contents: read
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Jobs
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+  validate:
+    name: Validate Renovate Config
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: "lts/*"
+
+      - name: Validate Renovate configuration
+        run: |
+          echo "::group::Installing renovate CLI"
+          npm install --global renovate
+          echo "::endgroup::"
+
+          echo "::group::Validating renovate.json"
+          renovate-config-validator --strict
+          echo "::endgroup::"
+
+      - name: Generate summary
+        if: always()
+        run: |
+          {
+            echo "## Renovate Config Validation"
+            echo ""
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| **Status** | ${{ job.status == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| **Run ID** | \`${{ github.run_id }}\` |"
+            echo "| **Ref** | \`${{ github.ref_name }}\` |"
+            echo "| **SHA** | \`${{ github.sha }}\` |"
+            echo "| **Triggered by** | ${{ github.actor }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

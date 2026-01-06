@@ -8,7 +8,8 @@ import type {
   TemperatureCelsius,
   TimeString,
   WeatherUpdatePayload,
-} from "../../../src/weather-update/services/fetchWeather";
+} from "../../../src/weather-update/services/fetch-weather";
+import type { MeteoconIconName } from "../../../src/weather-update/services/wmo-mapper";
 
 // Types and constants used for shaping test data
 
@@ -184,15 +185,15 @@ export const WEATHER_TEST_CONSTANTS: {
     FOG: "Fog" as const,
   } as const,
 
-  // Icon codes
+  // Meteocons icon names
   ICONS: {
-    CLEAR_DAY: "01d" as const,
-    CLEAR_NIGHT: "01n" as const,
-    CLOUDY_DAY: "02d" as const,
-    CLOUDY_NIGHT: "02n" as const,
-    RAIN_DAY: "10d" as const,
-    RAIN_NIGHT: "10n" as const,
-    THUNDERSTORM: "11d" as const,
+    CLEAR_DAY: "clear-day" as const,
+    CLEAR_NIGHT: "clear-night" as const,
+    CLOUDY_DAY: "partly-cloudy-day" as const,
+    CLOUDY_NIGHT: "partly-cloudy-night" as const,
+    RAIN_DAY: "rain" as const,
+    RAIN_NIGHT: "rain" as const,
+    THUNDERSTORM: "thunderstorms-day" as const,
   } as const,
 
   // Temperature constants
@@ -238,13 +239,13 @@ export function createTestWeatherPayload(
     sunriseLocal: "06:00" as TimeString,
     sunsetLocal: "18:00" as TimeString,
     humidityPct: WEATHER_TEST_CONSTANTS.HUMIDITY.DEFAULT as HumidityPercentage,
-    icon: WEATHER_TEST_CONSTANTS.ICONS.CLEAR_DAY,
+    icon: WEATHER_TEST_CONSTANTS.ICONS.CLEAR_DAY as MeteoconIconName,
   } as const satisfies WeatherUpdatePayload;
 
   return { ...DEFAULT_PAYLOAD, ...overrides };
 }
 
-/** Produces a minimal OpenWeather-like API response (overrides allowed). */
+/** Produces a minimal API response (overrides allowed). */
 export function createMockOpenWeatherResponse(
   overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
@@ -296,7 +297,9 @@ export const README_TEST_CONSTANTS = {
   HUMIDITY_PATTERN: /\d+%/g,
   SUNRISE_PATTERN: /(Sunrise:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
   SUNSET_PATTERN: /(Sunset:?\s*)\d{1,2}:\d{2}(:\d{2})?/gi,
-  ICON_PATTERN: /openweathermap\.org\/img\/w\/\w+\.png/g,
+  ICON_PATTERN:
+    /raw\.githubusercontent\.com\/basmilius\/weather-icons\/[^"\s]+\.svg/g,
+  LEGACY_ICON_PATTERN: /openweathermap\.org\/img\/w\/\w+\.png/g,
   ALT_TEXT_PATTERN: /alt="[^"]*icon"/g,
 } as const;
 
@@ -305,12 +308,13 @@ export function createTestReadmeContent(
   weatherData?: WeatherUpdatePayload
 ): string {
   const weather = weatherData || createTestWeatherPayload();
+  const meteoconUrl = `https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/${weather.icon}.svg`;
 
   return `# Profile README
 
 ## Weather Information
 ${README_TEST_CONSTANTS.WEATHER_SECTION_START}
-![Weather](https://openweathermap.org/img/w/${weather.icon}.png)
+![Weather](${meteoconUrl})
 **${weather.description}** | ${weather.temperatureC}°C | Humidity: ${weather.humidityPct}%
 Sunrise: ${weather.sunriseLocal} | Sunset: ${weather.sunsetLocal}
 <em>Last refresh: Monday, January 01, 2024 at 12:00:00 (UTC+6)</em>
@@ -440,19 +444,19 @@ export const weatherTestData = {
   clearSky: () =>
     createTestWeatherPayload({
       description: WEATHER_TEST_CONSTANTS.WEATHER_CONDITIONS.CLEAR_SKY,
-      icon: WEATHER_TEST_CONSTANTS.ICONS.CLEAR_DAY,
+      icon: WEATHER_TEST_CONSTANTS.ICONS.CLEAR_DAY as MeteoconIconName,
     }),
 
   cloudy: () =>
     createTestWeatherPayload({
       description: WEATHER_TEST_CONSTANTS.WEATHER_CONDITIONS.CLOUDS,
-      icon: WEATHER_TEST_CONSTANTS.ICONS.CLOUDY_DAY,
+      icon: WEATHER_TEST_CONSTANTS.ICONS.CLOUDY_DAY as MeteoconIconName,
     }),
 
   rainy: () =>
     createTestWeatherPayload({
       description: WEATHER_TEST_CONSTANTS.WEATHER_CONDITIONS.RAIN,
-      icon: WEATHER_TEST_CONSTANTS.ICONS.RAIN_DAY,
+      icon: WEATHER_TEST_CONSTANTS.ICONS.RAIN_DAY as MeteoconIconName,
     }),
 
   extreme: () =>
@@ -460,7 +464,7 @@ export const weatherTestData = {
       description: WEATHER_TEST_CONSTANTS.WEATHER_CONDITIONS.THUNDERSTORM,
       temperatureC: 35 as TemperatureCelsius,
       humidityPct: 95 as HumidityPercentage,
-      icon: "11d",
+      icon: WEATHER_TEST_CONSTANTS.ICONS.THUNDERSTORM as MeteoconIconName,
     }),
 };
 

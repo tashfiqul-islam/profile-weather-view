@@ -47,6 +47,7 @@ pids
 coverage/
 .nyc_output/
 *.lcov
+test-results.xml
 
 # Caching
 .cache/
@@ -114,6 +115,8 @@ pids
 .vercel
 .serverless/
 .netlify/
+.claude/
+GEMINI.md
 
 # Security Scanning
 .scannerwork/

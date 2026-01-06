@@ -1,34 +1,46 @@
 /**
  * Semantic Release Configuration
- * Configuration for automated versioning and package publishing
+ * Automated versioning and package publishing based on commit conventions
+ *
+ * @type {import('semantic-release').GlobalConfig}
+ * @see https://semantic-release.gitbook.io/semantic-release/usage/configuration
  */
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Lodash Template Strings (interpolated by semantic-release at runtime)
+// Using unicode escapes to prevent premature template literal evaluation
+// ─────────────────────────────────────────────────────────────────────────────
+const TAG_FORMAT = "v\u0024{version}";
+const RELEASE_MESSAGE =
+  "chore(release): v\u0024{nextRelease.version} [skip ci]\n\n\u0024{nextRelease.notes}";
+const SUCCESS_COMMENT =
+  "🚀 This PR is included in version \u0024{nextRelease.version}";
+const FAIL_COMMENT =
+  "❌ Release automation failed with error: \u0024{error.message}";
+
 export default {
-  /**
-   * Branches that trigger releases
-   */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Branch Configuration
+  // ─────────────────────────────────────────────────────────────────────────────
   branches: [
     "+([0-9])?(.{+([0-9]),x}).x", // Maintenance branches: 1.x, 1.2.x
     "master", // Main release branch
+    { name: "next", prerelease: true }, // Next channel releases
     { name: "beta", prerelease: true }, // Beta releases
     { name: "alpha", prerelease: true }, // Alpha releases
   ],
 
-  /**
-   * Format of the release tag
-   */
-  tagFormat: "v${version}",
-
-  /**
-   * CI configuration and execution options
-   */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Release Configuration
+  // ─────────────────────────────────────────────────────────────────────────────
+  tagFormat: TAG_FORMAT,
   ci: true,
   debug: process.env.DEBUG === "true",
   dryRun: process.env.DRY_RUN === "true",
 
-  /**
-   * Plugin configuration pipeline
-   */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Plugin Pipeline (order matters)
+  // ─────────────────────────────────────────────────────────────────────────────
   plugins: [
     /**
      * Analyze commits using conventional commit format
@@ -217,7 +229,7 @@ export default {
           "bunfig.toml",
           "README.md",
         ],
-        message: "chore(release): v${nextRelease.version} [skip ci]",
+        message: RELEASE_MESSAGE,
       },
     ],
 
@@ -227,13 +239,12 @@ export default {
     [
       "@semantic-release/github",
       {
-        assets: [],
-        successComment:
-          "🚀 This PR is included in version ${nextRelease.version}",
-        failComment:
-          "❌ Release automation failed with error: ${error.message}",
+        assets: [{ path: "CHANGELOG.md", label: "Changelog" }],
+        successComment: SUCCESS_COMMENT,
+        failComment: FAIL_COMMENT,
         releasedLabels: ["released", "ready-for-production"],
         addReleases: "bottom",
+        discussionCategoryName: false,
         githubOptions: {
           request: {
             timeout: 10_000,
@@ -243,9 +254,9 @@ export default {
     ],
   ],
 
-  /**
-   * Global repository configuration
-   */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Repository Configuration
+  // ─────────────────────────────────────────────────────────────────────────────
   repositoryUrl:
     process.env.REPOSITORY_URL ||
     "https://github.com/tashfiqul-islam/profile-weather-view",

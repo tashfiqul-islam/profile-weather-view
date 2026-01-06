@@ -25,7 +25,7 @@ Rules
 - Use lowercase `type` and optional `(scope)`
 - Max header length: 100 chars
 - No trailing period in subject
-- Use imperative mood: “add”, “fix”, “update”, not “added” or “fixes”
+- Use imperative mood: "add", "fix", "update", not "added" or "fixes"
 - Wrap body/footer lines at ~100 chars
 - Breaking changes: add `!` after type/scope OR a `BREAKING CHANGE:` footer
 
@@ -71,13 +71,13 @@ Examples
 
 Indicate breaking changes using either method:
 
-- Exclamation mark: `feat(api)!: switch to One Call 3.0`
+- Exclamation mark: `feat(api)!: switch to Open-Meteo API`
 - Footer: add a paragraph starting with `BREAKING CHANGE:`
 
 Example footer
 
 ```text
-BREAKING CHANGE: rename env var OPEN_WEATHER_KEY → WEATHER_API_KEY
+BREAKING CHANGE: switched from OpenWeather to Open-Meteo API; no API key required
 ```
 
 ---
@@ -116,9 +116,9 @@ Valid
 ```text
 feat(weather): add humidity to output table
 fix(ci): correct cache key for bun.lock
-chore(deps): update vitest to 3.2.4 [skip actions]
+chore(deps): update zod to 4.x [skip actions]
 docs(workflows): document signed commits and permissions
-refactor(core): extract request builder from fetchWeather
+refactor(core): extract WMO mapper to separate module
 perf(utils): memoize computed timezone offsets
 security(api): mask token in logs
 ```
@@ -126,9 +126,9 @@ security(api): mask token in logs
 Breaking
 
 ```text
-feat(api)!: migrate to One Call 3.0 endpoint
+feat(api)!: migrate to Open-Meteo with Meteocons
 
-BREAKING CHANGE: payload shape changed for current weather
+BREAKING CHANGE: replaced OpenWeather with Open-Meteo API; icon format changed to WMO codes
 ```
 
 Revert
@@ -143,14 +143,14 @@ This reverts commit <sha>.
 
 ## Workflow & tooling
 
-- Husky `commit-msg` hook validates commits locally
-- Commitlint enforces the spec and custom rules (see `commitlint.config.mjs`)
+- Lefthook `commit-msg` hook validates commits locally
+- Commitlint enforces the spec and custom rules (see `commitlint.config.mts`)
 - Optional interactive prompt: `bun run commit`
 - CI also validates commit messages in PRs
 
 ---
 
-## Do/Don’t
+## Do/Don't
 
 Do
 
@@ -158,11 +158,11 @@ Do
 - Use accurate scope and type for better release notes
 - Reference issues in footer (not subject)
 
-Don’t
+Don't
 
 - Use capitalization or emojis in the subject
 - End the subject with a period
-- Use vague subjects like “update files”
+- Use vague subjects like "update files"
 
 ---
 

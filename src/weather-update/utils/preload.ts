@@ -1,23 +1,18 @@
 /**
  * Preload utilities for environment validation and simple API rate limiting.
- * Comments focus on intent, constraints, and non-obvious behavior.
+ * Ensures configuration is valid before weather updates run.
  */
 
 import "dotenv/config";
 // biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for schema typing
 import * as z from "zod";
 
-// API key boundaries and debug preview length
-const API_KEY_MIN_LENGTH = 32 as const;
-const API_KEY_MAX_LENGTH = 100 as const;
-const PREVIEW_LENGTH = 8 as const;
-
-// Used to append a location suffix when reporting validation errors
-const NON_EMPTY_CAPTURE = /^(.)+$/;
-
-// Simple per-day limit stored locally to avoid accidental overuse
+/**
+ * Rate limit configuration.
+ * Prevents accidental API overuse in CI environments.
+ */
 const RATE_LIMIT_CONFIG = {
-  maxCallsPerDay: 15 as const,
+  maxCallsPerDay: 1000 as const,
   trackingFile: ".api-calls.json" as const,
   resetTime: "00:00" as const, // Reset at midnight UTC
 } as const;
@@ -137,74 +132,37 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   return true;
 }
 
-// Validates OPEN_WEATHER_KEY format before use
+/** Environment schema for optional configuration. */
 const EnvironmentSchema = z.object({
-  OPEN_WEATHER_KEY: z
+  FORCE_UPDATE: z
     .string()
-    .min(
-      API_KEY_MIN_LENGTH,
-      `API key must be at least ${API_KEY_MIN_LENGTH} characters`
-    )
-    .max(
-      API_KEY_MAX_LENGTH,
-      `API key must be less than ${API_KEY_MAX_LENGTH} characters`
-    )
-    .regex(
-      /^[a-zA-Z0-9]+$/,
-      "API key must contain only alphanumeric characters"
-    )
-    .describe("OpenWeather API key for weather data access"),
+    .optional()
+    .describe("Force README update even if no changes"),
+  GITHUB_ACTIONS: z.string().optional().describe("Running in GitHub Actions"),
 });
 
-type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
+export type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
 
-// Printed as guidance when env validation fails
-const SETUP_INSTRUCTIONS = `
-📋 Setup Instructions:
-1. Create a .env file in your project root
-2. Add your OpenWeather API key: OPEN_WEATHER_KEY=your_api_key_here
-3. Get your API key from: https://home.openweathermap.org/api_keys
-4. Restart your development server
-
-💡 Example .env file:
-OPEN_WEATHER_KEY=1234567890abcdef1234567890abcdef` as const;
-
-/** Validates OPEN_WEATHER_KEY and prints a short debug summary. */
+/** Validates optional environment variables. */
 export function validateEnvironmentVariables(): EnvironmentVariables {
-  // Validate environment variables
-  const envResult = EnvironmentSchema.safeParse({
-    OPEN_WEATHER_KEY: Bun.env["OPEN_WEATHER_KEY"]?.trim(),
+  const env = EnvironmentSchema.parse({
+    FORCE_UPDATE: Bun.env["FORCE_UPDATE"],
+    GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
   });
 
-  if (!envResult.success) {
-    const errorMessages = envResult.error.issues
-      .map((issue) => {
-        const joinedPath = issue.path.join(".");
-        const suffix = joinedPath.replace(NON_EMPTY_CAPTURE, " at $1");
-        return `${issue.message}${suffix}`;
-      })
-      .join("; ");
-
-    throw new Error(
-      `Environment validation failed: ${errorMessages}${SETUP_INSTRUCTIONS}`
-    );
-  }
-
-  // Log environment variable status for debugging (no secrets exposed)
-  const apiKey = envResult.data.OPEN_WEATHER_KEY;
+  // Log environment status for debugging
   const debugInfo = [
-    "🔍 Environment variable check:",
-    `  OPEN_WEATHER_KEY exists: ${Boolean(apiKey)}`,
-    `  OPEN_WEATHER_KEY length: ${apiKey.length}`,
-    `  OPEN_WEATHER_KEY preview: ${apiKey.substring(0, PREVIEW_LENGTH)}...`,
+    "🔍 Environment check:",
+    `  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`,
+    `  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`,
   ].join("\n");
 
   process.stdout.write(`${debugInfo}\n`);
 
-  return envResult.data;
+  return env;
 }
 
-/** Ensures API limit allows execution, then validates environment variables. */
+/** Ensures API limit allows execution and validates environment. */
 export async function ensureEnvironmentVariables(): Promise<EnvironmentVariables> {
   // Check API call limit first
   if (!(await checkAndUpdateApiLimit())) {

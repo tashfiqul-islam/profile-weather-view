@@ -1,8 +1,8 @@
-name: "Sync README Tech Stack"
+name: Sync README Tech Stack
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Workflow triggers
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     branches: [master]
@@ -11,47 +11,48 @@ on:
       - "bun.lock"
   workflow_dispatch:
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Concurrency control
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Permissions
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 permissions:
   contents: write
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Jobs
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 jobs:
   sync:
-    name: "Sync Versions & Footer"
+    name: Sync Versions & Footer
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    if: |
-      !contains(github.event.head_commit.message, '[skip actions]')
+    if: "!contains(github.event.head_commit.message, '[skip actions]')"
+
     env:
       CACHE_KEY_PREFIX: v4-sync-readme
       TIMEZONE: Asia/Dhaka
+
     steps:
-      - name: "Checkout Repository"
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
-      - name: "Setup Bun"
-        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979 # v2.1.0
         with:
           bun-version: latest
 
-      - name: "Restore Dependencies Cache"
+      - name: Restore dependencies cache
         id: cache-deps
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: |
             ~/.bun/install/cache
@@ -59,7 +60,7 @@ jobs:
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
 
-      - name: "Install Dependencies (no scripts)"
+      - name: Install dependencies
         run: |
           if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
             echo "::group::Installing dependencies"
@@ -67,17 +68,16 @@ jobs:
           else
             echo "::notice::Using cached dependencies"
           fi
-          # Avoid running Lefthook or other lifecycle scripts during CI
           LEFTHOOK=0 bun install --no-summary --ignore-scripts
           echo "::endgroup::"
 
-      - name: "Sync README tech stack badges & footer"
+      - name: Sync README tech stack badges & footer
         run: |
           echo "::group::Sync README"
           bun run sync-readme-tech-stack
           echo "::endgroup::"
 
-      - name: "📝 Check for lockfile changes"
+      - name: Check for lockfile changes
         id: lockfile-check
         run: |
           if [[ -n "$(git status --porcelain bun.lock)" ]]; then
@@ -88,20 +88,26 @@ jobs:
             echo "::notice::No lockfile changes detected"
           fi
 
-      - name: "Validate GPG secret format"
+      - name: Validate GPG secret format
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
           if [ -z "${GPG_PRIVATE_KEY}" ]; then
-            echo "::error::Missing secret GPG_PRIVATE_KEY"; exit 1; fi
+            echo "::error::Missing secret GPG_PRIVATE_KEY"
+            exit 1
+          fi
           if ! grep -q "BEGIN PGP PRIVATE KEY BLOCK" <<< "${GPG_PRIVATE_KEY}"; then
-            echo "::error::GPG_PRIVATE_KEY is not ASCII-armored. Re-export with 'gpg --export-secret-keys --armor KEY_ID' and paste full block including BEGIN/END lines."; exit 1; fi
+            echo "::error::GPG_PRIVATE_KEY is not ASCII-armored. Re-export with 'gpg --export-secret-keys --armor KEY_ID' and paste full block including BEGIN/END lines."
+            exit 1
+          fi
           if ! grep -q "END PGP PRIVATE KEY BLOCK" <<< "${GPG_PRIVATE_KEY}"; then
-            echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."; exit 1; fi
+            echo "::error::GPG_PRIVATE_KEY footer missing. Ensure END line is present."
+            exit 1
+          fi
 
-      - name: "Setup GPG for Commit Signing"
+      - name: Setup GPG for commit signing
         id: gpg
-        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -112,17 +118,16 @@ jobs:
         env:
           GPG_TTY: /dev/console
 
-      - name: "Configure Git Identity"
+      - name: Configure Git identity
         run: |
           git config --global user.name "${{ secrets.GIT_COMMITTER_NAME || github.repository_owner }}"
           git config --global user.email "${{ secrets.GIT_COMMITTER_EMAIL }}"
 
-      - name: "Commit Changes"
+      - name: Commit changes
         id: commit
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git add README.md
-            # Add lockfile if it changed
             if [[ "${{ steps.lockfile-check.outputs.lockfile_changed }}" == "true" ]]; then
               git add bun.lock
               echo "::notice::Including lockfile changes in commit"
@@ -136,17 +141,32 @@ jobs:
             echo "did_commit=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: "Push"
+      - name: Push changes
         if: steps.commit.outputs.did_commit == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
 
-      - name: "Save Dependencies Cache"
+      - name: Save dependencies cache
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: |
             ~/.bun/install/cache
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+
+      - name: Generate summary
+        if: always()
+        run: |
+          {
+            echo "## README Tech Stack Sync"
+            echo ""
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| **Status** | ${{ job.status == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| **Committed** | ${{ steps.commit.outputs.did_commit == 'true' && '✅ Yes' || '⏭️ No changes' }} |"
+            echo "| **Lockfile** | ${{ steps.lockfile-check.outputs.lockfile_changed == 'true' && '📦 Updated' || '✓ Unchanged' }} |"
+            echo "| **Run ID** | \`${{ github.run_id }}\` |"
+            echo "| **Ref** | \`${{ github.ref_name }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

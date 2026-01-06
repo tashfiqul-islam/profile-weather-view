@@ -1,120 +1,110 @@
 # Bun Configuration File
 # https://bun.sh/docs/runtime/bunfig
 
-# ============================================================
-# 🧪 Test Configuration
-# ============================================================
-[test]
-# Test discovery patterns (Bun's default patterns)
-# *.test.{js|jsx|ts|tsx}
-# *_test.{js|jsx|ts|tsx}
-# *.spec.{js|jsx|ts|tsx}
-# *_spec.{js|jsx|ts|tsx}
+# ═══════════════════════════════════════════════════════════════════════════════
+# Runtime Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
 
+# Preload scripts for all Bun executions
+preload = ["./src/weather-update/utils/preload.ts"]
+
+# Log level: "debug" | "warn" | "error"
+logLevel = "warn"
+
+# Disable telemetry (optional - respects DO_NOT_TRACK env var)
+telemetry = false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Console Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[console]
+# Object inspection depth for console.log()
+depth = 4
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Test Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[test]
 # Root directory for test discovery
 root = "src/tests"
 
-# Preload scripts for global test setup
+# Preload scripts for test setup
 preload = ["./src/tests/setup.ts"]
 
-# Coverage configuration
+# Coverage settings
 coverage = true
-coverageSkipTestFiles = true  # Exclude test files from coverage
-
-# Coverage thresholds (90% for all metrics)
+coverageSkipTestFiles = true
 coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
-
-# Coverage reporters (text for console, lcov for CI)
 coverageReporter = ["text", "lcov"]
-
-# Coverage output directory
 coverageDir = "coverage"
 
-# Exclude patterns from coverage reports
+# Exclude patterns from coverage
 coveragePathIgnorePatterns = [
   "**/*.test.ts",
   "**/*.spec.ts",
   "**/tests/**",
   "**/node_modules/**",
   "**/dist/**",
-  "**/*.config.*",
-  "**/coverage/**"
+  "**/coverage/**",
 ]
 
-# Test execution configuration
-randomize = true  # Randomize test order to catch dependencies
-rerunEach = 1    # Number of times to rerun each test file
+# Test execution
+randomize = true
+seed = 42                    # Reproducible random order for debugging flaky tests
+rerunEach = 0                # Set > 0 to catch flaky tests
 
-# Timeout configuration (15 seconds for API calls)
-timeout = 15000
+# Run integration tests concurrently
+concurrentTestGlob = "**/integration/**/*.test.ts"
 
-# Enable concurrent test execution for better performance
-# Tests will run concurrently unless marked with .serial
+# Reporter configuration (Bun 1.3+)
+[test.reporter]
+dots = false                 # Compact dot output (set true for CI)
+junit = "test-results.xml"   # JUnit XML for CI integration
 
-# Enable smol mode for reduced memory usage
-smol = false  # Keep false for better performance in CI
+# ═══════════════════════════════════════════════════════════════════════════════
+# Package Manager Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# Test file patterns for concurrent execution
-# Run integration tests concurrently, unit tests sequentially
-concurrentTestGlob = [
-  "**/integration/*.test.ts",
-  "**/e2e/*.test.ts"
-]
-
-# Environment variables for tests
-[test.env]
-NODE_ENV = "test"
-CI = "true"
-
-# ============================================================
-# 📦 Package Management Configuration
-# ============================================================
 [install]
-# Default registry
-registry = "https://registry.npmjs.org"
+# Lock exact versions for reproducible builds
+exact = true
 
-# Install behavior
-production = false  # Include devDependencies by default
-dev = true         # Install devDependencies
-optional = true    # Install optionalDependencies
-peer = true        # Install peerDependencies
+# Text-based lockfile (bun.lock) - easier to review in PRs
+saveTextLockfile = true
 
-# Lockfile configuration
-[install.lockfile]
-save = true  # Generate bun.lock file
-print = "yarn"  # Also generate yarn.lock for compatibility
+# Linker strategy: "hoisted" | "isolated"
+# "isolated" is stricter and recommended for new projects
+linker = "hoisted"
 
-# Cache configuration
+# Auto-install behavior: "auto" | "force" | "disable" | "fallback"
+auto = "fallback"
+
 [install.cache]
-dir = "~/.bun/install/cache"
-disable = false  # Use global cache
-disableManifest = false  # Always resolve latest versions
+# Disable to always resolve fresh versions (useful for CI)
+disableManifest = false
 
-# Global installation directories
-globalDir = "~/.bun/install/global"
-globalBinDir = "~/.bun/bin"
+[install.lockfile]
+save = true
 
-# ============================================================
-# 🚀 Runtime Configuration
-# ============================================================
-# Preload scripts for all Bun executions
-preload = ["./src/weather-update/utils/preload.ts"]
+# ═══════════════════════════════════════════════════════════════════════════════
+# Run Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# Console configuration
-[console]
-depth = 3  # Object inspection depth
-
-# Log level
-logLevel = "warn"  # "debug" | "warn" | "error"
-
-# ============================================================
-# 🔧 Development Configuration
-# ============================================================
 [run]
-# Use Bun for all bun run commands (Node.js compatibility)
+# Use Bun's shell for cross-platform consistency
+shell = "bun"
+
+# Auto-alias `node` to `bun` in scripts
 bun = true
 
-# Shell configuration
-shell = "system"  # Use system shell (not bun shell)
+# Suppress "Running..." output
+silent = false
 
- 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Environment Variables
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[env]
+NODE_ENV = "development"

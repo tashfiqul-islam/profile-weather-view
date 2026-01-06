@@ -1,6 +1,5 @@
 /**
  * Tests for preload.ts: rate limit tracking and env validation behavior.
- * Covers success, failure, and edge cases.
  */
 
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
@@ -14,15 +13,6 @@ import {
 
 // Common values and fixtures used across tests
 const TEST_CONSTANTS = {
-  // API Key constants
-  VALID_API_KEY: "1234567890abcdef1234567890abcdef", // 32 chars
-  VALID_API_KEY_LONG:
-    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcde", // 95 chars
-  INVALID_API_KEY_SHORT: "1234567890abcdef1234567890abcde", // 31 chars
-  INVALID_API_KEY_LONG:
-    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345", // 101 chars
-  INVALID_API_KEY_SPECIAL: "1234567890abcdef1234567890abc@ef", // 32 chars with special char
-
   // Date constants
   TODAY_DATE: "2024-01-15",
   YESTERDAY_DATE: "2024-01-14",
@@ -32,35 +22,34 @@ const TEST_CONSTANTS = {
   CURRENT_TIME: "14:30",
   LAST_CALL_TIME: "13:45",
 
-  // Rate limiting constants
-  MAX_CALLS_PER_DAY: 15,
+  // Rate limiting constants (updated for Open-Meteo)
+  MAX_CALLS_PER_DAY: 1000, // Open-Meteo allows much more
   TRACKING_FILE: ".api-calls.json",
 
   // Mock data
   VALID_TRACKING_DATA: {
     date: "2024-01-15",
-    calls: 5,
+    calls: 500,
     lastCall: "13:45",
   },
   TRACKING_DATA_WITHOUT_LAST_CALL: {
     date: "2024-01-15",
-    calls: 3,
+    calls: 300,
   },
   TRACKING_DATA_LIMIT_REACHED: {
     date: "2024-01-15",
-    calls: 15,
+    calls: 1000, // Updated for new limit
     lastCall: "13:45",
   },
   TRACKING_DATA_OLD_DATE: {
     date: "2024-01-14",
-    calls: 10,
+    calls: 800,
     lastCall: "23:59",
   },
 
   // Error messages
   API_LIMIT_EXCEEDED_MESSAGE:
     "API call limit exceeded - cannot proceed with weather update",
-  ENVIRONMENT_VALIDATION_FAILED_MESSAGE: "Environment validation failed:",
 } as const;
 
 // Test setup & utilities
@@ -182,7 +171,9 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain("📊 API call 6/15 (9 remaining today)\n");
+      expect(stdoutCalls).toContain(
+        "📊 API call 501/1000 (499 remaining today)\n"
+      );
     } finally {
       restoreDate();
     }
@@ -211,7 +202,7 @@ describe("checkAndUpdateApiLimit", () => {
         stderrCalls.some((call) => call.includes("📅 Date: 2024-01-15"))
       ).toBeTrue();
       expect(
-        stderrCalls.some((call) => call.includes("📊 Calls made: 15"))
+        stderrCalls.some((call) => call.includes("📊 Calls made: 1000"))
       ).toBeTrue();
       expect(
         stderrCalls.some((call) => call.includes("⏰ Last call: 13:45"))
@@ -239,7 +230,9 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain("📊 API call 1/15 (14 remaining today)\n");
+      expect(stdoutCalls).toContain(
+        "📊 API call 1/1000 (999 remaining today)\n"
+      );
     } finally {
       restoreDate();
     }
@@ -286,7 +279,9 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain("📊 API call 1/15 (14 remaining today)\n");
+      expect(stdoutCalls).toContain(
+        "📊 API call 1/1000 (999 remaining today)\n"
+      );
     } finally {
       restoreDate();
     }
@@ -350,138 +345,54 @@ describe("checkAndUpdateApiLimit", () => {
 });
 
 describe("validateEnvironmentVariables", () => {
-  test("should validate valid API key", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.VALID_API_KEY;
+  test("should validate successfully and log debug info", () => {
+    Bun.env["FORCE_UPDATE"] = "true";
 
     // Execute
     const result = validateEnvironmentVariables();
 
     // Verify
-    expect(result.OPEN_WEATHER_KEY).toBe(TEST_CONSTANTS.VALID_API_KEY);
+    expect(result).toBeDefined();
+    expect(result.FORCE_UPDATE).toBe("true");
+
+    // Check if debug intro was logged (covers line 163)
     expect(
-      stdoutCalls.some((call) =>
-        call.includes("🔍 Environment variable check:")
-      )
+      stdoutCalls.some((call) => call.includes("🔍 Environment check:"))
     ).toBeTrue();
+
+    // Verify variable logging
     expect(
-      stdoutCalls.some((call) => call.includes("OPEN_WEATHER_KEY exists: true"))
-    ).toBeTrue();
-    expect(
-      stdoutCalls.some((call) => call.includes("OPEN_WEATHER_KEY length: 32"))
-    ).toBeTrue();
-    expect(
-      stdoutCalls.some((call) =>
-        call.includes("OPEN_WEATHER_KEY preview: 12345678...")
-      )
+      stdoutCalls.some((call) => call.includes("FORCE_UPDATE: true"))
     ).toBeTrue();
   });
 
-  test("should validate valid long API key", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.VALID_API_KEY_LONG;
+  test("should handle missing FORCE_UPDATE gracefully", () => {
+    Bun.env["FORCE_UPDATE"] = "";
+
+    // Execute
+    const result = validateEnvironmentVariables();
+
+    expect(result).toBeDefined();
+    expect(result.FORCE_UPDATE).toBe("");
+  });
+
+  test("should detect GitHub Actions environment", () => {
+    Bun.env["GITHUB_ACTIONS"] = "true";
 
     // Execute
     const result = validateEnvironmentVariables();
 
     // Verify
-    expect(result.OPEN_WEATHER_KEY).toBe(TEST_CONSTANTS.VALID_API_KEY_LONG);
+    expect(result.GITHUB_ACTIONS).toBe("true");
     expect(
-      stdoutCalls.some((call) => call.includes("OPEN_WEATHER_KEY length: 95"))
+      stdoutCalls.some((call) => call.includes("GITHUB_ACTIONS: true"))
     ).toBeTrue();
-  });
-
-  test("should handle API key with whitespace", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = `  ${TEST_CONSTANTS.VALID_API_KEY}  `;
-
-    // Execute
-    const result = validateEnvironmentVariables();
-
-    // Verify
-    expect(result.OPEN_WEATHER_KEY).toBe(TEST_CONSTANTS.VALID_API_KEY);
-  });
-
-  test("should throw error for missing API key", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = undefined;
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
-    );
-  });
-
-  test("should throw error for empty API key", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = "";
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
-    );
-  });
-
-  test("should throw error for API key that's too short", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.INVALID_API_KEY_SHORT;
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
-    );
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "API key must be at least 32 characters"
-    );
-  });
-
-  test("should throw error for API key that's too long", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.INVALID_API_KEY_LONG;
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
-    );
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "API key must be less than 100 characters"
-    );
-  });
-
-  test("should throw error for API key with special characters", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.INVALID_API_KEY_SPECIAL;
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
-    );
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "API key must contain only alphanumeric characters"
-    );
-  });
-
-  test("should include setup instructions in error message", () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = "";
-
-    // Execute & Verify
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "📋 Setup Instructions:"
-    );
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "Create a .env file in your project root"
-    );
-    expect(() => validateEnvironmentVariables()).toThrow(
-      "Add your OpenWeather API key: OPEN_WEATHER_KEY=your_api_key_here"
-    );
   });
 });
 
 describe("ensureEnvironmentVariables", () => {
-  test("should succeed when API limit allows and environment is valid", async () => {
+  test("should succeed when API limit allows", async () => {
     // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.VALID_API_KEY;
     const mockFile = createMockFile(
       true,
       JSON.stringify(TEST_CONSTANTS.VALID_TRACKING_DATA)
@@ -494,7 +405,7 @@ describe("ensureEnvironmentVariables", () => {
       const result = await ensureEnvironmentVariables();
 
       // Verify
-      expect(result.OPEN_WEATHER_KEY).toBe(TEST_CONSTANTS.VALID_API_KEY);
+      expect(result).toBeDefined();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
     } finally {
       restoreDate();
@@ -503,7 +414,6 @@ describe("ensureEnvironmentVariables", () => {
 
   test("should throw error when API limit is exceeded", async () => {
     // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = TEST_CONSTANTS.VALID_API_KEY;
     const mockFile = createMockFile(
       true,
       JSON.stringify(TEST_CONSTANTS.TRACKING_DATA_LIMIT_REACHED)
@@ -515,26 +425,6 @@ describe("ensureEnvironmentVariables", () => {
       // Execute & Verify
       await expect(ensureEnvironmentVariables()).rejects.toThrow(
         TEST_CONSTANTS.API_LIMIT_EXCEEDED_MESSAGE
-      );
-    } finally {
-      restoreDate();
-    }
-  });
-
-  test("should throw error when environment validation fails", async () => {
-    // Setup
-    Bun.env["OPEN_WEATHER_KEY"] = "";
-    const mockFile = createMockFile(
-      true,
-      JSON.stringify(TEST_CONSTANTS.VALID_TRACKING_DATA)
-    );
-    mockBunFile.mockReturnValue(mockFile as any);
-    const restoreDate = mockDate("2024-01-15T14:30:00Z");
-
-    try {
-      // Execute & Verify
-      await expect(ensureEnvironmentVariables()).rejects.toThrow(
-        TEST_CONSTANTS.ENVIRONMENT_VALIDATION_FAILED_MESSAGE
       );
     } finally {
       restoreDate();

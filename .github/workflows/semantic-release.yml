@@ -1,8 +1,8 @@
-name: "Semantic Release"
+name: Semantic Release
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Workflow triggers
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     branches:
@@ -19,42 +19,42 @@ on:
         type: boolean
         default: false
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Concurrency control
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Permissions
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 permissions:
   contents: write
   issues: write
   pull-requests: write
   id-token: write
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Environment variables
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 env:
-  NODE_ENV: "production"
+  NODE_ENV: production
   BUN_RUNTIME_SAFETY: "true"
   DEBUG: ${{ (github.event.inputs.debug == 'true' && 'semantic-release:*') || '' }}
   DRY_RUN: ${{ (github.event.inputs.dry_run == 'true' && 'true') || 'false' }}
-  GIT_AUTHOR_NAME: "GitHub Actions"
-  GIT_AUTHOR_EMAIL: "github-actions@github.com"
-  GIT_COMMITTER_NAME: "GitHub Actions"
-  GIT_COMMITTER_EMAIL: "github-actions@github.com"
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
   LEFTHOOK: "0"
 
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 # Jobs
-# ============================================================
+# ─────────────────────────────────────────────────────────────────────────────
 jobs:
   release:
-    name: "🚀 Release"
+    name: 🚀 Release
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -63,30 +63,22 @@ jobs:
       latest_tag: ${{ steps.check-release.outputs.latest_tag }}
       provenance_assets: ${{ steps.generate-provenance.outputs.provenance_assets }}
       skip_ci: ${{ steps.skip-ci-check.outputs.skip_ci }}
+
     steps:
-      # ============================================================
-      # Checkout Repository
-      # ============================================================
-      - name: "Checkout Repository"
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # ============================================================
-      # Setup Bun
-      # ============================================================
-      - name: "Setup Bun"
-        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979 # v2.1.0
         with:
           bun-version: latest
 
-      # ============================================================
-      # Restore Dependencies Cache
-      # ============================================================
-      - name: "Restore Dependencies Cache"
+      - name: Restore dependencies cache
         id: cache-deps
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: |
             ~/.bun/install/cache
@@ -94,10 +86,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bun-
 
-      # ============================================================
-      # Install Dependencies
-      # ============================================================
-      - name: "Install Dependencies"
+      - name: Install dependencies
         run: |
           if [[ "${{ steps.cache-deps.outputs.cache-hit }}" != "true" ]]; then
             echo "::group::Installing dependencies"
@@ -107,21 +96,17 @@ jobs:
           bun install --frozen-lockfile --no-summary
           echo "::endgroup::"
 
-      - name: "Save Dependencies Cache"
+      - name: Save dependencies cache
         if: always() && steps.cache-deps.outputs.cache-hit != 'true'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: |
             ~/.bun/install/cache
           key: ${{ steps.cache-deps.outputs.cache-primary-key }}
 
-      # ============================================================
-      # Check for Skip CI Commits
-      # ============================================================
-      - name: "Check for Skip CI Commits"
+      - name: Check for skip CI commits
         id: skip-ci-check
         run: |
-          # Check if the current commit message contains [skip ci] or similar
           COMMIT_MSG=$(git log -1 --pretty=%B)
           if echo "$COMMIT_MSG" | grep -qE '\[skip ci\]|\[ci skip\]|\[no ci\]|\[skip actions\]'; then
             echo "skip_ci=true" >> $GITHUB_OUTPUT
@@ -131,21 +116,15 @@ jobs:
             echo "✅ No skip CI detected. Running full validation."
           fi
 
-      # ============================================================
-      # Validate Project (only if not dry-run and not skip ci)
-      # ============================================================
-      - name: "Validate Project"
-        if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
+      - name: Validate project
+        if: env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true'
         run: |
           echo "::group::Project Validation"
-          bun run type-check && bun run src/scripts/test-pretty.ts --no-live && bunx ultracite fix src && bunx ultracite check src
+          bun run typecheck && bun run src/scripts/test-pretty.ts --no-live && bunx ultracite fix src && bunx ultracite check src
           echo "::endgroup::"
 
-      # ============================================================
-      # Security Audit (optional, continue on error)
-      # ============================================================
-      - name: "Security Audit"
-        if: ${{ env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true' }}
+      - name: Security audit
+        if: env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true'
         continue-on-error: true
         run: |
           echo "::group::Security Audit"
@@ -157,20 +136,16 @@ jobs:
           fi
           echo "::endgroup::"
 
-      # ============================================================
-      # Run Semantic Release
-      # ============================================================
-      - name: "Setup Node"
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - name: Setup Node.js
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: "lts/*"
 
-      - name: "Run Semantic Release"
+      - name: Run semantic release
         id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Build flags based on inputs
           FLAGS=""
           if [[ "${{ env.DRY_RUN }}" == "true" ]]; then
             FLAGS="--dry-run"
@@ -181,7 +156,6 @@ jobs:
 
           echo "::group::Running Semantic Release"
 
-          # Handle skip CI gracefully - semantic-release will still run but won't create releases
           if [[ "${{ steps.skip-ci-check.outputs.skip_ci }}" == "true" ]]; then
             echo "ℹ️ Skip CI detected - semantic-release will analyze commits but won't create releases"
             echo "This is expected behavior for [skip ci] commits"
@@ -190,10 +164,7 @@ jobs:
           npx semantic-release@latest $FLAGS
           echo "::endgroup::"
 
-      # ============================================================
-      # Check for New Release
-      # ============================================================
-      - name: "Check for New Release"
+      - name: Check for new release
         id: check-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -201,7 +172,6 @@ jobs:
           LATEST_TAG_AFTER=$(git describe --tags --abbrev=0 2>/dev/null || echo 'none')
           echo "latest_tag=${LATEST_TAG_AFTER}" >> $GITHUB_OUTPUT
 
-          # Get the tag before semantic-release ran
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo 'none')
 
           if [ "$PREVIOUS_TAG" != "$LATEST_TAG_AFTER" ] && [ "$LATEST_TAG_AFTER" != "none" ]; then
@@ -213,8 +183,7 @@ jobs:
             echo "ℹ️ No new release detected."
             echo "new_release_version=" >> $GITHUB_OUTPUT
             echo "release_upload_url=" >> $GITHUB_OUTPUT
-            
-            # Check if semantic-release ran successfully but found no commits to release
+
             if [ -f ".releaserc.js" ]; then
               if [[ "${{ steps.skip-ci-check.outputs.skip_ci }}" == "true" ]]; then
                 echo "ℹ️ Skip CI commit detected - this is expected behavior for [skip ci] commits"
@@ -225,51 +194,41 @@ jobs:
             fi
           fi
 
-      # ============================================================
-      # Upload Changelog Artifact (only if release created)
-      # ============================================================
-      - name: "Upload Changelog Artifact"
+      - name: Upload changelog artifact
         if: steps.check-release.outputs.new_release_version != ''
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: changelog
           path: CHANGELOG.md
 
-      # ============================================================
-      # Generate Provenance Assets (only if release created)
-      # ============================================================
-      - name: "Generate Provenance Assets"
+      - name: Generate provenance assets
         id: generate-provenance
         if: steps.check-release.outputs.new_release_version != ''
         run: |
-          # Generate SHA256 hashes in the correct format for SLSA
           ASSETS=("CHANGELOG.md" "package.json" "bun.lock" "bunfig.toml" "README.md")
           CONTENT=""
           for asset in "${ASSETS[@]}"; do
             if [ -f "$asset" ]; then
-              # Generate SHA256 hash in format: SHA256 NAME
               HASH=$(sha256sum "$asset")
               CONTENT+="$HASH"
               CONTENT+=$'\n'
             fi
           done
-          # Base64 encode the content for SLSA
           echo "provenance_assets=$(echo -n "$CONTENT" | base64 -w0)" >> $GITHUB_OUTPUT
 
-  # SLSA provenance temporarily disabled to avoid failing the workflow when no subjects are present.
-
-  # ============================================================
+  # ─────────────────────────────────────────────────────────────────────────────
   # Generate Release Summary
-  # ============================================================
+  # ─────────────────────────────────────────────────────────────────────────────
   generate-summary:
-    name: "Generate Release Summary"
+    name: Generate Release Summary
     needs: [release]
     if: always()
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Download Changelog"
+      - name: Download changelog
         if: needs.release.outputs.version != ''
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: changelog
           merge-multiple: false
@@ -277,46 +236,46 @@ jobs:
           run-id: ${{ github.run_id }}
         continue-on-error: true
 
-      - name: "Generate Summary"
+      - name: Generate summary
         id: summary
         run: |
           VERSION="${{ needs.release.outputs.version }}"
           SKIP_CI="${{ needs.release.outputs.skip_ci }}"
-          echo "# Semantic Release Results" >> $GITHUB_STEP_SUMMARY
 
-          if [[ "$VERSION" != "" ]]; then
-            echo "✅ **Version $VERSION released successfully**" >> $GITHUB_STEP_SUMMARY
-            if [ -f "CHANGELOG.md" ]; then
-              echo "📋 **Changelog generated**" >> $GITHUB_STEP_SUMMARY
-            fi
-            echo "🔒 **SLSA provenance generated**" >> $GITHUB_STEP_SUMMARY
-          elif [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
-            echo "✅ **Dry run completed successfully**" >> $GITHUB_STEP_SUMMARY
-          elif [[ "${{ needs.release.result }}" != "success" ]]; then
-            echo "❌ **Release process failed**" >> $GITHUB_STEP_SUMMARY
-            echo "Check the logs above for detailed error information." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "ℹ️ **No new version released**" >> $GITHUB_STEP_SUMMARY
-            if [[ "$SKIP_CI" == "true" ]]; then
-              echo "This is expected for commits with [skip ci] - semantic-release analyzed commits but did not create a release." >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Semantic Release Results"
+            echo ""
+
+            if [[ "$VERSION" != "" ]]; then
+              echo "✅ **Version $VERSION released successfully**"
+              if [ -f "CHANGELOG.md" ]; then
+                echo "📋 **Changelog generated**"
+              fi
+              echo "🔒 **SLSA provenance generated**"
+            elif [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+              echo "✅ **Dry run completed successfully**"
+            elif [[ "${{ needs.release.result }}" != "success" ]]; then
+              echo "❌ **Release process failed**"
+              echo "Check the logs above for detailed error information."
             else
-              echo "This is normal for chore commits or when no semantic changes are detected." >> $GITHUB_STEP_SUMMARY
-              echo "The commit analyzer determined no release was needed based on the commit messages." >> $GITHUB_STEP_SUMMARY
+              echo "ℹ️ **No new version released**"
+              if [[ "$SKIP_CI" == "true" ]]; then
+                echo "This is expected for commits with [skip ci] - semantic-release analyzed commits but did not create a release."
+              else
+                echo "This is normal for chore commits or when no semantic changes are detected."
+                echo "The commit analyzer determined no release was needed based on the commit messages."
+              fi
             fi
-          fi
 
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "N/A")
-          echo "- **Previous Release:** $LAST_TAG" >> $GITHUB_STEP_SUMMARY
-
-          # Add commit analysis information
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Commit Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "The following commit types trigger releases:" >> $GITHUB_STEP_SUMMARY
-          echo "- `feat:` → Minor release" >> $GITHUB_STEP_SUMMARY
-          echo "- `fix:` → Patch release" >> $GITHUB_STEP_SUMMARY
-          echo "- `chore(deps):` → Patch release" >> $GITHUB_STEP_SUMMARY
-          echo "- `chore(actions):` → Patch release" >> $GITHUB_STEP_SUMMARY
-          echo "- `chore(bun):` → Patch release" >> $GITHUB_STEP_SUMMARY
-          echo "- `docs:`, `style:`, `refactor:`, `perf:`, `build:`, `ci:`, `test:` → Patch release" >> $GITHUB_STEP_SUMMARY
-          echo "- Other `chore:` commits → No release" >> $GITHUB_STEP_SUMMARY
-          echo "- Commits with `[skip ci]` → No release (by design)" >> $GITHUB_STEP_SUMMARY
+            echo ""
+            echo "## Commit Analysis"
+            echo "The following commit types trigger releases:"
+            echo "- \`feat:\` → Minor release"
+            echo "- \`fix:\` → Patch release"
+            echo "- \`chore(deps):\` → Patch release"
+            echo "- \`chore(actions):\` → Patch release"
+            echo "- \`chore(bun):\` → Patch release"
+            echo "- \`docs:\`, \`style:\`, \`refactor:\`, \`perf:\`, \`build:\`, \`ci:\`, \`test:\` → Patch release"
+            echo "- Other \`chore:\` commits → No release"
+            echo "- Commits with \`[skip ci]\` → No release (by design)"
+          } >> "$GITHUB_STEP_SUMMARY"

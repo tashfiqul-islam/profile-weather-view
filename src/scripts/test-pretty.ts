@@ -72,7 +72,11 @@ function banner(title: string) {
   console.log(c(line, "blue"));
 }
 
-type RunResult = { code: number; stdout: string; stderr: string };
+interface RunResult {
+  code: number;
+  stdout: string;
+  stderr: string;
+}
 
 // Top-level regex patterns for performance
 const NOISY_PATTERNS = [
@@ -267,7 +271,11 @@ function renderLiveLine(raw: string) {
   console.log(dim(line));
 }
 
-type Failure = { name: string; message: string; location: string };
+interface Failure {
+  name: string;
+  message: string;
+  location: string;
+}
 const failures: Failure[] = [];
 let lastErrorMessage = "";
 let lastErrorLocation = "";

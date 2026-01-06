@@ -1,63 +1,101 @@
-# Lefthook Configuration - Modern Developer Experience 2025
-min_version: "2.0.1"
+# Lefthook Configuration - 2026 Modern Standards
+# https://lefthook.dev/configuration/
 
-# Clean, minimal output for better UX (2025 standards)
+min_version: 2.0.13
+
+# Clean output for better DX
 output:
-  - execution
-  - failure
-  - summary
+  - execution_out    # Show command output
+  - failure          # Show failures
+  - summary          # Show summary at end
+  - success          # Show successful jobs
 
-# Pre-commit hooks - Fast parallel execution
+# Skip LFS hooks if not using Git LFS
+skip_lfs: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Pre-commit: Fast parallel checks on staged files
+# ═══════════════════════════════════════════════════════════════════════════════
+
 pre-commit:
   parallel: true
-  commands:
-    # Code formatting and linting
-    format:
-      run: bunx ultracite fix {staged_files}
-      stage_fixed: true
+  jobs:
+    # Format and lint with Ultracite (Biome)
+    - name: format
       glob: "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
-      fail_text: "❌ Code formatting issues found. Run 'bun run format' to fix."
-    
-    # Type checking
-    typecheck:
-      run: bun run type-check
+      run: bunx ultracite@latest fix {staged_files}
+      stage_fixed: true
+      fail_text: "❌ Formatting failed. Run 'bun run format' to fix."
+
+    # Type checking (only when TS files change)
+    - name: typecheck
       glob: "*.{ts,tsx}"
-      fail_text: "❌ TypeScript errors found. Fix before committing."
-    
-    # Run tests for staged files only
-    test:
-      run: PRETTY_TEST_TITLE="Pre-commit Tests" bun run test:fast
+      run: bun run typecheck
+      fail_text: "❌ TypeScript errors found."
+
+    # Fast tests on staged files
+    - name: test
+      glob: "*.{ts,tsx}"
+      run: bun test --bail
       skip:
         - merge
         - rebase
-      fail_text: "❌ Tests failed. Fix issues before committing."
+      fail_text: "❌ Tests failed."
 
+# ═══════════════════════════════════════════════════════════════════════════════
 # Commit message validation
-commit-msg:
-  commands:
-    commitlint:
-      run: bunx commitlint --edit {1}
-      fail_text: "❌ Commit message doesn't follow conventional commits format."
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# Interactive commit message builder
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: bunx commitlint --edit {1}
+      fail_text: |
+        ❌ Invalid commit message format.
+
+        Expected: <type>(<scope>): <subject>
+        Example:  feat(weather): add temperature conversion
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Interactive commit builder (optional - use `git commit` from terminal)
+# ═══════════════════════════════════════════════════════════════════════════════
+
 prepare-commit-msg:
-  commands:
-    commitizen:
+  jobs:
+    - name: commitizen
       interactive: true
-      run: bunx commitizen --hook
+      run: bunx czg
       env:
         LEFTHOOK: "0"
 
-# Pre-push quality gates
+# ═══════════════════════════════════════════════════════════════════════════════
+# Pre-push: Full quality gate before pushing
+# ═══════════════════════════════════════════════════════════════════════════════
+
 pre-push:
   parallel: true
-  commands:
-    # Quick type check before push
-    typecheck:
-      run: bun run type-check
-      fail_text: "❌ TypeScript errors found. Fix before pushing."
-    
-    # Run full test suite before push
-    test:
-      run: PRETTY_TEST_TITLE="Pre-push Tests" bun run test:fast
-      fail_text: "❌ Tests failed. Fix issues before pushing."
+  jobs:
+    # Full type check
+    - name: typecheck
+      run: bun run typecheck
+      fail_text: "❌ TypeScript errors. Fix before pushing."
+
+    # Full test suite
+    - name: test
+      run: bun test
+      fail_text: "❌ Tests failed. Fix before pushing."
+
+    # Lint check (no fix, just validate)
+    - name: lint
+      run: bunx ultracite@latest check
+      fail_text: "❌ Lint errors found."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Post-merge: Auto-install deps when lockfile changes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+post-merge:
+  jobs:
+    - name: install
+      glob: "{bun.lock,bun.lockb,package.json}"
+      run: bun install

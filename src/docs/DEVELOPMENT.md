@@ -5,38 +5,36 @@ This guide shows how to build, test, and verify changes locally with Bun and Typ
 ## TL;DR
 
 ```bash
-bun install                              # install deps
-bun run check-all                        # type-check, format:check, lint:check, test:ci
-bun run test:coverage                    # writes LCOV to coverage/ (100% on touched files)
-bun run dev                              # run the weather script locally
+bun install                # install deps
+bun run check              # typecheck, lint, test
+bun run test:coverage      # writes LCOV to coverage/ (100% coverage)
+bun run dev                # run the weather script locally (watch mode)
 ```
 
 ## Prerequisites
 
-- Bun ≥ 1.2.19
+- Bun ≥ 1.3.5
 - Node.js ≥ 22 (tooling in CI)
 
 ## Environment
 
-Set the OpenWeather key for local runs:
+No API key required — Open-Meteo provides free weather data.
 
-```bash
-export OPEN_WEATHER_KEY=your_api_key
-```
-
-Optional:
+Optional environment variables:
 
 - `FORCE_UPDATE=true` to force writing the README section even if data is unchanged
+- `PROFILE_README_PATH` to specify an alternate README file path
+- `GITHUB_ACTIONS=true` set automatically in CI
 
 ## Install & run
 
 ```bash
 bun install
 
-# run orchestrator locally
+# run orchestrator locally (watch mode)
 bun run dev
 
-# or build then run
+# or run once
 bun run start
 ```
 
@@ -52,26 +50,46 @@ bun run start
 - Type-check:
 
   ```bash
-  bun run type-check
+  bun run typecheck
   ```
 
 - Tests (Bun test runner, coverage via bunfig):
 
   ```bash
-  bun run test:ci        # single pass
-  bun run test:coverage  # writes LCOV to coverage/
+  bun test              # single pass
+  bun test --coverage   # writes LCOV to coverage/
   ```
 
 - Full CI-like check:
 
   ```bash
-  bun run check-all
+  bun run check
   ```
 
 ## Coverage expectations
 
-- Keep 100% on statements, branches, functions, and lines for changed files.
-- Coverage settings and thresholds live in `bunfig.toml` under `[test]` (LCOV at `coverage/lcov.info`).
+- Target: 100% on statements, branches, functions, and lines
+- Coverage settings and thresholds live in `bunfig.toml` under `[test]`
+- LCOV output at `coverage/lcov.info`
+
+## Test structure
+
+Tests are organized under `src/tests/`:
+
+```text
+src/tests/
+├── setup.ts                    # Global test setup
+├── unit/
+│   ├── basic.test.ts           # Infrastructure tests
+│   ├── services/
+│   │   ├── fetch-weather.test.ts
+│   │   ├── update-readme.test.ts
+│   │   └── wmo-mapper.test.ts
+│   └── utils/
+│       └── preload.test.ts
+└── utils/
+    └── weather-test-helpers.ts  # Shared test utilities
+```
 
 ## Commit conventions
 
@@ -80,19 +98,19 @@ Use Conventional Commits (angular). Examples:
 ```text
 feat(weather): add sunrise/sunset formatting
 fix(ci): correct bun cache key
-chore(deps): update axios to 1.11.0 [skip actions]
+chore(deps): update zod to 4.x [skip actions]
 ```
 
 You can use a guided prompt:
 
 ```bash
-bunx commit
+bun run commit
 ```
 
 ## Sonar & quality gates
 
-- Sonar properties are in `sonar-project.properties`.
-- CI publishes LCOV from `coverage/lcov.info`.
+- Sonar properties are in `sonar-project.properties`
+- CI publishes LCOV from `coverage/lcov.info`
 
 ## README tech stack sync
 
@@ -106,10 +124,11 @@ bunx commit
 
 ## Troubleshooting
 
-- 401/403 from OpenWeather: verify `OPEN_WEATHER_KEY`.
-- No README changes: ensure the markers exist in the target README.
-- Slow installs in CI: check `actions/cache` usage and `bun.lock` presence.
+- Network errors: check internet connectivity; Open-Meteo may have temporary outages
+- No README changes: ensure the markers exist in the target README
+- Slow installs in CI: check `actions/cache` usage and `bun.lock` presence
+- Coverage below 100%: ensure new code has tests; check `bunfig.toml` thresholds
 
 ## Project layout
 
-See the full structure in the root README: [Project structure](../../README.md#project-structure).
+See the full structure in the root README: [Project structure](../../README.md#project-structure)

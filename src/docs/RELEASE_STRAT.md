@@ -15,9 +15,9 @@ This project uses semantic-release to fully automate versioning, changelog gener
 Examples:
 
 ```text
-feat(weather): add hourly icon rendering
+feat(weather): add Meteocons icon rendering
 fix(ci): correct cache key for bun.lock
-chore(deps): update zod to 4.0.15 [skip actions]
+chore(deps): update zod to 4.x [skip actions]
 ```
 
 - `feat:` → minor release
@@ -65,8 +65,8 @@ The release pipeline (see `.releaserc.js`) executes in this order:
 
 ## Skipping releases
 
-- Commits with `[skip ci]` (or Renovate’s `[skip actions]`) skip CI, but semantic-release still analyzes history on the next run
-- Pure docs or chores without matching rules don’t bump versions
+- Commits with `[skip ci]` (or Renovate's `[skip actions]`) skip CI, but semantic-release still analyzes history on the next run
+- Pure docs or chores without matching rules don't bump versions
 
 ## Local expectations
 
@@ -75,14 +75,14 @@ The release pipeline (see `.releaserc.js`) executes in this order:
 - Dry run locally if needed:
 
 ```bash
-DRY_RUN=true bun run semantic-release
+DRY_RUN=true bun run release
 ```
 
 ## Troubleshooting
 
-- “No release notes generated” → ensure Conventional Commit messages
-- “GitHub auth failed” → ensure `contents: write` permission for `GITHUB_TOKEN`
-- “Changelog not updated” → confirm `@semantic-release/changelog` is in pipeline and CI can write
+- "No release notes generated" → ensure Conventional Commit messages
+- "GitHub auth failed" → ensure `contents: write` permission for `GITHUB_TOKEN`
+- "Changelog not updated" → confirm `@semantic-release/changelog` is in pipeline and CI can write
 
 ---
 

@@ -1,22 +1,30 @@
-# 🧪 Bun Test Infrastructure
+<div align="center">
+  <img src="../../image/test_cover.png" alt="Profile Weather View - Automated weather updates for GitHub profile README" width="900">
+</div>
+
+# Test Infrastructure
 
 This directory contains the complete test infrastructure for the weather update project using Bun's built-in test runner.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```text
-tests/
-├── README.md                    # This file
-├── setup.ts                     # Global test setup and configuration
-├── unit/                        # Unit tests
-│   └── basic.test.ts           # Basic infrastructure tests
-├── integration/                 # Integration tests (future)
-├── fixtures/                    # Test data and mock files
-└── utils/                       # Test utilities and helpers
-    └── weather-test-helpers.ts  # Weather-specific test utilities
+src/tests/
+├── README.md                           # This file
+├── setup.ts                            # Global test setup and configuration
+├── unit/                               # Unit tests
+│   ├── basic.test.ts                   # Infrastructure and helper tests
+│   ├── services/
+│   │   ├── fetch-weather.test.ts       # Open-Meteo API tests
+│   │   ├── update-readme.test.ts       # README update logic tests
+│   │   └── wmo-mapper.test.ts          # WMO code to Meteocons mapping tests
+│   └── utils/
+│       └── preload.test.ts             # Environment validation tests
+└── utils/
+    └── weather-test-helpers.ts         # Shared test utilities
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Run all tests
@@ -26,47 +34,50 @@ bun test
 bun test --coverage
 
 # Run specific test file
-bun test tests/unit/basic.test.ts
+bun test src/tests/unit/services/fetch-weather.test.ts
 
 # Run tests in watch mode
 bun test --watch
 
-# Run tests with verbose output
-bun test --reporter=verbose
+# Filter by test name
+bun test -t "should fetch and transform"
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### bunfig.toml
 
-The test configuration is defined in `bunfig.toml`:
+Test configuration in `bunfig.toml`:
 
 ```toml
 [test]
-root = "tests"                    # Test discovery root
-preload = ["./tests/setup.ts"]    # Global setup file
-coverage = true                   # Enable coverage by default
-coverageSkipTestFiles = true      # Exclude test files from coverage
+root = "src/tests"
+preload = ["./src/tests/setup.ts"]
+coverage = true
+coverageSkipTestFiles = true
 coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
-randomize = true                  # Randomize test order
-timeout = 15000                   # 15 second timeout for API calls
+timeout = 15000
 ```
 
-### Global Setup (tests/setup.ts)
+### Global Setup (src/tests/setup.ts)
 
-- Environment variable configuration
-- Test utilities and helpers
-- Global test hooks (beforeAll, afterAll, etc.)
+- Environment variable defaults for test isolation
+- Test utilities and helper functions
+- Global hooks (beforeAll, afterAll)
 - Performance monitoring utilities
+- Temp file management
 
-## 🛠️ Test Utilities
+## Test Utilities
 
-### Weather Test Helpers (tests/utils/weather-test-helpers.ts)
+### Weather Test Helpers (src/tests/utils/weather-test-helpers.ts)
 
-#### Weather Data Creation
+#### Creating Test Data
 
 ```typescript
-import { createTestWeatherPayload, createMockOpenWeatherResponse } from "./utils/weather-test-helpers";
+import {
+  createTestWeatherPayload,
+  createMockApiResponse,
+} from "@/tests/utils/weather-test-helpers";
 
 // Create basic weather payload
 const weather = createTestWeatherPayload();
@@ -77,14 +88,17 @@ const customWeather = createTestWeatherPayload({
   temperatureC: 15,
 });
 
-// Create mock API response
-const apiResponse = createMockOpenWeatherResponse();
+// Create mock Open-Meteo API response
+const apiResponse = createMockApiResponse();
 ```
 
 #### README Testing
 
 ```typescript
-import { createTestReadmeContent, validateReadmeWeatherSection } from "./utils/weather-test-helpers";
+import {
+  createTestReadmeContent,
+  validateReadmeWeatherSection,
+} from "@/tests/utils/weather-test-helpers";
 
 // Create test README content
 const readmeContent = createTestReadmeContent(weatherData);
@@ -93,181 +107,174 @@ const readmeContent = createTestReadmeContent(weatherData);
 const hasWeatherSection = validateReadmeWeatherSection(readmeContent);
 ```
 
-#### API Mocking
+#### Mocking Fetch
 
 ```typescript
-import { createMockFetch, errorTestScenarios } from "./utils/weather-test-helpers";
+import { mock } from "bun:test";
 
-// Create mock fetch function
-const mockFetch = createMockFetch([
-  () => createMockFetchResponse(200, successData),
-  () => createMockFetchResponse(401, errorData),
-]);
-
-// Use error scenarios
-const errorFetch = createMockFetch([
-  errorTestScenarios.invalidApiKey,
-  errorTestScenarios.rateLimited,
-]);
+// Mock global fetch
+global.fetch = mock(() =>
+  Promise.resolve(Response.json(mockApiResponse))
+) as unknown as typeof fetch;
 ```
 
 #### Performance Testing
 
 ```typescript
-import { performanceTestUtils } from "./utils/weather-test-helpers";
+import { performanceTestUtils } from "@/tests/utils/weather-test-helpers";
 
 // Measure execution time
-const { result, duration } = await performanceTestUtils.measureExecutionTime(async () => {
-  // Your async operation
-  return await someAsyncFunction();
-});
+const { result, duration } = await performanceTestUtils.measureExecutionTime(
+  async () => {
+    return await someAsyncFunction();
+  }
+);
 
-// Create threshold checker
-const checker = performanceTestUtils.createThresholdChecker(2000); // 2 second threshold
+// Check against threshold
+const checker = performanceTestUtils.createThresholdChecker(2000);
 expect(checker.check(duration)).toBe(true);
 ```
 
-## 📝 Writing Tests
+## Writing Tests
 
-### Basic Test Structure
+### Basic Structure
 
 ```typescript
 import { describe, expect, test } from "bun:test";
 
-describe("Feature Name", () => {
-  test("should do something", () => {
-    expect(true).toBe(true);
-  });
-  
-  test("should handle async operations", async () => {
-    const result = await someAsyncFunction();
-    expect(result).toBeDefined();
+describe("fetchWeatherData", () => {
+  test("should fetch and transform weather data successfully", async () => {
+    // Arrange
+    const mockResponse = createMockApiResponse();
+    global.fetch = mock(() =>
+      Promise.resolve(Response.json(mockResponse))
+    ) as unknown as typeof fetch;
+
+    // Act
+    const result = await fetchWeatherData();
+
+    // Assert
+    expect(result.temperatureC).toBe(25);
+    expect(result.icon).toBe("clear-day");
   });
 });
 ```
 
-### Test Categories
+### Test Organization
 
-#### Unit Tests (`tests/unit/`)
+| Directory | Purpose |
+| --------- | ------- |
+| `unit/services/` | Service module tests (fetch-weather, update-readme, wmo-mapper) |
+| `unit/utils/` | Utility module tests (preload) |
+| `unit/basic.test.ts` | Infrastructure and helper validation |
+| `utils/` | Shared test utilities and factories |
 
-- Test individual functions and modules
-- Use mocks for external dependencies
-- Fast execution, isolated tests
+### Naming Conventions
 
-#### Integration Tests (`tests/integration/`)
+- Files: `kebab-case.test.ts`
+- Describes: Module or function name
+- Tests: `should <expected behavior>`
 
-- Test multiple components working together
-- May use real external services (with test keys)
-- Slower execution, more realistic scenarios
+## Coverage
 
-### Test Naming Convention
+Configuration:
 
-- Files: `*.test.ts` or `*.spec.ts`
-- Describes: `Feature Name` or `Module Name`
-- Tests: `should do something` or `should handle edge case`
+- 100% coverage target on all source files
+- Test files excluded from coverage calculations
+- LCOV output at `coverage/lcov.info`
 
-## 🎯 Best Practices
+Current coverage:
 
-### 1. Use Test Utilities
+| File | Functions | Lines |
+| ---- | --------- | ----- |
+| fetch-weather.ts | 100% | 100% |
+| update-readme.ts | 100% | 100% |
+| wmo-mapper.ts | 100% | 100% |
+| preload.ts | 100% | 100% |
 
-Always use the provided test utilities instead of creating mock data manually:
+## Best Practices
+
+### Use Test Utilities
 
 ```typescript
-// ✅ Good
+// Preferred: use factories
 const weather = createTestWeatherPayload();
 
-// ❌ Avoid
-const weather = { description: "Clear Sky", temperatureC: 25, ... };
+// Avoid: manual object creation
+const weather = { description: "Clear", temperatureC: 25 };
 ```
 
-### 2. Test Performance
-
-Use performance utilities for API and file operations:
+### Mock External Dependencies
 
 ```typescript
-test("should complete within time limit", async () => {
-  const { duration } = await performanceTestUtils.measureExecutionTime(async () => {
-    await fetchWeatherData();
-  });
-  
-  expect(duration).toBeLessThan(2000); // 2 seconds
+// Mock fetch for API tests
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  global.fetch = mock(() =>
+    Promise.resolve(Response.json(mockData))
+  ) as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
 });
 ```
 
-### 3. Clean Up Resources
-
-Use proper cleanup in tests:
+### Test Both Paths
 
 ```typescript
-afterEach(async () => {
-  await testUtils.fs.cleanupTempFiles();
+// Success path
+test("should return weather data on success", async () => {
+  // ...
+});
+
+// Error path
+test("should throw on API failure", async () => {
+  global.fetch = mock(() =>
+    Promise.resolve(new Response("Not Found", { status: 404 }))
+  ) as unknown as typeof fetch;
+
+  await expect(fetchWeatherData()).rejects.toThrow();
 });
 ```
 
-### 4. Test Error Scenarios
-
-Always test both success and error cases:
+### Use Type Assertions Correctly
 
 ```typescript
-test("should handle API errors", async () => {
-  const mockFetch = createMockFetch([errorTestScenarios.invalidApiKey]);
-  // Test error handling
-});
+// For mock type casting
+global.fetch = mock(() =>
+  Promise.resolve(Response.json(data))
+) as unknown as typeof fetch;
+
+// For branded types in assertions
+expect(result.temperatureC).toBe(25 as TemperatureCelsius);
 ```
 
-## 📊 Coverage
-
-The test infrastructure is configured to:
-
-- Generate coverage reports by default
-- Exclude test files from coverage calculations
-- Enforce 90% coverage thresholds
-- Generate HTML and text reports
-
-Coverage reports are generated in the `coverage/` directory.
-
-## 🔧 Available Scripts
+## Scripts
 
 ```bash
-# Basic testing
-bun test                    # Run all tests
-bun test --watch           # Watch mode
-bun test --coverage        # With coverage
-
-# Specific test types
-bun test tests/unit        # Unit tests only
-bun test tests/integration # Integration tests only
-
-# Advanced options
-bun test --concurrent      # Run tests concurrently
-bun test --serial         # Run tests sequentially
-bun test --timeout 30000  # Custom timeout
-bun test --reporter=verbose # Verbose output
+bun test                     # Run all tests
+bun test --watch             # Watch mode
+bun test --coverage          # Generate coverage report
+bun test -t "pattern"        # Filter by test name
+bun test src/tests/unit/     # Run specific directory
 ```
 
-## 🐛 Debugging
-
-### Debug Mode
+## Debugging
 
 ```bash
-bun test --inspect-brk
-```
-
-### Verbose Output
-
-```bash
+# Verbose output
 bun test --reporter=verbose
+
+# Run single test file
+bun test src/tests/unit/services/fetch-weather.test.ts
+
+# Filter to specific test
+bun test -t "should handle API failure"
 ```
 
-### Specific Test
-
-```bash
-bun test -t "should handle API errors"
-```
-
-## 📚 Resources
+## References
 
 - [Bun Test Documentation](https://bun.sh/docs/cli/test)
 - [Bun Test Configuration](https://bun.sh/docs/runtime/bunfig)
-- [Test Utilities API](./utils/weather-test-helpers.ts)
-- [Global Setup](./setup.ts)
