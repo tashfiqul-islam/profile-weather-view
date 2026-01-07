@@ -1,5 +1,10 @@
 # Changelog
 
+# [3.1.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.0.0...v3.1.0)
+### feat
+
+* **core:** support multi format readme ([19a57b7](https://github.com/tashfiqul-islam/profile-weather-view/commit/19a57b79353c30b19c1a1471f6ca3ce65bee3523))
+
 # [3.0.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v2.5.0...v3.0.0)
 ### chore
 
