@@ -120,7 +120,7 @@ jobs:
         if: env.DRY_RUN != 'true' && steps.skip-ci-check.outputs.skip_ci != 'true'
         run: |
           echo "::group::Project Validation"
-          bun run typecheck && bun run src/scripts/test-pretty.ts --no-live && bunx ultracite fix src && bunx ultracite check src
+          bun run typecheck && bun test && bunx ultracite fix src && bunx ultracite check src
           echo "::endgroup::"
 
       - name: Security audit

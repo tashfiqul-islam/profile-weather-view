@@ -123,7 +123,7 @@ jobs:
         if: env.SKIP_TESTS != 'true'
         run: |
           echo "::group::Test execution"
-          bun run src/scripts/test-pretty.ts --no-live
+          bun test
           echo "::endgroup::"
         env:
           CI: "true"
