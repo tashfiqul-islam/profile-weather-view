@@ -1,5 +1,10 @@
 # Changelog
 
+# [3.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.2...v3.1.3)
+### fix
+
+* added ultracite configs ([8167b9f](https://github.com/tashfiqul-islam/profile-weather-view/commit/8167b9f8f13696d39a1ccbfa49f2ce702f56cb3b))
+
 # [3.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.1...v3.1.2)
 ### fix
 
