@@ -92,9 +92,9 @@ sequenceDiagram
 
 ## Runtime & core libraries
 
-- **Runtime**: Bun 1.3+ (fast startup, native fetch, file I/O)
-- **Language**: TypeScript 5.9+ (strict)
-- **Validation**: Zod 4 (schema-first validation)
+- **Runtime**: Bun 1.3+ (fast startup, native fetch, file I/O, `Bun.env` for environment)
+- **Language**: TypeScript 5.9+ (strict mode, `satisfies` operator, branded types)
+- **Validation**: Zod 4 (named imports, schema-first validation)
 - **Time**: Temporal polyfill (timezone-safe operations)
 - **Icons**: Meteocons (animated weather icons via WMO codes)
 
@@ -102,20 +102,23 @@ sequenceDiagram
 
 - `src/weather-update/index.ts`
   - Main orchestrator: validates env, fetches data, updates README, logs, and signals status
-  - Provides `log()` with timestamped messages and `handleError()` for consistent error context
+  - Provides `log()` with timestamped severity prefixes and `createErrorInfo()` for structured errors
+  - Uses `Bun.env` for environment access (2026 Bun-native pattern)
   - Emits `CHANGES_DETECTED=true|false` to help workflows decide on committing
 - `src/weather-update/services/fetch-weather.ts`
-  - Builds Open-Meteo API request for current weather and daily sunrise/sunset
-  - Validates JSON payload using Zod; converts timestamps to `Asia/Dhaka` with Temporal
-  - Produces a small, stable view model used by the renderer: `WeatherUpdatePayload`
+  - Builds Open-Meteo API request with `as const satisfies` typed configurations
+  - Uses `measureTime()` utility for performance tracking
+  - Validates JSON payload using Zod (named imports); converts timestamps via Temporal
+  - Produces branded-type payload: `WeatherUpdatePayload`
 - `src/weather-update/services/wmo-mapper.ts`
   - Maps WMO weather interpretation codes to Meteocons icon names
   - Provides day/night variants for accurate weather visualization
   - Generates Meteocons CDN URLs for weather icons
 - `src/weather-update/services/update-readme.ts`
   - Detects the section bounded by `<!-- Hourly Weather Update --> ... <!-- End of Hourly Weather Update -->`
-  - Renders weather data as a markdown table with Meteocons icons
-  - Updates the "Last refresh" line using Temporal; writes only when content changes (or when forced)
+  - Supports both Markdown pipe-tables and HTML `<table>` formats (auto-detected)
+  - Renders weather data with Meteocons icons; updates "Last refresh" timestamp
+  - Writes only when content changes (or when `FORCE_UPDATE=true`)
 - `src/weather-update/utils/preload.ts`
   - Validates and normalizes environment variables before the main flow executes
   - Tracks daily API call counts to respect rate limits
@@ -157,8 +160,8 @@ Key Zod schemas (representative):
 
 ## Error handling and logging
 
-- `handleError()` standardizes error messages and provides timestamped context
-- `log()` prefixes with ISO timestamps and emojis for CI readability
+- `createErrorInfo()` produces structured error objects with timestamp and context
+- `log()` uses `LOG_PREFIXES` map for emoji-prefixed severity levels (info/success/warning/error)
 - On failure, the process exits non-zero (CI-visible) and includes actionable hints
 
 ## Configuration and environment

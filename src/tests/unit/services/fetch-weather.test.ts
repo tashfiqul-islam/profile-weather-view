@@ -72,7 +72,7 @@ describe("fetchWeatherData", () => {
     ) as unknown as typeof fetch;
 
     await expect(fetchWeatherData()).rejects.toThrow(
-      "Open-Meteo API failed with status 404: Not Found"
+      "[fetch-weather] Open-Meteo API failed: 404 Not Found"
     );
   });
 
@@ -91,7 +91,7 @@ describe("fetchWeatherData", () => {
     ) as unknown as typeof fetch;
 
     await expect(fetchWeatherData()).rejects.toThrow(
-      "Invalid API response structure"
+      "[fetch-weather] Invalid API response: missing required fields"
     );
   });
 
@@ -123,9 +123,7 @@ describe("fetchWeatherData", () => {
       Promise.reject("Critical failure")
     ) as unknown as typeof fetch;
 
-    await expect(fetchWeatherData()).rejects.toThrow(
-      "[fetchWeather.ts] ❌ Unexpected error during weather data fetch: Critical failure"
-    );
+    await expect(fetchWeatherData()).rejects.toThrow("Critical failure");
   });
 
   test("should handle empty daily arrays in response", async () => {
@@ -148,7 +146,7 @@ describe("fetchWeatherData", () => {
     ) as unknown as typeof fetch;
 
     await expect(fetchWeatherData()).rejects.toThrow(
-      "Invalid API response structure"
+      "[fetch-weather] Invalid API response: missing required fields"
     );
   });
 

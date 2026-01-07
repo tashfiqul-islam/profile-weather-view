@@ -14,6 +14,7 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 - **No API key required** — Uses Open-Meteo free weather API
 - **Animated icons** — Meteocons weather icons via WMO codes
+- **Dual format support** — Works with both Markdown and HTML tables
 - **100% test coverage** — Bun test runner with full coverage
 - **Automated releases** — Semantic versioning from commits
 - **Type-safe** — TypeScript strict mode with Zod validation
@@ -46,10 +47,10 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 <!-- Hourly Weather Update -->
 | Weather | Temperature | Sunrise | Sunset | Humidity |
 | ------- | ----------- | ------- | ------ | -------- |
-| <img src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/partly-cloudy-night.svg" alt="Mainly Clear icon" height="17" style="vertical-align: middle;"> Mainly Clear | 11°C | 06:42 | 17:26 | 97% |
+| <img src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/partly-cloudy-night.svg" alt="Mainly Clear icon" height="17" style="vertical-align: middle;"> Mainly Clear | 13°C | 06:42 | 17:27 | 95% |
 <!-- End of Hourly Weather Update -->
 
-*Last refresh: Wednesday, January 07, 2026 at 04:25:37 (UTC+6)*
+<em>Last refresh: Wednesday, January 07, 2026 at 04:25:37 (UTC+6)</em>
 
 ---
 
@@ -103,7 +104,7 @@ const LOCATION = {
   lat: 23.8759,
   lon: 90.3795,
   timezone: "Asia/Dhaka",
-} as const;
+} as const satisfies LocationConfig;
 ```
 
 ### Environment Variables

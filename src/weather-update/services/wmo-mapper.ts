@@ -2,27 +2,42 @@
  * Maps WMO weather codes to Meteocons icon names and descriptions.
  * Handles day/night variations for applicable conditions.
  *
- * WMO Weather Interpretation Codes (WW) are standardized by the
- * World Meteorological Organization. Open-Meteo uses a subset of these codes.
- *
+ * @module wmo-mapper
+ * @since 1.0.0
  * @see https://open-meteo.com/en/docs
  * @see https://github.com/basmilius/weather-icons
  */
 
-// Branded types for type safety
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/** Branded type for Meteocons icon names */
 export type MeteoconIconName = string & { readonly __brand: unique symbol };
 
+/** Meteocons icon with name and description */
 export interface MeteoconIcon {
   readonly name: MeteoconIconName;
   readonly description: string;
 }
 
-/**
- * Base URL for Meteocons CDN (GitHub raw content)
- * Using the production build from basmilius/weather-icons
- */
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/** Base URL for Meteocons CDN (GitHub raw content) */
 const METEOCONS_BASE_URL =
   "https://raw.githubusercontent.com/basmilius/weather-icons/dev/production" as const;
+
+/** Default icon for unknown WMO codes */
+const UNKNOWN_ICON: MeteoconIcon = {
+  name: "not-available" as MeteoconIconName,
+  description: "Unknown",
+} as const;
+
+// ============================================================================
+// WMO Code Mappings
+// ============================================================================
 
 /**
  * WMO Weather Code to Meteocons mapping for daytime conditions.
@@ -123,18 +138,19 @@ const WMO_DAY_MAP: Readonly<Record<number, MeteoconIcon>> = {
 } as const;
 
 /**
- * Generate night variants by replacing -day with -night in icon names.
+ * Generates night map by replacing -day with -night in icon names.
  * Icons without -day suffix remain unchanged (e.g., "rain", "snow").
  */
 function createNightMap(): Readonly<Record<number, MeteoconIcon>> {
   const nightMap: Record<number, MeteoconIcon> = {};
 
-  for (const [code, icon] of Object.entries(WMO_DAY_MAP)) {
+  for (const [codeStr, icon] of Object.entries(WMO_DAY_MAP)) {
+    const code = Number(codeStr);
     const nightName = icon.name.includes("-day")
       ? icon.name.replace("-day", "-night")
       : icon.name;
 
-    nightMap[Number(code)] = {
+    nightMap[code] = {
       name: nightName as MeteoconIconName,
       description: icon.description,
     };
@@ -145,11 +161,9 @@ function createNightMap(): Readonly<Record<number, MeteoconIcon>> {
 
 const WMO_NIGHT_MAP: Readonly<Record<number, MeteoconIcon>> = createNightMap();
 
-/** Default icon for unknown WMO codes */
-const UNKNOWN_ICON: MeteoconIcon = {
-  name: "not-available" as MeteoconIconName,
-  description: "Unknown",
-} as const;
+// ============================================================================
+// Public API
+// ============================================================================
 
 /**
  * Converts a WMO weather code to a Meteocons icon.
@@ -169,9 +183,7 @@ const UNKNOWN_ICON: MeteoconIcon = {
  */
 export function wmoToMeteocons(wmoCode: number, isDay: boolean): MeteoconIcon {
   const map = isDay ? WMO_DAY_MAP : WMO_NIGHT_MAP;
-  const icon = map[wmoCode];
-
-  return icon ?? UNKNOWN_ICON;
+  return map[wmoCode] ?? UNKNOWN_ICON;
 }
 
 /**
@@ -184,7 +196,7 @@ export function wmoToMeteocons(wmoCode: number, isDay: boolean): MeteoconIcon {
  * @example
  * ```ts
  * const url = getMeteoconUrl("clear-day");
- * // "https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-day.svg"
+ * // "https://raw.githubusercontent.com/.../fill/svg/clear-day.svg"
  * ```
  */
 export function getMeteoconUrl(
@@ -202,8 +214,7 @@ export function getMeteoconUrl(
  * @returns Human-readable weather description
  */
 export function getWmoDescription(wmoCode: number): string {
-  const icon = WMO_DAY_MAP[wmoCode];
-  return icon?.description ?? "Unknown";
+  return WMO_DAY_MAP[wmoCode]?.description ?? "Unknown";
 }
 
 /**

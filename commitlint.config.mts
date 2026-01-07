@@ -129,7 +129,7 @@ const config: CzgUserConfig = {
   plugins: [
     {
       rules: {
-        "no-forbidden-patterns": (parsed) => {
+        "no-forbidden-patterns": (parsed: { header: string }) => {
           const text = parsed.header ?? "";
           const hasMatch = FORBIDDEN_PATTERNS.some((p) => p.test(text));
           return [
@@ -182,11 +182,11 @@ const config: CzgUserConfig = {
 
   // Ignore auto-generated commits
   ignores: [
-    (message) => message.startsWith("Merge pull request"),
-    (message) => message.startsWith("Merge branch"),
-    (message) => message.startsWith("Automatic merge"),
-    (message) => RELEASE_COMMIT_PATTERN.test(message), // Release commits
-    (message) => VERSION_TAG_PATTERN.test(message), // Version tags
+    (message: string) => message.startsWith("Merge pull request"),
+    (message: string) => message.startsWith("Merge branch"),
+    (message: string) => message.startsWith("Automatic merge"),
+    (message: string) => RELEASE_COMMIT_PATTERN.test(message), // Release commits
+    (message: string) => VERSION_TAG_PATTERN.test(message), // Version tags
   ],
 
   defaultIgnores: true,

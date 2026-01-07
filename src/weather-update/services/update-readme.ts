@@ -1,125 +1,123 @@
 /**
- * Updates README weather section by validating payload,
- * preserving existing format, and writing only when content changes.
+ * README update service for weather data.
+ * Detects and updates weather sections in both Markdown and HTML table formats.
+ *
+ * @module update-readme
+ * @since 1.0.0
  */
 
-import { join } from "node:path";
 import { Temporal } from "@js-temporal/polyfill";
-// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
-import * as z from "zod";
-import type {
-  HumidityPercentage,
-  TemperatureCelsius,
-  TimeString,
-  WeatherUpdatePayload,
-} from "./fetch-weather";
-import { getMeteoconUrl, type MeteoconIconName } from "./wmo-mapper";
+import { z } from "zod";
+import type { WeatherUpdatePayload } from "./fetch-weather";
+import { getMeteoconUrl } from "./wmo-mapper";
 
-// Display and formatting defaults
-const CONFIG = {
-  timezone: "Asia/Dhaka" as const,
-  defaultIcon: "clear-day" as const, // Meteocons default icon
-  defaultDescription: "Unknown" as const,
-} as const;
+// ============================================================================
+// Configuration
+// ============================================================================
 
-// Markers and fields we replace inside README
-const REGEX = {
-  weatherSection:
-    /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/,
-  refreshTime: /<em>Last refresh:.*?<\/em>/,
-} as const;
+/** Timezone for displaying refresh timestamps */
+const DISPLAY_TIMEZONE = "Asia/Dhaka" as const;
 
-// Narrow env flags we care about for control flow
+/** Default README file path */
+const DEFAULT_README_PATH = "README.md" as const;
+
+// ============================================================================
+// Schemas
+// ============================================================================
+
+/** Schema for environment variables used in README updates */
 const EnvironmentSchema = z.object({
   FORCE_UPDATE: z.string().optional(),
   GITHUB_ACTIONS: z.string().optional(),
 });
 
-// Input boundaries for simple payload validation
-const VALIDATION_LIMITS = {
-  MIN_STRING_LENGTH: 1,
-  MIN_HUMIDITY: 0,
-  MAX_HUMIDITY: 100,
-} as const;
-
-// Validates the minimal payload consumed by README rendering
+/** Schema for validating weather data before rendering */
 const WeatherDataSchema = z.object({
-  description: z
-    .string()
-    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
-    .describe("Weather description"),
+  description: z.string().min(1).describe("Weather condition description"),
   temperatureC: z.number().describe("Temperature in Celsius"),
-  sunriseLocal: z
-    .string()
-    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
-    .describe("Sunrise time in local format"),
-  sunsetLocal: z
-    .string()
-    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
-    .describe("Sunset time in local format"),
-  humidityPct: z
-    .number()
-    .min(VALIDATION_LIMITS.MIN_HUMIDITY)
-    .max(VALIDATION_LIMITS.MAX_HUMIDITY)
-    .describe("Humidity percentage"),
-  icon: z
-    .string()
-    .min(VALIDATION_LIMITS.MIN_STRING_LENGTH)
-    .describe("Meteocons icon name"),
+  sunriseLocal: z.string().min(1).describe("Local sunrise time"),
+  sunsetLocal: z.string().min(1).describe("Local sunset time"),
+  humidityPct: z.number().min(0).max(100).describe("Humidity percentage"),
+  icon: z.string().min(1).describe("Meteocons icon name"),
 });
 
-/** Extracts the first match or returns empty string. */
-export function getSectionContent(content: string, regex: RegExp): string {
-  return regex.exec(content)?.[0] ?? "";
-}
+// ============================================================================
+// Regex Patterns
+// ============================================================================
 
-/** Returns a human-readable refresh timestamp for the configured timezone. */
-export function createRefreshTime(): string {
-  const now = Temporal.Now.zonedDateTimeISO(CONFIG.timezone);
+/** Matches the entire weather section including markers */
+const WEATHER_SECTION_REGEX =
+  /<!-- Hourly Weather Update -->[\s\S]*?<!-- End of Hourly Weather Update -->/;
 
-  const formattedTime = now.toLocaleString("en-US", {
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: "long",
-    second: "2-digit",
-    weekday: "long",
-    year: "numeric",
-  });
+/** Matches the refresh time element */
+const REFRESH_TIME_REGEX = /<em>Last refresh:.*?<\/em>/;
 
-  return `${formattedTime} (UTC+6)`;
-}
+// ============================================================================
+// Public API
+// ============================================================================
 
-/** Writes updated README content to disk. */
-export async function performFileUpdate(
-  readmePath: string,
-  updatedContent: string
-): Promise<number> {
-  return await Bun.write(readmePath, updatedContent);
-}
+/**
+ * Updates the README file with new weather data.
+ * Automatically detects Markdown or HTML table format.
+ *
+ * @param weatherData - Validated weather payload
+ * @param customReadmePath - Optional custom README path
+ * @returns true if update was made, false if skipped
+ */
+export async function updateReadme(
+  weatherData: WeatherUpdatePayload,
+  customReadmePath?: string
+): Promise<boolean> {
+  const readmePath = customReadmePath ?? DEFAULT_README_PATH;
+  const file = Bun.file(readmePath);
 
-/** Validates payload; returns normalized payload or null if invalid. */
-function validateAndExtractWeatherData(
-  weatherData: WeatherUpdatePayload
-): WeatherUpdatePayload | null {
-  const validationResult = WeatherDataSchema.safeParse(weatherData);
-  if (!validationResult.success) {
-    return null;
+  const exists = await file.exists();
+  if (!exists) {
+    process.stderr.write(`❌ README not found at: ${readmePath}\n`);
+    return false;
   }
-  return {
-    ...validationResult.data,
-    temperatureC: validationResult.data.temperatureC as TemperatureCelsius,
-    sunriseLocal: validationResult.data.sunriseLocal as TimeString,
-    sunsetLocal: validationResult.data.sunsetLocal as TimeString,
-    humidityPct: validationResult.data.humidityPct as HumidityPercentage,
-    icon: validationResult.data.icon as MeteoconIconName,
-  };
+
+  const oldContent = await file.text();
+  const currentSection = getSectionContent(oldContent, WEATHER_SECTION_REGEX);
+
+  if (!currentSection) {
+    process.stderr.write("❌ Weather section markers not found in README\n");
+    return false;
+  }
+
+  if (!validateWeatherPayload(weatherData)) {
+    process.stderr.write("❌ Weather data validation failed\n");
+    return false;
+  }
+
+  const updatedSection = createWeatherData(weatherData, currentSection);
+  const refreshTime = createRefreshTime();
+  const updatedContent = updateReadmeContent(
+    oldContent,
+    updatedSection,
+    refreshTime
+  );
+
+  if (!shouldProceedWithUpdate(oldContent, updatedContent)) {
+    return false;
+  }
+
+  await performFileUpdate(readmePath, updatedContent);
+  return true;
+}
+
+/**
+ * Validates weather payload against schema.
+ * Returns true if valid, false otherwise.
+ */
+function validateWeatherPayload(data: WeatherUpdatePayload): boolean {
+  const result = WeatherDataSchema.safeParse(data);
+  return result.success;
 }
 
 /**
  * Produces an updated weather section while preserving existing structure.
- * Replaces only known tokens to avoid layout drift.
+ * Supports both Markdown pipe-tables and HTML table formats (auto-detected).
  */
 export function createWeatherData(
   payload: WeatherUpdatePayload,
@@ -133,139 +131,168 @@ export function createWeatherData(
     humidityPct,
     icon,
   } = payload;
-
   const meteoconUrl = getMeteoconUrl(icon);
 
-  // Construct the new data row
-  // Format: | <Icon> <Desc> | <Temp> | <Sunrise> | <Sunset> | <Humidity> |
-  // Note: We use HTML img tag to control size (height="17" matches standard text line height)
-  // and vertical alignment to center it with the text.
+  // Auto-detect format: HTML table uses <td> tags
+  const isHtmlTable = currentSection.includes("<td");
+
+  if (isHtmlTable) {
+    return updateHtmlTableCells(currentSection, {
+      description,
+      temperatureC,
+      sunriseLocal,
+      sunsetLocal,
+      humidityPct,
+      iconUrl: meteoconUrl,
+    });
+  }
+
+  // Markdown pipe-table format
   const iconImage = `<img src="${meteoconUrl}" alt="${description} icon" height="17" style="vertical-align: middle;">`;
   const weatherCell = `${iconImage} ${description}`;
   const newRow = `| ${weatherCell} | ${temperatureC}°C | ${sunriseLocal} | ${sunsetLocal} | ${humidityPct}% |`;
 
-  // Regex to find the data row in the table
-  // Looks for a line starting with | that doesn't contain "Weather" (header) or "---" (separator)
   const lines = currentSection.split("\n");
   const updatedLines = lines.map((line) => {
     const trimmed = line.trim();
-    if (
+    const isDataRow =
       trimmed.startsWith("|") &&
       !trimmed.includes("| Weather") &&
-      !trimmed.includes("|---")
-    ) {
-      return newRow;
-    }
-    return line;
+      !trimmed.includes("|---");
+
+    return isDataRow ? newRow : line;
   });
 
   return updatedLines.join("\n");
 }
 
-/** Inserts the updated section and refresh timestamp into README content. */
-export function updateReadmeContent(
-  readmeContent: string,
-  updatedWeatherData: string,
-  lastRefreshTime: string
-): string {
-  const updatedContent = readmeContent.replace(
-    REGEX.weatherSection,
-    updatedWeatherData
-  );
-
-  if (REGEX.refreshTime.test(updatedContent)) {
-    return updatedContent.replace(
-      REGEX.refreshTime,
-      `<em>Last refresh: ${lastRefreshTime}</em>`
-    );
-  }
-
-  return updatedContent;
+/** Cell data for HTML table updates */
+interface HtmlCellData {
+  readonly description: string;
+  readonly temperatureC: number;
+  readonly sunriseLocal: string;
+  readonly sunsetLocal: string;
+  readonly humidityPct: number;
+  readonly iconUrl: string;
 }
 
 /**
- * Returns true when content changed, or FORCE_UPDATE=true is set.
- * Avoids unnecessary writes in CI and local runs.
+ * Updates HTML table cells with new weather data.
+ * Preserves existing HTML structure and attributes.
+ */
+function updateHtmlTableCells(section: string, data: HtmlCellData): string {
+  const tdPattern = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+  const matches = [...section.matchAll(tdPattern)];
+
+  if (matches.length < 5) {
+    return section;
+  }
+
+  const iconImg = `<img width="15" src="${data.iconUrl}" alt="${data.description} icon">`;
+  const cellReplacements = [
+    `${data.description} ${iconImg}`,
+    `${data.temperatureC}°C`,
+    data.sunriseLocal,
+    data.sunsetLocal,
+    `${data.humidityPct}%`,
+  ] as const;
+
+  let cellIndex = 0;
+  return section.replace(
+    /<td([^>]*)>([\s\S]*?)<\/td>/gi,
+    (match, attrs: string) => {
+      if (cellIndex < cellReplacements.length) {
+        const replacement = cellReplacements[cellIndex];
+        cellIndex++;
+        return `<td${attrs}>${replacement}</td>`;
+      }
+      return match;
+    }
+  );
+}
+
+/**
+ * Creates a formatted refresh timestamp in Asia/Dhaka timezone.
+ *
+ * @returns Formatted date string like "Thursday, January 08, 2026 at 02:12:16 (UTC+6)"
+ */
+export function createRefreshTime(): string {
+  const now = Temporal.Now.zonedDateTimeISO(DISPLAY_TIMEZONE);
+
+  const formatted = now.toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  return `${formatted} (UTC+6)`;
+}
+
+/**
+ * Extracts content matching a regex pattern.
+ *
+ * @param content - Source content to search
+ * @param regex - Pattern to match
+ * @returns Matched content or empty string
+ */
+export function getSectionContent(content: string, regex: RegExp): string {
+  const match = content.match(regex);
+  return match?.[0] ?? "";
+}
+
+/**
+ * Inserts the updated section and refresh timestamp into README content.
+ */
+export function updateReadmeContent(
+  readmeContent: string,
+  updatedWeatherSection: string,
+  refreshTime: string
+): string {
+  let result = readmeContent.replace(
+    WEATHER_SECTION_REGEX,
+    updatedWeatherSection
+  );
+  result = result.replace(
+    REFRESH_TIME_REGEX,
+    `<em>Last refresh: ${refreshTime}</em>`
+  );
+  return result;
+}
+
+/**
+ * Determines whether to proceed with the file update.
+ * Returns true if content changed or FORCE_UPDATE is set.
  */
 export function shouldProceedWithUpdate(
   oldContent: string,
   updatedContent: string
 ): boolean {
-  if (updatedContent !== oldContent) {
-    return true;
-  }
-
   const envResult = EnvironmentSchema.safeParse({
-    FORCE_UPDATE: process.env["FORCE_UPDATE"],
-    GITHUB_ACTIONS: process.env["GITHUB_ACTIONS"],
+    FORCE_UPDATE: Bun.env["FORCE_UPDATE"],
+    GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
   });
 
-  return Boolean(envResult.success && envResult.data.FORCE_UPDATE === "true");
+  const forceUpdate =
+    envResult.success && envResult.data.FORCE_UPDATE === "true";
+  const hasChanges = oldContent !== updatedContent;
+
+  return hasChanges || forceUpdate;
 }
 
 /**
- * Reads README, applies replacements, and writes back if needed.
- * Returns false when the file is missing, data is invalid, or nothing changed.
+ * Writes updated content to the README file.
+ *
+ * @returns Number of bytes written
  */
-export async function updateReadme(
-  weatherData: WeatherUpdatePayload,
-  customReadmePath?: string
-): Promise<boolean> {
-  const readmePath = customReadmePath ?? join(process.cwd(), "README.md");
-  const readmeFile = Bun.file(readmePath);
-
-  // Ensure the file exists before proceeding
-  if (!(await readmeFile.exists())) {
-    return false;
-  }
-
-  // Validate input payload
-  const validatedPayload = validateAndExtractWeatherData(weatherData);
-  if (!validatedPayload) {
-    return false;
-  }
-
-  const lastRefreshTime = createRefreshTime();
-
-  // Read the file content
-  const readmeContent = await readmeFile.text();
-
-  // Ensure the weather section markers exist
-  if (!REGEX.weatherSection.test(readmeContent)) {
-    return false;
-  }
-
-  // Extract the current weather section to analyze its format
-  const currentSection = getSectionContent(readmeContent, REGEX.weatherSection);
-
-  // Create an updated weather section that matches the existing format
-  const updatedWeatherData = createWeatherData(
-    {
-      description: validatedPayload.description,
-      temperatureC: validatedPayload.temperatureC,
-      sunriseLocal: validatedPayload.sunriseLocal,
-      sunsetLocal: validatedPayload.sunsetLocal,
-      humidityPct: validatedPayload.humidityPct,
-      icon: validatedPayload.icon,
-    },
-    currentSection
-  );
-
-  // Update the content
-  const oldContent = readmeContent;
-  const updatedContent = updateReadmeContent(
-    readmeContent,
-    updatedWeatherData,
-    lastRefreshTime
-  );
-
-  // Skip write if content is unchanged and FORCE_UPDATE is not set
-  if (!shouldProceedWithUpdate(oldContent, updatedContent)) {
-    return false;
-  }
-
-  // Perform the file update
-  await performFileUpdate(readmePath, updatedContent);
-
-  return true;
+export async function performFileUpdate(
+  readmePath: string,
+  content: string
+): Promise<number> {
+  const bytesWritten = await Bun.write(readmePath, content);
+  return bytesWritten;
 }

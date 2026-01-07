@@ -7,7 +7,6 @@
  * @module sync-readme-tech-stack
  */
 
-import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,7 +49,7 @@ const FOOTER_PATTERN = /<sub>\*\*Last refresh\*\*: .+<\/sub>/;
 const createBadgeMappings = (pkg: PackageJson): readonly BadgeMapping[] => {
   const bunVersion =
     pkg.packageManager?.replace("bun@", "") ??
-    pkg.engines?.bun?.replaceAll(/^>=?/g, "") ??
+    pkg.engines?.["bun"]?.replaceAll(/^>=?/g, "") ??
     "latest";
 
   return [
@@ -150,17 +149,16 @@ const log = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const loadPackageJson = async (): Promise<PackageJson> => {
-  const content = await readFile(PACKAGE_JSON_PATH, "utf8");
+  const content = await Bun.file(PACKAGE_JSON_PATH).text();
   return JSON.parse(content) as PackageJson;
 };
 
-const loadReadme = async (): Promise<string> => {
-  const content = await readFile(README_PATH, "utf8");
-  return content;
+const loadReadme = (): Promise<string> => {
+  return Bun.file(README_PATH).text();
 };
 
 const saveReadme = async (content: string): Promise<void> => {
-  await writeFile(README_PATH, content, "utf8");
+  await Bun.write(README_PATH, content);
 };
 
 const extractVersion = (pkg: PackageJson, dep: string): string => {

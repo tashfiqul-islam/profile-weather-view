@@ -133,8 +133,7 @@ const REGEX_PATTERNS = {
 
 // Test setup & utilities
 
-// Mock global objects
-const originalEnv = { ...process.env };
+// Store original values
 const originalBunFile = Bun.file;
 const originalBunWrite = Bun.write;
 
@@ -158,17 +157,19 @@ beforeEach(() => {
   Bun.file = mockBunFile as any;
   Bun.write = mockBunWrite as any;
 
-  // Reset environment
-  process.env = { ...originalEnv };
+  // Clear environment variables
+  Bun.env["FORCE_UPDATE"] = undefined;
+  Bun.env["GITHUB_ACTIONS"] = undefined;
 });
 
 afterEach(() => {
-  // Restore environment
-  process.env = originalEnv;
-
   // Restore global objects
   Bun.file = originalBunFile;
   Bun.write = originalBunWrite;
+
+  // Clear environment variables
+  Bun.env["FORCE_UPDATE"] = undefined;
+  Bun.env["GITHUB_ACTIONS"] = undefined;
 });
 
 // Helper functions
@@ -507,6 +508,135 @@ describe("createWeatherData", () => {
   });
 });
 
+describe("createWeatherData - HTML Table Format", () => {
+  // HTML table section matching the user's profile README format
+  const HTML_WEATHER_SECTION = `<!-- Hourly Weather Update -->
+        <td align="center">Drizzle <img width="15" src="https://openweathermap.org/img/w/50n.png" alt="Fog icon"></td>
+        <td align="center">13°C</td>
+        <td align="center">05:33</td>
+        <td align="center">18:33</td>
+        <td align="center">100%</td>
+        <!-- End of Hourly Weather Update -->`;
+
+  test("should detect and update HTML table format", () => {
+    // Execute
+    const result = createWeatherData(
+      UPDATED_WEATHER_DATA,
+      HTML_WEATHER_SECTION
+    );
+
+    // Verify - Should contain updated values
+    expect(result).toContain("Partly Cloudy");
+    expect(result).toContain("28°C");
+    expect(result).toContain("07:15");
+    expect(result).toContain("19:22");
+    expect(result).toContain("70%");
+  });
+
+  test("should preserve HTML table structure with align attributes", () => {
+    // Execute
+    const result = createWeatherData(
+      UPDATED_WEATHER_DATA,
+      HTML_WEATHER_SECTION
+    );
+
+    // Verify - Should preserve <td align="center"> attributes
+    expect(result).toContain('<td align="center">');
+    expect(result).toContain("</td>");
+    expect(result).toContain("<!-- Hourly Weather Update -->");
+    expect(result).toContain("<!-- End of Hourly Weather Update -->");
+  });
+
+  test("should include Meteocons icon in HTML format", () => {
+    // Execute
+    const result = createWeatherData(
+      UPDATED_WEATHER_DATA,
+      HTML_WEATHER_SECTION
+    );
+
+    // Verify - Should contain Meteocons URL instead of OpenWeatherMap
+    expect(result).toContain("basmilius/weather-icons");
+    expect(result).toContain("partly-cloudy-day.svg");
+    expect(result).toContain('<img width="15"');
+  });
+
+  test("should update all five cells correctly", () => {
+    // Setup
+    const weatherData: WeatherUpdatePayload = {
+      description: "Thunderstorm",
+      temperatureC: -5 as TemperatureCelsius,
+      sunriseLocal: "06:00" as TimeString,
+      sunsetLocal: "18:00" as TimeString,
+      humidityPct: 95 as HumidityPercentage,
+      icon: "thunderstorms-day" as MeteoconIconName,
+    };
+
+    // Execute
+    const result = createWeatherData(weatherData, HTML_WEATHER_SECTION);
+
+    // Verify each cell
+    expect(result).toContain("Thunderstorm");
+    expect(result).toContain("-5°C");
+    expect(result).toContain("06:00");
+    expect(result).toContain("18:00");
+    expect(result).toContain("95%");
+    expect(result).toContain("thunderstorms-day.svg");
+  });
+
+  test("should handle HTML table with minimal whitespace", () => {
+    // Setup - Compact HTML format
+    const compactHtml =
+      "<!-- Hourly Weather Update --><td>Rain</td><td>20°C</td><td>06:00</td><td>18:00</td><td>80%</td><!-- End of Hourly Weather Update -->";
+
+    // Execute
+    const result = createWeatherData(UPDATED_WEATHER_DATA, compactHtml);
+
+    // Verify
+    expect(result).toContain("Partly Cloudy");
+    expect(result).toContain("28°C");
+  });
+
+  test("should preserve extra cells beyond the first 5 in HTML table", () => {
+    // Setup - HTML table with 6+ cells (extra cells should remain unchanged)
+    const htmlWithExtraCells = `<!-- Hourly Weather Update -->
+        <td align="center">Rain</td>
+        <td align="center">20°C</td>
+        <td align="center">06:00</td>
+        <td align="center">18:00</td>
+        <td align="center">80%</td>
+        <td align="center">Extra Cell</td>
+        <td>Another Extra</td>
+        <!-- End of Hourly Weather Update -->`;
+
+    // Execute
+    const result = createWeatherData(UPDATED_WEATHER_DATA, htmlWithExtraCells);
+
+    // Verify - First 5 cells should be updated, extra cells preserved
+    expect(result).toContain("Partly Cloudy");
+    expect(result).toContain("28°C");
+    expect(result).toContain("07:15");
+    expect(result).toContain("19:22");
+    expect(result).toContain("70%");
+    // Extra cells should remain unchanged
+    expect(result).toContain("Extra Cell");
+    expect(result).toContain("Another Extra");
+  });
+
+  test("should not modify HTML table with fewer than 5 cells", () => {
+    // Setup - Incomplete HTML table
+    const incompleteHtml =
+      "<!-- Hourly Weather Update --><td>Rain</td><td>20°C</td><!-- End of Hourly Weather Update -->";
+
+    // Execute
+    const result = createWeatherData(UPDATED_WEATHER_DATA, incompleteHtml);
+
+    // Verify - Should return unchanged (not enough cells to update)
+    expect(result).toContain("Rain");
+    expect(result).toContain("20°C");
+    expect(result).not.toContain("Partly Cloudy");
+  });
+});
+
 describe("createRefreshTime", () => {
   test("should create formatted refresh time", () => {
     // Execute
@@ -562,7 +692,7 @@ describe("shouldProceedWithUpdate", () => {
   test("should return false when content is unchanged and FORCE_UPDATE is false", () => {
     // Setup
     const content = "Same content";
-    process.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_FALSE;
+    Bun.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_FALSE;
 
     // Execute
     const result = shouldProceedWithUpdate(content, content);
@@ -574,7 +704,7 @@ describe("shouldProceedWithUpdate", () => {
   test("should return true when content is unchanged but FORCE_UPDATE is true", () => {
     // Setup
     const content = "Same content";
-    process.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_TRUE;
+    Bun.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_TRUE;
 
     // Execute
     const result = shouldProceedWithUpdate(content, content);
@@ -586,7 +716,7 @@ describe("shouldProceedWithUpdate", () => {
   test("should handle missing FORCE_UPDATE environment variable", () => {
     // Setup
     const content = "Same content";
-    process.env["FORCE_UPDATE"] = undefined;
+    Bun.env["FORCE_UPDATE"] = undefined;
 
     // Execute
     const result = shouldProceedWithUpdate(content, content);
@@ -598,7 +728,7 @@ describe("shouldProceedWithUpdate", () => {
   test("should handle invalid FORCE_UPDATE value", () => {
     // Setup
     const content = "Same content";
-    process.env["FORCE_UPDATE"] = "invalid";
+    Bun.env["FORCE_UPDATE"] = "invalid";
 
     // Execute
     const result = shouldProceedWithUpdate(content, content);
@@ -607,17 +737,16 @@ describe("shouldProceedWithUpdate", () => {
     expect(result).toBeFalse();
   });
 
-  test("should handle environment variable parsing failure", () => {
+  test("should handle environment variable parsing with both set", () => {
     // Setup
     const content = "Same content";
-    // Set invalid environment variables that might cause parsing issues
-    process.env["FORCE_UPDATE"] = "true";
-    process.env["GITHUB_ACTIONS"] = "true";
+    Bun.env["FORCE_UPDATE"] = "true";
+    Bun.env["GITHUB_ACTIONS"] = "true";
 
     // Execute
     const result = shouldProceedWithUpdate(content, content);
 
-    // Verify - Should still work with valid environment variables
+    // Verify - Should return true when FORCE_UPDATE is true
     expect(result).toBeTrue();
   });
 });

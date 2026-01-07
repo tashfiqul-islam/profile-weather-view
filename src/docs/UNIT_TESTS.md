@@ -158,6 +158,7 @@ describe("getFirstElement", () => {
 
 - `update-readme.ts`
   - Marker detection and content replacement
+  - Markdown pipe-table and HTML table format support (auto-detection)
   - Idempotency when content is identical; `FORCE_UPDATE` semantics
   - Refresh timestamp replacement
   - Error paths: missing file, read/write failures
@@ -166,6 +167,38 @@ describe("getFirstElement", () => {
   - Env validation behavior and messages
   - Daily API call limit tracking and rollovers
   - Error logging on tracking write failure
+
+---
+
+## Mocking Environment Variables
+
+Use `Bun.env` with bracket notation for proper mocking:
+
+```ts
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+
+describe("shouldProceedWithUpdate", () => {
+  beforeEach(() => {
+    // Clear environment before each test
+    Bun.env["FORCE_UPDATE"] = undefined;
+    Bun.env["GITHUB_ACTIONS"] = undefined;
+  });
+
+  afterEach(() => {
+    // Clean up after each test
+    Bun.env["FORCE_UPDATE"] = undefined;
+    Bun.env["GITHUB_ACTIONS"] = undefined;
+  });
+
+  test("should return true when FORCE_UPDATE is true", () => {
+    Bun.env["FORCE_UPDATE"] = "true";
+    const result = shouldProceedWithUpdate("content", "content");
+    expect(result).toBeTrue();
+  });
+});
+```
+
+> **Note**: Use `= undefined` instead of `delete` to satisfy Biome's `noDelete` performance rule.
 
 ---
 

@@ -92,7 +92,7 @@ async function runBunTestsJUnit(): Promise<RunResult> {
     cmd: ["bun", "test", "--reporter=junit"],
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...process.env, CI: "true" },
+    env: { ...Bun.env, CI: "true" },
   });
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
@@ -115,7 +115,7 @@ async function runBunTests(
     stdout: "pipe",
     stderr: "pipe",
     env: {
-      ...process.env,
+      ...Bun.env,
       CI: "true",
     },
   });
@@ -132,7 +132,7 @@ async function runBunTestsStreaming(reporter: "dots" = "dots") {
     cmd: ["bun", "test", `--reporter=${reporter}`],
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...process.env, CI: "true" },
+    env: { ...Bun.env, CI: "true" },
   });
   const decoder = new TextDecoder();
   const outLines: string[] = [];
@@ -286,7 +286,7 @@ async function runPerFileLiveIfEnabled(
   forceLive?: boolean,
   globOverride?: string
 ): Promise<number | null> {
-  const liveEnv = process.env["PER_FILE_LIVE"] as string | undefined;
+  const liveEnv = Bun.env["PER_FILE_LIVE"] as string | undefined;
   const wantLiveDefault = liveEnv !== "0"; // default on in TTY
   const wantLive = typeof forceLive === "boolean" ? forceLive : wantLiveDefault;
   const isTty =
@@ -297,7 +297,7 @@ async function runPerFileLiveIfEnabled(
   // Discover test files: prefer PER_FILE_GLOB, else a default glob under src/tests
   const files = ((): string[] => {
     const globEnv =
-      globOverride ?? (process.env["PER_FILE_GLOB"] as string | undefined);
+      globOverride ?? (Bun.env["PER_FILE_GLOB"] as string | undefined);
     if (globEnv) {
       return globEnv
         .split(",")
@@ -327,7 +327,7 @@ async function runPerFileLiveIfEnabled(
       cmd: ["bun", "test", f, "--reporter=dots"],
       stdout: "pipe",
       stderr: "pipe",
-      env: { ...process.env, CI: "true" },
+      env: { ...Bun.env, CI: "true" },
     });
     const code = await proc.exited;
     const ok = code === 0;
@@ -425,7 +425,7 @@ const cli = parseCliArgs(process.argv.slice(2));
 // Theme toggles
 NO_COLOR =
   (typeof cli["no-color"] === "boolean" ? cli["no-color"] : false) ||
-  Boolean(process.env["NO_COLOR"]?.length);
+  Boolean(Bun.env["NO_COLOR"]?.length);
 const asciiFlag = typeof cli.ascii === "boolean" ? cli.ascii : false;
 USE_UNICODE = !asciiFlag && process.platform !== "win32";
 const BOX = USE_UNICODE
@@ -453,7 +453,7 @@ const BOX = USE_UNICODE
     } as const);
 const TITLE =
   (typeof cli.title === "string" ? cli.title : undefined) ??
-  (process.env["PRETTY_TEST_TITLE"] as string | undefined) ??
+  (Bun.env["PRETTY_TEST_TITLE"] as string | undefined) ??
   "Bun Tests";
 banner(TITLE);
 const liveFlag = typeof cli.live === "boolean" ? cli.live : undefined;

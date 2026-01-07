@@ -129,6 +129,81 @@ bun run commit
 - Slow installs in CI: check `actions/cache` usage and `bun.lock` presence
 - Coverage below 100%: ensure new code has tests; check `bunfig.toml` thresholds
 
+## TypeScript Code Patterns
+
+The codebase follows modern TypeScript patterns:
+
+### Configuration with `satisfies`
+
+```typescript
+const LOCATION = {
+  lat: 23.8759,
+  lon: 90.3795,
+  timezone: "Asia/Dhaka",
+} as const satisfies LocationConfig;
+```
+
+### Named Zod Imports
+
+```typescript
+import { z } from "zod";  // Named import, no namespace
+
+const Schema = z.object({ ... });
+```
+
+### Bun.env for Environment Access
+
+```typescript
+// Use Bun.env with bracket notation
+const forceUpdate = Bun.env["FORCE_UPDATE"] === "true";
+```
+
+### Branded Types for Type Safety
+
+```typescript
+export type TemperatureCelsius = number & { readonly __brand: unique symbol };
+export type TimeString = string & { readonly __brand: unique symbol };
+```
+
+### Structured Logging
+
+```typescript
+const LOG_PREFIXES: Readonly<Record<LogLevel, string>> = {
+  info: "ℹ️",
+  success: "✅",
+  warning: "⚠️",
+  error: "❌",
+} as const;
+```
+
+## README Format Support
+
+The weather updater supports two table formats (auto-detected):
+
+### Markdown pipe-table
+
+```markdown
+<!-- Hourly Weather Update -->
+| Weather | Temperature | Sunrise | Sunset | Humidity |
+| ------- | ----------- | ------- | ------ | -------- |
+| ☀️ Clear | 25°C | 06:00 | 18:00 | 65% |
+<!-- End of Hourly Weather Update -->
+```
+
+### HTML table
+
+```html
+<!-- Hourly Weather Update -->
+<td align="center">Clear <img src="..."></td>
+<td align="center">25°C</td>
+<td align="center">06:00</td>
+<td align="center">18:00</td>
+<td align="center">65%</td>
+<!-- End of Hourly Weather Update -->
+```
+
+Both formats require the `<!-- Hourly Weather Update -->` markers.
+
 ## Project layout
 
 See the full structure in the root README: [Project structure](../../README.md#project-structure)

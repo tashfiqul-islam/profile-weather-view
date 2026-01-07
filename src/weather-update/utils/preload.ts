@@ -1,23 +1,36 @@
 /**
- * Preload utilities for environment validation and simple API rate limiting.
+ * Preload utilities for environment validation and API rate limiting.
  * Ensures configuration is valid before weather updates run.
+ *
+ * @module preload
+ * @since 1.0.0
  */
 
 import "dotenv/config";
-// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for schema typing
-import * as z from "zod";
+import { z } from "zod";
 
-/**
- * Rate limit configuration.
- * Prevents accidental API overuse in CI environments.
- */
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/** Rate limiting configuration */
+interface RateLimitConfig {
+  readonly maxCallsPerDay: number;
+  readonly trackingFile: string;
+  readonly resetTime: string;
+}
+
 const RATE_LIMIT_CONFIG = {
-  maxCallsPerDay: 1000 as const,
-  trackingFile: ".api-calls.json" as const,
-  resetTime: "00:00" as const, // Reset at midnight UTC
-} as const;
+  maxCallsPerDay: 1000,
+  trackingFile: ".api-calls.json",
+  resetTime: "00:00",
+} as const satisfies RateLimitConfig;
 
-// Tracking file schema for persisted counters
+// ============================================================================
+// Schemas
+// ============================================================================
+
+/** Schema for persisted API call tracking */
 const ApiCallTrackingSchema = z.object({
   date: z
     .string()
@@ -32,7 +45,22 @@ const ApiCallTrackingSchema = z.object({
 
 type ApiCallTracking = z.infer<typeof ApiCallTrackingSchema>;
 
-/** Returns today's date in YYYY-MM-DD format. */
+/** Schema for environment variables */
+const EnvironmentSchema = z.object({
+  FORCE_UPDATE: z
+    .string()
+    .optional()
+    .describe("Force README update even if no changes"),
+  GITHUB_ACTIONS: z.string().optional().describe("Running in GitHub Actions"),
+});
+
+export type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
+
+// ============================================================================
+// Date/Time Utilities
+// ============================================================================
+
+/** Returns today's date in YYYY-MM-DD format */
 function getTodayDate(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -41,7 +69,7 @@ function getTodayDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Returns the current time in HH:MM. */
+/** Returns the current time in HH:MM format */
 function getCurrentTime(): string {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
@@ -49,73 +77,83 @@ function getCurrentTime(): string {
   return `${hours}:${minutes}`;
 }
 
-/** True when the stored date differs from today. */
+/** Returns true when stored date differs from today */
 function shouldResetCounter(lastDate: string): boolean {
   return lastDate !== getTodayDate();
 }
 
-/** Loads tracking data from disk; resets counters on a new day. */
+// ============================================================================
+// Tracking File Operations
+// ============================================================================
+
+/** Creates fresh tracking data for a new day */
+function createFreshTracking(): ApiCallTracking {
+  return { date: getTodayDate(), calls: 0 };
+}
+
+/** Loads tracking data from disk; resets counters on a new day */
 async function loadApiCallTracking(): Promise<ApiCallTracking> {
   try {
     const trackingFile = Bun.file(RATE_LIMIT_CONFIG.trackingFile);
-    if (await trackingFile.exists()) {
-      const data = JSON.parse(await trackingFile.text());
+    const exists = await trackingFile.exists();
+
+    if (exists) {
+      const text = await trackingFile.text();
+      const data: unknown = JSON.parse(text);
       const validated = ApiCallTrackingSchema.parse(data);
 
-      // Reset counter if it's a new day
       if (shouldResetCounter(validated.date)) {
-        return {
-          date: getTodayDate(),
-          calls: 0,
-        };
+        return createFreshTracking();
       }
 
       return validated;
     }
   } catch {
-    // If file is missing or invalid, start fresh
     process.stdout.write(
       "⚠️ API tracking file invalid or missing, starting fresh\n"
     );
   }
 
-  return {
-    date: getTodayDate(),
-    calls: 0,
-  };
+  return createFreshTracking();
 }
 
-/** Persists tracking counters; logs to STDERR on failure. */
+/** Persists tracking counters to disk */
 async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
   try {
     const data = JSON.stringify(tracking, null, 2);
     await Bun.write(RATE_LIMIT_CONFIG.trackingFile, data);
   } catch (error) {
-    process.stderr.write(`❌ Failed to save API call tracking: ${error}\n`);
+    process.stderr.write(
+      `❌ Failed to save API call tracking: ${String(error)}\n`
+    );
   }
 }
 
+// ============================================================================
+// Rate Limiting
+// ============================================================================
+
 /**
- * Increments the daily counter and prevents calls after the limit is reached.
- * Useful for CI and local runs to avoid accidental API overuse.
+ * Checks API rate limit and increments the daily counter.
+ * Prevents exceeding the configured maximum calls per day.
+ *
+ * @returns true if the call is allowed, false if limit exceeded
  */
 export async function checkAndUpdateApiLimit(): Promise<boolean> {
   const tracking = await loadApiCallTracking();
 
   if (tracking.calls >= RATE_LIMIT_CONFIG.maxCallsPerDay) {
-    const errorMessage = [
+    const errorLines = [
       `❌ API call limit exceeded! Maximum ${RATE_LIMIT_CONFIG.maxCallsPerDay} calls per day reached.`,
       `📅 Date: ${tracking.date}`,
       `📊 Calls made: ${tracking.calls}`,
-      `⏰ Last call: ${tracking.lastCall || "N/A"}`,
+      `⏰ Last call: ${tracking.lastCall ?? "N/A"}`,
       `🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`,
-    ].join("\n");
-
-    process.stderr.write(`${errorMessage}\n`);
+    ];
+    process.stderr.write(`${errorLines.join("\n")}\n`);
     return false;
   }
 
-  // Update tracking
   const updatedTracking: ApiCallTracking = {
     date: tracking.date,
     calls: tracking.calls + 1,
@@ -132,40 +170,39 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   return true;
 }
 
-/** Environment schema for optional configuration. */
-const EnvironmentSchema = z.object({
-  FORCE_UPDATE: z
-    .string()
-    .optional()
-    .describe("Force README update even if no changes"),
-  GITHUB_ACTIONS: z.string().optional().describe("Running in GitHub Actions"),
-});
+// ============================================================================
+// Environment Validation
+// ============================================================================
 
-export type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
-
-/** Validates optional environment variables. */
+/**
+ * Validates and returns environment variables.
+ * Logs current configuration for debugging.
+ */
 export function validateEnvironmentVariables(): EnvironmentVariables {
   const env = EnvironmentSchema.parse({
     FORCE_UPDATE: Bun.env["FORCE_UPDATE"],
     GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
   });
 
-  // Log environment status for debugging
-  const debugInfo = [
+  const debugLines = [
     "🔍 Environment check:",
     `  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`,
     `  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`,
-  ].join("\n");
-
-  process.stdout.write(`${debugInfo}\n`);
+  ];
+  process.stdout.write(`${debugLines.join("\n")}\n`);
 
   return env;
 }
 
-/** Ensures API limit allows execution and validates environment. */
+/**
+ * Ensures API limit allows execution and validates environment.
+ * Call this before performing weather updates.
+ *
+ * @throws Error if API call limit is exceeded
+ */
 export async function ensureEnvironmentVariables(): Promise<EnvironmentVariables> {
-  // Check API call limit first
-  if (!(await checkAndUpdateApiLimit())) {
+  const allowed = await checkAndUpdateApiLimit();
+  if (!allowed) {
     throw new Error(
       "API call limit exceeded - cannot proceed with weather update"
     );

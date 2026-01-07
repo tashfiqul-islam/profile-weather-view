@@ -1,29 +1,43 @@
+/**
+ * Weather data fetching service for Open-Meteo API.
+ * Fetches current conditions and shapes a minimal payload for README updates.
+ *
+ * @module fetch-weather
+ * @since 1.0.0
+ * @see https://open-meteo.com/en/docs
+ */
+
 import "dotenv/config";
 import { Temporal } from "@js-temporal/polyfill";
-// biome-ignore lint/performance/noNamespaceImport: Zod requires namespace import for proper tree shaking
-import * as z from "zod";
+import { z } from "zod";
 import type { MeteoconIconName } from "./wmo-mapper";
 import { wmoToMeteocons } from "./wmo-mapper";
 
 export type { MeteoconIconName } from "./wmo-mapper";
 
-/**
- * Fetches current weather and shapes a minimal payload for README updates.
- * Uses native fetch with JSON response for precision and simplicity.
- *
- * @see https://open-meteo.com/en/docs
- */
+// ============================================================================
+// Configuration
+// ============================================================================
+
+/** Geographic location for weather queries */
+interface LocationConfig {
+  readonly lat: number;
+  readonly lon: number;
+  readonly timezone: string;
+}
+
+/** Open-Meteo API configuration */
+interface ApiConfig {
+  readonly baseUrl: string;
+  readonly queryParams: Readonly<Record<string, string>>;
+}
 
 const LOCATION = {
   lat: 23.8759,
   lon: 90.3795,
   timezone: "Asia/Dhaka",
-} as const;
+} as const satisfies LocationConfig;
 
-/**
- * Open-Meteo API configuration.
- * We request current conditions + daily sunrise/sunset.
- */
 const OPEN_METEO_CONFIG = {
   baseUrl: "https://api.open-meteo.com/v1/forecast",
   queryParams: {
@@ -37,18 +51,26 @@ const OPEN_METEO_CONFIG = {
     ].join(","),
     daily: ["sunrise", "sunset"].join(","),
     timezone: LOCATION.timezone,
-    timeformat: "unixtime", // Critical: Returns timestamps as seconds (Int64 safe in JSON)
+    timeformat: "unixtime",
   },
-} as const;
+} as const satisfies ApiConfig;
 
-// Branded types for type-safe values
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+/** Branded type for temperature values in Celsius */
 export type TemperatureCelsius = number & { readonly __brand: unique symbol };
+
+/** Branded type for humidity percentages (0-100) */
 export type HumidityPercentage = number & { readonly __brand: unique symbol };
+
+/** Branded type for formatted time strings (HH:MM) */
 export type TimeString = string & { readonly __brand: unique symbol };
 
 /**
- * Minimal payload used to update the README without coupling to raw API shape.
- * Uses Meteocons icon names for weather visualization.
+ * Minimal payload for README weather updates.
+ * Decoupled from raw API shape for stability.
  */
 export interface WeatherUpdatePayload {
   readonly description: string;
@@ -59,10 +81,11 @@ export interface WeatherUpdatePayload {
   readonly icon: MeteoconIconName;
 }
 
-/**
- * Zod schema for validating the processed weather data.
- * This validates our internal data structure, not the raw API response.
- */
+// ============================================================================
+// Schemas
+// ============================================================================
+
+/** Schema for validated internal weather data */
 const ProcessedWeatherSchema = z.object({
   temperature: z.number().describe("Current temperature in Celsius"),
   humidity: z.number().min(0).max(100).describe("Relative humidity percentage"),
@@ -74,10 +97,7 @@ const ProcessedWeatherSchema = z.object({
 
 type ProcessedWeather = z.infer<typeof ProcessedWeatherSchema>;
 
-/**
- * Internal schema for the Open-Meteo JSON response.
- * This ensures strict runtime validation of the external API data.
- */
+/** Schema for Open-Meteo API response validation */
 const OpenMeteoResponseSchema = z.object({
   current: z.object({
     temperature_2m: z.number(),
@@ -91,6 +111,10 @@ const OpenMeteoResponseSchema = z.object({
   }),
   utc_offset_seconds: z.number(),
 });
+
+// ============================================================================
+// Utilities
+// ============================================================================
 
 /**
  * Formats a Date to HH:mm in Asia/Dhaka timezone.
@@ -107,17 +131,16 @@ function formatTimeInDhaka(date: Date): TimeString {
   }) as TimeString;
 }
 
-/**
- * Rounds temperature for compact display.
- * Units are added at render time.
- */
+/** Rounds temperature for compact display */
 function formatTemperature(temp: number): TemperatureCelsius {
   return Math.round(temp) as TemperatureCelsius;
 }
 
 /**
- * Extracts the first element from an array, throwing if empty.
- * Used after schema validation to satisfy TypeScript's strict null checks.
+ * Safely extracts the first element from an array.
+ * Throws if the array is empty.
+ *
+ * @throws Error if array is empty
  */
 export function getFirstElement<T>(arr: readonly T[], fieldName: string): T {
   const first = arr[0];
@@ -127,9 +150,7 @@ export function getFirstElement<T>(arr: readonly T[], fieldName: string): T {
   return first;
 }
 
-/**
- * Validates processed weather data against our schema.
- */
+/** Validates processed weather data against schema */
 function validateProcessedData(data: unknown): ProcessedWeather {
   const result = ProcessedWeatherSchema.safeParse(data);
 
@@ -148,96 +169,98 @@ function validateProcessedData(data: unknown): ProcessedWeather {
 }
 
 /**
- * Fetches current weather and returns a minimal payload for README updates.
+ * Measures execution time of an async operation.
+ * Returns result and duration in milliseconds.
+ */
+async function measureTime<T>(
+  operation: () => Promise<T>
+): Promise<{ result: T; durationMs: number }> {
+  const start = performance.now();
+  const result = await operation();
+  return { result, durationMs: performance.now() - start };
+}
+
+// ============================================================================
+// Main Export
+// ============================================================================
+
+/**
+ * Fetches current weather from Open-Meteo and returns a minimal payload.
  *
  * Features:
- * - Uses native fetch with JSON parsing
- * - Validates API response structure with Zod
+ * - Native fetch with JSON parsing
+ * - Zod schema validation for API responses
  * - WMO weather codes mapped to Meteocons icons
+ * - Temporal-based timezone handling
+ *
+ * @returns Weather data payload for README updates
+ * @throws Error if API request fails or validation fails
+ *
+ * @example
+ * ```ts
+ * const weather = await fetchWeatherData();
+ * console.log(weather.description); // "Clear Sky"
+ * ```
  */
 export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
-  try {
-    const startTime = performance.now();
+  const url = new URL(OPEN_METEO_CONFIG.baseUrl);
+  for (const [key, value] of Object.entries(OPEN_METEO_CONFIG.queryParams)) {
+    url.searchParams.append(key, value);
+  }
 
-    // Construct URL with query parameters
-    const url = new URL(OPEN_METEO_CONFIG.baseUrl);
-    for (const [key, value] of Object.entries(OPEN_METEO_CONFIG.queryParams)) {
-      url.searchParams.append(key, value);
-    }
+  const { result: response, durationMs } = await measureTime(() =>
+    fetch(url.toString())
+  );
 
-    // Fetch weather data
-    const response = await fetch(url.toString());
-
-    if (!response.ok) {
-      throw new Error(
-        `Open-Meteo API failed with status ${response.status}: ${response.statusText}`
-      );
-    }
-
-    const rawData = await response.json();
-
-    const duration = performance.now() - startTime;
-    process.stdout.write(
-      `✅ Open-Meteo API request completed in ${duration.toFixed(2)}ms\n`
-    );
-
-    // Validate structure of the external API response
-    const apiResult = OpenMeteoResponseSchema.safeParse(rawData);
-    if (!apiResult.success) {
-      throw new Error(
-        "Invalid API response structure: Missing required weather fields"
-      );
-    }
-
-    const { current, daily } = apiResult.data;
-
-    const sunriseTimestamp = getFirstElement(daily.sunrise, "sunrise") * 1000;
-    const sunsetTimestamp = getFirstElement(daily.sunset, "sunset") * 1000;
-
-    // Validate and type the processed data
-    const processedData = validateProcessedData({
-      temperature: current.temperature_2m,
-      humidity: current.relative_humidity_2m,
-      weatherCode: Math.round(current.weather_code),
-      isDay: current.is_day === 1,
-      sunrise: new Date(sunriseTimestamp),
-      sunset: new Date(sunsetTimestamp),
-    });
-
-    // Map WMO weather code to Meteocons icon
-    const meteoconIcon = wmoToMeteocons(
-      processedData.weatherCode,
-      processedData.isDay
-    );
-
-    // Build the final payload
-    const payload: WeatherUpdatePayload = {
-      description: meteoconIcon.description,
-      temperatureC: formatTemperature(processedData.temperature),
-      sunriseLocal: formatTimeInDhaka(processedData.sunrise),
-      sunsetLocal: formatTimeInDhaka(processedData.sunset),
-      humidityPct: Math.round(processedData.humidity) as HumidityPercentage,
-      icon: meteoconIcon.name,
-    };
-
-    // Log success with weather summary
-    process.stdout.write(
-      `🌤️ Weather: ${payload.description}, ${payload.temperatureC}°C, ` +
-        `Humidity: ${payload.humidityPct}%, Icon: ${payload.icon}\n`
-    );
-
-    return payload;
-  } catch (error) {
-    // Normalize all errors to Error instances with context
-    if (error instanceof Error) {
-      throw new Error(`[fetchWeather.ts] ❌ ${error.message}`);
-    }
-
-    // Defensive fallback for non-Error types
+  if (!response.ok) {
     throw new Error(
-      `[fetchWeather.ts] ❌ Unexpected error during weather data fetch: ${String(
-        error
-      )}`
+      `[fetch-weather] Open-Meteo API failed: ${response.status} ${response.statusText}`
     );
   }
+
+  const rawData: unknown = await response.json();
+  process.stdout.write(
+    `✅ Open-Meteo API request completed in ${durationMs.toFixed(2)}ms\n`
+  );
+
+  const apiResult = OpenMeteoResponseSchema.safeParse(rawData);
+  if (!apiResult.success) {
+    throw new Error(
+      "[fetch-weather] Invalid API response: missing required fields"
+    );
+  }
+
+  const { current, daily } = apiResult.data;
+  const sunriseTimestamp = getFirstElement(daily.sunrise, "sunrise") * 1000;
+  const sunsetTimestamp = getFirstElement(daily.sunset, "sunset") * 1000;
+
+  const processedData = validateProcessedData({
+    temperature: current.temperature_2m,
+    humidity: current.relative_humidity_2m,
+    weatherCode: Math.round(current.weather_code),
+    isDay: current.is_day === 1,
+    sunrise: new Date(sunriseTimestamp),
+    sunset: new Date(sunsetTimestamp),
+  });
+
+  const meteoconIcon = wmoToMeteocons(
+    processedData.weatherCode,
+    processedData.isDay
+  );
+
+  const payload: WeatherUpdatePayload = {
+    description: meteoconIcon.description,
+    temperatureC: formatTemperature(processedData.temperature),
+    sunriseLocal: formatTimeInDhaka(processedData.sunrise),
+    sunsetLocal: formatTimeInDhaka(processedData.sunset),
+    humidityPct: Math.round(processedData.humidity) as HumidityPercentage,
+    icon: meteoconIcon.name,
+  };
+
+  process.stdout.write(
+    `🌤️ Weather: ${payload.description}, ${payload.temperatureC}°C, ` +
+      `Humidity: ${payload.humidityPct}%, Icon: ${payload.icon}\n`
+  );
+
+  return payload;
 }
