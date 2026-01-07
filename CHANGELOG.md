@@ -1,5 +1,10 @@
 # Changelog
 
+# [3.1.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.1...v3.1.2)
+### fix
+
+* fixed gha test failures ([7b706f9](https://github.com/tashfiqul-islam/profile-weather-view/commit/7b706f9eb1d7a3f8fd15408ea36491804c38f870))
+
 # [3.1.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.0...v3.1.1)
 ### ci
 
