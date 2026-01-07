@@ -64,7 +64,7 @@ prepare-commit-msg:
   jobs:
     - name: commitizen
       interactive: true
-      run: bunx czg
+      run: bunx czg --hook || true
       env:
         LEFTHOOK: "0"
 
