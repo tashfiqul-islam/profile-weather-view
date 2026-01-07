@@ -1,5 +1,13 @@
 # Changelog
 
+# [3.1.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.0...v3.1.1)
+### ci
+
+* removed unnecessary test scripts ([80d6bb9](https://github.com/tashfiqul-islam/profile-weather-view/commit/80d6bb9c8c2d9931c022ee92798b0e2d32feb150))
+### fix
+
+* **ci:** removed unnecessary test script ([f1f7c5b](https://github.com/tashfiqul-islam/profile-weather-view/commit/f1f7c5bb75e62897b3dd696ebb386e3fbc183dc8))
+
 # [3.1.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.0.0...v3.1.0)
 ### feat
 
