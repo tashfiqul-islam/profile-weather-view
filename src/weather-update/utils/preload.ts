@@ -6,7 +6,6 @@
  * @since 1.0.0
  */
 
-import "dotenv/config";
 import { z } from "zod";
 
 // ============================================================================
@@ -109,9 +108,7 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
       return validated;
     }
   } catch {
-    process.stdout.write(
-      "⚠️ API tracking file invalid or missing, starting fresh\n"
-    );
+    console.log("⚠️ API tracking file invalid or missing, starting fresh");
   }
 
   return createFreshTracking();
@@ -123,9 +120,7 @@ async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
     const data = JSON.stringify(tracking, null, 2);
     await Bun.write(RATE_LIMIT_CONFIG.trackingFile, data);
   } catch (error) {
-    process.stderr.write(
-      `❌ Failed to save API call tracking: ${String(error)}\n`
-    );
+    console.error(`❌ Failed to save API call tracking: ${String(error)}`);
   }
 }
 
@@ -150,7 +145,7 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
       `⏰ Last call: ${tracking.lastCall ?? "N/A"}`,
       `🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`,
     ];
-    process.stderr.write(`${errorLines.join("\n")}\n`);
+    console.error(errorLines.join("\n"));
     return false;
   }
 
@@ -163,8 +158,8 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   await saveApiCallTracking(updatedTracking);
 
   const remaining = RATE_LIMIT_CONFIG.maxCallsPerDay - updatedTracking.calls;
-  process.stdout.write(
-    `📊 API call ${updatedTracking.calls}/${RATE_LIMIT_CONFIG.maxCallsPerDay} (${remaining} remaining today)\n`
+  console.log(
+    `📊 API call ${updatedTracking.calls}/${RATE_LIMIT_CONFIG.maxCallsPerDay} (${remaining} remaining today)`
   );
 
   return true;
@@ -189,7 +184,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     `  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`,
     `  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`,
   ];
-  process.stdout.write(`${debugLines.join("\n")}\n`);
+  console.log(debugLines.join("\n"));
 
   return env;
 }

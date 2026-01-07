@@ -73,7 +73,7 @@ export async function updateReadme(
 
   const exists = await file.exists();
   if (!exists) {
-    process.stderr.write(`❌ README not found at: ${readmePath}\n`);
+    console.error(`❌ README not found at: ${readmePath}`);
     return false;
   }
 
@@ -81,12 +81,12 @@ export async function updateReadme(
   const currentSection = getSectionContent(oldContent, WEATHER_SECTION_REGEX);
 
   if (!currentSection) {
-    process.stderr.write("❌ Weather section markers not found in README\n");
+    console.error("❌ Weather section markers not found in README");
     return false;
   }
 
   if (!validateWeatherPayload(weatherData)) {
-    process.stderr.write("❌ Weather data validation failed\n");
+    console.error("❌ Weather data validation failed");
     return false;
   }
 

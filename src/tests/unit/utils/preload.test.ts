@@ -58,8 +58,8 @@ const TEST_CONSTANTS = {
 const originalEnv = { ...Bun.env };
 const originalBunFile = Bun.file;
 const originalBunWrite = Bun.write;
-const originalStdoutWrite = process.stdout.write;
-const originalStderrWrite = process.stderr.write;
+const originalLog = console.log;
+const originalError = console.error;
 
 const mockBunFile = mock(originalBunFile);
 const mockBunWrite = mock(originalBunWrite);
@@ -88,14 +88,12 @@ beforeEach(() => {
   Bun.write = mockBunWrite as any;
 
   // Mock console output
-  process.stdout.write = (chunk: string) => {
+  console.log = (chunk: string) => {
     stdoutCalls.push(chunk);
-    return true;
   };
 
-  process.stderr.write = (chunk: string) => {
+  console.error = (chunk: string) => {
     stderrCalls.push(chunk);
-    return true;
   };
 
   // Reset environment
@@ -109,8 +107,8 @@ afterEach(() => {
   // Restore global objects
   Bun.file = originalBunFile;
   Bun.write = originalBunWrite;
-  process.stdout.write = originalStdoutWrite;
-  process.stderr.write = originalStderrWrite;
+  console.log = originalLog;
+  console.error = originalError;
 });
 
 // Helper functions
@@ -172,7 +170,7 @@ describe("checkAndUpdateApiLimit", () => {
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
       expect(stdoutCalls).toContain(
-        "📊 API call 501/1000 (499 remaining today)\n"
+        "📊 API call 501/1000 (499 remaining today)"
       );
     } finally {
       restoreDate();
@@ -230,9 +228,7 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain(
-        "📊 API call 1/1000 (999 remaining today)\n"
-      );
+      expect(stdoutCalls).toContain("📊 API call 1/1000 (999 remaining today)");
     } finally {
       restoreDate();
     }
@@ -279,9 +275,7 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain(
-        "📊 API call 1/1000 (999 remaining today)\n"
-      );
+      expect(stdoutCalls).toContain("📊 API call 1/1000 (999 remaining today)");
     } finally {
       restoreDate();
     }
