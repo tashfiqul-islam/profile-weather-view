@@ -28,9 +28,9 @@
     "zod"
   ],
   "engines": {
-    "bun": ">=1.3.5"
+    "bun": ">=1.3.9"
   },
-  "packageManager": "bun@1.3.5",
+  "packageManager": "bun@1.3.9",
   "main": "./src/weather-update/index.ts",
   "exports": {
     ".": {
