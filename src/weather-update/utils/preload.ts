@@ -36,12 +36,16 @@ const ApiCallTrackingSchema = z.object({
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .describe("Date in YYYY-MM-DD format"),
-  calls: z.number().int().min(0).describe("Number of API calls made"),
+    .meta({ description: "Date in YYYY-MM-DD format" }),
+  calls: z
+    .number()
+    .int()
+    .min(0)
+    .meta({ description: "Number of API calls made" }),
   lastCall: z
     .string()
     .optional()
-    .describe("Time of last API call in HH:MM format"),
+    .meta({ description: "Time of last API call in HH:MM format" }),
 });
 
 type ApiCallTracking = z.infer<typeof ApiCallTrackingSchema>;
@@ -51,8 +55,11 @@ const EnvironmentSchema = z.object({
   FORCE_UPDATE: z
     .string()
     .optional()
-    .describe("Force README update even if no changes"),
-  GITHUB_ACTIONS: z.string().optional().describe("Running in GitHub Actions"),
+    .meta({ description: "Force README update even if no changes" }),
+  GITHUB_ACTIONS: z
+    .string()
+    .optional()
+    .meta({ description: "Running in GitHub Actions" }),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;

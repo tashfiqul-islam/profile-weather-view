@@ -34,12 +34,19 @@ const EnvironmentSchema = z.object({
 
 /** Schema for validating weather data before rendering */
 const WeatherDataSchema = z.object({
-  description: z.string().min(1).describe("Weather condition description"),
-  temperatureC: z.number().describe("Temperature in Celsius"),
-  sunriseLocal: z.string().min(1).describe("Local sunrise time"),
-  sunsetLocal: z.string().min(1).describe("Local sunset time"),
-  humidityPct: z.number().min(0).max(100).describe("Humidity percentage"),
-  icon: z.string().min(1).describe("Meteocons icon name"),
+  description: z
+    .string()
+    .min(1)
+    .meta({ description: "Weather condition description" }),
+  temperatureC: z.number().meta({ description: "Temperature in Celsius" }),
+  sunriseLocal: z.string().min(1).meta({ description: "Local sunrise time" }),
+  sunsetLocal: z.string().min(1).meta({ description: "Local sunset time" }),
+  humidityPct: z
+    .number()
+    .min(0)
+    .max(100)
+    .meta({ description: "Humidity percentage" }),
+  icon: z.string().min(1).meta({ description: "Meteocons icon name" }),
 });
 
 // ============================================================================

@@ -87,12 +87,21 @@ export interface WeatherUpdatePayload {
 
 /** Schema for validated internal weather data */
 const ProcessedWeatherSchema = z.object({
-  temperature: z.number().describe("Current temperature in Celsius"),
-  humidity: z.number().min(0).max(100).describe("Relative humidity percentage"),
-  weatherCode: z.number().int().describe("WMO weather interpretation code"),
-  isDay: z.boolean().describe("Whether it's currently daytime"),
-  sunrise: z.date().describe("Today's sunrise time"),
-  sunset: z.date().describe("Today's sunset time"),
+  temperature: z
+    .number()
+    .meta({ description: "Current temperature in Celsius" }),
+  humidity: z
+    .number()
+    .min(0)
+    .max(100)
+    .meta({ description: "Relative humidity percentage" }),
+  weatherCode: z
+    .number()
+    .int()
+    .meta({ description: "WMO weather interpretation code" }),
+  isDay: z.boolean().meta({ description: "Whether it's currently daytime" }),
+  sunrise: z.date().meta({ description: "Today's sunrise time" }),
+  sunset: z.date().meta({ description: "Today's sunset time" }),
 });
 
 type ProcessedWeather = z.infer<typeof ProcessedWeatherSchema>;
