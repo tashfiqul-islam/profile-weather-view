@@ -1,5 +1,35 @@
 # Changelog
 
+# [3.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.3...v3.1.4)
+### chore
+
+* **deps:** Pin dependencies [skip actions] (#160) ([2638041](https://github.com/tashfiqul-islam/profile-weather-view/commit/263804193522b635bbb71b71b80d09196f08c3c6))
+* **deps:** Pin dependencies [skip actions] (#162) ([4d356ad](https://github.com/tashfiqul-islam/profile-weather-view/commit/4d356ad109e9f41d428da214103891a2591f1327))
+### ci
+
+* **actions:** deep 2026 architecture improvements to all workflows ([d107202](https://github.com/tashfiqul-islam/profile-weather-view/commit/d107202446abb3da641ccabef313b3213ab79c97))
+* **actions:** upgrade all workflow actions to latest 2026 versions ([855952b](https://github.com/tashfiqul-islam/profile-weather-view/commit/855952befb40390009c1cd9498846cb7d5af2b50))
+### docs
+
+* **ai:** add CLAUDE.md, AGENTS.md, copilot-instructions; update README ([801d7a8](https://github.com/tashfiqul-islam/profile-weather-view/commit/801d7a84ce3109dabd8e463a70180e195d184a47))
+### fix
+
+* **config:** remove dotenv, fix packageManager, linker=isolated, Bun native ([3d7ab51](https://github.com/tashfiqul-islam/profile-weather-view/commit/3d7ab51464c1097a51cb533648e9ba40a7249835))
+* **config:** scope weather preload to start/dev scripts only ([c0389bc](https://github.com/tashfiqul-islam/profile-weather-view/commit/c0389bc7b493c90d5e9ad6b580e9f2e30313f6b2))
+* **core:** derive UTC offset dynamically, remove hardcoded UTC+6 ([0272e42](https://github.com/tashfiqul-islam/profile-weather-view/commit/0272e42655c1037e8a0dd5a130426534d799382e))
+* **test:** replace OpenWeatherMap mock with Open-Meteo format ([43bf062](https://github.com/tashfiqul-islam/profile-weather-view/commit/43bf062fed6a29e4e9ba065423997ab22fbecb89))
+### perf
+
+* **types:** upgrade Zod .describe() to .meta() across all schemas ([c06764d](https://github.com/tashfiqul-islam/profile-weather-view/commit/c06764d214f14d221c206919d162559c114f7b20))
+### refactor
+
+* **core:** extract shared logger module from index ([eee020c](https://github.com/tashfiqul-islam/profile-weather-view/commit/eee020c90d663a5d99c1d41ac8db56369caea681))
+* **core:** route all service logging through logger module ([867270e](https://github.com/tashfiqul-islam/profile-weather-view/commit/867270e3fab9dbb423366a7b8b0ce6557774a3a9))
+* **utils:** replace new Date() with Temporal in preload ([85920a8](https://github.com/tashfiqul-islam/profile-weather-view/commit/85920a8f0e9431713cf3daf08a2449a5385489a4))
+### test
+
+* **test:** add Symbol.asyncDispose helper, guard bun audit in CI ([d33a53f](https://github.com/tashfiqul-islam/profile-weather-view/commit/d33a53f0cea2575c3d4909f5e1aff5043128320c))
+
 # [3.1.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.2...v3.1.3)
 ### fix
 
