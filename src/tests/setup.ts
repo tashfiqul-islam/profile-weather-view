@@ -119,6 +119,24 @@ This is other content that should not be modified.
         // Ignore cleanup errors
       }
     },
+    /** Creates a temp file with automatic cleanup via Symbol.dispose.
+     *  Use with the `using` keyword: `await using f = await createDisposableTempFile(...)` */
+    createDisposableTempFile: async (content: string, filename = "temp.md") => {
+      const TEMP_ROOT = path.join(os.tmpdir(), "profile-weather-view-tests");
+      await $`mkdir -p ${TEMP_ROOT}`.quiet();
+      const tempPath = path.join(TEMP_ROOT, filename);
+      await Bun.write(tempPath, content);
+      return {
+        path: tempPath,
+        [Symbol.asyncDispose]: async () => {
+          try {
+            await $`rm -f ${tempPath}`.quiet();
+          } catch {
+            // Ignore cleanup errors
+          }
+        },
+      };
+    },
   },
 };
 
