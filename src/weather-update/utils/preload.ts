@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+import { log } from "./logger";
 
 // ============================================================================
 // Configuration
@@ -108,7 +109,7 @@ async function loadApiCallTracking(): Promise<ApiCallTracking> {
       return validated;
     }
   } catch {
-    console.log("⚠️ API tracking file invalid or missing, starting fresh");
+    log("API tracking file invalid or missing, starting fresh", "warning");
   }
 
   return createFreshTracking();
@@ -120,7 +121,7 @@ async function saveApiCallTracking(tracking: ApiCallTracking): Promise<void> {
     const data = JSON.stringify(tracking, null, 2);
     await Bun.write(RATE_LIMIT_CONFIG.trackingFile, data);
   } catch (error) {
-    console.error(`❌ Failed to save API call tracking: ${String(error)}`);
+    log(`Failed to save API call tracking: ${String(error)}`, "error");
   }
 }
 
@@ -138,14 +139,14 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   const tracking = await loadApiCallTracking();
 
   if (tracking.calls >= RATE_LIMIT_CONFIG.maxCallsPerDay) {
-    const errorLines = [
+    log(
       `❌ API call limit exceeded! Maximum ${RATE_LIMIT_CONFIG.maxCallsPerDay} calls per day reached.`,
-      `📅 Date: ${tracking.date}`,
-      `📊 Calls made: ${tracking.calls}`,
-      `⏰ Last call: ${tracking.lastCall ?? "N/A"}`,
-      `🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`,
-    ];
-    console.error(errorLines.join("\n"));
+      "error"
+    );
+    log(`📅 Date: ${tracking.date}`, "error");
+    log(`📊 Calls made: ${tracking.calls}`, "error");
+    log(`⏰ Last call: ${tracking.lastCall ?? "N/A"}`, "error");
+    log(`🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`, "error");
     return false;
   }
 
@@ -158,8 +159,9 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
   await saveApiCallTracking(updatedTracking);
 
   const remaining = RATE_LIMIT_CONFIG.maxCallsPerDay - updatedTracking.calls;
-  console.log(
-    `📊 API call ${updatedTracking.calls}/${RATE_LIMIT_CONFIG.maxCallsPerDay} (${remaining} remaining today)`
+  log(
+    `API call ${updatedTracking.calls}/${RATE_LIMIT_CONFIG.maxCallsPerDay} (${remaining} remaining today)`,
+    "info"
   );
 
   return true;
@@ -179,12 +181,9 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
   });
 
-  const debugLines = [
-    "🔍 Environment check:",
-    `  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`,
-    `  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`,
-  ];
-  console.log(debugLines.join("\n"));
+  log("🔍 Environment check:", "info");
+  log(`  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`, "info");
+  log(`  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`, "info");
 
   return env;
 }

@@ -8,6 +8,7 @@
 
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
+import { log } from "../utils/logger";
 import type { WeatherUpdatePayload } from "./fetch-weather";
 import { getMeteoconUrl } from "./wmo-mapper";
 
@@ -73,7 +74,7 @@ export async function updateReadme(
 
   const exists = await file.exists();
   if (!exists) {
-    console.error(`❌ README not found at: ${readmePath}`);
+    log(`README not found at: ${readmePath}`, "error");
     return false;
   }
 
@@ -81,12 +82,12 @@ export async function updateReadme(
   const currentSection = getSectionContent(oldContent, WEATHER_SECTION_REGEX);
 
   if (!currentSection) {
-    console.error("❌ Weather section markers not found in README");
+    log("Weather section markers not found in README", "error");
     return false;
   }
 
   if (!validateWeatherPayload(weatherData)) {
-    console.error("❌ Weather data validation failed");
+    log("Weather data validation failed", "error");
     return false;
   }
 

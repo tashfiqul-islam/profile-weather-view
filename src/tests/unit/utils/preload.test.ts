@@ -58,13 +58,13 @@ const TEST_CONSTANTS = {
 const originalEnv = { ...Bun.env };
 const originalBunFile = Bun.file;
 const originalBunWrite = Bun.write;
-const originalLog = console.log;
-const originalError = console.error;
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
 const mockBunFile = mock(originalBunFile);
 const mockBunWrite = mock(originalBunWrite);
 
-// Capture console output
+// Capture process stream output (used by log() in logger.ts)
 let stdoutCalls: string[] = [];
 let stderrCalls: string[] = [];
 
@@ -87,13 +87,15 @@ beforeEach(() => {
   Bun.file = mockBunFile as any;
   Bun.write = mockBunWrite as any;
 
-  // Mock console output
-  console.log = (chunk: string) => {
+  // Capture process stream output (log() writes here)
+  process.stdout.write = (chunk: string) => {
     stdoutCalls.push(chunk);
+    return true;
   };
 
-  console.error = (chunk: string) => {
+  process.stderr.write = (chunk: string) => {
     stderrCalls.push(chunk);
+    return true;
   };
 
   // Reset environment
@@ -107,8 +109,8 @@ afterEach(() => {
   // Restore global objects
   Bun.file = originalBunFile;
   Bun.write = originalBunWrite;
-  console.log = originalLog;
-  console.error = originalError;
+  process.stdout.write = originalStdoutWrite;
+  process.stderr.write = originalStderrWrite;
 });
 
 // Helper functions
@@ -169,9 +171,11 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain(
-        "📊 API call 501/1000 (499 remaining today)"
-      );
+      expect(
+        stdoutCalls.some((call) =>
+          call.includes("API call 501/1000 (499 remaining today)")
+        )
+      ).toBeTrue();
     } finally {
       restoreDate();
     }
@@ -228,7 +232,11 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain("📊 API call 1/1000 (999 remaining today)");
+      expect(
+        stdoutCalls.some((call) =>
+          call.includes("API call 1/1000 (999 remaining today)")
+        )
+      ).toBeTrue();
     } finally {
       restoreDate();
     }
@@ -247,10 +255,8 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(
-        stdoutCalls.some((call) =>
-          call.includes(
-            "⚠️ API tracking file invalid or missing, starting fresh"
-          )
+        stderrCalls.some((call) =>
+          call.includes("API tracking file invalid or missing, starting fresh")
         )
       ).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
@@ -275,7 +281,11 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
-      expect(stdoutCalls).toContain("📊 API call 1/1000 (999 remaining today)");
+      expect(
+        stdoutCalls.some((call) =>
+          call.includes("API call 1/1000 (999 remaining today)")
+        )
+      ).toBeTrue();
     } finally {
       restoreDate();
     }
@@ -297,10 +307,8 @@ describe("checkAndUpdateApiLimit", () => {
       // Verify
       expect(result).toBeTrue();
       expect(
-        stdoutCalls.some((call) =>
-          call.includes(
-            "⚠️ API tracking file invalid or missing, starting fresh"
-          )
+        stderrCalls.some((call) =>
+          call.includes("API tracking file invalid or missing, starting fresh")
         )
       ).toBeTrue();
       expect(mockBunWrite).toHaveBeenCalledTimes(1);
@@ -327,9 +335,7 @@ describe("checkAndUpdateApiLimit", () => {
       expect(result).toBeTrue();
       expect(
         stderrCalls.some((call) =>
-          call.includes(
-            "❌ Failed to save API call tracking: Error: Write error"
-          )
+          call.includes("Failed to save API call tracking: Error: Write error")
         )
       ).toBeTrue();
     } finally {

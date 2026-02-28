@@ -9,6 +9,7 @@
 
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
+import { log } from "../utils/logger";
 import type { MeteoconIconName } from "./wmo-mapper";
 import { wmoToMeteocons } from "./wmo-mapper";
 
@@ -218,8 +219,9 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   }
 
   const rawData: unknown = await response.json();
-  console.log(
-    `✅ Open-Meteo API request completed in ${durationMs.toFixed(2)}ms`
+  log(
+    `Open-Meteo API request completed in ${durationMs.toFixed(2)}ms`,
+    "success"
   );
 
   const apiResult = OpenMeteoResponseSchema.safeParse(rawData);
@@ -256,9 +258,10 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     icon: meteoconIcon.name,
   };
 
-  console.log(
-    `🌤️ Weather: ${payload.description}, ${payload.temperatureC}°C, ` +
-      `Humidity: ${payload.humidityPct}%, Icon: ${payload.icon}`
+  log(
+    `Weather: ${payload.description}, ${payload.temperatureC}°C, ` +
+      `Humidity: ${payload.humidityPct}%, Icon: ${payload.icon}`,
+    "info"
   );
 
   return payload;
