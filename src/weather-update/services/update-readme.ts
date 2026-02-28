@@ -231,7 +231,16 @@ export function createRefreshTime(): string {
     hour12: false,
   });
 
-  return `${formatted} (UTC+6)`;
+  const rawOffset = now.offset; // e.g. "+06:00"
+  const sign = rawOffset[0] ?? "+";
+  const hrs = Number.parseInt(rawOffset.slice(1, 3), 10);
+  const mins = Number.parseInt(rawOffset.slice(4, 6), 10);
+  const utcOffset =
+    mins === 0
+      ? `UTC${sign}${hrs}`
+      : `UTC${sign}${hrs}:${String(mins).padStart(2, "0")}`;
+
+  return `${formatted} (${utcOffset})`;
 }
 
 /**

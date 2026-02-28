@@ -132,7 +132,15 @@ const formatDate = (date: Date, timezone: string): string => {
   const second = get("second");
   const dayPeriod = get("dayPeriod");
 
-  return `${weekday}, ${month} ${day}, ${year} at ${hour}:${minute}:${second} ${dayPeriod} (UTC+6)`;
+  const offsetParts = new Intl.DateTimeFormat("en", {
+    timeZone: timezone,
+    timeZoneName: "shortOffset",
+  }).formatToParts(date);
+  const rawOffset =
+    offsetParts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
+  const utcOffset = rawOffset.replace("GMT", "UTC");
+
+  return `${weekday}, ${month} ${day}, ${year} at ${hour}:${minute}:${second} ${dayPeriod} (${utcOffset})`;
 };
 
 const log = {
