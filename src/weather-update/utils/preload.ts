@@ -6,6 +6,7 @@
  * @since 1.0.0
  */
 
+import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
 import { log } from "./logger";
 
@@ -60,21 +61,15 @@ export type EnvironmentVariables = z.infer<typeof EnvironmentSchema>;
 // Date/Time Utilities
 // ============================================================================
 
-/** Returns today's date in YYYY-MM-DD format */
+/** Returns today's date in YYYY-MM-DD format (UTC) */
 function getTodayDate(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return Temporal.Now.zonedDateTimeISO("UTC").toPlainDate().toString();
 }
 
-/** Returns the current time in HH:MM format */
+/** Returns the current time in HH:MM format (UTC) */
 function getCurrentTime(): string {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
+  const t = Temporal.Now.zonedDateTimeISO("UTC").toPlainTime();
+  return `${String(t.hour).padStart(2, "0")}:${String(t.minute).padStart(2, "0")}`;
 }
 
 /** Returns true when stored date differs from today */

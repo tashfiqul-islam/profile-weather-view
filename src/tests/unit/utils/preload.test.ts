@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { Temporal } from "@js-temporal/polyfill";
 import {
   checkAndUpdateApiLimit,
   ensureEnvironmentVariables,
@@ -126,27 +127,20 @@ function createMockFile(
   };
 }
 
-/** Stubs Date for deterministic tests; returns restore function. */
+/** Stubs Temporal.Now for deterministic tests; returns restore function. */
 function mockDate(dateString: string) {
-  const mockDateInstance = new Date(dateString);
-  const OriginalDate = global.Date;
+  const mockInstant = Temporal.Instant.from(dateString);
+  const mockZdt = mockInstant.toZonedDateTimeISO("UTC");
 
-  // Create a custom Date class that returns our mocked date
-  const MockDate = function (this: any, ...args: any[]) {
-    if (args.length === 0) {
-      return mockDateInstance;
-    }
-    const [year, month, ...rest] = args;
-    return new OriginalDate(year, month, ...rest);
-  } as any;
+  const originalZonedDateTimeISO = Temporal.Now.zonedDateTimeISO;
 
-  MockDate.now = () => mockDateInstance.getTime();
-  MockDate.prototype = OriginalDate.prototype;
-
-  global.Date = MockDate;
+  (Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"] = (
+    _tz: unknown
+  ) => mockZdt;
 
   return () => {
-    global.Date = OriginalDate;
+    (Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"] =
+      originalZonedDateTimeISO;
   };
 }
 
