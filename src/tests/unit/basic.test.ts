@@ -48,15 +48,17 @@ describe("Weather Test Helpers", () => {
     const response = createMockOpenWeatherResponse();
 
     expect(response).toBeDefined();
-    expect(response["lat"]).toBe(
-      Number.parseFloat(WEATHER_TEST_CONSTANTS.LOCATION.LAT)
-    );
-    expect(response["lon"]).toBe(
-      Number.parseFloat(WEATHER_TEST_CONSTANTS.LOCATION.LON)
-    );
-    expect(response["timezone"]).toBe(WEATHER_TEST_CONSTANTS.LOCATION.TIMEZONE);
     expect(response["current"]).toBeDefined();
-    expect((response["current"] as { weather: unknown[] }).weather).toBeArray();
+    const current = response["current"] as Record<string, unknown>;
+    expect(current["temperature_2m"]).toBeTypeOf("number");
+    expect(current["relative_humidity_2m"]).toBeTypeOf("number");
+    expect(current["weather_code"]).toBeTypeOf("number");
+    expect(current["is_day"]).toBeTypeOf("number");
+    expect(response["daily"]).toBeDefined();
+    const daily = response["daily"] as Record<string, unknown>;
+    expect(daily["sunrise"]).toBeArray();
+    expect(daily["sunset"]).toBeArray();
+    expect(response["utc_offset_seconds"]).toBeTypeOf("number");
   });
 
   test("should allow payload overrides", () => {

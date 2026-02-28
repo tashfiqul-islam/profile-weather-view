@@ -245,7 +245,7 @@ export function createTestWeatherPayload(
   return { ...DEFAULT_PAYLOAD, ...overrides };
 }
 
-/** Produces a minimal API response (overrides allowed). */
+/** Produces a minimal Open-Meteo API response (overrides allowed). */
 export function createMockOpenWeatherResponse(
   overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
@@ -254,33 +254,17 @@ export function createMockOpenWeatherResponse(
   );
 
   const DEFAULT_RESPONSE = {
-    lat: Number.parseFloat(WEATHER_TEST_CONSTANTS.LOCATION.LAT),
-    lon: Number.parseFloat(WEATHER_TEST_CONSTANTS.LOCATION.LON),
-    timezone: WEATHER_TEST_CONSTANTS.LOCATION.TIMEZONE,
-    timezone_offset: WEATHER_TEST_CONSTANTS.TIME.UTC_OFFSET_DHAKA,
     current: {
-      dt: currentTime,
-      sunrise: currentTime - WEATHER_TEST_CONSTANTS.TIME.HOUR_IN_SECONDS,
-      sunset: currentTime + WEATHER_TEST_CONSTANTS.TIME.HOUR_IN_SECONDS,
-      temp: WEATHER_TEST_CONSTANTS.TEMPERATURE.DEFAULT,
-      feels_like: WEATHER_TEST_CONSTANTS.TEMPERATURE.DEFAULT + 2,
-      pressure: 1013 as const,
-      humidity: WEATHER_TEST_CONSTANTS.HUMIDITY.DEFAULT,
-      dew_point: 18.5 as const,
-      uvi: 6.5 as const,
-      clouds: 10 as const,
-      visibility: 10_000 as const,
-      wind_speed: 3.5 as const,
-      wind_deg: 180 as const,
-      weather: [
-        {
-          id: 800 as const,
-          main: "Clear" as const,
-          description: "clear sky" as const,
-          icon: WEATHER_TEST_CONSTANTS.ICONS.CLEAR_DAY,
-        },
-      ] as const,
+      temperature_2m: WEATHER_TEST_CONSTANTS.TEMPERATURE.DEFAULT,
+      relative_humidity_2m: WEATHER_TEST_CONSTANTS.HUMIDITY.DEFAULT,
+      weather_code: 0 as const, // WMO: clear sky
+      is_day: 1 as const,
     },
+    daily: {
+      sunrise: [currentTime - WEATHER_TEST_CONSTANTS.TIME.HOUR_IN_SECONDS],
+      sunset: [currentTime + WEATHER_TEST_CONSTANTS.TIME.HOUR_IN_SECONDS],
+    },
+    utc_offset_seconds: WEATHER_TEST_CONSTANTS.TIME.UTC_OFFSET_DHAKA,
   } as const;
 
   return { ...DEFAULT_RESPONSE, ...overrides };

@@ -40,59 +40,29 @@ export const testUtils = {
     };
   },
 
-  /** Produces a minimal OpenWeather-like response. */
+  /** Produces a minimal Open-Meteo API response for tests. */
   createMockApiResponse: () => {
-    const MOCK_LAT = 23.8759;
-    const MOCK_LON = 90.3795;
-    const MOCK_TIMEZONE = "Asia/Dhaka";
-    const MOCK_TIMEZONE_OFFSET = 21_600;
     const MOCK_TEMP = 25.5;
-    const MOCK_FEELS_LIKE = 27.2;
-    const MOCK_PRESSURE = 1013;
     const MOCK_HUMIDITY = 60;
-    const MOCK_DEW_POINT = 18.5;
-    const MOCK_UVI = 6.5;
-    const MOCK_CLOUDS = 10;
-    const MOCK_VISIBILITY = 10_000;
-    const MOCK_WIND_SPEED = 3.5;
-    const MOCK_WIND_DEG = 180;
-    const MOCK_WEATHER_ID = 800;
-    const MOCK_WEATHER_MAIN = "Clear";
-    const MOCK_WEATHER_DESC = "clear sky";
-    const MOCK_WEATHER_ICON = "01d";
+    const MOCK_WEATHER_CODE = 0; // WMO: clear sky
+    const MOCK_IS_DAY = 1;
+    const MOCK_UTC_OFFSET = 21_600; // UTC+6 in seconds
     const SECONDS_IN_HOUR = 3600;
-
     const MILLISECONDS_TO_SECONDS = 1000;
     const currentTime = Math.floor(Date.now() / MILLISECONDS_TO_SECONDS);
 
     return {
-      lat: MOCK_LAT,
-      lon: MOCK_LON,
-      timezone: MOCK_TIMEZONE,
-      timezone_offset: MOCK_TIMEZONE_OFFSET,
       current: {
-        dt: currentTime,
-        sunrise: currentTime - SECONDS_IN_HOUR,
-        sunset: currentTime + SECONDS_IN_HOUR,
-        temp: MOCK_TEMP,
-        feels_like: MOCK_FEELS_LIKE,
-        pressure: MOCK_PRESSURE,
-        humidity: MOCK_HUMIDITY,
-        dew_point: MOCK_DEW_POINT,
-        uvi: MOCK_UVI,
-        clouds: MOCK_CLOUDS,
-        visibility: MOCK_VISIBILITY,
-        wind_speed: MOCK_WIND_SPEED,
-        wind_deg: MOCK_WIND_DEG,
-        weather: [
-          {
-            id: MOCK_WEATHER_ID,
-            main: MOCK_WEATHER_MAIN,
-            description: MOCK_WEATHER_DESC,
-            icon: MOCK_WEATHER_ICON,
-          },
-        ],
+        temperature_2m: MOCK_TEMP,
+        relative_humidity_2m: MOCK_HUMIDITY,
+        weather_code: MOCK_WEATHER_CODE,
+        is_day: MOCK_IS_DAY,
       },
+      daily: {
+        sunrise: [currentTime - SECONDS_IN_HOUR],
+        sunset: [currentTime + SECONDS_IN_HOUR],
+      },
+      utc_offset_seconds: MOCK_UTC_OFFSET,
     };
   },
 
