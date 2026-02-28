@@ -5,9 +5,6 @@
 # Runtime Configuration
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Preload scripts for all Bun executions
-preload = ["./src/weather-update/utils/preload.ts"]
-
 # Log level: "debug" | "warn" | "error"
 logLevel = "warn"
 

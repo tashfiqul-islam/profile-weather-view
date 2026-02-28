@@ -41,8 +41,8 @@
   },
   "sideEffects": false,
   "scripts": {
-    "dev": "bun --watch src/weather-update/index.ts",
-    "start": "bun src/weather-update/index.ts",
+    "dev": "bun --preload ./src/weather-update/utils/preload.ts --watch src/weather-update/index.ts",
+    "start": "bun --preload ./src/weather-update/utils/preload.ts src/weather-update/index.ts",
     "build": "bun build src/weather-update/index.ts --outdir dist --target bun",
     "build:prod": "bun build src/weather-update/index.ts --outdir dist --target bun --minify",
     "test": "bun test",
