@@ -17,8 +17,8 @@ export type MeteoconIconName = string & { readonly __brand: unique symbol };
 
 /** Meteocons icon with name and description */
 export interface MeteoconIcon {
-  readonly name: MeteoconIconName;
   readonly description: string;
+  readonly name: MeteoconIconName;
 }
 
 // ============================================================================

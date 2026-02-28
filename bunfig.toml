@@ -76,7 +76,7 @@ saveTextLockfile = true
 
 # Linker strategy: "hoisted" | "isolated"
 # "isolated" is stricter and recommended for new projects
-linker = "hoisted"
+linker = "isolated"
 
 # Auto-install behavior: "auto" | "force" | "disable" | "fallback"
 auto = "fallback"

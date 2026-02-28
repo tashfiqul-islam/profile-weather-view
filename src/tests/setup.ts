@@ -4,9 +4,9 @@
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach } from "bun:test";
-import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { $ } from "bun";
 
 // Environment configuration used by tests
 
@@ -135,7 +135,7 @@ This is other content that should not be modified.
   fs: {
     createTempFile: async (content: string, filename = "temp.md") => {
       const TEMP_ROOT = path.join(os.tmpdir(), "profile-weather-view-tests");
-      await fs.mkdir(TEMP_ROOT, { recursive: true });
+      await $`mkdir -p ${TEMP_ROOT}`.quiet();
       const tempPath = path.join(TEMP_ROOT, filename);
       await Bun.write(tempPath, content);
       return tempPath;
@@ -144,7 +144,7 @@ This is other content that should not be modified.
       // Remove all temporary files created during tests
       try {
         const TEMP_ROOT = path.join(os.tmpdir(), "profile-weather-view-tests");
-        await fs.rm(TEMP_ROOT, { recursive: true, force: true });
+        await $`rm -rf ${TEMP_ROOT}`.quiet();
       } catch {
         // Ignore cleanup errors
       }

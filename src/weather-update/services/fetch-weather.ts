@@ -73,11 +73,11 @@ export type TimeString = string & { readonly __brand: unique symbol };
  */
 export interface WeatherUpdatePayload {
   readonly description: string;
-  readonly temperatureC: TemperatureCelsius;
-  readonly sunriseLocal: TimeString;
-  readonly sunsetLocal: TimeString;
   readonly humidityPct: HumidityPercentage;
   readonly icon: MeteoconIconName;
+  readonly sunriseLocal: TimeString;
+  readonly sunsetLocal: TimeString;
+  readonly temperatureC: TemperatureCelsius;
 }
 
 // ============================================================================

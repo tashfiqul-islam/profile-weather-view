@@ -61,14 +61,14 @@ jobs:
       # Repository Checkout
       # ─────────────────────────────────────────────────────────────────────────
       - name: Checkout weather repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: ${{ github.repository }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Checkout profile repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: ${{ env.PROFILE_REPO }}
           path: profile-repo
@@ -105,7 +105,7 @@ jobs:
           else
             echo "::notice::Using cached dependencies"
           fi
-          bun install --no-summary
+          bun install --frozen-lockfile --no-summary
           echo "::endgroup::"
 
       # ─────────────────────────────────────────────────────────────────────────

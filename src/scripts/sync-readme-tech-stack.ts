@@ -14,14 +14,15 @@ import { join } from "node:path";
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface PackageJson {
-  readonly version: string;
   readonly dependencies?: Readonly<Record<string, string>>;
   readonly devDependencies?: Readonly<Record<string, string>>;
-  readonly packageManager?: string;
   readonly engines?: Readonly<Record<string, string>>;
+  readonly packageManager?: string;
+  readonly version: string;
 }
 
 interface BadgeMapping {
+  readonly dependencyName: string;
   readonly pattern: RegExp;
   readonly replacement: (version: string) => string;
 }
@@ -55,53 +56,50 @@ const createBadgeMappings = (pkg: PackageJson): readonly BadgeMapping[] => {
   return [
     // Core Technologies
     {
+      dependencyName: "typescript",
       pattern: /TypeScript-[\d.]+(?:-[\w]+)?-3178C6/g,
       replacement: (v) => `TypeScript-${v}-3178C6`,
     },
     {
+      dependencyName: "bun",
       pattern: /Bun-[\d.]+(?:-[\w]+)?-000000/g,
       replacement: () => `Bun-${bunVersion}-000000`,
     },
     {
+      dependencyName: "bun",
       pattern: /Bun%20Test-[\d.]+(?:-[\w]+)?-000000/g,
       replacement: () => `Bun%20Test-${bunVersion}-000000`,
     },
     {
+      dependencyName: "zod",
       pattern: /Zod-[\d.]+(?:-[\w]+)?-3E67B1/g,
       replacement: (v) => `Zod-${v}-3E67B1`,
     },
 
     // Development & Build Tools
     {
+      dependencyName: "@js-temporal/polyfill",
       pattern: /Temporal-[\d.]+(?:-[\w]+)?-1F2A44/g,
       replacement: (v) => `Temporal-${v}-1F2A44`,
     },
     {
+      dependencyName: "@biomejs/biome",
       pattern: /Biome-[\d.]+(?:-[\w]+)?-60A5FA/g,
       replacement: (v) => `Biome-${v}-60A5FA`,
     },
 
     // Quality & Automation
     {
+      dependencyName: "semantic-release",
       pattern: /semantic--release-[\d.]+(?:-[\w]+)?-e10079/g,
       replacement: (v) => `semantic--release-${v}-e10079`,
     },
     {
+      dependencyName: "lefthook",
       pattern: /Lefthook-[\d.]+(?:-[\w]+)?-FF4088/g,
       replacement: (v) => `Lefthook-${v}-FF4088`,
     },
   ] satisfies BadgeMapping[];
-};
-
-const DEPENDENCY_MAP: Readonly<Record<number, string>> = {
-  0: "typescript",
-  1: "bun",
-  2: "bun",
-  3: "zod",
-  4: "@js-temporal/polyfill",
-  5: "@biomejs/biome",
-  6: "semantic-release",
-  7: "lefthook",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,13 +170,8 @@ const updateBadges = (readme: string, pkg: PackageJson): [string, number] => {
   let updated = readme;
   let count = 0;
 
-  for (const [index, mapping] of mappings.entries()) {
-    const dep = DEPENDENCY_MAP[index];
-    if (!dep) {
-      continue;
-    }
-
-    const version = extractVersion(pkg, dep);
+  for (const mapping of mappings) {
+    const version = extractVersion(pkg, mapping.dependencyName);
     const newBadge = mapping.replacement(version);
 
     if (mapping.pattern.test(updated)) {

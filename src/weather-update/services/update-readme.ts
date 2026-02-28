@@ -169,11 +169,11 @@ export function createWeatherData(
 /** Cell data for HTML table updates */
 interface HtmlCellData {
   readonly description: string;
-  readonly temperatureC: number;
-  readonly sunriseLocal: string;
-  readonly sunsetLocal: string;
   readonly humidityPct: number;
   readonly iconUrl: string;
+  readonly sunriseLocal: string;
+  readonly sunsetLocal: string;
+  readonly temperatureC: number;
 }
 
 /**

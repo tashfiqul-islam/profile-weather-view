@@ -15,8 +15,8 @@ import { z } from "zod";
 /** Rate limiting configuration */
 interface RateLimitConfig {
   readonly maxCallsPerDay: number;
-  readonly trackingFile: string;
   readonly resetTime: string;
+  readonly trackingFile: string;
 }
 
 const RATE_LIMIT_CONFIG = {

@@ -6,7 +6,6 @@
  * @since 1.0.0
  */
 
-import "dotenv/config";
 import { fetchWeatherData } from "./services/fetch-weather";
 import { updateReadme } from "./services/update-readme";
 import { ensureEnvironmentVariables } from "./utils/preload";
@@ -20,9 +19,9 @@ type LogLevel = "info" | "success" | "warning" | "error";
 
 /** Structured error information for logging and debugging */
 interface ErrorInfo {
-  readonly message: string;
-  readonly details: string;
   readonly context: string;
+  readonly details: string;
+  readonly message: string;
 }
 
 // ============================================================================

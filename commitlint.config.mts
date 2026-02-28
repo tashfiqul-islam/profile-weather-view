@@ -17,47 +17,47 @@ import { RuleConfigSeverity } from "@commitlint/types";
  * @see https://cz-git.qbb.sh/config/
  */
 interface CzgTypeOption {
-  value: string;
-  name: string;
   emoji?: string;
+  name: string;
+  value: string;
 }
 
 interface CzgIssuePrefixOption {
-  value: string;
   name: string;
+  value: string;
 }
 
 interface CzgPromptConfig {
-  messages?: Record<string, string>;
-  types?: CzgTypeOption[];
-  useEmoji?: boolean;
-  emojiAlign?: "left" | "center" | "right";
-  useAI?: boolean;
-  aiNumber?: number;
   aiModel?: string;
-  scopes?: readonly string[] | string[];
-  enableMultipleScopes?: boolean;
-  scopeEnumSeparator?: string;
-  allowCustomScopes?: boolean;
-  allowEmptyScopes?: boolean;
-  customScopesAlign?: "top" | "bottom" | "top-bottom" | "bottom-top";
-  emptyScopesAlias?: string;
-  customScopesAlias?: string;
-  upperCaseSubject?: boolean;
-  markBreakingChangeMode?: boolean;
+  aiNumber?: number;
   allowBreakingChanges?: readonly string[] | string[];
   allowCustomIssuePrefix?: boolean;
+  allowCustomScopes?: boolean;
   allowEmptyIssuePrefix?: boolean;
-  issuePrefixes?: CzgIssuePrefixOption[];
-  skipQuestions?: readonly string[] | string[];
+  allowEmptyScopes?: boolean;
   confirmColorize?: boolean;
-  maxSubjectLength?: number;
-  minSubjectLength?: number;
-  defaultType?: string;
-  defaultScope?: string;
-  defaultSubject?: string;
+  customScopesAlias?: string;
+  customScopesAlign?: "top" | "bottom" | "top-bottom" | "bottom-top";
   defaultBody?: string;
   defaultIssues?: string;
+  defaultScope?: string;
+  defaultSubject?: string;
+  defaultType?: string;
+  emojiAlign?: "left" | "center" | "right";
+  emptyScopesAlias?: string;
+  enableMultipleScopes?: boolean;
+  issuePrefixes?: CzgIssuePrefixOption[];
+  markBreakingChangeMode?: boolean;
+  maxSubjectLength?: number;
+  messages?: Record<string, string>;
+  minSubjectLength?: number;
+  scopeEnumSeparator?: string;
+  scopes?: readonly string[] | string[];
+  skipQuestions?: readonly string[] | string[];
+  types?: CzgTypeOption[];
+  upperCaseSubject?: boolean;
+  useAI?: boolean;
+  useEmoji?: boolean;
 }
 
 interface CzgUserConfig extends Omit<UserConfig, "prompt"> {
