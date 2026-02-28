@@ -8,46 +8,18 @@
 
 import { fetchWeatherData } from "./services/fetch-weather";
 import { updateReadme } from "./services/update-readme";
+import { log } from "./utils/logger";
 import { ensureEnvironmentVariables } from "./utils/preload";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
-/** Log severity levels */
-type LogLevel = "info" | "success" | "warning" | "error";
-
 /** Structured error information for logging and debugging */
 interface ErrorInfo {
   readonly context: string;
   readonly details: string;
   readonly message: string;
-}
-
-// ============================================================================
-// Logging
-// ============================================================================
-
-/** Log level prefixes for console output */
-const LOG_PREFIXES: Readonly<Record<LogLevel, string>> = {
-  info: "ℹ️",
-  success: "✅",
-  warning: "⚠️",
-  error: "❌",
-} as const;
-
-/**
- * Logs a message with timestamp and severity indicator.
- * Writes to stdout for info/success, stderr for warning/error.
- */
-function log(message: string, level: LogLevel = "info"): void {
-  const timestamp = new Date().toISOString();
-  const prefix = LOG_PREFIXES[level];
-  const entry = `${prefix} [${timestamp}] Weather Update: ${message}\n`;
-
-  const stream =
-    level === "error" || level === "warning" ? process.stderr : process.stdout;
-  stream.write(entry);
 }
 
 // ============================================================================
