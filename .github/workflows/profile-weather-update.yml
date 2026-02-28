@@ -49,7 +49,7 @@ env:
 jobs:
   update-weather:
     name: Update Weather Data
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       api_response_time: ${{ steps.update-weather-and-readme.outputs.API_RESPONSE_TIME }}
@@ -92,7 +92,6 @@ jobs:
           path: |
             node_modules
             ~/.bun/install/cache
-            bun.lock
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-
@@ -195,7 +194,6 @@ jobs:
           path: |
             node_modules
             ~/.bun/install/cache
-            bun.lock
           key: ${{ steps.cache-deps.outputs.cache-primary-key }}
 
       # ─────────────────────────────────────────────────────────────────────────
@@ -275,7 +273,7 @@ jobs:
     name: Verify & Report
     needs: update-weather
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     timeout-minutes: 2
@@ -345,7 +343,9 @@ jobs:
     name: Recovery Actions
     needs: [update-weather, verify]
     if: always() && (needs.update-weather.result == 'failure' || needs.verify.result == 'failure')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     timeout-minutes: 3
 
     steps:

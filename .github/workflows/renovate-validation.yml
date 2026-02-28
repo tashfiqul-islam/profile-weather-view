@@ -34,7 +34,7 @@ permissions:
 jobs:
   validate:
     name: Validate Renovate Config
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:
@@ -51,12 +51,8 @@ jobs:
 
       - name: Validate Renovate configuration
         run: |
-          echo "::group::Installing renovate CLI"
-          npm install --global renovate@43.46.1
-          echo "::endgroup::"
-
           echo "::group::Validating renovate.json"
-          renovate-config-validator --strict
+          npx --yes --package renovate@43.46.1 renovate-config-validator --strict
           echo "::endgroup::"
 
       - name: Generate summary

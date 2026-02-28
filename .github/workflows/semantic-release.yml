@@ -34,6 +34,7 @@ permissions:
   issues: write
   pull-requests: write
   id-token: write
+  attestations: write
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Environment variables
@@ -55,13 +56,12 @@ env:
 jobs:
   release:
     name: 🚀 Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       version: ${{ steps.check-release.outputs.new_release_version }}
       release_upload_url: ${{ steps.check-release.outputs.release_upload_url }}
       latest_tag: ${{ steps.check-release.outputs.latest_tag }}
-      provenance_assets: ${{ steps.generate-provenance.outputs.provenance_assets }}
       skip_ci: ${{ steps.skip-ci-check.outputs.skip_ci }}
 
     steps:
@@ -204,21 +204,18 @@ jobs:
         with:
           name: changelog
           path: CHANGELOG.md
+          retention-days: 7
 
-      - name: Generate provenance assets
-        id: generate-provenance
+      - name: Attest release provenance
         if: steps.check-release.outputs.new_release_version != ''
-        run: |
-          ASSETS=("CHANGELOG.md" "package.json" "bun.lock" "bunfig.toml" "README.md")
-          CONTENT=""
-          for asset in "${ASSETS[@]}"; do
-            if [ -f "$asset" ]; then
-              HASH=$(sha256sum "$asset")
-              CONTENT+="$HASH"
-              CONTENT+=$'\n'
-            fi
-          done
-          echo "provenance_assets=$(echo -n "$CONTENT" | base64 -w0)" >> $GITHUB_OUTPUT
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: |
+            CHANGELOG.md
+            package.json
+            bun.lock
+            bunfig.toml
+            README.md
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Generate Release Summary
@@ -227,7 +224,9 @@ jobs:
     name: Generate Release Summary
     needs: [release]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
 
     steps:
       - name: Download changelog
