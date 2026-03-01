@@ -1,5 +1,10 @@
 # Changelog
 
+# [3.1.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.4...v3.1.5)
+### docs
+
+* **copilot:** add path-specific instructions and prompt files per 2026 Copilot docs ([6f08090](https://github.com/tashfiqul-islam/profile-weather-view/commit/6f0809001b8a61946f38994695917004cae6d79e))
+
 # [3.1.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.3...v3.1.4)
 ### chore
 
