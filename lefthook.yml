@@ -23,7 +23,7 @@ pre-commit:
     # Format and lint with Ultracite (Biome)
     - name: format
       glob: "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
-      run: bunx ultracite@latest fix {staged_files}
+      run: bunx ultracite fix {staged_files}
       stage_fixed: true
       fail_text: "❌ Formatting failed. Run 'bun run format' to fix."
 
@@ -87,7 +87,7 @@ pre-push:
 
     # Lint check (no fix, just validate)
     - name: lint
-      run: bunx ultracite@latest check
+      run: bunx ultracite check
       fail_text: "❌ Lint errors found."
 
 # ═══════════════════════════════════════════════════════════════════════════════

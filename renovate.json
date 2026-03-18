@@ -24,12 +24,8 @@
   "separateMajorMinor": true,
   "separateMultipleMajor": true,
   "separateMinorPatch": false,
-  "commitMessagePrefix": "chore(deps):",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "{{newVersion}}",
-  "semanticCommits": "enabled",
-  "semanticCommitType": "chore",
-  "semanticCommitScope": "deps",
   "commitMessageSuffix": "[skip actions]",
   "commitBody": "[skip actions]",
   "lockFileMaintenance": {

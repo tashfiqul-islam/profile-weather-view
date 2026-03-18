@@ -33,15 +33,8 @@ const RATE_LIMIT_CONFIG = {
 
 /** Schema for persisted API call tracking */
 const ApiCallTrackingSchema = z.object({
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .meta({ description: "Date in YYYY-MM-DD format" }),
-  calls: z
-    .number()
-    .int()
-    .min(0)
-    .meta({ description: "Number of API calls made" }),
+  date: z.string().date().meta({ description: "Date in YYYY-MM-DD format" }),
+  calls: z.int().min(0).meta({ description: "Number of API calls made" }),
   lastCall: z
     .string()
     .optional()
