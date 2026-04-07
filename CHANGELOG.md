@@ -1,5 +1,10 @@
 # Changelog
 
+# [3.1.7](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.6...v3.1.7)
+### fix
+
+* stale preload data fix ([93e9244](https://github.com/tashfiqul-islam/profile-weather-view/commit/93e9244c769e3fe61c7aea2439a3f038c6f31de6))
+
 # [3.1.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.5...v3.1.6)
 ### chore
 
