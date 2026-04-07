@@ -142,21 +142,17 @@ const WMO_DAY_MAP: Readonly<Record<number, MeteoconIcon>> = {
  * Icons without -day suffix remain unchanged (e.g., "rain", "snow").
  */
 function createNightMap(): Readonly<Record<number, MeteoconIcon>> {
-  const nightMap: Record<number, MeteoconIcon> = {};
-
-  for (const [codeStr, icon] of Object.entries(WMO_DAY_MAP)) {
-    const code = Number(codeStr);
-    const nightName = icon.name.includes("-day")
-      ? icon.name.replace("-day", "-night")
-      : icon.name;
-
-    nightMap[code] = {
-      name: nightName as MeteoconIconName,
-      description: icon.description,
-    };
-  }
-
-  return nightMap;
+  return Object.fromEntries(
+    Object.entries(WMO_DAY_MAP).map(([code, icon]) => [
+      Number(code),
+      {
+        name: (icon.name.includes("-day")
+          ? icon.name.replace("-day", "-night")
+          : icon.name) as MeteoconIconName,
+        description: icon.description,
+      },
+    ])
+  );
 }
 
 const WMO_NIGHT_MAP: Readonly<Record<number, MeteoconIcon>> = createNightMap();

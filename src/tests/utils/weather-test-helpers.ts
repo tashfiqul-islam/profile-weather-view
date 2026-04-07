@@ -3,6 +3,7 @@
  * Comments emphasize intent and reuse across tests.
  */
 
+import { Temporal } from "@js-temporal/polyfill";
 import type {
   HumidityPercentage,
   TemperatureCelsius,
@@ -249,8 +250,9 @@ export function createTestWeatherPayload(
 export function createMockOpenWeatherResponse(
   overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
-  const currentTime = Math.floor(
-    Date.now() / WEATHER_TEST_CONSTANTS.TIME.MILLISECONDS_TO_SECONDS
+  const currentTime = Math.round(
+    Temporal.Now.instant().epochMilliseconds /
+      WEATHER_TEST_CONSTANTS.TIME.MILLISECONDS_TO_SECONDS
   );
 
   const DEFAULT_RESPONSE = {

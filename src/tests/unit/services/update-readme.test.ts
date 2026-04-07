@@ -305,7 +305,7 @@ This is a test README.
       text: () => Promise.resolve(unchangedContent),
     };
     mockBunFile.mockReturnValue(mockFile as any);
-    process.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_FALSE;
+    Bun.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_FALSE;
 
     // Use the exact same weather data that's already in the content
     const sameWeatherData: WeatherUpdatePayload = {
@@ -330,7 +330,7 @@ This is a test README.
     const mockFile = createMockFile();
     mockBunFile.mockReturnValue(mockFile as any);
     mockBunWrite.mockResolvedValue(0);
-    process.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_TRUE;
+    Bun.env["FORCE_UPDATE"] = TEST_CONSTANTS.FORCE_UPDATE_TRUE;
 
     // Execute
     const result = await updateReadme(MOCK_WEATHER_DATA);

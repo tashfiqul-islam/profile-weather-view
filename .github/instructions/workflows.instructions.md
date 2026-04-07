@@ -7,7 +7,7 @@ applyTo: ".github/workflows/**"
 ## Runners & Versions
 
 - Always `runs-on: ubuntu-24.04` — never `ubuntu-latest` (prevents silent runtime migration between LTS versions)
-- Always `bun-version: 1.3.10` — never `latest` (reproducibility)
+- Always `bun-version: 1.3.11` — never `latest` (reproducibility)
 - Install command: `LEFTHOOK=0 bun install --frozen-lockfile --no-summary --ignore-scripts`
 
 ## Action SHA Pinning
@@ -28,12 +28,12 @@ uses: actions/checkout@main
 | Action | Version | SHA |
 |--------|---------|-----|
 | `actions/checkout` | v6.0.2 | `de0fac2e4500dabe0009e67214ff5f5447ce83dd` |
-| `oven-sh/setup-bun` | v2.1.2 | `3d267786b128fe76c2f16a390aa2448b815359f3` |
-| `actions/cache` | v5.0.3 | `cdf6c1fa76f9f475f3d7449005a359c84ca0f306` |
-| `actions/setup-node` | v6.2.0 | `6044e13b5dc448c55e2357c09f80417699197238` |
+| `oven-sh/setup-bun` | v2.2.0 | `0c5077e51419868618aeaa5fe8019c62421857d6` |
+| `actions/cache` | v5.0.4 | `668228422ae6a00e4ad889ee87cd7109ec5666a7` |
+| `actions/setup-node` | v6.3.0 | `53b83947a5a98c8d113130e565377fae1a50d02f` |
 | `actions/upload-artifact` | v7.0.0 | `bbbca2ddaa5d8feaa63e36b76fdaad77386f024f` |
-| `actions/download-artifact` | v8.0.0 | `70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3` |
-| `crazy-max/ghaction-import-gpg` | v6.3.0 | `e89d40939c28e39f97cf32126055eeae86ba74ec` |
+| `actions/download-artifact` | v8.0.1 | `3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` |
+| `crazy-max/ghaction-import-gpg` | v7.0.0 | `2dc316deee8e90f13e1a351ab510b4d5bc0c82cd` |
 | `actions/attest-build-provenance` | v4.1.0 | `a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32` |
 
 ## Permissions (least privilege)
@@ -62,7 +62,7 @@ Jobs that only write `$GITHUB_STEP_SUMMARY` need only `contents: read`.
 
 ```yaml
 # Correct
-- uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+- uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
   with:
     path: ~/.bun/install/cache
     key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}

@@ -6,6 +6,8 @@
  * @since 3.2.0
  */
 
+import { Temporal } from "@js-temporal/polyfill";
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -34,7 +36,7 @@ const LOG_PREFIXES: Readonly<Record<LogLevel, string>> = {
  * Writes to stdout for info/success, stderr for warning/error.
  */
 export function log(message: string, level: LogLevel = "info"): void {
-  const timestamp = new Date().toISOString();
+  const timestamp = Temporal.Now.instant().toString();
   const prefix = LOG_PREFIXES[level];
   const entry = `${prefix} [${timestamp}] Weather Update: ${message}\n`;
 

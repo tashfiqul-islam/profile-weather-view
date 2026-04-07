@@ -1,16 +1,23 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    // ── Emit & Module ────────────────────────────────────────────────────
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
-    "types": ["bun-types"],
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "types": ["bun-types"],
     "noEmit": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+
+    // ── TypeScript 6.0 ──────────────────────────────────────────────────
+    "erasableSyntaxOnly": true,
+    "libReplacement": false,
+
+    // ── Strict Type-Checking ─────────────────────────────────────────────
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -23,15 +30,17 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": ".",
+
+    // ── Path Aliases ─────────────────────────────────────────────────────
     "paths": {
-      "@/*": ["src/*"],
-      "@/services/*": ["src/weather-update/services/*"],
-      "@/utils/*": ["src/weather-update/utils/*"]
+      "@/*": ["./src/*"],
+      "@/services/*": ["./src/weather-update/services/*"],
+      "@/utils/*": ["./src/weather-update/utils/*"]
     },
+
+    // ── Interop & Output ─────────────────────────────────────────────────
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
     "noErrorTruncation": true
   },
   "include": [

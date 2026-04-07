@@ -6,6 +6,7 @@
  * @since 1.0.0
  */
 
+import { Temporal } from "@js-temporal/polyfill";
 import { fetchWeatherData } from "./services/fetch-weather";
 import { updateReadme } from "./services/update-readme";
 import { log } from "./utils/logger";
@@ -31,8 +32,7 @@ interface ErrorInfo {
  * Normalizes unknown error types to a consistent shape.
  */
 function createErrorInfo(error: unknown): ErrorInfo {
-  const timestamp = new Date().toISOString();
-  const context = `[${timestamp}] Weather Update Script`;
+  const context = `[${Temporal.Now.instant().toString()}] Weather Update Script`;
 
   if (error instanceof Error) {
     return {

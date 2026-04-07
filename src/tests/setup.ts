@@ -3,9 +3,9 @@
  * Comments focus on intent and non-obvious behavior.
  */
 
-import { afterAll, afterEach, beforeAll, beforeEach } from "bun:test";
 import os from "node:os";
 import path from "node:path";
+import { Temporal } from "@js-temporal/polyfill";
 import { $ } from "bun";
 
 // Environment configuration used by tests
@@ -48,8 +48,9 @@ export const testUtils = {
     const MOCK_IS_DAY = 1;
     const MOCK_UTC_OFFSET = 21_600; // UTC+6 in seconds
     const SECONDS_IN_HOUR = 3600;
-    const MILLISECONDS_TO_SECONDS = 1000;
-    const currentTime = Math.floor(Date.now() / MILLISECONDS_TO_SECONDS);
+    const currentTime = Math.round(
+      Temporal.Now.instant().epochMilliseconds / 1000
+    );
 
     return {
       current: {
@@ -139,28 +140,6 @@ This is other content that should not be modified.
     },
   },
 };
-
-// Global test hooks
-
-/** Runs once before all tests. */
-beforeAll(() => {
-  // Placeholder for any global setup validation if needed
-});
-
-/** Runs once after all tests. */
-afterAll(() => {
-  // Placeholder for any global teardown if needed
-});
-
-/** Runs before each test. */
-beforeEach(() => {
-  // Placeholder for per-test setup
-});
-
-/** Runs after each test. */
-afterEach(() => {
-  // Placeholder for per-test cleanup
-});
 
 // Exported test configuration for shared thresholds and data
 

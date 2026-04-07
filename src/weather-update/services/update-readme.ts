@@ -205,16 +205,13 @@ function updateHtmlTableCells(section: string, data: HtmlCellData): string {
     `${data.humidityPct}%`,
   ] as const;
 
-  let cellIndex = 0;
+  // Use an iterator to avoid mutable counter
+  const replacements = cellReplacements[Symbol.iterator]();
   return section.replace(
     /<td([^>]*)>([\s\S]*?)<\/td>/gi,
     (match, attrs: string) => {
-      if (cellIndex < cellReplacements.length) {
-        const replacement = cellReplacements[cellIndex];
-        cellIndex++;
-        return `<td${attrs}>${replacement}</td>`;
-      }
-      return match;
+      const next = replacements.next();
+      return next.done ? match : `<td${attrs}>${next.value}</td>`;
     }
   );
 }

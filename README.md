@@ -26,7 +26,7 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 ### Core
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-v5.9.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/Bun-v1.3.10-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh) [![Zod](https://img.shields.io/badge/Zod-v4.3.6-3E67B1?style=flat-square)](https://zod.dev) [![Temporal](https://img.shields.io/badge/Temporal-v0.5.1-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-v6.0.2-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/Bun-v1.3.11-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh) [![Zod](https://img.shields.io/badge/Zod-v4.3.6-3E67B1?style=flat-square)](https://zod.dev) [![Temporal](https://img.shields.io/badge/Temporal-v0.5.1-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/)
 
 ### Weather
 
@@ -34,11 +34,11 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 ### Quality
 
-[![Biome](https://img.shields.io/badge/Biome-v2.4.4-60A5FA?style=flat-square&logo=biome&logoColor=white)](https://biomejs.dev/) [![Ultracite](https://img.shields.io/badge/Ultracite-v7.2.4-0B7285?style=flat-square)](https://github.com/haydenbleasel/ultracite) [![Bun Test](https://img.shields.io/badge/Bun%20Test-v1.3.10-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh/docs/cli/test)
+[![Biome](https://img.shields.io/badge/Biome-v2.4.10-60A5FA?style=flat-square&logo=biome&logoColor=white)](https://biomejs.dev/) [![Ultracite](https://img.shields.io/badge/Ultracite-v7.4.3-0B7285?style=flat-square)](https://github.com/haydenbleasel/ultracite) [![Bun Test](https://img.shields.io/badge/Bun%20Test-v1.3.11-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh/docs/cli/test)
 
 ### Automation
 
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) [![semantic-release](https://img.shields.io/badge/semantic--release-v25.0.3-e10079?style=flat-square&logo=semantic-release)](https://semantic-release.gitbook.io/) [![Renovate](https://img.shields.io/badge/Renovate-Enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://renovatebot.com) [![Lefthook](https://img.shields.io/badge/Lefthook-v2.1.1-FF4088?style=flat-square&logo=git&logoColor=white)](https://github.com/evilmartians/lefthook)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) [![semantic-release](https://img.shields.io/badge/semantic--release-v25.0.3-e10079?style=flat-square&logo=semantic-release)](https://semantic-release.gitbook.io/) [![Renovate](https://img.shields.io/badge/Renovate-Enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://renovatebot.com) [![Lefthook](https://img.shields.io/badge/Lefthook-v2.1.5-FF4088?style=flat-square&logo=git&logoColor=white)](https://github.com/evilmartians/lefthook)
 
 ---
 
@@ -46,10 +46,10 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 <!-- Hourly Weather Update -->
 | Weather | Temperature | Sunrise | Sunset | Humidity |
-| <img src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-night.svg" alt="Clear Sky icon" height="17" style="vertical-align: middle;"> Clear Sky | 22°C | 06:20 | 18:01 | 48% |
+| <img src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-night.svg" alt="Clear Sky icon" height="17" style="vertical-align: middle;"> Clear Sky | 24°C | 05:43 | 18:16 | 88% |
 <!-- End of Hourly Weather Update -->
 
-<em>Last refresh: Sunday, March 01, 2026 at 00:21:17 (UTC+6)</em>
+<em>Last refresh: Wednesday, April 08, 2026 at 01:51:29 (UTC+6)</em>
 
 ---
 

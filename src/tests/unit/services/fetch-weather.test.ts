@@ -14,6 +14,11 @@ import {
 } from "@/weather-update/services/fetch-weather";
 import type { MeteoconIconName } from "@/weather-update/services/wmo-mapper";
 
+/** Sets global.fetch to a mocked function, avoiding repetitive double-casts. */
+function mockGlobalFetch(impl: () => Promise<Response>): void {
+  global.fetch = mock(impl) as unknown as typeof fetch;
+}
+
 describe("fetchWeatherData", () => {
   // Mock data representing a valid Open-Meteo JSON response
   const MOCK_VALID_RESPONSE = {
@@ -33,43 +38,34 @@ describe("fetchWeatherData", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    global.fetch = mock(() =>
-      Promise.resolve(new Response("{}"))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(new Response("{}")));
   });
 
-  // Restore fetch after tests
   afterAll(() => {
     global.fetch = originalFetch;
   });
 
   test("should fetch and transform weather data successfully", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(Response.json(MOCK_VALID_RESPONSE))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(Response.json(MOCK_VALID_RESPONSE)));
 
-    // Execute
     const result = await fetchWeatherData();
 
-    // Verify
     expect(result).toBeDefined();
     expect(result.temperatureC).toBe(25 as TemperatureCelsius);
     expect(result.humidityPct).toBe(60 as HumidityPercentage);
     expect(result.description).toBe("Clear Sky");
     expect(result.icon).toBe("clear-day" as MeteoconIconName);
-
-    // Check branded types runtime check
     expect(typeof result.temperatureC).toBe("number");
     expect(typeof result.humidityPct).toBe("number");
     expect(typeof result.sunriseLocal).toBe("string");
   });
 
   test("should handle API failure (non-200 status)", async () => {
-    global.fetch = mock(() =>
+    mockGlobalFetch(() =>
       Promise.resolve(
         new Response("Not Found", { status: 404, statusText: "Not Found" })
       )
-    ) as unknown as typeof fetch;
+    );
 
     await expect(fetchWeatherData()).rejects.toThrow(
       "[fetch-weather] Open-Meteo API failed: 404 Not Found"
@@ -77,18 +73,14 @@ describe("fetchWeatherData", () => {
   });
 
   test("should handle malformed JSON response", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(new Response("{ invalid json }"))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(new Response("{ invalid json }")));
 
     await expect(fetchWeatherData()).rejects.toThrow();
   });
 
   test("should handle missing required fields in JSON", async () => {
     const invalidResponse = { ...MOCK_VALID_RESPONSE, current: undefined };
-    global.fetch = mock(() =>
-      Promise.resolve(Response.json(invalidResponse))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(Response.json(invalidResponse)));
 
     await expect(fetchWeatherData()).rejects.toThrow(
       "[fetch-weather] Invalid API response: missing required fields"
@@ -109,9 +101,7 @@ describe("fetchWeatherData", () => {
       current: { ...MOCK_VALID_RESPONSE.current, relative_humidity_2m: 150 },
     };
 
-    global.fetch = mock(() =>
-      Promise.resolve(Response.json(invalidData))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(Response.json(invalidData)));
 
     await expect(fetchWeatherData()).rejects.toThrow(
       "Weather data validation failed"
@@ -141,9 +131,7 @@ describe("fetchWeatherData", () => {
       utc_offset_seconds: 21_600,
     };
 
-    global.fetch = mock(() =>
-      Promise.resolve(Response.json(emptyArraysResponse))
-    ) as unknown as typeof fetch;
+    mockGlobalFetch(() => Promise.resolve(Response.json(emptyArraysResponse)));
 
     await expect(fetchWeatherData()).rejects.toThrow(
       "[fetch-weather] Invalid API response: missing required fields"
@@ -165,9 +153,9 @@ describe("fetchWeatherData", () => {
       utc_offset_seconds: 21_600,
     };
 
-    global.fetch = mock(() =>
+    mockGlobalFetch(() =>
       Promise.resolve(Response.json(multipleErrorsResponse))
-    ) as unknown as typeof fetch;
+    );
 
     await expect(fetchWeatherData()).rejects.toThrow(
       "Weather data validation failed"

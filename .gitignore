@@ -116,7 +116,7 @@ pids
 .serverless/
 .netlify/
 .claude/
-GEMINI.md
+
 
 # Security Scanning
 .scannerwork/

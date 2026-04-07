@@ -2,16 +2,18 @@
 
 TypeScript/Bun automation that fetches real-time weather from Open-Meteo (no API key) and patches a GitHub profile README every 8 hours via GitHub Actions.
 
+> **All versions are in `package.json`** — never hardcode them here.
+
 ## Stack
 
-| Tool | Version |
+| Tool | Purpose |
 |------|---------|
-| Runtime | Bun 1.3.10 |
-| Language | TypeScript 5.9.3 strict |
-| Linter | Biome 2.4.4 / Ultracite 7.2.4 |
-| Testing | Bun built-in test runner |
-| Validation | Zod v4.3.6 |
-| Date/Time | @js-temporal/polyfill 0.5.1 |
+| Bun | Runtime + test runner + package manager |
+| TypeScript | Strict mode + `erasableSyntaxOnly` (TS 6.x) |
+| Biome / Ultracite | Linting + formatting |
+| Bun built-in | Test runner (100% coverage enforced) |
+| Zod v4 | Schema validation with `.meta()` API |
+| @js-temporal/polyfill | Date/time (Bun lacks native Temporal) |
 
 ## Architecture
 
@@ -24,20 +26,23 @@ Each `src/weather-update/` file has a 1:1 test in `src/tests/unit/`.
 ## Hard Rules (never violate)
 
 - **No native Temporal** — Bun issue #15853; always `import { Temporal } from "@js-temporal/polyfill"`
+- **No `new Date()`** — use `Temporal.Now.instant()` for all timestamps
 - **No `console.log/error`** — use `log(message, level)` from `src/weather-update/utils/logger.ts`
 - **No version bumps** — semantic-release drives versioning from commit messages
 - **No CommonJS** — ESM only (`import`/`export`); no `require()` or `.cjs`
+- **No enums or parameter properties** — `erasableSyntaxOnly: true` in tsconfig.json
 - **No phantom deps** — `linker = "isolated"` in bunfig.toml; every import must be in `package.json`
 - **No `czg` in scripts** — it's interactive; always `git commit -m "type(scope): description"`
 
 ## Code Style
 
-- TypeScript strict flags: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
+- TypeScript 6.x: `erasableSyntaxOnly`, `verbatimModuleSyntax`, no `baseUrl`, no `isolatedModules`
 - Zod v4: `.meta({ description: "..." })` — NOT `.describe()` (removed in v4)
 - Config objects: `as const satisfies T`
+- Branded types: manual intersection (`number & { readonly __brand: unique symbol }`)
 - File I/O: `Bun.file()` / `Bun.write()` — not `node:fs`
 
-## Testing (99 tests, 100% coverage)
+## Testing (100% coverage)
 
 - `bun test` only — never Jest, Vitest, or other runners
 - Log capture: mock `process.stdout.write` / `process.stderr.write`, not `console.log`
