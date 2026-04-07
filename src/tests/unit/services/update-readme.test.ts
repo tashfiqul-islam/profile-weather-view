@@ -153,8 +153,15 @@ beforeEach(() => {
 
   mockBunWrite.mockResolvedValue(0);
 
-  // Override global objects
-  Bun.file = mockBunFile as any;
+  // Wrap Bun.file: pass through file-descriptor calls (numbers) to the original.
+  // On Linux, process.stdout/stderr internally call Bun.file(fd).writer();
+  // mocking Bun.file globally breaks process streams without this passthrough.
+  Bun.file = ((...args: Parameters<typeof Bun.file>) => {
+    if (typeof args[0] === "number") {
+      return originalBunFile(...args);
+    }
+    return mockBunFile(...args);
+  }) as typeof Bun.file;
   Bun.write = mockBunWrite as any;
 
   // Clear environment variables

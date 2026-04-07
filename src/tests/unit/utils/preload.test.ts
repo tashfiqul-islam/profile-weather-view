@@ -59,8 +59,11 @@ const TEST_CONSTANTS = {
 const originalEnv = { ...Bun.env };
 const originalBunFile = Bun.file;
 const originalBunWrite = Bun.write;
-const originalStdoutWrite = process.stdout.write.bind(process.stdout);
-const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
+// Stream write originals captured in beforeEach (not module level)
+// On Linux CI with piped output, process.stderr.write may be undefined at module load
+let originalStdoutWrite: typeof process.stdout.write;
+let originalStderrWrite: typeof process.stderr.write;
 
 const mockBunFile = mock(originalBunFile);
 const mockBunWrite = mock(originalBunWrite);
@@ -70,6 +73,10 @@ let stdoutCalls: string[] = [];
 let stderrCalls: string[] = [];
 
 beforeEach(() => {
+  // Capture stream writes inside beforeEach (safe on all platforms)
+  originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  originalStderrWrite = process.stderr.write.bind(process.stderr);
+
   // Reset mocks
   mockBunFile.mockClear();
   mockBunWrite.mockClear();
