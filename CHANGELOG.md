@@ -1,5 +1,19 @@
 # Changelog
 
+# [3.1.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.5...v3.1.6)
+### chore
+
+* **actions:** update github actions [skip actions] (#169) ([9a4b5f3](https://github.com/tashfiqul-islam/profile-weather-view/commit/9a4b5f3724651fef9da14a6f26bbaf556b3fda05))
+* **bun:** update bun-types 1.3.11 [skip actions] (#170) ([2c4751f](https://github.com/tashfiqul-islam/profile-weather-view/commit/2c4751f5d913a3dbc5827d9c764b6681cd6ce07a))
+* **deps:** update @biomejs/biome 2.4.10 [skip actions] (#172) ([83c1ab6](https://github.com/tashfiqul-islam/profile-weather-view/commit/83c1ab61946b5fa49c47c18adc358aeeac00db71))
+* **deps:** update @biomejs/biome 2.4.8 [skip actions] (#166) ([f65df58](https://github.com/tashfiqul-islam/profile-weather-view/commit/f65df58a5e0298f41abf4e8e418df2e70a7bdc10))
+* **deps:** update bun 1.3.11 [skip actions] (#171) ([253f256](https://github.com/tashfiqul-islam/profile-weather-view/commit/253f256a345c20da2b4bc1156cf617eae95bb01d))
+* **deps:** update dev dependencies and align configs with latest docs ([f7018b2](https://github.com/tashfiqul-islam/profile-weather-view/commit/f7018b25d30f2580f2c2de1b50b8b3d9b2d7fe9a))
+* **deps:** update ultracite 7.4.3 [skip actions] (#173) ([8d1f6a9](https://github.com/tashfiqul-islam/profile-weather-view/commit/8d1f6a9fd948001c662ac97db2acbd90e81a6eed))
+### refactor
+
+* update to typescript v6 ([284d527](https://github.com/tashfiqul-islam/profile-weather-view/commit/284d5278119528a75af8d4f1bfc20daa27be3f36))
+
 # [3.1.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.4...v3.1.5)
 ### docs
 
