@@ -6,7 +6,7 @@
 
 Automated weather updates for your GitHub profile README using TypeScript, Bun, and Open-Meteo.
 
-[![Weather Update](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat-square&logo=github&label=weather%20update)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml) [![Release](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/semantic-release.yml?style=flat-square&logo=githubactions&label=release)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/semantic-release.yml) [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://github.com/tashfiqul-islam/profile-weather-view) [![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/powered%20by-bun-000?style=flat-square&logo=bun)](https://bun.sh) [![semantic-release](https://img.shields.io/badge/semantic--release-angular-e10079?style=flat-square&logo=semantic-release)](https://github.com/semantic-release/semantic-release) [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat-square&logo=renovatebot)](https://renovatebot.com) [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Weather Update](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat-square&logo=github&label=weather%20update)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml) [![Release](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/semantic-release.yml?style=flat-square&logo=githubactions&label=release)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/semantic-release.yml) [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://github.com/tashfiqul-islam/profile-weather-view) [![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/powered%20by-bun-000?style=flat-square&logo=bun)](https://bun.sh) [![semantic-release](https://img.shields.io/badge/semantic--release-conventionalcommits-e10079?style=flat-square&logo=semantic-release)](https://github.com/semantic-release/semantic-release) [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat-square&logo=renovatebot)](https://renovatebot.com) [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 ---
 
@@ -42,14 +42,34 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 ---
 
-## Live Demo
+## Live Weather
 
 <!-- Hourly Weather Update -->
-| Weather | Temperature | Sunrise | Sunset | Humidity |
-| <img src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-night.svg" alt="Clear Sky icon" height="17" style="vertical-align: middle;"> Clear Sky | 24°C | 05:43 | 18:16 | 88% |
+<table>
+  <thead>
+    <tr>
+      <th align="center">Condition</th>
+      <th align="center">Temp</th>
+      <th align="center">Sunrise</th>
+      <th align="center">Sunset</th>
+      <th align="center">Humidity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">Partly Cloudy <img width="15" src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/partly-cloudy-day.svg" alt="Partly Cloudy icon"></td>
+      <td align="center">30°C</td>
+      <td align="center">05:41</td>
+      <td align="center">18:17</td>
+      <td align="center">56%</td>
+    </tr>
+  </tbody>
+</table>
 <!-- End of Hourly Weather Update -->
 
-<em>Last refresh: Wednesday, April 08, 2026 at 01:51:29 (UTC+6)</em>
+<em>Last refresh: Friday, April 10, 2026 at 13:51:09 (UTC+6)</em>
+
+> This section updates automatically 3x daily via GitHub Actions. The same updater patches both this README and the [profile README](https://github.com/tashfiqul-islam/tashfiqul-islam).
 
 ---
 
@@ -180,6 +200,7 @@ profile-weather-view/
 │   └── 📄 copilot-instructions.md
 ├── 📁 src/
 │   ├── 📁 weather-update/
+│   │   ├── 📄 config.ts
 │   │   ├── 📄 index.ts
 │   │   ├── 📁 services/
 │   │   │   ├── 📄 fetch-weather.ts
@@ -193,7 +214,7 @@ profile-weather-view/
 │   └── 📁 docs/
 ├── 📄 biome.jsonc
 ├── 📄 bunfig.toml
-├── 📄 commitlint.config.mts
+├── 📄 commitlint.config.ts
 ├── 📄 lefthook.yml
 ├── 📄 renovate.json
 ├── 📄 tsconfig.json
@@ -207,14 +228,18 @@ profile-weather-view/
 ```text
 File                      | % Funcs | % Lines
 --------------------------|---------|--------
+config.ts                 |  100.00 | 100.00
+index.ts                  |  100.00 |  98.65
 fetch-weather.ts          |  100.00 | 100.00
 update-readme.ts          |  100.00 | 100.00
 wmo-mapper.ts             |  100.00 | 100.00
 logger.ts                 |  100.00 | 100.00
 preload.ts                |  100.00 | 100.00
 --------------------------|---------|--------
-All files                 |  100.00 | 100.00
+All files                 |  100.00 |  99.81
 ```
+
+130 tests, 374 assertions, seed=42.
 
 ---
 

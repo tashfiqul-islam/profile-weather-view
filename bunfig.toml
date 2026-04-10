@@ -33,7 +33,7 @@ preload = ["./src/tests/setup.ts"]
 # Coverage settings
 coverage = true
 coverageSkipTestFiles = true
-coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
+coverageThreshold = { line = 0.99, function = 1.0, statement = 0.99 }
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
 
@@ -49,16 +49,16 @@ coveragePathIgnorePatterns = [
 
 # Test execution
 randomize = true
-seed = 42                    # Reproducible random order for debugging flaky tests
-rerunEach = 0                # Set > 0 to catch flaky tests
+seed = 42 # Reproducible random order for debugging flaky tests
+rerunEach = 0 # Set > 0 to catch flaky tests
 
 # Run integration tests concurrently
 concurrentTestGlob = "**/integration/**/*.test.ts"
 
 # Reporter configuration (Bun 1.3+)
 [test.reporter]
-dots = false                 # Compact dot output (set true for CI)
-junit = "test-results.xml"   # JUnit XML for CI integration
+dots = false # Compact dot output (set true for CI)
+junit = "test-results.xml" # JUnit XML for CI integration
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Package Manager Configuration

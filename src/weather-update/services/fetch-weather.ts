@@ -9,6 +9,7 @@
 
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
+import { DISPLAY_TIMEZONE } from "../config";
 import { log } from "../utils/logger";
 import type { MeteoconIconName } from "./wmo-mapper";
 import { wmoToMeteocons } from "./wmo-mapper";
@@ -35,7 +36,7 @@ interface ApiConfig {
 const LOCATION = {
   lat: 23.8759,
   lon: 90.3795,
-  timezone: "Asia/Dhaka",
+  timezone: DISPLAY_TIMEZONE,
 } as const satisfies LocationConfig;
 
 const OPEN_METEO_CONFIG = {
@@ -158,20 +159,21 @@ export function getFirstElement<T>(arr: readonly T[], fieldName: string): T {
 
 /** Validates processed weather data against schema */
 function validateProcessedData(data: unknown): ProcessedWeather {
-  const result = ProcessedWeatherSchema.safeParse(data);
-
-  if (!result.success) {
-    const errorMessages = result.error.issues
+  try {
+    return ProcessedWeatherSchema.parse(data);
+  } catch (error: unknown) {
+    const zodError = error instanceof z.ZodError ? error : undefined;
+    const errorMessages = (zodError?.issues ?? [])
       .map((issue) => {
         const path = issue.path.length > 0 ? ` at ${issue.path.join(".")}` : "";
         return `${issue.message}${path}`;
       })
       .join("; ");
 
-    throw new Error(`Weather data validation failed: ${errorMessages}`);
+    throw new Error(
+      `Weather data validation failed: ${errorMessages || String(error)}`
+    );
   }
-
-  return result.data;
 }
 
 /**
@@ -214,9 +216,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     url.searchParams.append(key, value);
   }
 
-  const { result: response, durationMs } = await measureTime(() =>
-    fetch(url.toString())
-  );
+  const { result: response, durationMs } = await measureTime(() => fetch(url));
 
   if (!response.ok) {
     throw new Error(
@@ -225,19 +225,18 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   }
 
   const rawData: unknown = await response.json();
-  log(
-    `Open-Meteo API request completed in ${durationMs.toFixed(2)}ms`,
-    "success"
-  );
+  log(`Open-Meteo responded in ${durationMs.toFixed(0)}ms`, "success");
 
-  const apiResult = OpenMeteoResponseSchema.safeParse(rawData);
-  if (!apiResult.success) {
+  let apiData: z.infer<typeof OpenMeteoResponseSchema>;
+  try {
+    apiData = OpenMeteoResponseSchema.parse(rawData);
+  } catch {
     throw new Error(
       "[fetch-weather] Invalid API response: missing required fields"
     );
   }
 
-  const { current, daily } = apiResult.data;
+  const { current, daily } = apiData;
   const sunriseTimestamp = getFirstElement(daily.sunrise, "sunrise") * 1000;
   const sunsetTimestamp = getFirstElement(daily.sunset, "sunset") * 1000;
 
@@ -265,8 +264,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   };
 
   log(
-    `Weather: ${payload.description}, ${payload.temperatureC}°C, ` +
-      `Humidity: ${payload.humidityPct}%, Icon: ${payload.icon}`,
+    `${payload.description} ${payload.temperatureC}°C humidity=${payload.humidityPct}% icon=${payload.icon}`,
     "info"
   );
 

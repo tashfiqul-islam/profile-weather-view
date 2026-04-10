@@ -7,7 +7,7 @@
  */
 
 import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
+import { DISPLAY_TIMEZONE } from "../config";
 import { log } from "../utils/logger";
 import type { WeatherUpdatePayload } from "./fetch-weather";
 import { getMeteoconUrl } from "./wmo-mapper";
@@ -16,38 +16,8 @@ import { getMeteoconUrl } from "./wmo-mapper";
 // Configuration
 // ============================================================================
 
-/** Timezone for displaying refresh timestamps */
-const DISPLAY_TIMEZONE = "Asia/Dhaka" as const;
-
 /** Default README file path */
 const DEFAULT_README_PATH = "README.md" as const;
-
-// ============================================================================
-// Schemas
-// ============================================================================
-
-/** Schema for environment variables used in README updates */
-const EnvironmentSchema = z.object({
-  FORCE_UPDATE: z.string().optional(),
-  GITHUB_ACTIONS: z.string().optional(),
-});
-
-/** Schema for validating weather data before rendering */
-const WeatherDataSchema = z.object({
-  description: z
-    .string()
-    .min(1)
-    .meta({ description: "Weather condition description" }),
-  temperatureC: z.number().meta({ description: "Temperature in Celsius" }),
-  sunriseLocal: z.string().min(1).meta({ description: "Local sunrise time" }),
-  sunsetLocal: z.string().min(1).meta({ description: "Local sunset time" }),
-  humidityPct: z
-    .number()
-    .min(0)
-    .max(100)
-    .meta({ description: "Humidity percentage" }),
-  icon: z.string().min(1).meta({ description: "Meteocons icon name" }),
-});
 
 // ============================================================================
 // Regex Patterns
@@ -93,11 +63,6 @@ export async function updateReadme(
     return false;
   }
 
-  if (!validateWeatherPayload(weatherData)) {
-    log("Weather data validation failed", "error");
-    return false;
-  }
-
   const updatedSection = createWeatherData(weatherData, currentSection);
   const refreshTime = createRefreshTime();
   const updatedContent = updateReadmeContent(
@@ -112,15 +77,6 @@ export async function updateReadme(
 
   await performFileUpdate(readmePath, updatedContent);
   return true;
-}
-
-/**
- * Validates weather payload against schema.
- * Returns true if valid, false otherwise.
- */
-function validateWeatherPayload(data: WeatherUpdatePayload): boolean {
-  const result = WeatherDataSchema.safeParse(data);
-  return result.success;
 }
 
 /**
@@ -267,15 +223,9 @@ export function updateReadmeContent(
   updatedWeatherSection: string,
   refreshTime: string
 ): string {
-  let result = readmeContent.replace(
-    WEATHER_SECTION_REGEX,
-    updatedWeatherSection
-  );
-  result = result.replace(
-    REFRESH_TIME_REGEX,
-    `<em>Last refresh: ${refreshTime}</em>`
-  );
-  return result;
+  return readmeContent
+    .replace(WEATHER_SECTION_REGEX, updatedWeatherSection)
+    .replace(REFRESH_TIME_REGEX, `<em>Last refresh: ${refreshTime}</em>`);
 }
 
 /**
@@ -286,13 +236,7 @@ export function shouldProceedWithUpdate(
   oldContent: string,
   updatedContent: string
 ): boolean {
-  const envResult = EnvironmentSchema.safeParse({
-    FORCE_UPDATE: Bun.env["FORCE_UPDATE"],
-    GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
-  });
-
-  const forceUpdate =
-    envResult.success && envResult.data.FORCE_UPDATE === "true";
+  const forceUpdate = Bun.env["FORCE_UPDATE"] === "true";
   const hasChanges = oldContent !== updatedContent;
 
   return hasChanges || forceUpdate;

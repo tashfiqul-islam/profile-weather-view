@@ -199,22 +199,9 @@ describe("checkAndUpdateApiLimit", () => {
       expect(result).toBeFalse();
       expect(mockBunWrite).not.toHaveBeenCalled();
       expect(
-        stderrCalls.some((call) => call.includes("❌ API call limit exceeded!"))
+        stderrCalls.some((call) => call.includes("Rate limit exceeded"))
       ).toBeTrue();
-      expect(
-        stderrCalls.some((call) => call.includes("📅 Date: 2024-01-15"))
-      ).toBeTrue();
-      expect(
-        stderrCalls.some((call) => call.includes("📊 Calls made: 1000"))
-      ).toBeTrue();
-      expect(
-        stderrCalls.some((call) => call.includes("⏰ Last call: 13:45"))
-      ).toBeTrue();
-      expect(
-        stderrCalls.some((call) =>
-          call.includes("🔄 Counter resets at 00:00 UTC")
-        )
-      ).toBeTrue();
+      expect(stderrCalls.some((call) => call.includes("1000/1000"))).toBeTrue();
     } finally {
       restoreDate();
     }
@@ -356,14 +343,9 @@ describe("validateEnvironmentVariables", () => {
     expect(result).toBeDefined();
     expect(result.FORCE_UPDATE).toBe("true");
 
-    // Check if debug intro was logged (covers line 163)
+    // Check if env summary was logged
     expect(
-      stdoutCalls.some((call) => call.includes("🔍 Environment check:"))
-    ).toBeTrue();
-
-    // Verify variable logging
-    expect(
-      stdoutCalls.some((call) => call.includes("FORCE_UPDATE: true"))
+      stdoutCalls.some((call) => call.includes("force_update=true"))
     ).toBeTrue();
   });
 
@@ -386,7 +368,7 @@ describe("validateEnvironmentVariables", () => {
     // Verify
     expect(result.GITHUB_ACTIONS).toBe("true");
     expect(
-      stdoutCalls.some((call) => call.includes("GITHUB_ACTIONS: true"))
+      stdoutCalls.some((call) => call.includes("github_actions=true"))
     ).toBeTrue();
   });
 });

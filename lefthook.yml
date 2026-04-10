@@ -1,16 +1,14 @@
-# Lefthook Configuration - 2026 Modern Standards
+# Lefthook Configuration
 # https://lefthook.dev/configuration/
 
 min_version: 2.0.13
 
-# Clean output for better DX
 output:
-  - execution_out    # Show command output
-  - failure          # Show failures
-  - summary          # Show summary at end
-  - success          # Show successful jobs
+  - execution_out
+  - failure
+  - summary
+  - success
 
-# Skip LFS hooks if not using Git LFS
 skip_lfs: true
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -20,27 +18,21 @@ skip_lfs: true
 pre-commit:
   parallel: true
   jobs:
-    # Format and lint with Ultracite (Biome)
     - name: format
-      glob: "*.{ts,tsx,js,jsx,json,jsonc,md,mdx,css,scss,toml,yml,yaml}"
+      glob: "*.{ts,tsx,js,jsx,json,jsonc,css,scss,md,mdx,toml,yml,yaml}"
       run: bunx ultracite fix {staged_files}
       stage_fixed: true
-      fail_text: "❌ Formatting failed. Run 'bun run format' to fix."
 
-    # Type checking (only when TS files change)
     - name: typecheck
       glob: "*.{ts,tsx}"
       run: bun run typecheck
-      fail_text: "❌ TypeScript errors found."
 
-    # Fast tests on staged files
     - name: test
       glob: "*.{ts,tsx}"
       run: bun test --bail
       skip:
         - merge
         - rebase
-      fail_text: "❌ Tests failed."
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Commit message validation
@@ -50,45 +42,22 @@ commit-msg:
   jobs:
     - name: commitlint
       run: bunx commitlint --edit {1}
-      fail_text: |
-        ❌ Invalid commit message format.
-
-        Expected: <type>(<scope>): <subject>
-        Example:  feat(weather): add temperature conversion
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Interactive commit builder (optional - use `git commit` from terminal)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-prepare-commit-msg:
-  jobs:
-    - name: commitizen
-      interactive: true
-      run: bunx czg --hook || true
-      env:
-        LEFTHOOK: "0"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Pre-push: Full quality gate before pushing
+# Pre-push: Full quality gate
 # ═══════════════════════════════════════════════════════════════════════════════
 
 pre-push:
   parallel: true
   jobs:
-    # Full type check
     - name: typecheck
       run: bun run typecheck
-      fail_text: "❌ TypeScript errors. Fix before pushing."
 
-    # Full test suite
     - name: test
-      run: bun test
-      fail_text: "❌ Tests failed. Fix before pushing."
+      run: bun run test
 
-    # Lint check (no fix, just validate)
     - name: lint
       run: bunx ultracite check
-      fail_text: "❌ Lint errors found."
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Post-merge: Auto-install deps when lockfile changes

@@ -116,6 +116,8 @@ pids
 .serverless/
 .netlify/
 .claude/
+.claude-flow/
+.mcp.json
 
 
 # Security Scanning

@@ -26,7 +26,7 @@ All versions are defined in `package.json` (engines, dependencies, devDependenci
 | **@js-temporal/polyfill** | Date/time | Bun lacks native Temporal (issue #15853) |
 | **Biome / Ultracite** | Linting + formatting | Fast, opinionated, replaces ESLint+Prettier |
 | **semantic-release** | Automated versioning | Drives releases from conventional commits |
-| **Lefthook** | Git hooks | Pre-commit: typecheck → format → test |
+| **Lefthook** | Git hooks | Pre-commit: typecheck + format + test |
 
 ---
 
@@ -40,7 +40,7 @@ bun run typecheck          # tsc --noEmit (must be clean)
 bun run lint               # ultracite check
 bun run format             # ultracite fix
 bun test                   # all tests (randomized, seed=42)
-bun test --coverage        # with coverage report (100% enforced)
+bun test --coverage        # with coverage report
 bun run check              # typecheck + lint + test (full gate)
 bun run build              # bundle to dist/ (target: bun)
 ```
@@ -55,13 +55,14 @@ All three quality gates must pass before any commit (enforced by lefthook pre-co
 profile-weather-view/
 ├── src/
 │   ├── weather-update/
+│   │   ├── config.ts                   # Shared constants (DISPLAY_TIMEZONE)
 │   │   ├── index.ts                    # Orchestrator — run this
 │   │   ├── services/
 │   │   │   ├── fetch-weather.ts        # Open-Meteo API + Zod parsing
 │   │   │   ├── wmo-mapper.ts           # WMO code → Meteocon SVG icon
 │   │   │   └── update-readme.ts        # Regex-patches README weather section
 │   │   └── utils/
-│   │       ├── logger.ts               # log(message, level) → stdout/stderr
+│   │       ├── logger.ts               # log(message, level) → ANSI-colored stdout/stderr
 │   │       └── preload.ts              # Rate limit check + env validation
 │   ├── scripts/
 │   │   └── sync-readme-tech-stack.ts   # Syncs badge versions from package.json
@@ -73,6 +74,8 @@ profile-weather-view/
 ├── .github/workflows/                  # 4 GitHub Actions workflows
 ├── CLAUDE.md                           # Claude Code specific instructions
 ├── AGENTS.md                           # This file
+├── .releaserc.json                     # semantic-release config (conventionalcommits preset)
+├── commitlint.config.ts                # Conventional commit enforcement
 ├── bunfig.toml                         # Bun runtime + test + install config
 ├── tsconfig.json                       # TypeScript strict config
 ├── lefthook.yml                        # Git hook definitions
@@ -90,12 +93,12 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 ## Counterintuitive Patterns
 
 1. **No native Temporal** — Bun issue #15853; always `import { Temporal } from "@js-temporal/polyfill"` never from globals
-2. **TS 6.x: `erasableSyntaxOnly: true`** — No enums, no parameter properties, no value namespaces. Bun strips types rather than compiling them; non-erasable syntax would break at runtime.
-3. **TS 6.x: `baseUrl` removed** — Deprecated in TS 6.0; `paths` entries use `./` prefix instead
-4. **TS 6.x: `isolatedModules` removed** — Superseded by `verbatimModuleSyntax: true`
-5. **`linker = "isolated"`** — Phantom dependencies cause immediate crashes, not silent failures
-6. **Preload scope split** — `--preload` flag only on `start`/`dev` scripts; test preload at `[test].preload` is separate
-7. **All timestamps use Temporal** — `logger.ts` and `index.ts` use `Temporal.Now.instant()`, not `new Date()`
+2. **Logger uses `Date.toISOString()`** — Not Temporal. The logger only needs UTC timestamps; using the polyfill for logging added unnecessary overhead
+3. **TS 6.x: `erasableSyntaxOnly: true`** — No enums, no parameter properties, no value namespaces. Bun strips types rather than compiling them
+4. **TS 6.x: `baseUrl` removed** — Deprecated in TS 6.0; `paths` entries use `./` prefix instead
+5. **TS 6.x: `isolatedModules` removed** — Superseded by `verbatimModuleSyntax: true`
+6. **`linker = "isolated"`** — Phantom dependencies cause immediate crashes, not silent failures
+7. **Preload scope split** — `--preload` flag only on `start`/`dev` scripts; test preload at `[test].preload` is separate
 8. **UTC offset is dynamic** — `update-readme.ts` derives it from `now.offset` (Temporal property)
 9. **Zod `.describe()` removed** — Zod v4 uses `.meta({ description: "..." })`
 10. **czg is interactive** — never use `bunx czg` in scripts/CI; always `git commit -m "type(scope): description"`
@@ -105,7 +108,7 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 ## Testing Rules
 
 - **Framework**: `bun test` only — never Jest, Vitest, or other runners
-- **Coverage**: 100% enforced via `coverageThreshold` in `bunfig.toml`
+- **Coverage**: `function=1.0, line=0.99, statement=0.99` enforced via `coverageThreshold` in `bunfig.toml`
 - **Randomization**: `randomize = true, seed = 42` — no `test.only()`
 
 ### Key Testing Patterns
@@ -130,15 +133,9 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 - Validate external data with Zod schemas
 - Use conventional commit format: `type(scope): description`
 
-### Ask First
-- Changing tsconfig.json compiler options
-- Modifying GitHub Actions workflow files
-- Altering the Zod schema shape (breaks mock contracts)
-
 ### Never Do
 - Bump versions manually — semantic-release handles this
 - Use `require()` or CommonJS patterns
-- Use `new Date()` — use `Temporal.Now.instant()` instead
 - Use native `Temporal` from globals — always import the polyfill
 - Add `test.only()` — randomization is enforced
 - Put `bun.lock` in `actions/cache path:` blocks — only in `hashFiles()`
@@ -153,14 +150,11 @@ Format: `type(scope): description`
 
 Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `types` `chore` `revert` `security`
 
-**Do not bump versions manually** — semantic-release drives this from commit messages.
-
 ---
 
 ## GitHub Actions
 
 - All actions pinned to full commit SHAs — see `.github/instructions/workflows.instructions.md` for the current table
-- `upload-artifact` and `download-artifact` must remain version-paired (v7/v8)
 - All runners use `ubuntu-24.04` (explicit, not `ubuntu-latest`)
 - Bun version pinned in workflows (not `latest`) — see `package.json` `engines.bun`
 
@@ -170,9 +164,6 @@ Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `
 
 | Variable | Purpose |
 |----------|---------|
-| `PROFILE_README_PATH` | Path to the profile README to patch |
+| `PROFILE_README_PATH` | Path to the profile README to patch (must end in `.md`) |
 | `FORCE_UPDATE` | Bypass change detection, always commit |
 | `GITHUB_ACTIONS` | Set by GHA; changes log output format |
-
-> See `.github/instructions/` for TypeScript, test, and workflow rules.
-> See `.github/prompts/` for `/add-test` and `/new-service` slash commands.

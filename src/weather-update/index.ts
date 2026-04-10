@@ -6,6 +6,7 @@
  * @since 1.0.0
  */
 
+import { resolve } from "node:path";
 import { Temporal } from "@js-temporal/polyfill";
 import { fetchWeatherData } from "./services/fetch-weather";
 import { updateReadme } from "./services/update-readme";
@@ -54,22 +55,31 @@ function createErrorInfo(error: unknown): ErrorInfo {
 // ============================================================================
 
 /**
+ * Handles fatal errors from the main orchestrator.
+ * Logs structured error details and exits with code 1.
+ */
+export function handleFatalError(error: unknown): never {
+  const errorInfo = createErrorInfo(error);
+  log(`Fatal: ${errorInfo.message}`, "error");
+  process.exit(1);
+}
+
+/**
  * Reports update status with CHANGES_DETECTED signal for CI.
  * Emits structured output for GitHub Actions workflow parsing.
  */
-function reportUpdateStatus(success: boolean, details?: string): void {
+function reportUpdateStatus(success: boolean, durationMs: number): void {
+  const timing = `${durationMs.toFixed(0)}ms`;
+
   if (success) {
-    log("Weather update process completed successfully!", "success");
-    if (details) {
-      log(`Details: ${details}`, "info");
-    }
-    process.stdout.write("CHANGES_DETECTED=true\n");
+    log(`Weather data updated in ${timing}`, "success");
   } else {
-    log("Weather update process completed with warnings", "warning");
-    if (details) {
-      log(`Details: ${details}`, "warning");
-    }
-    process.stdout.write("CHANGES_DETECTED=false\n");
+    log(`No changes to commit (${timing})`, "warning");
+  }
+
+  // CI signal — only emit when running in GitHub Actions
+  if (Bun.env["GITHUB_ACTIONS"]) {
+    process.stdout.write(`CHANGES_DETECTED=${success}\n`);
   }
 }
 
@@ -87,60 +97,46 @@ export async function main(): Promise<void> {
   const startTime = performance.now();
 
   try {
-    log("Starting weather update process...", "info");
+    log("Starting weather update", "info");
 
-    // Log environment context
-    const envInfo = [
-      `Environment: ${Bun.env.NODE_ENV ?? "development"}`,
-      `GitHub Actions: ${Bun.env["GITHUB_ACTIONS"] ? "Yes" : "No"}`,
-    ];
-    for (const info of envInfo) {
-      log(info, "info");
-    }
+    const env = Bun.env["GITHUB_ACTIONS"] ? "ci" : "local";
+    log(`env=${env} node_env=${Bun.env.NODE_ENV ?? "development"}`, "info");
 
     // Validate environment and check rate limits
-    log("Validating environment variables...", "info");
     await ensureEnvironmentVariables();
-    log("Environment variables validated", "success");
 
     // Fetch current weather data
-    log("Fetching weather data from Open-Meteo API...", "info");
     const weatherData = await fetchWeatherData();
-    log("Weather data fetched successfully", "success");
 
-    // Handle custom README path
+    // Handle custom README path with path traversal validation
     const customReadmePath = Bun.env["PROFILE_README_PATH"];
     if (customReadmePath) {
-      log(`Using custom README path: ${customReadmePath}`, "info");
+      const resolvedPath = resolve(customReadmePath);
+      if (resolvedPath.includes("..") || !resolvedPath.endsWith(".md")) {
+        throw new Error(
+          "Invalid PROFILE_README_PATH: must be a .md file without path traversal"
+        );
+      }
+      log(`readme=${customReadmePath}`, "info");
     }
 
     // Update README with new weather data
-    log("Updating README with new weather data...", "info");
     const updateSuccess = await updateReadme(weatherData, customReadmePath);
-
-    if (updateSuccess) {
-      log("README updated successfully", "success");
-    } else {
-      log("README update skipped (no changes detected)", "warning");
-    }
 
     // Report timing and status
     const durationMs = performance.now() - startTime;
-    log(`Total execution time: ${durationMs.toFixed(2)}ms`, "info");
-    reportUpdateStatus(
-      updateSuccess,
-      `Execution time: ${durationMs.toFixed(2)}ms`
-    );
+    reportUpdateStatus(updateSuccess, durationMs);
   } catch (error: unknown) {
     const durationMs = performance.now() - startTime;
     const errorInfo = createErrorInfo(error);
 
-    log(`Script failed after ${durationMs.toFixed(2)}ms`, "error");
-    log(`Error: ${errorInfo.message}`, "error");
+    log(
+      `Failed after ${durationMs.toFixed(0)}ms: ${errorInfo.message}`,
+      "error"
+    );
 
     if (Bun.env["GITHUB_ACTIONS"]) {
-      log("This error occurred during a GitHub Actions workflow run", "error");
-      log("Check the workflow logs for more details", "info");
+      log("Check workflow logs for details", "error");
     }
 
     throw error;
@@ -152,10 +148,5 @@ export async function main(): Promise<void> {
 // ============================================================================
 
 if (Bun.env.NODE_ENV !== "test") {
-  main().catch((error: unknown) => {
-    const errorInfo = createErrorInfo(error);
-    log(`Script execution failed: ${errorInfo.message}`, "error");
-    log(`Context: ${errorInfo.context}`, "error");
-    process.exit(1);
-  });
+  main().catch(handleFatalError);
 }

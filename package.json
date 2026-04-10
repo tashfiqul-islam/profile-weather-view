@@ -82,8 +82,7 @@
   ],
   "config": {
     "commitizen": {
-      "path": "node_modules/czg",
-      "$schema": "https://raw.githubusercontent.com/Zhengqbbb/cz-git/main/docs/public/schema/cz-git.json"
+      "path": "node_modules/czg"
     }
   }
 }

@@ -138,6 +138,54 @@ describe("fetchWeatherData", () => {
     );
   });
 
+  test("should return night icon when is_day is 0", async () => {
+    const nightResponse = {
+      ...MOCK_VALID_RESPONSE,
+      current: { ...MOCK_VALID_RESPONSE.current, is_day: 0 },
+    };
+    mockGlobalFetch(() => Promise.resolve(Response.json(nightResponse)));
+
+    const result = await fetchWeatherData();
+    expect(result.icon).toBe("clear-night" as MeteoconIconName);
+  });
+
+  test("should round temperature correctly", async () => {
+    const responseWith25_6 = {
+      ...MOCK_VALID_RESPONSE,
+      current: { ...MOCK_VALID_RESPONSE.current, temperature_2m: 25.6 },
+    };
+    mockGlobalFetch(() => Promise.resolve(Response.json(responseWith25_6)));
+
+    const result = await fetchWeatherData();
+    expect(result.temperatureC).toBe(26 as TemperatureCelsius);
+  });
+
+  test("should round temperature down when below .5", async () => {
+    const responseWith25_3 = {
+      ...MOCK_VALID_RESPONSE,
+      current: { ...MOCK_VALID_RESPONSE.current, temperature_2m: 25.3 },
+    };
+    mockGlobalFetch(() => Promise.resolve(Response.json(responseWith25_3)));
+
+    const result = await fetchWeatherData();
+    expect(result.temperatureC).toBe(25 as TemperatureCelsius);
+  });
+
+  test("should handle server error (500 status)", async () => {
+    mockGlobalFetch(() =>
+      Promise.resolve(
+        new Response("Internal Server Error", {
+          status: 500,
+          statusText: "Internal Server Error",
+        })
+      )
+    );
+
+    await expect(fetchWeatherData()).rejects.toThrow(
+      "[fetch-weather] Open-Meteo API failed: 500 Internal Server Error"
+    );
+  });
+
   test("should handle multiple validation errors with paths", async () => {
     const multipleErrorsResponse = {
       current: {

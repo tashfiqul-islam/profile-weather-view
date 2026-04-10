@@ -8,6 +8,10 @@
  */
 
 import { join } from "node:path";
+import { Temporal } from "@js-temporal/polyfill";
+import { z } from "zod";
+import { DISPLAY_TIMEZONE } from "../weather-update/config";
+import { log } from "../weather-update/utils/logger";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -40,7 +44,7 @@ interface SyncResult {
 const ROOT_DIR = join(import.meta.dirname, "../..");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const README_PATH = join(ROOT_DIR, "README.md");
-const TIMEZONE = "Asia/Dhaka";
+const TIMEZONE = DISPLAY_TIMEZONE;
 const FOOTER_PATTERN = /<sub>\*\*Last refresh\*\*: .+<\/sub>/;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -111,8 +115,9 @@ const createBadgeMappings = (pkg: PackageJson): readonly BadgeMapping[] => {
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────────
 
-const formatDate = (date: Date, timezone: string): string => {
-  const formatter = new Intl.DateTimeFormat("en-US", {
+const formatDate = (timezone: string): string => {
+  const now = Temporal.Now.zonedDateTimeISO(timezone);
+  const formatted = now.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -121,47 +126,36 @@ const formatDate = (date: Date, timezone: string): string => {
     minute: "2-digit",
     second: "2-digit",
     hour12: true,
-    timeZone: timezone,
   });
 
-  const parts = formatter.formatToParts(date);
-  const get = (type: Intl.DateTimeFormatPartTypes): string =>
-    parts.find((p) => p.type === type)?.value ?? "";
+  const rawOffset = now.offset;
+  const sign = rawOffset[0] ?? "+";
+  const hrs = Number.parseInt(rawOffset.slice(1, 3), 10);
+  const mins = Number.parseInt(rawOffset.slice(4, 6), 10);
+  const utcOffset =
+    mins === 0
+      ? `UTC${sign}${hrs}`
+      : `UTC${sign}${hrs}:${String(mins).padStart(2, "0")}`;
 
-  const weekday = get("weekday");
-  const month = get("month");
-  const day = get("day");
-  const year = get("year");
-  const hour = get("hour");
-  const minute = get("minute");
-  const second = get("second");
-  const dayPeriod = get("dayPeriod");
-
-  const offsetParts = new Intl.DateTimeFormat("en", {
-    timeZone: timezone,
-    timeZoneName: "shortOffset",
-  }).formatToParts(date);
-  const rawOffset =
-    offsetParts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
-  const utcOffset = rawOffset.replace("GMT", "UTC");
-
-  return `${weekday}, ${month} ${day}, ${year} at ${hour}:${minute}:${second} ${dayPeriod} (${utcOffset})`;
-};
-
-const log = {
-  info: (msg: string) => console.log(`ℹ️  ${msg}`),
-  success: (msg: string) => console.log(`✅ ${msg}`),
-  warn: (msg: string) => console.log(`⚠️  ${msg}`),
-  error: (msg: string) => console.error(`❌ ${msg}`),
+  return `${formatted} (${utcOffset})`;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Core Functions
 // ─────────────────────────────────────────────────────────────────────────────
 
+const PackageJsonSchema = z.object({
+  version: z.string(),
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+  engines: z.record(z.string(), z.string()).optional(),
+  packageManager: z.string().optional(),
+});
+
 const loadPackageJson = async (): Promise<PackageJson> => {
   const content = await Bun.file(PACKAGE_JSON_PATH).text();
-  return JSON.parse(content) as PackageJson;
+  const data: unknown = JSON.parse(content);
+  return PackageJsonSchema.parse(data) as PackageJson;
 };
 
 const loadReadme = (): Promise<string> => {
@@ -197,7 +191,7 @@ const updateBadges = (readme: string, pkg: PackageJson): [string, number] => {
 };
 
 const updateFooter = (readme: string): [string, boolean] => {
-  const newFooter = `<sub>**Last refresh**: ${formatDate(new Date(), TIMEZONE)}</sub>`;
+  const newFooter = `<sub>**Last refresh**: ${formatDate(TIMEZONE)}</sub>`;
 
   if (FOOTER_PATTERN.test(readme)) {
     return [readme.replace(FOOTER_PATTERN, newFooter), true];
@@ -211,29 +205,29 @@ const updateFooter = (readme: string): [string, boolean] => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sync = async (): Promise<SyncResult> => {
-  log.info("Loading package.json...");
+  log("Loading package.json...", "info");
   const pkg = await loadPackageJson();
 
-  log.info("Loading README.md...");
+  log("Loading README.md...", "info");
   const originalReadme = await loadReadme();
 
-  log.info("Updating version badges...");
+  log("Updating version badges...", "info");
   const [withBadges, badgesUpdated] = updateBadges(originalReadme, pkg);
 
-  log.info("Updating footer timestamp...");
+  log("Updating footer timestamp...", "info");
   const [finalReadme, footerUpdated] = updateFooter(withBadges);
 
   const hasChanges = originalReadme !== finalReadme;
 
   if (hasChanges) {
-    log.info("Saving changes to README.md...");
+    log("Saving changes to README.md...", "info");
     await saveReadme(finalReadme);
-    log.success(`Updated ${badgesUpdated} badges`);
+    log(`Updated ${badgesUpdated} badges`, "success");
     if (footerUpdated) {
-      log.success("Updated footer timestamp");
+      log("Updated footer timestamp", "success");
     }
   } else {
-    log.info("No changes detected");
+    log("No changes detected", "info");
   }
 
   return { badgesUpdated, footerUpdated, hasChanges };
@@ -247,13 +241,13 @@ const main = async (): Promise<void> => {
   const result = await sync();
 
   if (result.hasChanges) {
-    log.success("README sync completed successfully");
+    log("README sync completed successfully", "success");
   } else {
-    log.info("README is already up to date");
+    log("README is already up to date", "info");
   }
 };
 
 main().catch((error: unknown) => {
-  log.error(error instanceof Error ? error.message : String(error));
+  log(error instanceof Error ? error.message : String(error), "error");
   process.exit(1);
 });

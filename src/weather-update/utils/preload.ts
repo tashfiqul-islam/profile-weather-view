@@ -135,13 +135,9 @@ export async function checkAndUpdateApiLimit(): Promise<boolean> {
 
   if (tracking.calls >= RATE_LIMIT_CONFIG.maxCallsPerDay) {
     log(
-      `❌ API call limit exceeded! Maximum ${RATE_LIMIT_CONFIG.maxCallsPerDay} calls per day reached.`,
+      `Rate limit exceeded: ${tracking.calls}/${RATE_LIMIT_CONFIG.maxCallsPerDay} calls on ${tracking.date} (last=${tracking.lastCall ?? "N/A"}, resets=${RATE_LIMIT_CONFIG.resetTime} UTC)`,
       "error"
     );
-    log(`📅 Date: ${tracking.date}`, "error");
-    log(`📊 Calls made: ${tracking.calls}`, "error");
-    log(`⏰ Last call: ${tracking.lastCall ?? "N/A"}`, "error");
-    log(`🔄 Counter resets at ${RATE_LIMIT_CONFIG.resetTime} UTC`, "error");
     return false;
   }
 
@@ -176,9 +172,10 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     GITHUB_ACTIONS: Bun.env["GITHUB_ACTIONS"],
   });
 
-  log("🔍 Environment check:", "info");
-  log(`  FORCE_UPDATE: ${env.FORCE_UPDATE ?? "not set"}`, "info");
-  log(`  GITHUB_ACTIONS: ${env.GITHUB_ACTIONS ?? "not set"}`, "info");
+  log(
+    `force_update=${env.FORCE_UPDATE ?? "false"} github_actions=${env.GITHUB_ACTIONS ?? "false"}`,
+    "info"
+  );
 
   return env;
 }

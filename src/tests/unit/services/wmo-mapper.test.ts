@@ -42,6 +42,35 @@ describe("wmoToMeteocons", () => {
     });
   });
 
+  test("should map all defined WMO codes without returning unknown", () => {
+    const definedCodes = [
+      0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75,
+      77, 80, 81, 82, 85, 86, 95, 96, 99,
+    ];
+    for (const code of definedCodes) {
+      expect(wmoToMeteocons(code, true).name).not.toBe("not-available");
+      expect(wmoToMeteocons(code, false).name).not.toBe("not-available");
+    }
+  });
+
+  test("should replace -day with -night for night variants that contain -day", () => {
+    // fog-day -> fog-night
+    expect(wmoToMeteocons(45, false).name).toContain("night");
+    // partly-cloudy-day -> partly-cloudy-night
+    expect(wmoToMeteocons(1, false).name).toContain("night");
+  });
+
+  test("should keep icon name unchanged for night when no -day suffix", () => {
+    // snow (73) has no -day suffix, stays as "snow" at night
+    expect(wmoToMeteocons(73, false).name).toBe("snow" as MeteoconIconName);
+    // rain (63) has no -day suffix, stays as "rain" at night
+    expect(wmoToMeteocons(63, false).name).toBe("rain" as MeteoconIconName);
+    // drizzle (53) has no -day suffix
+    expect(wmoToMeteocons(53, false).name).toBe("drizzle" as MeteoconIconName);
+    // sleet (56) has no -day suffix
+    expect(wmoToMeteocons(56, false).name).toBe("sleet" as MeteoconIconName);
+  });
+
   test("should return unknown icon for invalid code", () => {
     expect(wmoToMeteocons(999, true)).toEqual({
       name: "not-available" as MeteoconIconName,

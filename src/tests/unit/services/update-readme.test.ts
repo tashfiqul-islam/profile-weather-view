@@ -268,13 +268,13 @@ describe("updateReadme", () => {
     expect(mockBunWrite).not.toHaveBeenCalled();
   });
 
-  test("should return false when weather data validation fails", async () => {
-    // Setup
+  test("should handle empty description in weather data gracefully", async () => {
+    // Setup - with validation removed, empty description passes through
     const mockFile = createMockFile();
     mockBunFile.mockReturnValue(mockFile as any);
 
-    const invalidWeatherData = {
-      description: "", // Invalid: empty string
+    const weatherWithEmptyDesc = {
+      description: "",
       temperatureC: 26 as TemperatureCelsius,
       sunriseLocal: "06:34" as TimeString,
       sunsetLocal: "18:31" as TimeString,
@@ -282,12 +282,11 @@ describe("updateReadme", () => {
       icon: "clear-day" as MeteoconIconName,
     };
 
-    // Execute
-    const result = await updateReadme(invalidWeatherData);
+    // Execute - data is already validated by fetchWeatherData before reaching updateReadme
+    const result = await updateReadme(weatherWithEmptyDesc);
 
-    // Verify
-    expect(result).toBeFalse();
-    expect(mockBunWrite).not.toHaveBeenCalled();
+    // Verify - the update proceeds since validation is done upstream
+    expect(result).toBeTrue();
   });
 
   test("should return false when no changes are needed and FORCE_UPDATE is false", async () => {
