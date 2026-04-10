@@ -12,14 +12,14 @@ Thank you for considering a contribution to Profile Weather View. This guide exp
 
 ## Getting started
 
-1) Fork and clone the repository
-2) Install dependencies
+1. Fork and clone the repository
+2. Install dependencies
 
    ```bash
    bun install
    ```
 
-3) Create a feature branch
+3. Create a feature branch
 
    ```bash
    git checkout -b feat/<short-scope>
@@ -60,7 +60,7 @@ bun run check
 
 ### Linting & formatting
 
-- Tooling: Ultracite (Biome) driven by `biome.jsonc`
+- Tooling: oxlint (linting) + oxfmt (formatting) configured via `oxlint.config.ts` and `.oxfmtrc.json`
 - Run `bun run format` and `bun run lint` before pushing
 - Follow project rules (e.g., no console/debugger, avoid `delete` operator, no TypeScript enums, etc.)
 
@@ -76,7 +76,7 @@ docs(readme): add architecture diagram
 ```
 
 - Types: feat, fix, docs, chore, refactor, perf, test, ci, build, revert
-- Scope examples: actions, bun, ci, config, core, deps, docs, release, security, test, types, utils, weather
+- Scope examples: actions, bun, ci, config, deps, docs, release, test, weather
 - Docs-only or Renovate-like commits may include `[skip actions]` to avoid unnecessary pipelines
 - Use `bun run commit` for a guided prompt
 

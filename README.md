@@ -26,7 +26,7 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 ### Core
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-v6.0.2-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/Bun-v1.3.11-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh) [![Zod](https://img.shields.io/badge/Zod-v4.3.6-3E67B1?style=flat-square)](https://zod.dev) [![Temporal](https://img.shields.io/badge/Temporal-v0.5.1-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-v7.0.2-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/Bun-v1.3.14-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh) [![Zod](https://img.shields.io/badge/Zod-v4.4.3-3E67B1?style=flat-square)](https://zod.dev) [![Temporal](https://img.shields.io/badge/Temporal-v0.5.1-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/)
 
 ### Weather
 
@@ -34,11 +34,11 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
 
 ### Quality
 
-[![Biome](https://img.shields.io/badge/Biome-v2.4.10-60A5FA?style=flat-square&logo=biome&logoColor=white)](https://biomejs.dev/) [![Ultracite](https://img.shields.io/badge/Ultracite-v7.4.3-0B7285?style=flat-square)](https://github.com/haydenbleasel/ultracite) [![Bun Test](https://img.shields.io/badge/Bun%20Test-v1.3.11-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh/docs/cli/test)
+[![Oxlint](https://img.shields.io/badge/oxlint-v1.75.0-4E4E4E?style=flat-square)](https://oxc.rs/) [![Oxfmt](https://img.shields.io/badge/oxfmt-v0.60.0-4E4E4E?style=flat-square)](https://oxc.rs/docs/guide/usage/formatter) [![Bun Test](https://img.shields.io/badge/Bun%20Test-v1.3.14-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh/docs/cli/test)
 
 ### Automation
 
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) [![semantic-release](https://img.shields.io/badge/semantic--release-v25.0.3-e10079?style=flat-square&logo=semantic-release)](https://semantic-release.gitbook.io/) [![Renovate](https://img.shields.io/badge/Renovate-Enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://renovatebot.com) [![Lefthook](https://img.shields.io/badge/Lefthook-v2.1.5-FF4088?style=flat-square&logo=git&logoColor=white)](https://github.com/evilmartians/lefthook)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) [![semantic-release](https://img.shields.io/badge/semantic--release-v25.0.8-e10079?style=flat-square&logo=semantic-release)](https://semantic-release.gitbook.io/) [![Renovate](https://img.shields.io/badge/Renovate-Enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://renovatebot.com) [![Lefthook](https://img.shields.io/badge/Lefthook-v2.1.10-FF4088?style=flat-square&logo=git&logoColor=white)](https://github.com/evilmartians/lefthook)
 
 ---
 
@@ -57,17 +57,17 @@ Automated weather updates for your GitHub profile README using TypeScript, Bun, 
   </thead>
   <tbody>
     <tr>
-      <td align="center">Partly Cloudy <img width="15" src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/partly-cloudy-day.svg" alt="Partly Cloudy icon"></td>
-      <td align="center">30°C</td>
-      <td align="center">05:41</td>
-      <td align="center">18:17</td>
-      <td align="center">56%</td>
+      <td align="center">Clear Sky <img width="15" src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-night.svg" alt="Clear Sky icon"></td>
+      <td align="center">26°C</td>
+      <td align="center">05:25</td>
+      <td align="center">18:44</td>
+      <td align="center">92%</td>
     </tr>
   </tbody>
 </table>
 <!-- End of Hourly Weather Update -->
 
-<em>Last refresh: Friday, April 10, 2026 at 13:51:09 (UTC+6)</em>
+<em>Last refresh: Sunday, July 26, 2026 at 04:02:21 (UTC+6)</em>
 
 > This section updates automatically 3x daily via GitHub Actions. The same updater patches both this README and the [profile README](https://github.com/tashfiqul-islam/tashfiqul-islam).
 
@@ -122,44 +122,44 @@ Edit coordinates in `src/weather-update/services/fetch-weather.ts`:
 const LOCATION = {
   lat: 23.8759,
   lon: 90.3795,
-  timezone: "Asia/Dhaka",
+  timezone: 'Asia/Dhaka',
 } as const satisfies LocationConfig;
 ```
 
 ### Environment Variables
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `FORCE_UPDATE` | No | Force commit even when unchanged |
-| `PROFILE_README_PATH` | No | Custom README path |
+| Variable              | Required | Description                      |
+| --------------------- | -------- | -------------------------------- |
+| `FORCE_UPDATE`        | No       | Force commit even when unchanged |
+| `PROFILE_README_PATH` | No       | Custom README path               |
 
 ### GitHub Secrets
 
-| Secret | Required | Description |
-| ------ | -------- | ----------- |
-| `PAT` | Yes | Personal Access Token with `repo` scope |
-| `GPG_PRIVATE_KEY` | No | For signed commits |
-| `GPG_PASSPHRASE` | No | GPG key passphrase |
+| Secret            | Required | Description                             |
+| ----------------- | -------- | --------------------------------------- |
+| `PAT`             | Yes      | Personal Access Token with `repo` scope |
+| `GPG_PRIVATE_KEY` | No       | For signed commits                      |
+| `GPG_PASSPHRASE`  | No       | GPG key passphrase                      |
 
 ---
 
 ## Workflows
 
-| Workflow | Trigger | Purpose |
-| -------- | ------- | ------- |
-| **Profile Weather Update** | 3× daily + manual | Fetch weather, update README |
-| **Semantic Release** | Push to master | Automated versioning + SLSA provenance |
-| **Tech Stack Sync** | `package.json` changes | Update README badges |
-| **Renovate Validation** | `renovate.json` changes | Validate dependency update config |
+| Workflow                   | Trigger                 | Purpose                                |
+| -------------------------- | ----------------------- | -------------------------------------- |
+| **Profile Weather Update** | 3× daily + manual       | Fetch weather, update README           |
+| **Semantic Release**       | Push to main            | Automated versioning + SLSA provenance |
+| **Tech Stack Sync**        | `package.json` changes  | Update README badges                   |
+| **Renovate Validation**    | `renovate.json` changes | Validate dependency update config      |
 
 ### Release Rules
 
-| Commit Type | Version Bump |
-| ----------- | ------------ |
-| `feat:` | Minor |
-| `fix:` | Patch |
-| `chore(deps):` | Patch |
-| `BREAKING CHANGE:` | Major |
+| Commit Type        | Version Bump |
+| ------------------ | ------------ |
+| `feat:`            | Minor        |
+| `fix:`             | Patch        |
+| `chore(deps):`     | Patch        |
+| `BREAKING CHANGE:` | Major        |
 
 ---
 
@@ -173,8 +173,8 @@ bun run start            # Single run
 # Quality
 bun run check            # typecheck + lint + test
 bun run typecheck        # TypeScript check
-bun run lint             # Ultracite check
-bun run format           # Ultracite fix
+bun run lint             # oxlint check
+bun run format           # oxfmt fix
 
 # Testing
 bun test                 # Run tests
@@ -212,7 +212,8 @@ profile-weather-view/
 │   ├── 📁 scripts/
 │   ├── 📁 tests/
 │   └── 📁 docs/
-├── 📄 biome.jsonc
+├── 📄 oxlint.config.ts
+├── 📄 .oxfmtrc.json
 ├── 📄 bunfig.toml
 ├── 📄 commitlint.config.ts
 ├── 📄 lefthook.yml
@@ -229,32 +230,32 @@ profile-weather-view/
 File                      | % Funcs | % Lines
 --------------------------|---------|--------
 config.ts                 |  100.00 | 100.00
-index.ts                  |  100.00 |  98.65
+index.ts                  |  100.00 |  98.51
 fetch-weather.ts          |  100.00 | 100.00
 update-readme.ts          |  100.00 | 100.00
 wmo-mapper.ts             |  100.00 | 100.00
 logger.ts                 |  100.00 | 100.00
 preload.ts                |  100.00 | 100.00
 --------------------------|---------|--------
-All files                 |  100.00 |  99.81
+All files                 |  100.00 |  99.79
 ```
 
-130 tests, 374 assertions, seed=42.
+131 tests, 375 assertions, seed=42.
 
 ---
 
 ## Documentation
 
-| Document | Description |
-| -------- | ----------- |
-| [CLAUDE.md](./CLAUDE.md) | Claude Code project instructions |
-| [AGENTS.md](./AGENTS.md) | Universal AI agent context (Copilot, Cursor, Codex, Aider) |
-| [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md) | System design |
-| [CONTRIBUTING.md](./src/docs/CONTRIBUTING.md) | Contribution guide |
-| [DEVELOPMENT.md](./src/docs/DEVELOPMENT.md) | Development setup |
-| [WORKFLOWS.md](./src/docs/WORKFLOWS.md) | CI/CD details |
-| [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md) | Testing guide |
-| [SCRIPTS.md](./src/docs/SCRIPTS.md) | Scripts reference |
+| Document                                      | Description                                                |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| [CLAUDE.md](./CLAUDE.md)                      | Claude Code project instructions                           |
+| [AGENTS.md](./AGENTS.md)                      | Universal AI agent context (Copilot, Cursor, Codex, Aider) |
+| [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md) | System design                                              |
+| [CONTRIBUTING.md](./src/docs/CONTRIBUTING.md) | Contribution guide                                         |
+| [DEVELOPMENT.md](./src/docs/DEVELOPMENT.md)   | Development setup                                          |
+| [WORKFLOWS.md](./src/docs/WORKFLOWS.md)       | CI/CD details                                              |
+| [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md)     | Testing guide                                              |
+| [SCRIPTS.md](./src/docs/SCRIPTS.md)           | Scripts reference                                          |
 
 ---
 

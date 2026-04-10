@@ -9,11 +9,12 @@
     "moduleResolution": "bundler",
     "types": ["bun-types"],
     "noEmit": true,
+    "rootDir": "./src",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
 
-    // ── TypeScript 6.0 ──────────────────────────────────────────────────
+    // ── TypeScript 7.0 Stable ────────────────────────────────────────────
     "erasableSyntaxOnly": true,
     "libReplacement": false,
 
@@ -38,15 +39,10 @@
       "@/utils/*": ["./src/weather-update/utils/*"]
     },
 
-    // ── Interop & Output ─────────────────────────────────────────────────
+    // ── Output ───────────────────────────────────────────────────────────
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true
   },
-  "include": [
-    "src/weather-update/**/*.ts",
-    "src/tests/**/*.ts",
-    "src/scripts/**/*.ts"
-  ],
+  "include": ["src/weather-update/**/*.ts", "src/tests/**/*.ts", "src/scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", "src/docs"]
 }

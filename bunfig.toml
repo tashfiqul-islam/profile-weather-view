@@ -30,12 +30,16 @@ root = "src/tests"
 # Preload scripts for test setup
 preload = ["./src/tests/setup.ts"]
 
+# Skip irrelevant directories during test discovery
+pathIgnorePatterns = ["node_modules", "dist", "coverage", "src/docs"]
+
 # Coverage settings
 coverage = true
 coverageSkipTestFiles = true
 coverageThreshold = { line = 0.99, function = 1.0, statement = 0.99 }
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
+coverageIgnoreSourcemaps = false
 
 # Exclude patterns from coverage
 coveragePathIgnorePatterns = [
@@ -51,6 +55,7 @@ coveragePathIgnorePatterns = [
 randomize = true
 seed = 42 # Reproducible random order for debugging flaky tests
 rerunEach = 0 # Set > 0 to catch flaky tests
+retry = 0 # Set > 0 to retry failed tests
 
 # Run integration tests concurrently
 concurrentTestGlob = "**/integration/**/*.test.ts"
@@ -72,18 +77,16 @@ exact = true
 saveTextLockfile = true
 
 # Linker strategy: "hoisted" | "isolated"
-# "isolated" is stricter and recommended for new projects
+# "isolated" prevents phantom dependencies by ensuring every import is in package.json
 linker = "isolated"
 
-# Auto-install behavior: "auto" | "force" | "disable" | "fallback"
-auto = "fallback"
+# Supply chain security: minimum age for package releases before accepting
+minimumReleaseAge = 259200 # 3 days in seconds
+minimumReleaseAgeExcludes = ["@types/node", "typescript", "bun-types"]
 
 [install.cache]
-# Disable to always resolve fresh versions (useful for CI)
+# When true, always resolve the latest versions from the registry
 disableManifest = false
-
-[install.lockfile]
-save = true
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Run Configuration
@@ -96,12 +99,5 @@ shell = "bun"
 # Auto-alias `node` to `bun` in scripts
 bun = true
 
-# Suppress "Running..." output
+# Show "Running..." output
 silent = false
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Environment Variables
-# ═══════════════════════════════════════════════════════════════════════════════
-
-[env]
-NODE_ENV = "development"

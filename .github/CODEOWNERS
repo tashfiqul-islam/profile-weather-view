@@ -1,0 +1,5 @@
+# Default owner for everything
+* @tashfiqul-islam
+
+# Workflows need explicit review
+.github/ @tashfiqul-islam

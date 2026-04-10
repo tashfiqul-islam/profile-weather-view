@@ -5,7 +5,7 @@ This project uses semantic-release to fully automate versioning, changelog gener
 ## Overview
 
 - Versioning: semantic-release, tag format `v${version}`
-- Branches: `master` for stable; maintenance branches like `1.x`/`1.2.x`; pre-release branches `alpha`/`beta`
+- Branches: `main` for stable; maintenance branches like `1.x`/`1.2.x`; pre-release branches `alpha`/`beta`
 - Auth: `GITHUB_TOKEN` (no PAT required) for releases
 - Changelog: `CHANGELOG.md` maintained automatically
 - Package: version in `package.json` updated automatically; no npm publish
@@ -28,20 +28,20 @@ chore(deps): update zod to 4.x [skip actions]
 
 ## Pipeline (plugins)
 
-The release pipeline (see `.releaserc.js`) executes in this order:
+The release pipeline (see `.releaserc.json`) executes in this order:
 
-1) `@semantic-release/commit-analyzer`
+1. `@semantic-release/commit-analyzer`
    - Parses Conventional Commits; custom rules for chores and security
-2) `@semantic-release/release-notes-generator`
+2. `@semantic-release/release-notes-generator`
    - Generates release notes with grouped sections; skips merges and auto-release commits
-3) `@semantic-release/changelog`
+3. `@semantic-release/changelog`
    - Updates `CHANGELOG.md` with the generated notes
-4) `@semantic-release/npm`
+4. `@semantic-release/npm`
    - Updates `package.json` version (no publish)
-5) `@semantic-release/git`
+5. `@semantic-release/git`
    - Commits updated files (CHANGELOG.md, package.json, bun.lock, bunfig.toml, README.md)
    - Message: `chore(release): v${nextRelease.version} [skip ci]`
-6) `@semantic-release/github`
+6. `@semantic-release/github`
    - Creates a GitHub release with notes
 
 ## How changelogs are maintained
@@ -86,4 +86,4 @@ DRY_RUN=true bun run release
 
 ---
 
-For details, see `.releaserc.js` and the official [semantic-release docs](https://semantic-release.gitbook.io/semantic-release/).
+For details, see `.releaserc.json` and the official [semantic-release docs](https://semantic-release.gitbook.io/semantic-release/).

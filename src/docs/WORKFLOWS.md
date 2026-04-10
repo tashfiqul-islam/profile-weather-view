@@ -30,7 +30,7 @@ This document describes the automated workflows, their triggers, required secret
 - Key steps
   - Checkout both repos (this repo and the target profile repo)
   - Setup Bun, restore cache
-  - Quality gates (Ultracite lint, typecheck, Bun tests) unless skipped
+  - Quality gates (oxlint lint, typecheck, Bun tests) unless skipped
   - Run `src/weather-update/index.ts` which fetches from Open-Meteo and writes to the profile README
   - If changes or forced: import GPG key, configure identity, signed commit, push
   - Upload the updated README as an artifact
@@ -43,14 +43,14 @@ This document describes the automated workflows, their triggers, required secret
 ## 2) Semantic Release (`.github/workflows/semantic-release.yml`)
 
 - Triggers
-  - Pushes to `master` and `workflow_dispatch`
+  - Pushes to `main` and `workflow_dispatch`
 - Permissions
   - `contents: write`, `issues: write`, `pull-requests: write` (for release metadata)
 - Secrets required
   - Uses `GITHUB_TOKEN` (PAT not required)
 - Key steps
   - Setup Bun (install), Node LTS (run release)
-  - Run `semantic-release` with `.releaserc.js` pipeline
+  - Run `semantic-release` with `.releaserc.json` pipeline
   - Produce GitHub release and update `CHANGELOG.md`, `package.json`
 - Notes
   - Supports dry run via workflow dispatch
@@ -61,7 +61,7 @@ This document describes the automated workflows, their triggers, required secret
 ## 3) README Tech Stack Sync (`.github/workflows/sync-readme-tech-stack.yml`)
 
 - Triggers
-  - Pushes to `master` affecting `package.json` or `bun.lock` (Renovate merges included)
+  - Pushes to `main` affecting `package.json` or `bun.lock` (Renovate merges included)
   - Manual `workflow_dispatch`
   - Guard: job skips when head commit message contains `[skip actions]`
 - Permissions
@@ -79,7 +79,7 @@ This document describes the automated workflows, their triggers, required secret
 
 - Triggers
   - Pull requests affecting `renovate.json` or workflow file
-  - Push to `master` affecting same files
+  - Push to `main` affecting same files
 - Key steps
   - Setup Node LTS
   - Install renovate globally and run `renovate-config-validator --strict`

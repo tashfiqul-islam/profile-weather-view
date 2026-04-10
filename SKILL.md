@@ -12,16 +12,16 @@ analyzed_commits: 200
 
 This project strictly follows **conventional commits** with scope:
 
-| Type | Usage | Frequency |
-|------|-------|-----------|
-| `chore` | Dependency updates, releases | 64% |
-| `fix` | Bug fixes, config corrections | 19.5% |
-| `feat` | New features | 4.5% |
-| `docs` | Documentation updates | 4.5% |
-| `test` | Test infrastructure changes | 2% |
-| `refactor` | Code restructuring | 1.5% |
-| `ci` | Workflow changes | 1.5% |
-| `perf` | Performance improvements | 0.5% |
+| Type       | Usage                         | Frequency |
+| ---------- | ----------------------------- | --------- |
+| `chore`    | Dependency updates, releases  | 64%       |
+| `fix`      | Bug fixes, config corrections | 19.5%     |
+| `feat`     | New features                  | 4.5%      |
+| `docs`     | Documentation updates         | 4.5%      |
+| `test`     | Test infrastructure changes   | 2%        |
+| `refactor` | Code restructuring            | 1.5%      |
+| `ci`       | Workflow changes              | 1.5%      |
+| `perf`     | Performance improvements      | 0.5%      |
 
 ### Format
 
@@ -111,11 +111,13 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 ### Dependency Updates
 
 Renovate automates most updates with format:
+
 ```
 chore(deps): Update <package> <version> [skip actions] (#PR)
 ```
 
 Manual dependency changes:
+
 1. Update `package.json`
 2. Run `bun install` to update `bun.lock`
 3. Run `bun run check` to verify nothing breaks
@@ -130,12 +132,12 @@ Manual dependency changes:
 
 ### Key Testing Patterns
 
-| Pattern | Implementation |
-|---------|----------------|
-| Log capture | Intercept `process.stdout.write` / `process.stderr.write` |
-| Temporal mocking | Patch via `(Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"]` |
-| Temp files | `createDisposableTempFile()` with `await using` + `Symbol.asyncDispose` |
-| Weather mocks | Use Open-Meteo shape: `{ current: {...}, daily: {...}, utc_offset_seconds }` |
+| Pattern          | Implementation                                                               |
+| ---------------- | ---------------------------------------------------------------------------- |
+| Log capture      | Intercept `process.stdout.write` / `process.stderr.write`                    |
+| Temporal mocking | Patch via `(Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"]`    |
+| Temp files       | `createDisposableTempFile()` with `await using` + `Symbol.asyncDispose`      |
+| Weather mocks    | Use Open-Meteo shape: `{ current: {...}, daily: {...}, utc_offset_seconds }` |
 
 ### Test File Organization
 
@@ -147,35 +149,35 @@ Manual dependency changes:
 
 Files that typically change together:
 
-| Change Group | Files |
-|-------------|-------|
+| Change Group    | Files                                                                    |
+| --------------- | ------------------------------------------------------------------------ |
 | Weather service | `fetch-weather.ts` + `weather-test-helpers.ts` + `fetch-weather.test.ts` |
-| README patching | `update-readme.ts` + `update-readme.test.ts` |
-| Preload/config | `preload.ts` + `preload.test.ts` + `bunfig.toml` |
-| CI workflows | All 4 `.github/workflows/*.yml` files together |
-| Dependencies | `package.json` + `bun.lock` |
-| Releases | `CHANGELOG.md` + `package.json` |
+| README patching | `update-readme.ts` + `update-readme.test.ts`                             |
+| Preload/config  | `preload.ts` + `preload.test.ts` + `bunfig.toml`                         |
+| CI workflows    | All 4 `.github/workflows/*.yml` files together                           |
+| Dependencies    | `package.json` + `bun.lock`                                              |
+| Releases        | `CHANGELOG.md` + `package.json`                                          |
 
 ## Technology Stack
 
 > All versions are defined in `package.json` — check there for current values.
 
-| Tool | Purpose |
-|------|---------|
-| Bun | Runtime + test runner + package manager |
-| TypeScript | Language (strict + `erasableSyntaxOnly`, TS 6.x) |
-| Zod | Schema validation (v4, `.meta()` API) |
-| Biome / Ultracite | Linting/formatting |
-| Lefthook | Git hooks |
-| semantic-release | Automated versioning (`conventionalcommits` preset) |
-| Renovate | Dependency updates (pinned) |
-| `@js-temporal/polyfill` | Temporal API (Bun lacks native support) |
+| Tool                    | Purpose                                                 |
+| ----------------------- | ------------------------------------------------------- |
+| Bun                     | Runtime + test runner + package manager                 |
+| TypeScript              | Language (strict + `erasableSyntaxOnly`, TS 7.0 stable) |
+| Zod                     | Schema validation (v4, `.meta()` API)                   |
+| oxlint / oxfmt          | Linting + formatting                                    |
+| Lefthook                | Git hooks                                               |
+| semantic-release        | Automated versioning (`conventionalcommits` preset)     |
+| Renovate                | Dependency updates (pinned)                             |
+| `@js-temporal/polyfill` | Temporal API (Bun lacks native support)                 |
 
 ## Configuration Conventions
 
 - **`linker = "isolated"`** in `bunfig.toml` — phantom deps crash immediately
 - **ESM only** — `import`/`export`; no `require()`, no CommonJS
-- **TypeScript 6.x** — `erasableSyntaxOnly`, `verbatimModuleSyntax`, no `baseUrl`, no `isolatedModules`
+- **TypeScript 7.0 stable** — `erasableSyntaxOnly`, `verbatimModuleSyntax`, no `baseUrl`, no `isolatedModules`
 - **Strict TypeScript** — `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitReturns`
 - **No `isolatedDeclarations`** — incompatible with `noEmit: true`
 - **Preload via CLI flag** — `--preload` on `start`/`dev` scripts only, not in bunfig.toml root

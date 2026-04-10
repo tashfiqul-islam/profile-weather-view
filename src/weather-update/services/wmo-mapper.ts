@@ -27,12 +27,12 @@ export interface MeteoconIcon {
 
 /** Base URL for Meteocons CDN (GitHub raw content) */
 const METEOCONS_BASE_URL =
-  "https://raw.githubusercontent.com/basmilius/weather-icons/dev/production" as const;
+  'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production' as const;
 
 /** Default icon for unknown WMO codes */
 const UNKNOWN_ICON: MeteoconIcon = {
-  name: "not-available" as MeteoconIconName,
-  description: "Unknown",
+  name: 'not-available' as MeteoconIconName,
+  description: 'Unknown',
 } as const;
 
 // ============================================================================
@@ -45,95 +45,95 @@ const UNKNOWN_ICON: MeteoconIcon = {
  */
 const WMO_DAY_MAP: Readonly<Record<number, MeteoconIcon>> = {
   // Clear conditions
-  0: { name: "clear-day" as MeteoconIconName, description: "Clear Sky" },
+  0: { name: 'clear-day' as MeteoconIconName, description: 'Clear Sky' },
 
   // Partly cloudy conditions
   1: {
-    name: "partly-cloudy-day" as MeteoconIconName,
-    description: "Mainly Clear",
+    name: 'partly-cloudy-day' as MeteoconIconName,
+    description: 'Mainly Clear',
   },
   2: {
-    name: "partly-cloudy-day" as MeteoconIconName,
-    description: "Partly Cloudy",
+    name: 'partly-cloudy-day' as MeteoconIconName,
+    description: 'Partly Cloudy',
   },
-  3: { name: "overcast-day" as MeteoconIconName, description: "Overcast" },
+  3: { name: 'overcast-day' as MeteoconIconName, description: 'Overcast' },
 
   // Fog conditions
-  45: { name: "fog-day" as MeteoconIconName, description: "Fog" },
+  45: { name: 'fog-day' as MeteoconIconName, description: 'Fog' },
   48: {
-    name: "fog-day" as MeteoconIconName,
-    description: "Depositing Rime Fog",
+    name: 'fog-day' as MeteoconIconName,
+    description: 'Depositing Rime Fog',
   },
 
   // Drizzle conditions
   51: {
-    name: "partly-cloudy-day-drizzle" as MeteoconIconName,
-    description: "Light Drizzle",
+    name: 'partly-cloudy-day-drizzle' as MeteoconIconName,
+    description: 'Light Drizzle',
   },
-  53: { name: "drizzle" as MeteoconIconName, description: "Moderate Drizzle" },
-  55: { name: "drizzle" as MeteoconIconName, description: "Dense Drizzle" },
+  53: { name: 'drizzle' as MeteoconIconName, description: 'Moderate Drizzle' },
+  55: { name: 'drizzle' as MeteoconIconName, description: 'Dense Drizzle' },
 
   // Freezing drizzle
   56: {
-    name: "sleet" as MeteoconIconName,
-    description: "Light Freezing Drizzle",
+    name: 'sleet' as MeteoconIconName,
+    description: 'Light Freezing Drizzle',
   },
   57: {
-    name: "sleet" as MeteoconIconName,
-    description: "Dense Freezing Drizzle",
+    name: 'sleet' as MeteoconIconName,
+    description: 'Dense Freezing Drizzle',
   },
 
   // Rain conditions
   61: {
-    name: "partly-cloudy-day-rain" as MeteoconIconName,
-    description: "Slight Rain",
+    name: 'partly-cloudy-day-rain' as MeteoconIconName,
+    description: 'Slight Rain',
   },
-  63: { name: "rain" as MeteoconIconName, description: "Moderate Rain" },
-  65: { name: "rain" as MeteoconIconName, description: "Heavy Rain" },
+  63: { name: 'rain' as MeteoconIconName, description: 'Moderate Rain' },
+  65: { name: 'rain' as MeteoconIconName, description: 'Heavy Rain' },
 
   // Freezing rain
-  66: { name: "sleet" as MeteoconIconName, description: "Light Freezing Rain" },
-  67: { name: "sleet" as MeteoconIconName, description: "Heavy Freezing Rain" },
+  66: { name: 'sleet' as MeteoconIconName, description: 'Light Freezing Rain' },
+  67: { name: 'sleet' as MeteoconIconName, description: 'Heavy Freezing Rain' },
 
   // Snow conditions
   71: {
-    name: "partly-cloudy-day-snow" as MeteoconIconName,
-    description: "Slight Snow",
+    name: 'partly-cloudy-day-snow' as MeteoconIconName,
+    description: 'Slight Snow',
   },
-  73: { name: "snow" as MeteoconIconName, description: "Moderate Snow" },
-  75: { name: "snow" as MeteoconIconName, description: "Heavy Snow" },
-  77: { name: "snow" as MeteoconIconName, description: "Snow Grains" },
+  73: { name: 'snow' as MeteoconIconName, description: 'Moderate Snow' },
+  75: { name: 'snow' as MeteoconIconName, description: 'Heavy Snow' },
+  77: { name: 'snow' as MeteoconIconName, description: 'Snow Grains' },
 
   // Rain showers
   80: {
-    name: "partly-cloudy-day-rain" as MeteoconIconName,
-    description: "Slight Rain Showers",
+    name: 'partly-cloudy-day-rain' as MeteoconIconName,
+    description: 'Slight Rain Showers',
   },
   81: {
-    name: "rain" as MeteoconIconName,
-    description: "Moderate Rain Showers",
+    name: 'rain' as MeteoconIconName,
+    description: 'Moderate Rain Showers',
   },
-  82: { name: "rain" as MeteoconIconName, description: "Violent Rain Showers" },
+  82: { name: 'rain' as MeteoconIconName, description: 'Violent Rain Showers' },
 
   // Snow showers
   85: {
-    name: "partly-cloudy-day-snow" as MeteoconIconName,
-    description: "Slight Snow Showers",
+    name: 'partly-cloudy-day-snow' as MeteoconIconName,
+    description: 'Slight Snow Showers',
   },
-  86: { name: "snow" as MeteoconIconName, description: "Heavy Snow Showers" },
+  86: { name: 'snow' as MeteoconIconName, description: 'Heavy Snow Showers' },
 
   // Thunderstorm conditions
   95: {
-    name: "thunderstorms-day" as MeteoconIconName,
-    description: "Thunderstorm",
+    name: 'thunderstorms-day' as MeteoconIconName,
+    description: 'Thunderstorm',
   },
   96: {
-    name: "thunderstorms-day-rain" as MeteoconIconName,
-    description: "Thunderstorm with Slight Hail",
+    name: 'thunderstorms-day-rain' as MeteoconIconName,
+    description: 'Thunderstorm with Slight Hail',
   },
   99: {
-    name: "thunderstorms-day-rain" as MeteoconIconName,
-    description: "Thunderstorm with Heavy Hail",
+    name: 'thunderstorms-day-rain' as MeteoconIconName,
+    description: 'Thunderstorm with Heavy Hail',
   },
 } as const;
 
@@ -146,12 +146,12 @@ function createNightMap(): Readonly<Record<number, MeteoconIcon>> {
     Object.entries(WMO_DAY_MAP).map(([code, icon]) => [
       Number(code),
       {
-        name: (icon.name.includes("-day")
-          ? icon.name.replace("-day", "-night")
+        name: (icon.name.includes('-day')
+          ? icon.name.replace('-day', '-night')
           : icon.name) as MeteoconIconName,
         description: icon.description,
       },
-    ])
+    ]),
   );
 }
 
@@ -196,8 +196,8 @@ export function wmoToMeteocons(wmoCode: number, isDay: boolean): MeteoconIcon {
  * ```
  */
 export function getMeteoconUrl(
-  iconName: MeteoconIconName | string,
-  style: "fill" | "line" = "fill"
+  iconName: MeteoconIconName,
+  style: 'fill' | 'line' = 'fill',
 ): string {
   return `${METEOCONS_BASE_URL}/${style}/svg/${iconName}.svg`;
 }
@@ -210,7 +210,7 @@ export function getMeteoconUrl(
  * @returns Human-readable weather description
  */
 export function getWmoDescription(wmoCode: number): string {
-  return WMO_DAY_MAP[wmoCode]?.description ?? "Unknown";
+  return WMO_DAY_MAP[wmoCode]?.description ?? 'Unknown';
 }
 
 /**
@@ -227,7 +227,7 @@ export function formatWeatherDescription(description: string): string {
 
   return description
     .toLowerCase()
-    .split(" ")
+    .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .join(' ');
 }

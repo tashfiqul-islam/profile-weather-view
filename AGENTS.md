@@ -1,6 +1,6 @@
 # AGENTS.md — AI Agent Context for profile-weather-view
 
-Universal agent context file. Compatible with Claude Code, OpenAI Codex, GitHub Copilot, Cursor, Gemini CLI, and other AI coding tools.
+Universal agent context. Compatible with Claude Code, OpenAI Codex, GitHub Copilot, Cursor, Gemini CLI, and other AI coding tools.
 
 > **Versions live in `package.json`** — never hardcode them in agent context files.
 
@@ -8,44 +8,42 @@ Universal agent context file. Compatible with Claude Code, OpenAI Codex, GitHub 
 
 ## Project Overview
 
-**What it is**: TypeScript/Bun automation that fetches real-time weather from the Open-Meteo API (no API key) and patches a GitHub profile README every 8 hours.
+**What it is**: TypeScript/Bun automation that fetches real-time weather from the Open-Meteo API (no API key) and patches a GitHub profile README 3× daily.
 
-**Key constraint**: This project writes to a *different* repository (`tashfiqul-islam/tashfiqul-islam`) from where it lives (`tashfiqul-islam/profile-weather-view`). Cross-repo push uses a PAT secret.
+**Key constraint**: This project writes to a _different_ repository (`tashfiqul-islam/tashfiqul-islam`) from where it lives (`tashfiqul-islam/profile-weather-view`). Cross-repo push uses a PAT secret.
 
 ---
 
 ## Tech Stack
 
-All versions are defined in `package.json` (engines, dependencies, devDependencies). Key choices:
-
-| Tool | Purpose | Why this choice |
-|------|---------|-----------------|
-| **Bun** | Runtime + test runner + package manager | Fast, native TS support, built-in test runner |
-| **TypeScript** | Language (strict + `erasableSyntaxOnly`) | TS 6.x with full strict mode and Bun-compatible type-stripping |
-| **Zod** | Schema validation + branded types | v4 with `.meta()` API, runtime validation |
-| **@js-temporal/polyfill** | Date/time | Bun lacks native Temporal (issue #15853) |
-| **Biome / Ultracite** | Linting + formatting | Fast, opinionated, replaces ESLint+Prettier |
-| **semantic-release** | Automated versioning | Drives releases from conventional commits |
-| **Lefthook** | Git hooks | Pre-commit: typecheck + format + test |
+| Tool                      | Purpose                                  | Why                                           |
+| ------------------------- | ---------------------------------------- | --------------------------------------------- |
+| **Bun**                   | Runtime + test runner + package manager  | Fast, native TS support, built-in test runner |
+| **TypeScript**            | Language (strict + `erasableSyntaxOnly`) | TS 7.0 stable (native Go port, 10× faster)    |
+| **Zod**                   | Schema validation + branded types        | v4 with `.meta()` API, runtime validation     |
+| **@js-temporal/polyfill** | Date/time                                | Bun lacks native Temporal (issue #15853)      |
+| **oxlint / oxfmt**        | Linting + formatting                     | Rust-based, replaces Biome/Ultracite          |
+| **semantic-release**      | Automated versioning                     | Drives releases from conventional commits     |
+| **Lefthook**              | Git hooks                                | Pre-commit: format + typecheck                |
 
 ---
 
-## Executable Commands
+## Commands
 
 ```bash
 bun install                # install dependencies
 bun run start              # single weather update run
-bun run dev                # watch mode (re-runs on file save)
+bun run dev                # watch mode
 bun run typecheck          # tsc --noEmit (must be clean)
-bun run lint               # ultracite check
-bun run format             # ultracite fix
+bun run lint               # oxlint check
+bun run format             # oxfmt fix
 bun test                   # all tests (randomized, seed=42)
 bun test --coverage        # with coverage report
 bun run check              # typecheck + lint + test (full gate)
 bun run build              # bundle to dist/ (target: bun)
 ```
 
-All three quality gates must pass before any commit (enforced by lefthook pre-commit hook).
+All quality gates must pass before any commit (enforced by lefthook pre-commit hook).
 
 ---
 
@@ -71,15 +69,25 @@ profile-weather-view/
 │       ├── utils/
 │       │   └── weather-test-helpers.ts # Mock builders for weather data
 │       └── unit/                       # Unit tests mirror src/ structure
-├── .github/workflows/                  # 4 GitHub Actions workflows
-├── CLAUDE.md                           # Claude Code specific instructions
+├── .github/
+│   ├── workflows/                      # 4 GitHub Actions workflows
+│   ├── instructions/                   # Path-specific Copilot rules
+│   ├── prompts/                        # Reusable slash commands
+│   ├── CODEOWNERS                      # Review assignments
+│   └── copilot-instructions.md         # Copilot repo-wide rules
+├── .claude/                            # Claude Code rules (future)
+├── CLAUDE.md                           # Claude Code instructions (imports this file)
 ├── AGENTS.md                           # This file
-├── .releaserc.json                     # semantic-release config (conventionalcommits preset)
+├── .releaserc.json                     # semantic-release config
 ├── commitlint.config.ts                # Conventional commit enforcement
 ├── bunfig.toml                         # Bun runtime + test + install config
 ├── tsconfig.json                       # TypeScript strict config
+├── oxlint.config.ts                    # oxlint configuration
+├── .oxfmtrc.json                       # oxfmt configuration
 ├── lefthook.yml                        # Git hook definitions
-└── renovate.json                       # Dependency update automation
+├── renovate.json                       # Dependency update automation
+├── markdownlint-cli2                   # Markdown linting (devDep)
+└── .markdownlint.json                  # Markdown lint rules
 ```
 
 ### Data Flow
@@ -93,15 +101,18 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 ## Counterintuitive Patterns
 
 1. **No native Temporal** — Bun issue #15853; always `import { Temporal } from "@js-temporal/polyfill"` never from globals
-2. **Logger uses `Date.toISOString()`** — Not Temporal. The logger only needs UTC timestamps; using the polyfill for logging added unnecessary overhead
-3. **TS 6.x: `erasableSyntaxOnly: true`** — No enums, no parameter properties, no value namespaces. Bun strips types rather than compiling them
-4. **TS 6.x: `baseUrl` removed** — Deprecated in TS 6.0; `paths` entries use `./` prefix instead
-5. **TS 6.x: `isolatedModules` removed** — Superseded by `verbatimModuleSyntax: true`
-6. **`linker = "isolated"`** — Phantom dependencies cause immediate crashes, not silent failures
-7. **Preload scope split** — `--preload` flag only on `start`/`dev` scripts; test preload at `[test].preload` is separate
-8. **UTC offset is dynamic** — `update-readme.ts` derives it from `now.offset` (Temporal property)
-9. **Zod `.describe()` removed** — Zod v4 uses `.meta({ description: "..." })`
-10. **czg is interactive** — never use `bunx czg` in scripts/CI; always `git commit -m "type(scope): description"`
+2. **Logger uses `Date.toISOString()`** — Not Temporal. Logger only needs UTC timestamps; polyfill overhead unnecessary
+3. **TS 7.0: `erasableSyntaxOnly: true`** — No enums, no parameter properties, no value namespaces. Bun strips types
+4. **TS 7.0: `baseUrl` removed** — Hard error in TS 7.0; `paths` entries use `./` prefix instead
+5. **TS 7.0: `isolatedModules` removed** — Superseded by `verbatimModuleSyntax: true`
+6. **TS 7.0: `rootDir` defaults to `./`** — Must set `"rootDir": "./src"` explicitly when tsconfig sits above source dirs
+7. **TS 7.0: native Go port** — Released July 8, 2026; 8-12× faster; no programmatic API yet (coming in 7.1)
+8. **`linker = "isolated"`** — Phantom dependencies cause immediate crashes, not silent failures
+9. **Preload scope split** — `--preload` flag only on `start`/`dev` scripts; test preload at `[test].preload` is separate
+10. **UTC offset is dynamic** — `update-readme.ts` derives it from `now.offset` (Temporal property)
+11. **Zod `.describe()` removed** — Zod v4 uses `.meta({ description: "..." })`
+12. **czg is interactive** — never use `bunx czg` in scripts/CI; always `git commit -m "type(scope): description"`
+13. **oxlint replaces Biome** — `oxlint src/` for lint, `oxfmt src/` for format
 
 ---
 
@@ -113,19 +124,20 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 
 ### Key Testing Patterns
 
-| Pattern | Implementation |
-|---------|----------------|
-| Log capture | Intercept `process.stdout.write` / `process.stderr.write` (not `console.log`) |
+| Pattern          | Implementation                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| Log capture      | Intercept `process.stdout.write` / `process.stderr.write` (not `console.log`)               |
 | Temporal mocking | `(Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"]` — bracket notation required |
-| Temp files | `await using file = await testUtils.fs.createDisposableTempFile("content", "test.md")` |
-| Weather mocks | Open-Meteo shape: `{ current: {...}, daily: {...}, utc_offset_seconds }` |
-| Fetch mocking | `mockGlobalFetch()` helper in `fetch-weather.test.ts` |
+| Temp files       | `await using file = await testUtils.fs.createDisposableTempFile("content", "test.md")`      |
+| Weather mocks    | Open-Meteo shape: `{ current: {...}, daily: {...}, utc_offset_seconds }`                    |
+| Fetch mocking    | `mockGlobalFetch()` helper in `fetch-weather.test.ts`                                       |
 
 ---
 
 ## Boundaries
 
 ### Always Do
+
 - Use `import type` for type-only imports (enforced by `verbatimModuleSyntax`)
 - Route all logging through `utils/logger.ts` — no raw `console.*`
 - Use `Bun.file()` / `Bun.write()` for I/O — not `node:fs`
@@ -134,6 +146,7 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 - Use conventional commit format: `type(scope): description`
 
 ### Never Do
+
 - Bump versions manually — semantic-release handles this
 - Use `require()` or CommonJS patterns
 - Use native `Temporal` from globals — always import the polyfill
@@ -148,7 +161,9 @@ index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme
 
 Format: `type(scope): description`
 
-Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `types` `chore` `revert` `security`
+Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert` `security`
+
+Valid scopes: `weather` `deps` `ci` `release` `config` `docs` `test` `build` `actions` `bun`
 
 ---
 
@@ -157,13 +172,14 @@ Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `
 - All actions pinned to full commit SHAs — see `.github/instructions/workflows.instructions.md` for the current table
 - All runners use `ubuntu-24.04` (explicit, not `ubuntu-latest`)
 - Bun version pinned in workflows (not `latest`) — see `package.json` `engines.bun`
+- Default branch is `main` (renovated from `master`)
 
 ---
 
 ## Environment
 
-| Variable | Purpose |
-|----------|---------|
+| Variable              | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
 | `PROFILE_README_PATH` | Path to the profile README to patch (must end in `.md`) |
-| `FORCE_UPDATE` | Bypass change detection, always commit |
-| `GITHUB_ACTIONS` | Set by GHA; changes log output format |
+| `FORCE_UPDATE`        | Bypass change detection, always commit                  |
+| `GITHUB_ACTIONS`      | Set by GHA; changes log output format                   |

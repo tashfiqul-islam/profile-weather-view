@@ -13,8 +13,7 @@ bun run dev                # run the weather script locally (watch mode)
 
 ## Prerequisites
 
-- Bun ≥ 1.3.5
-- Node.js ≥ 22 (tooling in CI)
+- Bun ≥ 1.3.14
 
 ## Environment
 
@@ -40,7 +39,7 @@ bun run start
 
 ## Quality
 
-- Formatting/Linting (Ultracite/Biome):
+- Formatting/Linting (oxlint + oxfmt):
 
   ```bash
   bun run format
@@ -68,7 +67,7 @@ bun run start
 
 ## Coverage expectations
 
-- Target: 100% on statements, branches, functions, and lines
+- Target: `function=1.0, line=0.99, statement=0.99` (enforced in `bunfig.toml`)
 - Coverage settings and thresholds live in `bunfig.toml` under `[test]`
 - LCOV output at `coverage/lcov.info`
 
@@ -139,7 +138,7 @@ The codebase follows modern TypeScript patterns:
 const LOCATION = {
   lat: 23.8759,
   lon: 90.3795,
-  timezone: "Asia/Dhaka",
+  timezone: 'Asia/Dhaka',
 } as const satisfies LocationConfig;
 ```
 
@@ -155,7 +154,7 @@ const Schema = z.object({ ... });
 
 ```typescript
 // Use Bun.env with bracket notation
-const forceUpdate = Bun.env["FORCE_UPDATE"] === "true";
+const forceUpdate = Bun.env['FORCE_UPDATE'] === 'true';
 ```
 
 ### Branded Types for Type Safety
@@ -169,10 +168,10 @@ export type TimeString = string & { readonly __brand: unique symbol };
 
 ```typescript
 const LOG_PREFIXES: Readonly<Record<LogLevel, string>> = {
-  info: "ℹ️",
-  success: "✅",
-  warning: "⚠️",
-  error: "❌",
+  info: 'ℹ️',
+  success: '✅',
+  warning: '⚠️',
+  error: '❌',
 } as const;
 ```
 
@@ -184,9 +183,11 @@ The weather updater supports two table formats (auto-detected):
 
 ```markdown
 <!-- Hourly Weather Update -->
-| Weather | Temperature | Sunrise | Sunset | Humidity |
-| ------- | ----------- | ------- | ------ | -------- |
-| ☀️ Clear | 25°C | 06:00 | 18:00 | 65% |
+
+| Weather  | Temperature | Sunrise | Sunset | Humidity |
+| -------- | ----------- | ------- | ------ | -------- |
+| ☀️ Clear | 25°C        | 06:00   | 18:00  | 65%      |
+
 <!-- End of Hourly Weather Update -->
 ```
 
@@ -194,7 +195,7 @@ The weather updater supports two table formats (auto-detected):
 
 ```html
 <!-- Hourly Weather Update -->
-<td align="center">Clear <img src="..."></td>
+<td align="center">Clear <img src="..." /></td>
 <td align="center">25°C</td>
 <td align="center">06:00</td>
 <td align="center">18:00</td>

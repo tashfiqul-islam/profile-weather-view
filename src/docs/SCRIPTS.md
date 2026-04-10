@@ -16,25 +16,25 @@ Note: No API key required — Open-Meteo provides free weather data.
 
 ## Development
 
-| Script | Purpose | When to use | CI |
-| ------ | ------- | ----------- | -- |
-| `dev` | Run the weather script with watch mode | Local development | No |
-| `start` | Run the weather script once | Manual production-like run | No |
+| Script  | Purpose                                | When to use                | CI  |
+| ------- | -------------------------------------- | -------------------------- | --- |
+| `dev`   | Run the weather script with watch mode | Local development          | No  |
+| `start` | Run the weather script once            | Manual production-like run | No  |
 
 ## Build
 
-| Script | Purpose | When to use | CI |
-| ------ | ------- | ----------- | -- |
-| `build` | Bundle `index.ts` to `dist/` | Prep an artifact | Yes (indirect) |
-| `build:prod` | Minified production build | Release-grade bundle | Optional |
+| Script       | Purpose                      | When to use          | CI             |
+| ------------ | ---------------------------- | -------------------- | -------------- |
+| `build`      | Bundle `index.ts` to `dist/` | Prep an artifact     | Yes (indirect) |
+| `build:prod` | Minified production build    | Release-grade bundle | Optional       |
 
 ## Testing
 
-| Script | Purpose | When to use | CI |
-| ------ | ------- | ----------- | -- |
-| `test` | Run all tests with Bun's test runner | Local runs | Yes |
-| `test:watch` | Watch mode | Fast iteration | No |
-| `test:coverage` | Coverage (text, lcov) | Validate coverage locally | Yes |
+| Script          | Purpose                              | When to use               | CI  |
+| --------------- | ------------------------------------ | ------------------------- | --- |
+| `test`          | Run all tests with Bun's test runner | Local runs                | Yes |
+| `test:watch`    | Watch mode                           | Fast iteration            | No  |
+| `test:coverage` | Coverage (text, lcov)                | Validate coverage locally | Yes |
 
 Notes
 
@@ -43,26 +43,26 @@ Notes
 
 ## Quality
 
-| Script | Purpose | When to use | CI |
-| ------ | ------- | ----------- | -- |
-| `lint` | Ultracite check | CI check | Yes |
-| `format` | Ultracite fix | Local formatting | Yes |
-| `typecheck` | `tsc --noEmit` | Validate types | Yes |
-| `check` | Typecheck + lint + test | Full local validation | Yes |
+| Script      | Purpose                 | When to use           | CI  |
+| ----------- | ----------------------- | --------------------- | --- |
+| `lint`      | oxlint check            | CI check              | Yes |
+| `format`    | oxfmt fix               | Local formatting      | Yes |
+| `typecheck` | `tsc --noEmit`          | Validate types        | Yes |
+| `check`     | Typecheck + lint + test | Full local validation | Yes |
 
 ## Release & docs automation
 
-| Script | Purpose | When to use | CI |
-| ------ | ------- | ----------- | -- |
-| `release` | Runs semantic-release | Release workflow | Yes |
+| Script                   | Purpose                                    | When to use                         | CI  |
+| ------------------------ | ------------------------------------------ | ----------------------------------- | --- |
+| `release`                | Runs semantic-release                      | Release workflow                    | Yes |
 | `sync-readme-tech-stack` | Updates README tech badges and footer date | Invoked by CI on dependency changes | Yes |
 
 ## Git helpers
 
-| Script | Purpose |
-| ------ | ------- |
-| `prepare` | Initializes Lefthook hooks |
-| `commit` | Commitizen prompt (`bunx czg`) |
+| Script    | Purpose                        |
+| --------- | ------------------------------ |
+| `prepare` | Initializes Lefthook hooks     |
+| `commit`  | Commitizen prompt (`bunx czg`) |
 
 ## Typical local flows
 

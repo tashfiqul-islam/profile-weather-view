@@ -3,11 +3,14 @@
 
 min_version: 2.0.13
 
+no_tty: true
+
 output:
   - execution_out
   - failure
   - summary
   - success
+  - progress
 
 skip_lfs: true
 
@@ -19,13 +22,13 @@ pre-commit:
   parallel: true
   jobs:
     - name: format
-      glob: "*.{ts,tsx,js,jsx,json,jsonc,css,scss,md,mdx,toml,yml,yaml}"
-      run: bunx ultracite fix {staged_files}
+      glob: '*.{ts,tsx,js,jsx,json,jsonc,css,scss,md,mdx,toml,yml,yaml}'
+      run: bunx oxfmt --write {staged_files}
       stage_fixed: true
 
     - name: typecheck
-      glob: "*.{ts,tsx}"
-      run: bun run typecheck
+      glob: '*.{ts,tsx}'
+      run: bun run typecheck --incremental
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Commit message validation
@@ -50,7 +53,7 @@ pre-push:
       run: bun run test
 
     - name: lint
-      run: bunx ultracite check
+      run: oxlint src/
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Post-merge: Auto-install deps when lockfile changes
@@ -59,5 +62,15 @@ pre-push:
 post-merge:
   jobs:
     - name: install
-      glob: "{bun.lock,bun.lockb,package.json}"
+      glob: '{bun.lock,bun.lockb,package.json}'
+      run: bun install
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Post-checkout: Auto-install deps when switching branches
+# ═══════════════════════════════════════════════════════════════════════════════
+
+post-checkout:
+  jobs:
+    - name: install
+      glob: '{bun.lock,bun.lockb,package.json}'
       run: bun install

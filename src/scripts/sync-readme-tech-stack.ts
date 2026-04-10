@@ -7,11 +7,11 @@
  * @module sync-readme-tech-stack
  */
 
-import { join } from "node:path";
-import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
-import { DISPLAY_TIMEZONE } from "../weather-update/config";
-import { log } from "../weather-update/utils/logger";
+import { join } from 'node:path';
+import { Temporal } from '@js-temporal/polyfill';
+import { z } from 'zod';
+import { DISPLAY_TIMEZONE } from '../weather-update/config';
+import { log } from '../weather-update/utils/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -41,9 +41,9 @@ interface SyncResult {
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ROOT_DIR = join(import.meta.dirname, "../..");
-const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
-const README_PATH = join(ROOT_DIR, "README.md");
+const ROOT_DIR = join(import.meta.dirname, '../..');
+const PACKAGE_JSON_PATH = join(ROOT_DIR, 'package.json');
+const README_PATH = join(ROOT_DIR, 'README.md');
 const TIMEZONE = DISPLAY_TIMEZONE;
 const FOOTER_PATTERN = /<sub>\*\*Last refresh\*\*: .+<\/sub>/;
 
@@ -53,58 +53,58 @@ const FOOTER_PATTERN = /<sub>\*\*Last refresh\*\*: .+<\/sub>/;
 
 const createBadgeMappings = (pkg: PackageJson): readonly BadgeMapping[] => {
   const bunVersion =
-    pkg.packageManager?.replace("bun@", "") ??
-    pkg.engines?.["bun"]?.replaceAll(/^>=?/g, "") ??
-    "latest";
+    pkg.packageManager?.replace('bun@', '') ??
+    pkg.engines?.['bun']?.replaceAll(/^>=?/g, '') ??
+    'latest';
 
   return [
     // Core Technologies
     {
-      dependencyName: "typescript",
+      dependencyName: 'typescript',
       pattern: /TypeScript-v?[\d.]+(?:-[\w]+)?-3178C6/g,
       replacement: (v) => `TypeScript-v${v}-3178C6`,
     },
     {
-      dependencyName: "bun",
+      dependencyName: 'bun',
       pattern: /Bun-v?[\d.]+(?:-[\w]+)?-000000/g,
       replacement: () => `Bun-v${bunVersion}-000000`,
     },
     {
-      dependencyName: "bun",
+      dependencyName: 'bun',
       pattern: /Bun%20Test-v?[\d.]+(?:-[\w]+)?-000000/g,
       replacement: () => `Bun%20Test-v${bunVersion}-000000`,
     },
     {
-      dependencyName: "zod",
+      dependencyName: 'zod',
       pattern: /Zod-v?[\d.]+(?:-[\w]+)?-3E67B1/g,
       replacement: (v) => `Zod-v${v}-3E67B1`,
     },
 
     // Development & Build Tools
     {
-      dependencyName: "@js-temporal/polyfill",
+      dependencyName: '@js-temporal/polyfill',
       pattern: /Temporal-v?[\d.]+(?:-[\w]+)?-1F2A44/g,
       replacement: (v) => `Temporal-v${v}-1F2A44`,
     },
     {
-      dependencyName: "@biomejs/biome",
-      pattern: /Biome-v?[\d.]+(?:-[\w]+)?-60A5FA/g,
-      replacement: (v) => `Biome-v${v}-60A5FA`,
+      dependencyName: 'oxlint',
+      pattern: /oxlint-v?[\d.]+(?:-[\w]+)?-4E4E4E/g,
+      replacement: (v) => `oxlint-v${v}-4E4E4E`,
     },
     {
-      dependencyName: "ultracite",
-      pattern: /Ultracite-v?[\d.]+(?:-[\w]+)?-0B7285/g,
-      replacement: (v) => `Ultracite-v${v}-0B7285`,
+      dependencyName: 'oxfmt',
+      pattern: /oxfmt-v?[\d.]+(?:-[\w]+)?-4E4E4E/g,
+      replacement: (v) => `oxfmt-v${v}-4E4E4E`,
     },
 
     // Quality & Automation
     {
-      dependencyName: "semantic-release",
+      dependencyName: 'semantic-release',
       pattern: /semantic--release-v?[\d.]+(?:-[\w]+)?-e10079/g,
       replacement: (v) => `semantic--release-v${v}-e10079`,
     },
     {
-      dependencyName: "lefthook",
+      dependencyName: 'lefthook',
       pattern: /Lefthook-v?[\d.]+(?:-[\w]+)?-FF4088/g,
       replacement: (v) => `Lefthook-v${v}-FF4088`,
     },
@@ -117,25 +117,23 @@ const createBadgeMappings = (pkg: PackageJson): readonly BadgeMapping[] => {
 
 const formatDate = (timezone: string): string => {
   const now = Temporal.Now.zonedDateTimeISO(timezone);
-  const formatted = now.toLocaleString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+  const formatted = now.toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
     hour12: true,
   });
 
   const rawOffset = now.offset;
-  const sign = rawOffset[0] ?? "+";
+  const sign = rawOffset[0] ?? '+';
   const hrs = Number.parseInt(rawOffset.slice(1, 3), 10);
   const mins = Number.parseInt(rawOffset.slice(4, 6), 10);
   const utcOffset =
-    mins === 0
-      ? `UTC${sign}${hrs}`
-      : `UTC${sign}${hrs}:${String(mins).padStart(2, "0")}`;
+    mins === 0 ? `UTC${sign}${hrs}` : `UTC${sign}${hrs}:${String(mins).padStart(2, '0')}`;
 
   return `${formatted} (${utcOffset})`;
 };
@@ -168,8 +166,8 @@ const saveReadme = async (content: string): Promise<void> => {
 
 const extractVersion = (pkg: PackageJson, dep: string): string => {
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-  const raw = deps[dep] ?? "0.0.0";
-  return raw.replaceAll(/^[\^~>=<]+/g, "");
+  const raw = deps[dep] ?? '0.0.0';
+  return raw.replaceAll(/^[\^~>=<]+/g, '');
 };
 
 const updateBadges = (readme: string, pkg: PackageJson): [string, number] => {
@@ -205,29 +203,29 @@ const updateFooter = (readme: string): [string, boolean] => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sync = async (): Promise<SyncResult> => {
-  log("Loading package.json...", "info");
+  log('Loading package.json...', 'info');
   const pkg = await loadPackageJson();
 
-  log("Loading README.md...", "info");
+  log('Loading README.md...', 'info');
   const originalReadme = await loadReadme();
 
-  log("Updating version badges...", "info");
+  log('Updating version badges...', 'info');
   const [withBadges, badgesUpdated] = updateBadges(originalReadme, pkg);
 
-  log("Updating footer timestamp...", "info");
+  log('Updating footer timestamp...', 'info');
   const [finalReadme, footerUpdated] = updateFooter(withBadges);
 
   const hasChanges = originalReadme !== finalReadme;
 
   if (hasChanges) {
-    log("Saving changes to README.md...", "info");
+    log('Saving changes to README.md...', 'info');
     await saveReadme(finalReadme);
-    log(`Updated ${badgesUpdated} badges`, "success");
+    log(`Updated ${badgesUpdated} badges`, 'success');
     if (footerUpdated) {
-      log("Updated footer timestamp", "success");
+      log('Updated footer timestamp', 'success');
     }
   } else {
-    log("No changes detected", "info");
+    log('No changes detected', 'info');
   }
 
   return { badgesUpdated, footerUpdated, hasChanges };
@@ -241,13 +239,13 @@ const main = async (): Promise<void> => {
   const result = await sync();
 
   if (result.hasChanges) {
-    log("README sync completed successfully", "success");
+    log('README sync completed successfully', 'success');
   } else {
-    log("README is already up to date", "info");
+    log('README is already up to date', 'info');
   }
 };
 
 main().catch((error: unknown) => {
-  log(error instanceof Error ? error.message : String(error), "error");
+  log(error instanceof Error ? error.message : String(error), 'error');
   process.exit(1);
 });

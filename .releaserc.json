@@ -1,7 +1,7 @@
 {
   "branches": [
     "+([0-9])?(.{+([0-9]),x}).x",
-    "master",
+    "main",
     { "name": "next", "prerelease": true },
     { "name": "beta", "prerelease": true },
     { "name": "alpha", "prerelease": true }
@@ -72,7 +72,10 @@
             { "type": "revert", "section": "\u23EA Reverts" },
             { "type": "chore", "hidden": true },
             { "type": "style", "hidden": true }
-          ]
+          ],
+          "issueUrlFormat": "{{host}}/{{owner}}/{{repository}}/issues/{{id}}",
+          "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commit/{{hash}}",
+          "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}"
         },
         "parserOpts": {
           "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
@@ -100,13 +103,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": [
-          "package.json",
-          "CHANGELOG.md",
-          "bun.lock",
-          "bunfig.toml",
-          "README.md"
-        ],
+        "assets": ["package.json", "CHANGELOG.md", "bun.lock", "bunfig.toml", "README.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],

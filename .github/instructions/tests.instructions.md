@@ -1,5 +1,5 @@
 ---
-applyTo: "src/tests/**"
+applyTo: 'src/tests/**'
 ---
 
 # Testing Rules — profile-weather-view
@@ -9,7 +9,7 @@ applyTo: "src/tests/**"
 - `bun test` only — never Jest, Vitest, or any other runner
 - 100% line and function coverage enforced — never lower `coverageThreshold` in `bunfig.toml`
 - Test files mirror source structure: `src/weather-update/services/foo.ts` → `src/tests/unit/services/foo.test.ts`
-- Imports from `bun:test`: `describe`, `it`, `expect`, `beforeEach`, `afterEach`, `mock`, `spyOn`
+- Imports from `bun:test`: `describe`, `test`, `expect`, `beforeEach`, `afterEach`, `mock`, `spyOn`
 
 ## Log Capture Pattern
 
@@ -23,8 +23,14 @@ const origStdout = process.stdout.write.bind(process.stdout);
 const origStderr = process.stderr.write.bind(process.stderr);
 
 beforeEach(() => {
-  process.stdout.write = (chunk: string) => { stdoutCalls.push(chunk); return true; };
-  process.stderr.write = (chunk: string) => { stderrCalls.push(chunk); return true; };
+  process.stdout.write = (chunk: string) => {
+    stdoutCalls.push(chunk);
+    return true;
+  };
+  process.stderr.write = (chunk: string) => {
+    stderrCalls.push(chunk);
+    return true;
+  };
 });
 
 afterEach(() => {
@@ -38,17 +44,17 @@ afterEach(() => {
 ## Temporal.Now Mock
 
 ```ts
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal } from '@js-temporal/polyfill';
 
 // BRACKET NOTATION required — dot notation causes TS4111 (index signature error)
 const orig = Temporal.Now.zonedDateTimeISO;
 
 beforeEach(() => {
-  (Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"] = (_tz: unknown) => mockZdt;
+  (Temporal.Now as Record<string, unknown>)['zonedDateTimeISO'] = (_tz: unknown) => mockZdt;
 });
 
 afterEach(() => {
-  (Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"] = orig;
+  (Temporal.Now as Record<string, unknown>)['zonedDateTimeISO'] = orig;
 });
 ```
 
@@ -65,7 +71,7 @@ const mockWeather = {
   },
   daily: {
     sunrise: [1_704_153_600],
-    sunset:  [1_704_196_800],
+    sunset: [1_704_196_800],
   },
   utc_offset_seconds: 21_600,
 };
@@ -78,7 +84,7 @@ const mockWeather = {
 
 ```ts
 // createDisposableTempFile uses Symbol.asyncDispose — auto-cleanup on scope exit
-await using file = await testUtils.fs.createDisposableTempFile("initial content", "test.md");
+await using file = await testUtils.fs.createDisposableTempFile('initial content', 'test.md');
 // file.path is the temp file path
 // automatically deleted when the `await using` block exits
 ```
@@ -88,7 +94,7 @@ await using file = await testUtils.fs.createDisposableTempFile("initial content"
 ```ts
 // Mock global fetch for API tests
 const mockFetch = mock(() =>
-  Promise.resolve(new Response(JSON.stringify(mockWeather), { status: 200 }))
+  Promise.resolve(new Response(JSON.stringify(mockWeather), { status: 200 })),
 );
 global.fetch = mockFetch;
 

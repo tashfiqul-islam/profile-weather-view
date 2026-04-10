@@ -2,6 +2,12 @@
 
 All notable changes to **Profile Weather View** are documented in this file.
 
+## [3.1.10](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.9...v3.1.10) (2026-04-10)
+
+### 🩹 Fixes
+
+* **ci:** accept bc output without leading zero in response time validation ([edc4b15](https://github.com/tashfiqul-islam/profile-weather-view/commit/edc4b153a0a821f0fc7dbf029b7352b08fb6cd4a))
+
 ## [3.1.9](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.8...v3.1.9) (2026-04-10)
 
 ### 🩹 Fixes

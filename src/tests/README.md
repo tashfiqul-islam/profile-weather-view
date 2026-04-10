@@ -55,7 +55,7 @@ root = "src/tests"
 preload = ["./src/tests/setup.ts"]
 coverage = true
 coverageSkipTestFiles = true
-coverageThreshold = { line = 0.9, function = 0.9, statement = 0.9 }
+coverageThreshold = { line = 0.99, function = 1.0, statement = 0.99 }
 timeout = 15000
 ```
 
@@ -77,14 +77,14 @@ timeout = 15000
 import {
   createTestWeatherPayload,
   createMockApiResponse,
-} from "@/tests/utils/weather-test-helpers";
+} from '@/tests/utils/weather-test-helpers';
 
 // Create basic weather payload
 const weather = createTestWeatherPayload();
 
 // Create with overrides
 const customWeather = createTestWeatherPayload({
-  description: "Rain",
+  description: 'Rain',
   temperatureC: 15,
 });
 
@@ -98,7 +98,7 @@ const apiResponse = createMockApiResponse();
 import {
   createTestReadmeContent,
   validateReadmeWeatherSection,
-} from "@/tests/utils/weather-test-helpers";
+} from '@/tests/utils/weather-test-helpers';
 
 // Create test README content
 const readmeContent = createTestReadmeContent(weatherData);
@@ -110,25 +110,23 @@ const hasWeatherSection = validateReadmeWeatherSection(readmeContent);
 #### Mocking Fetch
 
 ```typescript
-import { mock } from "bun:test";
+import { mock } from 'bun:test';
 
 // Mock global fetch
 global.fetch = mock(() =>
-  Promise.resolve(Response.json(mockApiResponse))
+  Promise.resolve(Response.json(mockApiResponse)),
 ) as unknown as typeof fetch;
 ```
 
 #### Performance Testing
 
 ```typescript
-import { performanceTestUtils } from "@/tests/utils/weather-test-helpers";
+import { performanceTestUtils } from '@/tests/utils/weather-test-helpers';
 
 // Measure execution time
-const { result, duration } = await performanceTestUtils.measureExecutionTime(
-  async () => {
-    return await someAsyncFunction();
-  }
-);
+const { result, duration } = await performanceTestUtils.measureExecutionTime(async () => {
+  return await someAsyncFunction();
+});
 
 // Check against threshold
 const checker = performanceTestUtils.createThresholdChecker(2000);
@@ -140,14 +138,14 @@ expect(checker.check(duration)).toBe(true);
 ### Basic Structure
 
 ```typescript
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from 'bun:test';
 
-describe("fetchWeatherData", () => {
-  test("should fetch and transform weather data successfully", async () => {
+describe('fetchWeatherData', () => {
+  test('should fetch and transform weather data successfully', async () => {
     // Arrange
     const mockResponse = createMockApiResponse();
     global.fetch = mock(() =>
-      Promise.resolve(Response.json(mockResponse))
+      Promise.resolve(Response.json(mockResponse)),
     ) as unknown as typeof fetch;
 
     // Act
@@ -155,19 +153,19 @@ describe("fetchWeatherData", () => {
 
     // Assert
     expect(result.temperatureC).toBe(25);
-    expect(result.icon).toBe("clear-day");
+    expect(result.icon).toBe('clear-day');
   });
 });
 ```
 
 ### Test Organization
 
-| Directory | Purpose |
-| --------- | ------- |
-| `unit/services/` | Service module tests (fetch-weather, update-readme, wmo-mapper) |
-| `unit/utils/` | Utility module tests (preload) |
-| `unit/basic.test.ts` | Infrastructure and helper validation |
-| `utils/` | Shared test utilities and factories |
+| Directory            | Purpose                                                         |
+| -------------------- | --------------------------------------------------------------- |
+| `unit/services/`     | Service module tests (fetch-weather, update-readme, wmo-mapper) |
+| `unit/utils/`        | Utility module tests (preload)                                  |
+| `unit/basic.test.ts` | Infrastructure and helper validation                            |
+| `utils/`             | Shared test utilities and factories                             |
 
 ### Naming Conventions
 
@@ -185,12 +183,12 @@ Configuration:
 
 Current coverage:
 
-| File | Functions | Lines |
-| ---- | --------- | ----- |
-| fetch-weather.ts | 100% | 100% |
-| update-readme.ts | 100% | 100% |
-| wmo-mapper.ts | 100% | 100% |
-| preload.ts | 100% | 100% |
+| File             | Functions | Lines |
+| ---------------- | --------- | ----- |
+| fetch-weather.ts | 100%      | 100%  |
+| update-readme.ts | 100%      | 100%  |
+| wmo-mapper.ts    | 100%      | 100%  |
+| preload.ts       | 100%      | 100%  |
 
 ## Best Practices
 
@@ -201,7 +199,7 @@ Current coverage:
 const weather = createTestWeatherPayload();
 
 // Avoid: manual object creation
-const weather = { description: "Clear", temperatureC: 25 };
+const weather = { description: 'Clear', temperatureC: 25 };
 ```
 
 ### Mock External Dependencies
@@ -211,9 +209,7 @@ const weather = { description: "Clear", temperatureC: 25 };
 const originalFetch = global.fetch;
 
 beforeEach(() => {
-  global.fetch = mock(() =>
-    Promise.resolve(Response.json(mockData))
-  ) as unknown as typeof fetch;
+  global.fetch = mock(() => Promise.resolve(Response.json(mockData))) as unknown as typeof fetch;
 });
 
 afterAll(() => {
@@ -225,14 +221,14 @@ afterAll(() => {
 
 ```typescript
 // Success path
-test("should return weather data on success", async () => {
+test('should return weather data on success', async () => {
   // ...
 });
 
 // Error path
-test("should throw on API failure", async () => {
+test('should throw on API failure', async () => {
   global.fetch = mock(() =>
-    Promise.resolve(new Response("Not Found", { status: 404 }))
+    Promise.resolve(new Response('Not Found', { status: 404 })),
   ) as unknown as typeof fetch;
 
   await expect(fetchWeatherData()).rejects.toThrow();
@@ -243,9 +239,7 @@ test("should throw on API failure", async () => {
 
 ```typescript
 // For mock type casting
-global.fetch = mock(() =>
-  Promise.resolve(Response.json(data))
-) as unknown as typeof fetch;
+global.fetch = mock(() => Promise.resolve(Response.json(data))) as unknown as typeof fetch;
 
 // For branded types in assertions
 expect(result.temperatureC).toBe(25 as TemperatureCelsius);

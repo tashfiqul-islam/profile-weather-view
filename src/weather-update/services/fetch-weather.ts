@@ -7,14 +7,14 @@
  * @see https://open-meteo.com/en/docs
  */
 
-import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
-import { DISPLAY_TIMEZONE } from "../config";
-import { log } from "../utils/logger";
-import type { MeteoconIconName } from "./wmo-mapper";
-import { wmoToMeteocons } from "./wmo-mapper";
+import { Temporal } from '@js-temporal/polyfill';
+import { z } from 'zod';
+import { DISPLAY_TIMEZONE } from '../config';
+import { log } from '../utils/logger';
+import type { MeteoconIconName } from './wmo-mapper';
+import { wmoToMeteocons } from './wmo-mapper';
 
-export type { MeteoconIconName } from "./wmo-mapper";
+export type { MeteoconIconName } from './wmo-mapper';
 
 // ============================================================================
 // Configuration
@@ -40,19 +40,14 @@ const LOCATION = {
 } as const satisfies LocationConfig;
 
 const OPEN_METEO_CONFIG = {
-  baseUrl: "https://api.open-meteo.com/v1/forecast",
+  baseUrl: 'https://api.open-meteo.com/v1/forecast',
   queryParams: {
     latitude: LOCATION.lat.toString(),
     longitude: LOCATION.lon.toString(),
-    current: [
-      "temperature_2m",
-      "relative_humidity_2m",
-      "weather_code",
-      "is_day",
-    ].join(","),
-    daily: ["sunrise", "sunset"].join(","),
+    current: ['temperature_2m', 'relative_humidity_2m', 'weather_code', 'is_day'].join(','),
+    daily: ['sunrise', 'sunset'].join(','),
     timezone: LOCATION.timezone,
-    timeformat: "unixtime",
+    timeformat: 'unixtime',
   },
 } as const satisfies ApiConfig;
 
@@ -88,15 +83,9 @@ export interface WeatherUpdatePayload {
 
 /** Schema for validated internal weather data */
 const ProcessedWeatherSchema = z.object({
-  temperature: z
-    .number()
-    .meta({ description: "Current temperature in Celsius" }),
-  humidity: z
-    .number()
-    .min(0)
-    .max(100)
-    .meta({ description: "Relative humidity percentage" }),
-  weatherCode: z.int().meta({ description: "WMO weather interpretation code" }),
+  temperature: z.number().meta({ description: 'Current temperature in Celsius' }),
+  humidity: z.number().min(0).max(100).meta({ description: 'Relative humidity percentage' }),
+  weatherCode: z.int().meta({ description: 'WMO weather interpretation code' }),
   isDay: z.boolean().meta({ description: "Whether it's currently daytime" }),
   sunrise: z.date().meta({ description: "Today's sunrise time" }),
   sunset: z.date().meta({ description: "Today's sunset time" }),
@@ -131,9 +120,9 @@ function formatTimeInDhaka(date: Date): TimeString {
   const instant = Temporal.Instant.fromEpochMilliseconds(date.getTime());
   const dhakaTime = instant.toZonedDateTimeISO(LOCATION.timezone);
 
-  return dhakaTime.toLocaleString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
+  return dhakaTime.toLocaleString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
   }) as TimeString;
 }
@@ -165,14 +154,14 @@ function validateProcessedData(data: unknown): ProcessedWeather {
     const zodError = error instanceof z.ZodError ? error : undefined;
     const errorMessages = (zodError?.issues ?? [])
       .map((issue) => {
-        const path = issue.path.length > 0 ? ` at ${issue.path.join(".")}` : "";
+        const path = issue.path.length > 0 ? ` at ${issue.path.join('.')}` : '';
         return `${issue.message}${path}`;
       })
-      .join("; ");
+      .join('; ');
 
-    throw new Error(
-      `Weather data validation failed: ${errorMessages || String(error)}`
-    );
+    throw new Error(`Weather data validation failed: ${errorMessages || String(error)}`, {
+      cause: error,
+    });
   }
 }
 
@@ -181,7 +170,7 @@ function validateProcessedData(data: unknown): ProcessedWeather {
  * Returns result and duration in milliseconds.
  */
 async function measureTime<T>(
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<{ result: T; durationMs: number }> {
   const start = performance.now();
   const result = await operation();
@@ -203,12 +192,6 @@ async function measureTime<T>(
  *
  * @returns Weather data payload for README updates
  * @throws Error if API request fails or validation fails
- *
- * @example
- * ```ts
- * const weather = await fetchWeatherData();
- * console.log(weather.description); // "Clear Sky"
- * ```
  */
 export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
   const url = new URL(OPEN_METEO_CONFIG.baseUrl);
@@ -220,25 +203,23 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
 
   if (!response.ok) {
     throw new Error(
-      `[fetch-weather] Open-Meteo API failed: ${response.status} ${response.statusText}`
+      `[fetch-weather] Open-Meteo API failed: ${response.status} ${response.statusText}`,
     );
   }
 
   const rawData: unknown = await response.json();
-  log(`Open-Meteo responded in ${durationMs.toFixed(0)}ms`, "success");
+  log(`Open-Meteo responded in ${durationMs.toFixed(0)}ms`, 'success');
 
   let apiData: z.infer<typeof OpenMeteoResponseSchema>;
   try {
     apiData = OpenMeteoResponseSchema.parse(rawData);
   } catch {
-    throw new Error(
-      "[fetch-weather] Invalid API response: missing required fields"
-    );
+    throw new Error('[fetch-weather] Invalid API response: missing required fields');
   }
 
   const { current, daily } = apiData;
-  const sunriseTimestamp = getFirstElement(daily.sunrise, "sunrise") * 1000;
-  const sunsetTimestamp = getFirstElement(daily.sunset, "sunset") * 1000;
+  const sunriseTimestamp = getFirstElement(daily.sunrise, 'sunrise') * 1000;
+  const sunsetTimestamp = getFirstElement(daily.sunset, 'sunset') * 1000;
 
   const processedData = validateProcessedData({
     temperature: current.temperature_2m,
@@ -249,10 +230,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
     sunset: new Date(sunsetTimestamp),
   });
 
-  const meteoconIcon = wmoToMeteocons(
-    processedData.weatherCode,
-    processedData.isDay
-  );
+  const meteoconIcon = wmoToMeteocons(processedData.weatherCode, processedData.isDay);
 
   const payload: WeatherUpdatePayload = {
     description: meteoconIcon.description,
@@ -265,7 +243,7 @@ export async function fetchWeatherData(): Promise<WeatherUpdatePayload> {
 
   log(
     `${payload.description} ${payload.temperatureC}°C humidity=${payload.humidityPct}% icon=${payload.icon}`,
-    "info"
+    'info',
   );
 
   return payload;

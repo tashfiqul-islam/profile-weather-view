@@ -18,12 +18,15 @@
   "dependencyDashboard": true,
   "dependencyDashboardTitle": "🔄 Dependency Dashboard",
   "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
-  "prConcurrentLimit": 10,
+  "prConcurrentLimit": 5,
   "branchConcurrentLimit": 5,
   "prHourlyLimit": 0,
+  "platformAutomerge": true,
+  "recreateWhen": "always",
   "separateMajorMinor": true,
   "separateMultipleMajor": true,
   "separateMinorPatch": false,
+  "minimumReleaseAgeBehaviour": "timestamp-required",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "{{newVersion}}",
   "commitMessageSuffix": "[skip actions]",
@@ -46,7 +49,7 @@
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "automergeType": "branch",
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "14 days",
       "labels": ["dependencies", "{{updateType}}"]
     },
     {
@@ -55,7 +58,7 @@
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "automergeType": "branch",
-      "minimumReleaseAge": "3 days",
+      "minimumReleaseAge": "14 days",
       "labels": ["dependencies", "dev", "{{updateType}}"]
     },
     {
@@ -77,12 +80,12 @@
       "commitMessageTopic": "{{depName}}"
     },
     {
-      "description": "Group Biome packages together",
-      "matchPackageNames": ["/^@biomejs/"],
-      "groupName": "Biome packages",
+      "description": "Group oxlint/oxfmt packages together",
+      "matchPackageNames": ["oxlint", "oxfmt"],
+      "groupName": "Oxlint/Oxfmt packages",
       "automerge": true,
       "schedule": ["after 2am and before 4am on monday"],
-      "labels": ["dependencies", "biome", "linting"]
+      "labels": ["dependencies", "oxlint", "linting"]
     },
     {
       "description": "Group TypeScript packages together",
@@ -139,9 +142,7 @@
       "customType": "regex",
       "description": "Update Bun version in package.json packageManager field",
       "managerFilePatterns": ["/^package\\.json$/"],
-      "matchStrings": [
-        "\"packageManager\":\\s*\"bun@(?<currentValue>[^\"]+)\""
-      ],
+      "matchStrings": ["\"packageManager\":\\s*\"bun@(?<currentValue>[^\"]+)\""],
       "autoReplaceStringTemplate": "\"packageManager\": \"bun@{{newValue}}\"",
       "datasourceTemplate": "npm",
       "depNameTemplate": "bun",
@@ -159,12 +160,7 @@
     }
   ],
   "postUpdateOptions": [],
-  "ignorePaths": [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/coverage/**",
-    "**/*.min.js"
-  ],
+  "ignorePaths": ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**/*.min.js"],
   "postUpgradeTasks": {
     "commands": ["bun install --frozen-lockfile || bun install"],
     "fileFilters": ["package.json", "bun.lock"],

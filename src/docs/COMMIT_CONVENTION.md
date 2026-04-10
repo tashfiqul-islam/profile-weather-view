@@ -57,7 +57,7 @@ Forbidden
 Use a single scope or multiple scopes separated by comma.
 
 Allowed scopes (commitlint):
-`actions, api, bun, build, ci, config, core, deps, docs, hooks, infra, perf, release, security, test, types, ui, utils, weather`
+`actions, bun, ci, config, deps, docs, release, test, weather`
 
 Examples
 
@@ -97,7 +97,7 @@ Skip CI for automation
 
 ## Release mapping (semantic-release)
 
-Based on `.releaserc.js` and commit analyzer rules:
+Based on `.releaserc.json` and commit analyzer rules:
 
 - `feat:` → minor release
 - `fix:` → patch release
@@ -144,7 +144,7 @@ This reverts commit <sha>.
 ## Workflow & tooling
 
 - Lefthook `commit-msg` hook validates commits locally
-- Commitlint enforces the spec and custom rules (see `commitlint.config.mts`)
+- Commitlint enforces the spec and custom rules (see `commitlint.config.ts`)
 - Optional interactive prompt: `bun run commit`
 - CI also validates commit messages in PRs
 

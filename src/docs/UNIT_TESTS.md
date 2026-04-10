@@ -75,10 +75,10 @@ Path aliases (configured in `tsconfig.json`):
 Example:
 
 ```ts
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, mock, test } from 'bun:test';
 
-describe("fetchWeatherData", () => {
-  test("should fetch and transform weather data successfully", async () => {
+describe('fetchWeatherData', () => {
+  test('should fetch and transform weather data successfully', async () => {
     const mockResponse = {
       current: { temperature_2m: 25, relative_humidity_2m: 60, weather_code: 0, is_day: 1 },
       daily: { sunrise: [1704153600], sunset: [1704196800] },
@@ -86,12 +86,12 @@ describe("fetchWeatherData", () => {
     };
 
     global.fetch = mock(() =>
-      Promise.resolve(Response.json(mockResponse))
+      Promise.resolve(Response.json(mockResponse)),
     ) as unknown as typeof fetch;
 
     const result = await fetchWeatherData();
     expect(result.temperatureC).toBe(25);
-    expect(result.icon).toBe("clear-day");
+    expect(result.icon).toBe('clear-day');
   });
 });
 ```
@@ -103,7 +103,7 @@ describe("fetchWeatherData", () => {
 Coverage settings (see `bunfig.toml` `[test]`):
 
 - Coverage enabled by default; Bun writes coverage artifacts to `coverage/`
-- Thresholds: 90% branches/functions/lines/statements (targeting 100%)
+- Thresholds: `function=1.0, line=0.99, statement=0.99` (enforced in `bunfig.toml`)
 - See `bunfig.toml` for `coverage`, `coverageSkipTestFiles`, and `coverageThreshold`
 
 Integration:
@@ -124,17 +124,15 @@ Guidelines:
 Typical pattern:
 
 ```ts
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from 'bun:test';
 
-describe("getFirstElement", () => {
-  test("should return first element from non-empty array", () => {
-    expect(getFirstElement([42, 100], "test")).toBe(42);
+describe('getFirstElement', () => {
+  test('should return first element from non-empty array', () => {
+    expect(getFirstElement([42, 100], 'test')).toBe(42);
   });
 
-  test("should throw error for empty array", () => {
-    expect(() => getFirstElement([], "sunrise")).toThrow(
-      "Missing sunrise data in API response"
-    );
+  test('should throw error for empty array', () => {
+    expect(() => getFirstElement([], 'sunrise')).toThrow('Missing sunrise data in API response');
   });
 });
 ```
@@ -175,30 +173,30 @@ describe("getFirstElement", () => {
 Use `Bun.env` with bracket notation for proper mocking:
 
 ```ts
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
-describe("shouldProceedWithUpdate", () => {
+describe('shouldProceedWithUpdate', () => {
   beforeEach(() => {
     // Clear environment before each test
-    Bun.env["FORCE_UPDATE"] = undefined;
-    Bun.env["GITHUB_ACTIONS"] = undefined;
+    Bun.env['FORCE_UPDATE'] = undefined;
+    Bun.env['GITHUB_ACTIONS'] = undefined;
   });
 
   afterEach(() => {
     // Clean up after each test
-    Bun.env["FORCE_UPDATE"] = undefined;
-    Bun.env["GITHUB_ACTIONS"] = undefined;
+    Bun.env['FORCE_UPDATE'] = undefined;
+    Bun.env['GITHUB_ACTIONS'] = undefined;
   });
 
-  test("should return true when FORCE_UPDATE is true", () => {
-    Bun.env["FORCE_UPDATE"] = "true";
-    const result = shouldProceedWithUpdate("content", "content");
+  test('should return true when FORCE_UPDATE is true', () => {
+    Bun.env['FORCE_UPDATE'] = 'true';
+    const result = shouldProceedWithUpdate('content', 'content');
     expect(result).toBeTrue();
   });
 });
 ```
 
-> **Note**: Use `= undefined` instead of `delete` to satisfy Biome's `noDelete` performance rule.
+> **Note**: Use `= undefined` instead of `delete` to satisfy oxlint's `no-delete` performance rule.
 
 ---
 

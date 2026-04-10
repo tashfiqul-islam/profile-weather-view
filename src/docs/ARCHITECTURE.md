@@ -92,8 +92,8 @@ sequenceDiagram
 
 ## Runtime & core libraries
 
-- **Runtime**: Bun 1.3+ (fast startup, native fetch, file I/O, `Bun.env` for environment)
-- **Language**: TypeScript 5.9+ (strict mode, `satisfies` operator, branded types)
+- **Runtime**: Bun ≥ 1.3.14 (fast startup, native fetch, file I/O, `Bun.env` for environment)
+- **Language**: TypeScript 7.0 (strict mode, native Go binary)
 - **Validation**: Zod 4 (named imports, schema-first validation)
 - **Time**: Temporal polyfill (timezone-safe operations)
 - **Icons**: Meteocons (animated weather icons via WMO codes)
@@ -130,12 +130,12 @@ Zod schemas define and validate the network payload, and a minimal view model po
 ```ts
 // View model used throughout the rendering pipeline
 export interface WeatherUpdatePayload {
-  readonly description: string;        // e.g., "Clear Sky"
-  readonly temperatureC: TemperatureCelsius;  // branded type, rounded
-  readonly sunriseLocal: TimeString;   // HH:mm in Asia/Dhaka
-  readonly sunsetLocal: TimeString;    // HH:mm in Asia/Dhaka
-  readonly humidityPct: HumidityPercentage;   // branded type, 0..100
-  readonly icon: MeteoconIconName;     // Meteocons icon name (e.g., "clear-day")
+  readonly description: string; // e.g., "Clear Sky"
+  readonly temperatureC: TemperatureCelsius; // branded type, rounded
+  readonly sunriseLocal: TimeString; // HH:mm in Asia/Dhaka
+  readonly sunsetLocal: TimeString; // HH:mm in Asia/Dhaka
+  readonly humidityPct: HumidityPercentage; // branded type, 0..100
+  readonly icon: MeteoconIconName; // Meteocons icon name (e.g., "clear-day")
 }
 ```
 
@@ -146,17 +146,17 @@ Key Zod schemas (representative):
 
 ## Control flow
 
-1) `index.ts` logs startup context (env, CI) and ensures env is valid
-2) `fetchWeatherData()` constructs Open-Meteo URL with coordinates and required fields
+1. `index.ts` logs startup context (env, CI) and ensures env is valid
+2. `fetchWeatherData()` constructs Open-Meteo URL with coordinates and required fields
    - Uses native fetch with configurable timeout
    - Validates JSON via Zod → transforms to `WeatherUpdatePayload`
    - Maps WMO weather code to Meteocons icon using `wmoToMeteocons()`
-3) `updateReadme()`
+3. `updateReadme()`
    - Loads target README (`PROFILE_README_PATH` override supported)
    - Extracts existing section and generates updated markdown table
    - Includes Meteocons animated icon from CDN
    - Writes only if changed or `FORCE_UPDATE=true`
-4) `index.ts` records duration and emits `CHANGES_DETECTED` for the workflow
+4. `index.ts` records duration and emits `CHANGES_DETECTED` for the workflow
 
 ## Error handling and logging
 
@@ -194,7 +194,7 @@ Key Zod schemas (representative):
 ## Quality gates and observability
 
 - Tests: Bun test runner with 100% coverage; LCOV at `coverage/lcov.info` (used by SonarCloud)
-- Lint/format: Ultracite (Biome) with project rules enforced
+- Lint/format: oxlint (linting) + oxfmt (formatting) with project rules enforced
 - Logs: grouped `::group::` blocks in workflows; step outputs include response timing and change flags
 
 ## Extensibility
