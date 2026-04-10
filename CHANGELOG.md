@@ -1,5 +1,15 @@
 # Changelog
 
+All notable changes to **Profile Weather View** are documented in this file.
+
+## [3.1.8](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.7...v3.1.8) (2026-04-10)
+
+### 💅 Refactor
+
+* modernize codebase architecture and tooling ([f9c2a0b](https://github.com/tashfiqul-islam/profile-weather-view/commit/f9c2a0b718566a11597841ad93c948b7dc364189))
+
+# Changelog
+
 # [3.1.7](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.6...v3.1.7)
 ### fix
 
