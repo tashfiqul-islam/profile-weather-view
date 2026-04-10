@@ -2,6 +2,12 @@
 
 All notable changes to **Profile Weather View** are documented in this file.
 
+## [3.1.9](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.8...v3.1.9) (2026-04-10)
+
+### 🩹 Fixes
+
+* **hooks:** remove duplicate test run from pre-commit ([a61a4d1](https://github.com/tashfiqul-islam/profile-weather-view/commit/a61a4d1814099c3161528c9a89293abaaa2efe14))
+
 ## [3.1.8](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.7...v3.1.8) (2026-04-10)
 
 ### 💅 Refactor
