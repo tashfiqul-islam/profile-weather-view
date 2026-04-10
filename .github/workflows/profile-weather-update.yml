@@ -306,7 +306,7 @@ jobs:
             RESPONSE_TIME="${{ needs.update-weather.outputs.api_response_time }}"
 
             # Validate response time is a number before using in arithmetic
-            if [[ ! "$RESPONSE_TIME" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            if [[ ! "$RESPONSE_TIME" =~ ^[0-9]*\.?[0-9]+$ ]]; then
               echo "::warning::Invalid response time format: ${RESPONSE_TIME}"
             else
               {
