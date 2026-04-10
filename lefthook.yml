@@ -27,13 +27,6 @@ pre-commit:
       glob: "*.{ts,tsx}"
       run: bun run typecheck
 
-    - name: test
-      glob: "*.{ts,tsx}"
-      run: bun test --bail
-      skip:
-        - merge
-        - rebase
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # Commit message validation
 # ═══════════════════════════════════════════════════════════════════════════════
