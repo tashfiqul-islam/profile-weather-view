@@ -2,6 +2,8 @@
 
 All notable changes to **Profile Weather View** are documented in this file.
 
+## [3.2.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.1...v3.2.2) (2026-07-25)
+
 ## [3.1.10](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.9...v3.1.10) (2026-04-10)
 
 ### 🩹 Fixes
