@@ -13,19 +13,18 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            { "type": "feat", "section": "\uD83D\uDE80 Features", "effect": "bump" },
-            { "type": "fix", "section": "\uD83E\uDE79 Fixes", "effect": "bump" },
-            { "type": "perf", "section": "\uD83D\uDD25 Performance", "effect": "bump" },
-            { "type": "revert", "section": "\u23EA Reverts", "effect": "bump" },
-            { "type": "docs", "section": "\uD83D\uDCD6 Documentation", "effect": "hidden" },
-            { "type": "style", "section": "\uD83C\uDFA8 Styles", "effect": "hidden" },
-            { "type": "refactor", "section": "\uD83D\uDC85 Refactor", "effect": "hidden" },
-            { "type": "test", "section": "\u2705 Tests", "effect": "hidden" },
-            { "type": "build", "section": "\uD83D\uDCE6 Build", "effect": "hidden" },
-            { "type": "ci", "section": "\uD83E\uDD16 CI", "effect": "hidden" },
-            { "type": "chore", "section": "\uD83C\uDFE1 Chore", "effect": "hidden" },
-            { "type": "types", "section": "\uD83C\uDF0A Types", "effect": "hidden" },
-            { "type": "security", "section": "\uD83D\uDD12 Security", "effect": "bump" }
+            { "type": "feat", "effect": "bump" },
+            { "type": "fix", "effect": "bump" },
+            { "type": "perf", "effect": "bump" },
+            { "type": "revert", "effect": "bump" },
+            { "type": "security", "effect": "bump" },
+            { "type": "docs", "effect": "hidden" },
+            { "type": "style", "effect": "hidden" },
+            { "type": "refactor", "effect": "hidden" },
+            { "type": "test", "effect": "hidden" },
+            { "type": "build", "effect": "hidden" },
+            { "type": "ci", "effect": "hidden" },
+            { "type": "chore", "effect": "hidden" }
           ]
         },
         "releaseRules": [
@@ -46,27 +45,7 @@
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "conventionalcommits",
-        "presetConfig": {
-          "types": [
-            { "type": "feat", "section": "\uD83D\uDE80 Features", "effect": "bump" },
-            { "type": "fix", "section": "\uD83E\uDE79 Fixes", "effect": "bump" },
-            { "type": "perf", "section": "\uD83D\uDD25 Performance", "effect": "bump" },
-            { "type": "revert", "section": "\u23EA Reverts", "effect": "bump" },
-            { "type": "docs", "section": "\uD83D\uDCD6 Documentation", "effect": "hidden" },
-            { "type": "style", "section": "\uD83C\uDFA8 Styles", "effect": "hidden" },
-            { "type": "refactor", "section": "\uD83D\uDC85 Refactor", "effect": "hidden" },
-            { "type": "test", "section": "\u2705 Tests", "effect": "hidden" },
-            { "type": "build", "section": "\uD83D\uDCE6 Build", "effect": "hidden" },
-            { "type": "ci", "section": "\uD83E\uDD16 CI", "effect": "hidden" },
-            { "type": "chore", "section": "\uD83C\uDFE1 Chore", "effect": "hidden" },
-            { "type": "types", "section": "\uD83C\uDF0A Types", "effect": "hidden" },
-            { "type": "security", "section": "\uD83D\uDD12 Security", "effect": "bump" }
-          ],
-          "issueUrlFormat": "{{host}}/{{owner}}/{{repository}}/issues/{{id}}",
-          "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commit/{{hash}}",
-          "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}"
-        }
+        "preset": "conventionalcommits"
       }
     ],
     [
