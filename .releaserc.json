@@ -47,10 +47,7 @@
           { "type": "chore", "release": false },
           { "type": "security", "release": "patch" },
           { "type": "revert", "release": "patch" }
-        ],
-        "parserOpts": {
-          "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
-        }
+        ]
       }
     ],
     [
@@ -76,9 +73,6 @@
           "issueUrlFormat": "{{host}}/{{owner}}/{{repository}}/issues/{{id}}",
           "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commit/{{hash}}",
           "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}"
-        },
-        "parserOpts": {
-          "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
         },
         "writerOpts": {
           "commitGroupsSort": "title",
