@@ -91,7 +91,7 @@ jobs:
           if [[ "${{ github.event.inputs.debug }}" == "true" ]]; then
             FLAGS="${FLAGS} --debug"
           fi
-          npx semantic-release@25.0.8 $FLAGS
+          bunx semantic-release $FLAGS
 
       - name: Check for new release
         id: check-release
