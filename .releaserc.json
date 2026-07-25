@@ -13,40 +13,33 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            { "type": "feat", "section": "\uD83D\uDE80 Features" },
-            { "type": "fix", "section": "\uD83E\uDE79 Fixes" },
-            { "type": "perf", "section": "\uD83D\uDD25 Performance" },
-            { "type": "refactor", "section": "\uD83D\uDC85 Refactor" },
-            { "type": "docs", "section": "\uD83D\uDCD6 Documentation" },
-            { "type": "types", "section": "\uD83C\uDF0A Types" },
-            { "type": "test", "section": "\u2705 Tests" },
-            { "type": "build", "section": "\uD83D\uDCE6 Build" },
-            { "type": "ci", "section": "\uD83E\uDD16 CI" },
-            { "type": "chore", "section": "\uD83C\uDFE1 Chore" },
-            { "type": "style", "section": "\uD83C\uDFA8 Styles" },
-            { "type": "security", "section": "\uD83D\uDD12 Security" },
-            { "type": "revert", "section": "\u23EA Reverts" }
+            { "type": "feat", "section": "\uD83D\uDE80 Features", "effect": "bump" },
+            { "type": "fix", "section": "\uD83E\uDE79 Fixes", "effect": "bump" },
+            { "type": "perf", "section": "\uD83D\uDD25 Performance", "effect": "bump" },
+            { "type": "revert", "section": "\u23EA Reverts", "effect": "bump" },
+            { "type": "docs", "section": "\uD83D\uDCD6 Documentation", "effect": "hidden" },
+            { "type": "style", "section": "\uD83C\uDFA8 Styles", "effect": "hidden" },
+            { "type": "refactor", "section": "\uD83D\uDC85 Refactor", "effect": "hidden" },
+            { "type": "test", "section": "\u2705 Tests", "effect": "hidden" },
+            { "type": "build", "section": "\uD83D\uDCE6 Build", "effect": "hidden" },
+            { "type": "ci", "section": "\uD83E\uDD16 CI", "effect": "hidden" },
+            { "type": "chore", "section": "\uD83C\uDFE1 Chore", "effect": "hidden" },
+            { "type": "types", "section": "\uD83C\uDF0A Types", "effect": "hidden" },
+            { "type": "security", "section": "\uD83D\uDD12 Security", "effect": "bump" }
           ]
         },
         "releaseRules": [
           { "breaking": true, "release": "major" },
           { "type": "feat", "release": "minor" },
           { "type": "fix", "release": "patch" },
-          { "type": "docs", "release": "patch" },
-          { "type": "style", "release": "patch" },
-          { "type": "refactor", "release": "patch" },
           { "type": "perf", "release": "patch" },
-          { "type": "build", "release": "patch" },
-          { "type": "ci", "release": "patch" },
-          { "type": "types", "release": "patch" },
-          { "type": "test", "release": "patch" },
+          { "type": "revert", "release": "patch" },
+          { "type": "security", "release": "patch" },
           { "type": "chore", "scope": "deps", "release": "patch" },
           { "type": "chore", "scope": "actions", "release": "patch" },
           { "type": "chore", "scope": "bun", "release": "patch" },
           { "type": "chore", "scope": "dependencies", "release": "patch" },
-          { "type": "chore", "release": false },
-          { "type": "security", "release": "patch" },
-          { "type": "revert", "release": "patch" }
+          { "type": "chore", "release": false }
         ]
       }
     ],
@@ -56,27 +49,23 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            { "type": "feat", "section": "\uD83D\uDE80 Features" },
-            { "type": "fix", "section": "\uD83E\uDE79 Fixes" },
-            { "type": "perf", "section": "\uD83D\uDD25 Performance" },
-            { "type": "refactor", "section": "\uD83D\uDC85 Refactor" },
-            { "type": "docs", "section": "\uD83D\uDCD6 Documentation" },
-            { "type": "types", "section": "\uD83C\uDF0A Types" },
-            { "type": "test", "section": "\u2705 Tests" },
-            { "type": "build", "section": "\uD83D\uDCE6 Build" },
-            { "type": "ci", "section": "\uD83E\uDD16 CI" },
-            { "type": "security", "section": "\uD83D\uDD12 Security" },
-            { "type": "revert", "section": "\u23EA Reverts" },
-            { "type": "chore", "hidden": true },
-            { "type": "style", "hidden": true }
+            { "type": "feat", "section": "\uD83D\uDE80 Features", "effect": "bump" },
+            { "type": "fix", "section": "\uD83E\uDE79 Fixes", "effect": "bump" },
+            { "type": "perf", "section": "\uD83D\uDD25 Performance", "effect": "bump" },
+            { "type": "revert", "section": "\u23EA Reverts", "effect": "bump" },
+            { "type": "docs", "section": "\uD83D\uDCD6 Documentation", "effect": "hidden" },
+            { "type": "style", "section": "\uD83C\uDFA8 Styles", "effect": "hidden" },
+            { "type": "refactor", "section": "\uD83D\uDC85 Refactor", "effect": "hidden" },
+            { "type": "test", "section": "\u2705 Tests", "effect": "hidden" },
+            { "type": "build", "section": "\uD83D\uDCE6 Build", "effect": "hidden" },
+            { "type": "ci", "section": "\uD83E\uDD16 CI", "effect": "hidden" },
+            { "type": "chore", "section": "\uD83C\uDFE1 Chore", "effect": "hidden" },
+            { "type": "types", "section": "\uD83C\uDF0A Types", "effect": "hidden" },
+            { "type": "security", "section": "\uD83D\uDD12 Security", "effect": "bump" }
           ],
           "issueUrlFormat": "{{host}}/{{owner}}/{{repository}}/issues/{{id}}",
           "commitUrlFormat": "{{host}}/{{owner}}/{{repository}}/commit/{{hash}}",
           "compareUrlFormat": "{{host}}/{{owner}}/{{repository}}/compare/{{previousTag}}...{{currentTag}}"
-        },
-        "writerOpts": {
-          "commitGroupsSort": "title",
-          "commitsSort": ["scope", "subject"]
         }
       }
     ],

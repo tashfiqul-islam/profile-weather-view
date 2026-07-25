@@ -2,26 +2,6 @@
 
 All notable changes to **Profile Weather View** are documented in this file.
 
-## [3.2.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.0...v3.2.1) (2026-07-25)
-
-## [3.2.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.10...v3.2.0) (2026-07-25)
-
-### 🚀 Features
-
-- **config:** rename default branch master→main, overhaul tooling ([b9bac4f](https://github.com/tashfiqul-islam/profile-weather-view/commit/b9bac4f))
-  - Rename default branch master→main (local + remote)
-  - Update all workflows: checkout v7.0.1, cache v5.1.0, attest v4.1.1
-  - Fix .releaserc.json: master→main, add issueUrlFormat/commitUrlFormat/compareUrlFormat
-  - Add rootDir to tsconfig (TS 7.0 requirement)
-  - Add markdownlint-cli2, expand .markdownlint.json rules
-  - Add CODEOWNERS for review automation
-  - Renovate: 14-day min release age, platform automerge, timestamp-required
-  - Commitlint: add scope-enum, header/subject max lengths
-  - Lefthook: add --incremental typecheck, post-checkout hook, no\_tty
-  - Migrate linting from Biome to oxlint/oxfmt
-  - Restructure CLAUDE.md (imports AGENTS.md), clean up AGENTS.md
-  - Update all documentation to reflect current state
-
 ## [3.1.10](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.9...v3.1.10) (2026-04-10)
 
 ### 🩹 Fixes
