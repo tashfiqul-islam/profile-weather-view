@@ -257,7 +257,7 @@ jobs:
           else
             git add README.md
             git commit -S --no-verify -m "update(weather): refresh data for ${FORMATTED_DATE}"
-            git push https://x-access-token:${{ secrets.PAT }}@github.com/${{ env.PROFILE_REPO }} HEAD:master
+            git push https://x-access-token:${{ secrets.PAT }}@github.com/${{ env.PROFILE_REPO }} HEAD:main
             echo "::notice::Changes pushed successfully"
           fi
           echo "::endgroup::"

@@ -4,11 +4,39 @@ All notable changes to **Profile Weather View** are documented in this file.
 
 ## [3.2.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.4...v3.2.5) (2026-07-25)
 
+### 🩹 Fixes
+
+- **release:** use bunx instead of npx for semantic-release ([84e6afb](https://github.com/tashfiqul-islam/profile-weather-view/commit/84e6afb566c293287870397e493afe93862be73f))
+
 ## [3.2.4](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.3...v3.2.4) (2026-07-25)
+
+### 🩹 Fixes
+
+- **release:** add conventional-changelog-conventionalcommits as direct dep ([7803fb0](https://github.com/tashfiqul-islam/profile-weather-view/commit/7803fb0fba8905fef0d11177a95fc31c991617f4))
 
 ## [3.2.3](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.2...v3.2.3) (2026-07-25)
 
+### 🩹 Fixes
+
+- **release:** simplify release-notes-generator to use preset defaults ([2422ea1](https://github.com/tashfiqul-islam/profile-weather-view/commit/2422ea13c4e692795a5d7b7f0d546a551b85ea04))
+
 ## [3.2.2](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.1...v3.2.2) (2026-07-25)
+
+### 🩹 Fixes
+
+- **release:** add effect field to presetConfig types for changelog generation ([989eebd](https://github.com/tashfiqul-islam/profile-weather-view/commit/989eebdc0b463f2535e3542c16e9e93651954358))
+
+## [3.2.1](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.0...v3.2.1) (2026-07-25)
+
+### 🩹 Fixes
+
+- **release:** remove parserOpts that override conventionalcommits preset ([680e0d3](https://github.com/tashfiqul-islam/profile-weather-view/commit/680e0d316821430c1497116f1478e7f47d180c3a))
+
+## [3.2.0](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.10...v3.2.0) (2026-07-25)
+
+### 🎉 Features
+
+- **config:** rename default branch master→main, overhaul tooling ([b9bac4f](https://github.com/tashfiqul-islam/profile-weather-view/commit/b9bac4f37a01b790e5b5188cfc9fad3096671c5c))
 
 ## [3.1.10](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.9...v3.1.10) (2026-04-10)
 
@@ -28,9 +56,7 @@ All notable changes to **Profile Weather View** are documented in this file.
 
 - modernize codebase architecture and tooling ([f9c2a0b](https://github.com/tashfiqul-islam/profile-weather-view/commit/f9c2a0b718566a11597841ad93c948b7dc364189))
 
-# Changelog
-
-# [3.1.7](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.6...v3.1.7)
+## [3.1.7](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.1.6...v3.1.7)
 
 ### fix
 

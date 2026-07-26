@@ -15,5 +15,5 @@
 - **czg is interactive** — never `bunx czg` in scripts/CI; always `git commit -m "..."`
 - **`bun.lock` in cache** — never in `path:` blocks, only in `hashFiles()`
 - **`isolatedDeclarations` incompatible with `noEmit`** — do not add to tsconfig
-- **Profile repo uses `master`** — push target `HEAD:master` in workflow is intentional
+- **Profile repo uses `main`** — push target `HEAD:main` in workflow
 - **markdownlint-cli2** — `bunx markdownlint-cli2 "**/*.md" "#node_modules"` to lint markdown

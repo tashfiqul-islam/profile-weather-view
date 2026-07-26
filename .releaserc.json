@@ -13,18 +13,18 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            { "type": "feat", "effect": "bump" },
-            { "type": "fix", "effect": "bump" },
-            { "type": "perf", "effect": "bump" },
-            { "type": "revert", "effect": "bump" },
-            { "type": "security", "effect": "bump" },
-            { "type": "docs", "effect": "hidden" },
-            { "type": "style", "effect": "hidden" },
-            { "type": "refactor", "effect": "hidden" },
-            { "type": "test", "effect": "hidden" },
-            { "type": "build", "effect": "hidden" },
-            { "type": "ci", "effect": "hidden" },
-            { "type": "chore", "effect": "hidden" }
+            { "type": "feat", "section": "Features", "effect": "bump" },
+            { "type": "fix", "section": "Bug Fixes", "effect": "bump" },
+            { "type": "perf", "section": "Performance Improvements", "effect": "bump" },
+            { "type": "revert", "section": "Reverts", "effect": "bump" },
+            { "type": "security", "section": "Security", "effect": "bump" },
+            { "type": "docs", "section": "Documentation", "effect": "hidden" },
+            { "type": "style", "section": "Styles", "effect": "hidden" },
+            { "type": "refactor", "section": "Code Refactoring", "effect": "hidden" },
+            { "type": "test", "section": "Tests", "effect": "hidden" },
+            { "type": "build", "section": "Build System", "effect": "hidden" },
+            { "type": "ci", "section": "Continuous Integration", "effect": "hidden" },
+            { "type": "chore", "section": "Miscellaneous Chores", "effect": "hidden" }
           ]
         },
         "releaseRules": [
@@ -45,7 +45,34 @@
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "conventionalcommits"
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features", "effect": "bump" },
+            { "type": "fix", "section": "Bug Fixes", "effect": "bump" },
+            { "type": "perf", "section": "Performance Improvements", "effect": "bump" },
+            { "type": "revert", "section": "Reverts", "effect": "bump" },
+            { "type": "security", "section": "Security", "effect": "bump" },
+            {
+              "type": "chore",
+              "section": "Miscellaneous Chores",
+              "scope": "deps",
+              "effect": "changelog"
+            },
+            {
+              "type": "chore",
+              "section": "Miscellaneous Chores",
+              "scope": "actions",
+              "effect": "changelog"
+            },
+            {
+              "type": "chore",
+              "section": "Miscellaneous Chores",
+              "scope": "bun",
+              "effect": "changelog"
+            }
+          ]
+        }
       }
     ],
     [
