@@ -6,9 +6,13 @@ All notable changes to **Profile Weather View** are documented in this file.
 
 ### Bug Fixes
 
-* **release:** pin conventionalcommits preset to fix empty changelog ([1e19f0b](https://github.com/tashfiqul-islam/profile-weather-view/commit/1e19f0bf6f93cb1e60e2d3622bba3ae3383b01fe))
+- **release:** pin conventionalcommits preset to fix empty changelog ([1e19f0b](https://github.com/tashfiqul-islam/profile-weather-view/commit/1e19f0bf6f93cb1e60e2d3622bba3ae3383b01fe))
 
 ## [3.2.6](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.5...v3.2.6) (2026-07-26)
+
+### Bug Fixes
+
+- **ci:** update profile repo branch to main, fix changelog generation ([4ff8c14](https://github.com/tashfiqul-islam/profile-weather-view/commit/4ff8c1481935aed9a5a248273fb493d1849d38ee))
 
 ## [3.2.5](https://github.com/tashfiqul-islam/profile-weather-view/compare/v3.2.4...v3.2.5) (2026-07-25)
 
