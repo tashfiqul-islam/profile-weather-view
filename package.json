@@ -70,7 +70,7 @@
     "conventional-changelog-conventionalcommits": "8.0.0",
     "czg": "1.13.1",
     "lefthook": "2.1.10",
-    "markdownlint-cli2": "0.23.1",
+    "markdownlint-cli2": "0.23.2",
     "oxfmt": "0.60.0",
     "oxlint": "1.75.0",
     "semantic-release": "25.0.8",
