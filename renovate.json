@@ -15,9 +15,11 @@
   "labels": ["dependencies", "renovate"],
   "assignees": ["tashfiqul-islam"],
   "reviewers": ["tashfiqul-islam"],
-  "dependencyDashboard": true,
-  "dependencyDashboardTitle": "🔄 Dependency Dashboard",
-  "dependencyDashboardHeader": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.",
+  "dependencyDashboard": {
+    "enabled": true,
+    "title": "🔄 Dependency Dashboard",
+    "header": "This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more."
+  },
   "prConcurrentLimit": 5,
   "branchConcurrentLimit": 5,
   "prHourlyLimit": 0,
