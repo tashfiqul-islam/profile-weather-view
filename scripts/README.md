@@ -11,9 +11,11 @@ Repository tooling that runs outside the app.
 
 Turns a PR title into two managed labels: `type: <type>` and `release: major | minor | patch |
 none`. PRs are squash-merged, so the title is the commit semantic-release will read and the body is
-its message; the release label is computed by applying `.releaserc.json`'s own `releaseRules` the
-way commit-analyzer does (every matching rule counts, the highest release wins, a `!` or a
-`BREAKING CHANGE:` footer means major). The label therefore cannot disagree with the release job.
+its message; the release label applies `.releaserc.json`'s own `releaseRules` with a faithful port
+of commit-analyzer's algorithm: matching rules apply in order, a later `release: false` overrides
+earlier matches, `major` ends the scan, and if no custom rule matches the plugin's defaults apply. A
+`!` or a `BREAKING CHANGE:` footer means major. The label therefore cannot disagree with the
+release job; `pr-labels.test.ts` pins each of those semantics.
 
 `labelsFor(title, body)` is the pure core; the CLI reads `PR_TITLE` / `PR_BODY` and prints
 `type=…` / `release=…` for `$GITHUB_OUTPUT`. The workflow then replaces any stale `type:` or

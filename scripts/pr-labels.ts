@@ -33,10 +33,49 @@ export interface ReleaseRule {
 const HEADER = /^(?<type>[a-z]+)(?:\((?<scope>[^)]*)\))?(?<bang>!)?: \S/;
 /** A breaking-change footer anywhere in the squash message (the PR body). */
 const BREAKING_FOOTER = /^BREAKING[ -]CHANGE: /m;
-const RANK = { none: 0, patch: 1, minor: 2, major: 3 } as const satisfies Record<
-  ReleaseImpact,
-  number
->;
+
+/** commit-analyzer's `RELEASE_TYPES` precedence: a lower index is a bigger release. */
+const PRECEDENCE: readonly (ReleaseRule['release'] & string)[] = ['major', 'minor', 'patch'];
+
+/** commit-analyzer's built-in rules, used when no custom rule matches (conventional subset). */
+const DEFAULT_RULES: readonly ReleaseRule[] = [
+  { breaking: true, release: 'major' },
+  { type: 'feat', release: 'minor' },
+  { type: 'fix', release: 'patch' },
+  { type: 'perf', release: 'patch' },
+];
+
+/** The parsed header facts commit-analyzer matches rules against. */
+interface Commit {
+  readonly type: string;
+  readonly scope: string | undefined;
+  readonly breaking: boolean;
+}
+
+/**
+ * Port of commit-analyzer's `analyzeCommit`: matching rules apply in order, each replacing the
+ * result when nothing (or `false`) is set yet or when it ranks higher; `false` ranks highest of
+ * all, so a later `release: false` rule overrides earlier matches. `major` stops the scan.
+ */
+function analyze(
+  rules: readonly ReleaseRule[],
+  commit: Commit,
+): ReleaseRule['release'] | undefined {
+  let release: ReleaseRule['release'] | undefined;
+  for (const rule of rules) {
+    const matches = rule.breaking
+      ? commit.breaking
+      : rule.type === commit.type && (rule.scope === undefined || rule.scope === commit.scope);
+    if (!matches) continue;
+    const outranks =
+      !release ||
+      rule.release === false ||
+      PRECEDENCE.indexOf(rule.release) < PRECEDENCE.indexOf(release);
+    if (outranks) release = rule.release;
+    if (release === 'major') break;
+  }
+  return release;
+}
 
 const isReleaseRule = (value: unknown): value is ReleaseRule =>
   typeof value === 'object' && value !== null && 'release' in value;
@@ -51,8 +90,8 @@ export const RELEASE_RULES: readonly ReleaseRule[] = releaserc.plugins.flatMap((
 });
 
 /**
- * Works out the labels for a PR the way commit-analyzer will judge its squash commit: every
- * matching rule counts and the highest release wins; no matching rule means no release.
+ * Works out the labels for a PR exactly as commit-analyzer will judge its squash commit: the custom
+ * rules first, in order (see `analyze`), then commit-analyzer's defaults if no custom rule matched.
  *
  * @param title - PR title, which becomes the squash commit header.
  * @param body - PR body, which becomes the squash commit message.
@@ -72,18 +111,13 @@ export function labelsFor(
   const header = HEADER.exec(title.trim())?.groups;
   if (header?.['type'] === undefined) return undefined;
   const { type, scope, bang } = header;
-  const breaking = bang !== undefined || BREAKING_FOOTER.test(body);
-
-  let release: ReleaseImpact = 'none';
-  for (const rule of rules) {
-    const matches = rule.breaking
-      ? breaking
-      : rule.type === type && (rule.scope === undefined || rule.scope === scope);
-    if (matches && rule.release !== false && RANK[rule.release] > RANK[release]) {
-      release = rule.release;
-    }
-  }
-  return { type, release };
+  const commit: Commit = {
+    type,
+    scope,
+    breaking: bang !== undefined || BREAKING_FOOTER.test(body),
+  };
+  const release = analyze(rules, commit) ?? analyze(DEFAULT_RULES, commit);
+  return { type, release: release || 'none' };
 }
 
 /**

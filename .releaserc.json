@@ -15,8 +15,7 @@
           { "type": "revert", "release": "patch" },
           { "type": "security", "release": "patch" },
           { "type": "chore", "scope": "deps", "release": "patch" },
-          { "type": "chore", "scope": "bun", "release": "patch" },
-          { "type": "chore", "release": false }
+          { "type": "chore", "scope": "bun", "release": "patch" }
         ]
       }
     ],

@@ -43,9 +43,56 @@ describe('labelsFor (against the real .releaserc.json rules)', () => {
     expect(RELEASE_RULES).toContainEqual({ type: 'feat', release: 'minor' });
     expect(RELEASE_RULES).toContainEqual({ breaking: true, release: 'major' });
   });
+});
 
-  test('an empty rule set never releases', () => {
-    expect(labelsFor('feat: x', '', [])).toEqual({ type: 'feat', release: 'none' });
+/** Release impact of a title under the given rules. */
+const release = (title: string, rules: Parameters<typeof labelsFor>[2]) =>
+  labelsFor(title, '', rules)?.release;
+
+describe('labelsFor (commit-analyzer semantics)', () => {
+  test('regression: a later `false` rule overrides an earlier match (it hid dep releases)', () => {
+    const rules = [
+      { type: 'chore', scope: 'deps', release: 'patch' },
+      { type: 'chore', release: false },
+    ] as const;
+    expect(release('chore(deps): lock file maintenance', rules)).toBe('none');
+  });
+
+  test('a match after `false` wins again', () => {
+    expect(
+      release('chore: x', [
+        { type: 'chore', release: false },
+        { type: 'chore', release: 'minor' },
+      ]),
+    ).toBe('minor');
+  });
+
+  test('a higher earlier match is kept over a lower later one', () => {
+    expect(
+      release('chore: x', [
+        { type: 'chore', release: 'minor' },
+        { type: 'chore', release: 'patch' },
+      ]),
+    ).toBe('minor');
+  });
+
+  test('major stops the scan, so a later `false` cannot cancel it', () => {
+    expect(
+      release('feat!: x', [
+        { breaking: true, release: 'major' },
+        { type: 'feat', release: false },
+      ]),
+    ).toBe('major');
+  });
+
+  test('with no custom match, the plugin defaults apply', () => {
+    expect(release('feat: x', [])).toBe('minor');
+    expect(release('fix: x', [])).toBe('patch');
+    expect(release('docs: x', [])).toBe('none');
+  });
+
+  test('a custom `false` match does not fall back to the defaults', () => {
+    expect(release('feat: x', [{ type: 'feat', release: false }])).toBe('none');
   });
 });
 
