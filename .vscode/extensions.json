@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "TypeScriptTeam.native-preview",
-    "oxc.oxc-vscode",
-    "oven.bun-vscode",
-    "hverlin.mise-vscode"
-  ]
-}
