@@ -2,6 +2,23 @@
 {
   "MD013": false, // oxfmt owns line wrapping (printWidth 100)
   "MD041": false, // GitHub templates (PR, issue) start below the title
-  "MD033": true, // no inline HTML: Markdown images and GitHub alerts only
+  // Inline HTML only for the README's centred layout and collapsible sections.
+  "MD033": {
+    "allowed_elements": [
+      "div",
+      "img",
+      "sub",
+      "a",
+      "b",
+      "br",
+      "details",
+      "summary",
+      "table",
+      "tr",
+      "th",
+      "td",
+      "em",
+    ],
+  },
   "MD024": { "siblings_only": true }, // changelogs repeat "Bug Fixes" under each version
 }
