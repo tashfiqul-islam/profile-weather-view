@@ -8,10 +8,14 @@ on:
   pull_request:
     paths:
       - 'src/**'
+      - '!src/**/*.test.ts' # tests, fakes and docs cannot change what is rendered
+      - '!src/test-utils.ts'
+      - '!src/**/*.md'
       - 'package.json'
       - 'bun.lock'
       - 'mise.toml'
       - '.github/actions/render/**'
+      - '.github/actions/setup/**'
       - '.github/workflows/weather.yml'
 
 concurrency:

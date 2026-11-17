@@ -112,6 +112,9 @@ read `package.json` / `mise.toml` live.
   `.github/actions/render` on a fresh runner; only both failing fails the run. Load local actions
   with the self-repository syntax `uses: $/…` (exact running commit, no checkout); actionlint
   doesn't know it yet, so `.github/actionlint.yaml` ignores that one message.
+- **Shared steps live in composite actions**, loaded with `uses: $/…`: `.github/actions/setup`
+  (mise tools via `tools:`, Bun cache, `install: all | production | none`) and
+  `.github/actions/render`. Add setup steps there, not per job.
 - **`scripts/publish.sh` is tested end to end** in `scripts/publish.test.ts` against a local bare
   repo with a throwaway key. Those tests skip on Windows (OpenSSH there ignores `umask`); CI's
   Ubuntu runner and WSL run them.

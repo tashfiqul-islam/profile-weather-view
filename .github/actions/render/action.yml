@@ -32,21 +32,11 @@ runs:
         sparse-checkout: /README.md
         sparse-checkout-cone-mode: false
 
-    - name: Install toolchain (Bun via mise)
-      uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+    - name: Set up Bun and runtime dependencies
+      uses: $/.github/actions/setup
       with:
-        install_args: bun
-
-    - name: Restore Bun package cache
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-      with:
-        path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-        restore-keys: bun-${{ runner.os }}-
-
-    - name: Install runtime dependencies (frozen lockfile)
-      shell: bash
-      run: bun install --frozen-lockfile --production
+        tools: bun
+        install: production
 
     # Times out and retries transient Open-Meteo failures internally; writes the weather card
     # (src/summary.ts) to the job summary. Non-zero exit = this runner could not get the weather.

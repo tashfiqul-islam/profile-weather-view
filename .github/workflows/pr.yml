@@ -33,20 +33,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install toolchain (Bun via mise)
-        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
-        with:
-          install_args: bun
-
-      - name: Restore Bun package cache
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install dependencies (frozen lockfile)
-        run: bun install --frozen-lockfile
+      - name: Set up Bun and dependencies
+        uses: $/.github/actions/setup
 
       - name: Lint the title with commitlint (same rules as the commit-msg hook)
         env:
@@ -83,10 +71,10 @@ jobs:
             /mise.toml
           sparse-checkout-cone-mode: false
 
-      - name: Install toolchain (Bun via mise)
-        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+      - name: Set up Bun (no dependencies needed)
+        uses: $/.github/actions/setup
         with:
-          install_args: bun
+          install: none
 
       - name: Work out labels from the title and .releaserc.json
         id: labels
