@@ -96,6 +96,7 @@ read `package.json` / `mise.toml` live.
 | -------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ci.yml`       | PR, push to `main`                  | **Quality gate** (gate + `mise run lint-actions`), **Dependency review** (PRs), **Release** (`main`) |
 | `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** (no secrets; PR = dry run), **publish** (`profile` environment, signed push)              |
+| `pr.yml`       | PR opened, edited, updated          | **Conventional title** (commitlint, required), **Type and release labels** (`scripts/pr-labels.ts`)  |
 | `renovate.yml` | `renovate.json` changes             | strict config validation                                                                             |
 
 - **Secrets stay behind a seam.** Only `weather.yml`'s **publish** job touches secrets, inside the

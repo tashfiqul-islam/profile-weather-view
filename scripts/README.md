@@ -2,9 +2,22 @@
 
 Repository tooling that runs outside the app.
 
-| Script                     | Runs in                         | Tested by                            |
-| -------------------------- | ------------------------------- | ------------------------------------ |
-| [`publish.sh`](publish.sh) | `weather.yml` → **publish** job | [`publish.test.ts`](publish.test.ts) |
+| Script                         | Runs in                         | Tested by                                |
+| ------------------------------ | ------------------------------- | ---------------------------------------- |
+| [`publish.sh`](publish.sh)     | `weather.yml` → **publish** job | [`publish.test.ts`](publish.test.ts)     |
+| [`pr-labels.ts`](pr-labels.ts) | `pr.yml` → **labels** job       | [`pr-labels.test.ts`](pr-labels.test.ts) |
+
+## `pr-labels.ts`
+
+Turns a PR title into two managed labels: `type: <type>` and `release: major | minor | patch |
+none`. PRs are squash-merged, so the title is the commit semantic-release will read and the body is
+its message; the release label is computed by applying `.releaserc.json`'s own `releaseRules` the
+way commit-analyzer does (every matching rule counts, the highest release wins, a `!` or a
+`BREAKING CHANGE:` footer means major). The label therefore cannot disagree with the release job.
+
+`labelsFor(title, body)` is the pure core; the CLI reads `PR_TITLE` / `PR_BODY` and prints
+`type=…` / `release=…` for `$GITHUB_OUTPUT`. The workflow then replaces any stale `type:` or
+`release:` label, so editing a title relabels the PR.
 
 ## `publish.sh`
 

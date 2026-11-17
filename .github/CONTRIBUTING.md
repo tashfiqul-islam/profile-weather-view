@@ -45,9 +45,14 @@ mise run setup        # bun install --frozen-lockfile + hk git hooks
    mise run review       # difftastic: syntax-aware diff of this branch against main
    ```
 
-6. Open a PR. CI's **Quality gate** runs every check as its own step. tsc, oxlint, actionlint and
-   zizmor report straight onto the changed lines in the PR's **Files changed** tab, so you rarely
-   need to open a log. Renovate PRs go through the same gate.
+6. Open a PR with a conventional-commit **title**: it becomes the squash commit that drives the
+   release. The **Conventional title** check lints it, and the PR is labelled automatically with
+   `type: …` and `release: major | minor | patch | none`, so you see what merging will release
+   before you merge. Edit the title and the labels follow.
+
+   CI's **Quality gate** runs every check as its own step. tsc, oxlint, actionlint and zizmor
+   report straight onto the changed lines in the PR's **Files changed** tab, so you rarely need to
+   open a log. Renovate PRs go through the same gate.
 
 ## Design rules
 
