@@ -16,7 +16,7 @@ run = ["bun install --frozen-lockfile", "hk install --mise"]
 
 [tasks.lint-actions]
 description = "Lint and audit GitHub Actions workflows and shell scripts"
-run = ["actionlint", "zizmor --offline .github/workflows", "shellcheck scripts/publish.sh"]
+run = ["actionlint", "zizmor --offline .github", "shellcheck scripts/publish.sh"]
 
 [tasks.lint-docs]
 shell = "bash -c"

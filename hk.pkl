@@ -28,7 +28,8 @@ local actionlint = new Step {
 }
 
 local zizmor = new Step {
-  glob = workflows
+  // zizmor also audits composite actions; actionlint only understands workflows.
+  glob = List(".github/workflows/*.yml", ".github/actions/**/action.yml")
   check = "zizmor --offline {{files}}"
 }
 

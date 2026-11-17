@@ -95,7 +95,7 @@ read `package.json` / `mise.toml` live.
 | Workflow       | Trigger                             | Jobs                                                                                                 |
 | -------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ci.yml`       | PR, push to `main`                  | **Quality gate** (gate + `mise run lint-actions`), **Dependency review** (PRs), **Release** (`main`) |
-| `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** (no secrets; PR = dry run), **publish** (`profile` environment, signed push)              |
+| `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** → **render-retry** on a fresh runner if needed (no secrets; PR = dry run), **publish**    |
 | `pr.yml`       | PR opened, edited, updated          | **Conventional title** (commitlint, required), **Type and release labels** (`scripts/pr-labels.ts`)  |
 | `renovate.yml` | `renovate.json` changes             | strict config validation                                                                             |
 
@@ -104,6 +104,14 @@ read `package.json` / `mise.toml` live.
   dependencies) and nothing else. **render** does all the work with read-only access and hands the
   README over as an artifact; `publish.sh` refuses anything but a README change confined to the
   weather section and stamp. Keep new secret use in that shape.
+- **Required checks on `main`:** Quality gate, Conventional title, Dependency review. Path-filtered
+  or upstream-dependent jobs (the weather dry run, Renovate validation, labels) stay optional so
+  they can never block an unrelated merge.
+- **Open-Meteo throttles shared cloud IPs** by dropping connections, and a runner keeps one IP per
+  job. So `render` tolerates failure and `render-retry` repeats the composite action
+  `.github/actions/render` on a fresh runner; only both failing fails the run. Load local actions
+  with the self-repository syntax `uses: $/…` (exact running commit, no checkout); actionlint
+  doesn't know it yet, so `.github/actionlint.yaml` ignores that one message.
 - **`scripts/publish.sh` is tested end to end** in `scripts/publish.test.ts` against a local bare
   repo with a throwaway key. Those tests skip on Windows (OpenSSH there ignores `umask`); CI's
   Ubuntu runner and WSL run them.

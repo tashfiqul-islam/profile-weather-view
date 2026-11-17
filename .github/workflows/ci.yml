@@ -74,7 +74,7 @@ jobs:
 
       - name: Audit workflows (zizmor)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: zizmor --offline --format github .github/workflows
+        run: zizmor --offline --format github .github
 
       - name: Lint shell scripts (shellcheck)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}

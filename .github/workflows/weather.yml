@@ -11,6 +11,7 @@ on:
       - 'package.json'
       - 'bun.lock'
       - 'mise.toml'
+      - '.github/actions/render/**'
       - '.github/workflows/weather.yml'
 
 concurrency:
@@ -28,83 +29,60 @@ env:
 
 jobs:
   # No secrets here: this job talks to the internet and runs dependency code.
+  # Open-Meteo rate-limits per IP and may drop traffic from shared cloud IPs, and a runner keeps one
+  # IP for the whole job, so in-job retries cannot escape a throttled runner. A failed attempt is
+  # therefore tolerated here and retried once below on a fresh runner (a fresh IP).
   render:
     name: ${{ github.event_name == 'pull_request' && 'Render README (dry run)' || 'Render README' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      contents: read # check out this repo
+    outputs:
+      ok: ${{ steps.done.outputs.ok }}
+    steps:
+      - name: Render README
+        uses: $/.github/actions/render
+        with:
+          profile-repo: ${{ env.PROFILE_REPO }}
+          dry-run: ${{ github.event_name == 'pull_request' }}
+
+      - name: Mark the attempt complete
+        id: done
+        run: echo "ok=true" >> "$GITHUB_OUTPUT"
+
+  render-retry:
+    name: ${{ github.event_name == 'pull_request' && 'Render README, fresh runner (dry run)' || 'Render README, fresh runner' }}
+    needs: render
+    if: ${{ !cancelled() && needs.render.outputs.ok != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read # check out this repo
     steps:
-      - name: Check out repository (src only)
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          sparse-checkout: src
-
-      - name: Check out profile README (public, read-only)
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ env.PROFILE_REPO }}
-          ref: main
-          path: profile
-          persist-credentials: false
-          sparse-checkout: /README.md
-          sparse-checkout-cone-mode: false
-
-      - name: Install toolchain (Bun via mise)
-        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
-        with:
-          install_args: bun
-
-      - name: Restore Bun package cache
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: bun-${{ runner.os }}-
-
-      - name: Install runtime dependencies (frozen lockfile)
-        run: bun install --frozen-lockfile --production
-
-      # Times out and retries transient Open-Meteo failures internally; non-zero exit = real failure.
-      # Writes the weather card (src/summary.ts) to the job summary.
-      - name: Fetch weather and patch README
-        run: bun start
-        env:
-          PROFILE_README_PATH: profile/README.md
-
-      - name: Attach the README diff to the summary
-        env:
-          DRY_RUN: ${{ github.event_name == 'pull_request' }}
+      - name: Explain the retry
         run: |
           {
-            if [[ "$DRY_RUN" == true ]]; then
-              echo '> [!NOTE]'
-              echo '> Dry run: pull requests render against the live API but never publish.'
-              echo
-            fi
-            echo '<details><summary>README diff</summary>'
+            echo '> [!WARNING]'
+            echo '> The first runner could not complete the render (usually Open-Meteo throttling a'
+            echo '> shared cloud IP). This is the retry on a fresh runner, with a fresh IP.'
             echo
-            echo '```diff'
-            git -C profile diff --unified=0 -- README.md
-            echo '```'
-            echo
-            echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Hand the README to publish
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Render README
+        uses: $/.github/actions/render
         with:
-          name: profile-readme
-          path: profile/README.md
-          if-no-files-found: error
-          retention-days: 1
+          profile-repo: ${{ env.PROFILE_REPO }}
+          dry-run: ${{ github.event_name == 'pull_request' }}
 
   # Secrets live only here, behind the `profile` environment; no network fetch, no dependency code.
   publish:
     name: Publish signed commit
-    needs: render
-    if: github.event_name != 'pull_request'
+    needs: [render, render-retry]
+    if: >-
+      ${{ !cancelled() && github.event_name != 'pull_request' &&
+      (needs.render.outputs.ok == 'true' || needs.render-retry.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: profile
