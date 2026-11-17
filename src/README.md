@@ -16,7 +16,7 @@ the run with exit code 1 and a single readable error line.
 |    PROFILE_README_PATH must be a .md file.       |
 | │                                                |
 | 2  Fetch                    http.ts              |
-|    10 s per attempt, 3 attempts, jittered.       |
+|    15 s per attempt, 4 attempts, jittered.       |
 | │                                                |
 | 3  Validate and transform   weather.ts           |
 |    One Zod schema: JSON → Weather.               |
