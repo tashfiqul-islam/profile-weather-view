@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 912 312" width="912" height="312" role="img" aria-labelledby="architecture-title architecture-desc">
   <title id="architecture-title">Profile Weather View architecture</title>
-  <desc id="architecture-desc">A GitHub cron triggers weather.yml, which runs bun start. fetchWithRetry calls the Open-Meteo API with a 10 second timeout and up to three jittered attempts. The JSON response is validated and transformed by a Zod schema into a Weather value, rendered into the README section by the pure renderReadme core, written by the updateReadme shell, and pushed as an SSH-signed commit to the profile repository.</desc>
+  <desc id="architecture-desc">A GitHub cron triggers weather.yml, which runs bun start. fetchWithRetry calls the Open-Meteo API with a 15 second timeout and up to four jittered attempts. The JSON response is validated and transformed by a Zod schema into a Weather value, rendered into the README section by the pure renderReadme core, written by the updateReadme shell, and pushed as an SSH-signed commit to the profile repository.</desc>
   <defs><style>
   .paper{fill:#f5f5f5}.paper2{fill:#ececec}.card{fill:#ffffff}
   .ink{fill:#2d3142}.muted{fill:#4f5d75}.soft{fill:#5a6580}.accent{fill:#bf4520}.link{fill:#2e5aa8}
@@ -69,7 +69,7 @@
     <rect x="498" y="65" width="62.4" height="14" rx="2" class="paper s-rule" stroke-width="1"/>
     <text x="504" y="75" class="mono soft" font-size="8" font-weight="500" letter-spacing="1.4">HTTP SEAM</text>
     <text x="568" y="101" text-anchor="middle" class="sans ink" font-size="14" font-weight="600">fetchWithRetry</text>
-    <text x="568" y="118" text-anchor="middle" class="mono soft" font-size="10">10s × 3, jitter</text>
+    <text x="568" y="118" text-anchor="middle" class="mono soft" font-size="10">15s × 4, jitter</text>
   </g>
   
   <g>

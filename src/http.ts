@@ -10,23 +10,29 @@
 
 import { log } from './log';
 
-/** Retry and timeout policy for {@link fetchWithRetry}; every field has a production default. */
+/**
+ * Retry and timeout policy for {@link fetchWithRetry}; every field has a production default.
+ *
+ * The defaults ride out roughly 75 s of upstream trouble (4 × 15 s attempts plus jittered waits of
+ * up to 2, 4 and 8 s), sized from observed Open-Meteo stalls from GitHub's runners while staying far
+ * inside the job's 5-minute timeout.
+ */
 export interface RetryOptions {
-  /** Total attempts, including the first. Default `3`. */
+  /** Total attempts, including the first. Default `4`. */
   readonly attempts: number;
-  /** Budget per attempt, headers and body together. Default `10_000`. */
+  /** Budget per attempt, headers and body together. Default `15_000`. */
   readonly timeoutMs: number;
-  /** Base for full-jitter exponential backoff. Default `1000`. */
+  /** Base for full-jitter exponential backoff. Default `2000`. */
   readonly baseDelayMs: number;
-  /** Cap on any single wait, including `Retry-After`. Default `10_000`. */
+  /** Cap on any single wait, including `Retry-After`. Default `20_000`. */
   readonly maxDelayMs: number;
 }
 
 const DEFAULTS = {
-  attempts: 3,
-  timeoutMs: 10_000,
-  baseDelayMs: 1000,
-  maxDelayMs: 10_000,
+  attempts: 4,
+  timeoutMs: 15_000,
+  baseDelayMs: 2000,
+  maxDelayMs: 20_000,
 } as const satisfies RetryOptions;
 
 /** Request timeout, rate limiting, and server errors are worth another attempt; other 4xx are not. */

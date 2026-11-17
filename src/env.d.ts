@@ -11,5 +11,7 @@ declare module 'bun' {
     PROFILE_README_PATH?: string;
     /** Any value disables ANSI colours in log output, per https://no-color.org. */
     readonly NO_COLOR?: string;
+    /** Set by GitHub Actions: Markdown file for the current step's job summary. */
+    GITHUB_STEP_SUMMARY?: string;
   }
 }

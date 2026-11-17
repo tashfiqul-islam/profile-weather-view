@@ -7,12 +7,14 @@
  * @module
  */
 
+import { LOCATION } from './config';
 import { log } from './log';
 import { updateReadme } from './readme';
+import { renderSummary, writeSummary } from './summary';
 import { fetchWeather } from './weather';
 
 /**
- * Fetches the weather and patches one README.
+ * Fetches the weather, patches one README, and (in GitHub Actions) writes the job summary.
  *
  * The path is validated before any network call.
  *
@@ -27,8 +29,13 @@ export async function main(readmePath = Bun.env.PROFILE_README_PATH): Promise<vo
     throw new Error(`PROFILE_README_PATH must point to a .md file, got: ${readmePath}`);
   }
   const start = performance.now();
-  await updateReadme(readmePath, await fetchWeather());
-  log(`Done in ${(performance.now() - start).toFixed(0)}ms`, 'success');
+  const weather = await fetchWeather();
+  const fetchMs = performance.now() - start;
+  const now = Temporal.Now.zonedDateTimeISO(LOCATION.timezone);
+  await updateReadme(readmePath, weather, now);
+  const totalMs = performance.now() - start;
+  await writeSummary(renderSummary({ weather, now, readmePath, fetchMs, totalMs }));
+  log(`Done in ${totalMs.toFixed(0)}ms`, 'success');
 }
 
 /**

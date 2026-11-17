@@ -21,21 +21,14 @@ Read those instead of trusting any copy of them.
 
 ## Map
 
-```text
-src/index.ts      CLI: main(path) orchestrates, run() maps failure → exit code 1
-src/weather.ts    fetchWeather(): Open-Meteo → Zod schema → transform → Weather
-src/http.ts       fetchWithRetry(): per-attempt timeout + jittered retries (the network seam)
-src/meteocons.ts  WMO code → icon; icon names are a derived literal union
-src/readme.ts     renderReadme() pure core  ·  updateReadme() I/O shell
-src/time.ts       Temporal formatting helpers (clock, offset, timestamp)
-src/log.ts        the only logger: `HH:MM:SS [badge] msg`, warn/error → stderr
-scripts/publish.sh  publish job: guard → SSH-sign → rebase → verify-commit → push (bash, no deps)
-```
+Read [`src/README.md`](src/README.md) before changing code: run flow, every module's role and
+public surface, invariants, and recipes for common changes. [`scripts/README.md`](scripts/README.md)
+holds the `publish.sh` contract. Keep both current when modules or contracts change.
 
-Logic lives in **pure cores** (`renderReadme`, the Zod transform, `meteocons`, `time`) that take
-every input, including `now`, as a parameter. **I/O shells** (`updateReadme`, `run`,
-`fetchWithRetry`, `log`) only read, write, and call cores. Tests sit next to their module as
-`*.test.ts`; shared fakes live in `src/test-utils.ts`.
+Logic lives in **pure cores** (`renderReadme`, `renderSummary`, the Zod transform, `meteocons`,
+`time`) that take every input, including `now`, as a parameter. **I/O shells** (`updateReadme`,
+`writeSummary`, `run`, `fetchWithRetry`, `log`) only read, write, and call cores. Tests sit next to
+their module as `*.test.ts`; shared fakes live in `src/test-utils.ts`.
 
 ## Working agreement
 
@@ -102,7 +95,8 @@ read `package.json` / `mise.toml` live.
 | Workflow       | Trigger                             | Jobs                                                                                                 |
 | -------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ci.yml`       | PR, push to `main`                  | **Quality gate** (gate + `mise run lint-actions`), **Dependency review** (PRs), **Release** (`main`) |
-| `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** (no secrets; PR = dry run), **publish** (`profile` environment, signed push)              |
+| `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** → **render-retry** on a fresh runner if needed (no secrets; PR = dry run), **publish**    |
+| `pr.yml`       | PR opened, edited, updated          | **Conventional title** (commitlint, required), **Type and release labels** (`scripts/pr-labels.ts`)  |
 | `renovate.yml` | `renovate.json` changes             | strict config validation                                                                             |
 
 - **Secrets stay behind a seam.** Only `weather.yml`'s **publish** job touches secrets, inside the
@@ -110,6 +104,17 @@ read `package.json` / `mise.toml` live.
   dependencies) and nothing else. **render** does all the work with read-only access and hands the
   README over as an artifact; `publish.sh` refuses anything but a README change confined to the
   weather section and stamp. Keep new secret use in that shape.
+- **Required checks on `main`:** Quality gate, Conventional title, Dependency review. Path-filtered
+  or upstream-dependent jobs (the weather dry run, Renovate validation, labels) stay optional so
+  they can never block an unrelated merge.
+- **Open-Meteo throttles shared cloud IPs** by dropping connections, and a runner keeps one IP per
+  job. So `render` tolerates failure and `render-retry` repeats the composite action
+  `.github/actions/render` on a fresh runner; only both failing fails the run. Load local actions
+  with the self-repository syntax `uses: $/…` (exact running commit, no checkout); actionlint
+  doesn't know it yet, so `.github/actionlint.yaml` ignores that one message.
+- **Shared steps live in composite actions**, loaded with `uses: $/…`: `.github/actions/setup`
+  (mise tools via `tools:`, Bun cache, `install: all | production | none`) and
+  `.github/actions/render`. Add setup steps there, not per job.
 - **`scripts/publish.sh` is tested end to end** in `scripts/publish.test.ts` against a local bare
   repo with a throwaway key. Those tests skip on Windows (OpenSSH there ignores `umask`); CI's
   Ubuntu runner and WSL run them.

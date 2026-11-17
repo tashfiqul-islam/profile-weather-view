@@ -26,7 +26,7 @@ Three times a day a GitHub Actions cron fetches the current weather for Dhaka fr
 [my profile README](https://github.com/tashfiqul-islam/tashfiqul-islam), and pushes an SSH-signed
 commit. One run takes about a second; any failure exits non-zero and shows up red.
 
-- **Resilient.** Up to three attempts, 10 s each (body included), with jittered backoff on
+- **Resilient.** Up to four attempts, 15 s each (body included), with jittered backoff on
   dropped sockets, timeouts, 408, 429 and 5xx, honouring `Retry-After`.
 - **Validated.** One Zod schema checks the response and transforms it into exactly what the
   README shows.

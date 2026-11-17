@@ -63,8 +63,20 @@ describe.skipIf(process.platform === 'win32')('scripts/publish.sh', () => {
       SIGNING_KEY: await Bun.file(`${root}/key`).text(),
       NAME: 'Weather Bot',
       EMAIL: 'bot@example.com',
+      GITHUB_OUTPUT: `${root}/github_output`,
     };
   });
+
+  const outputs = async (): Promise<Record<string, string>> => {
+    const file = Bun.file(`${root}/github_output`);
+    if (!(await file.exists())) return {};
+    return Object.fromEntries(
+      (await file.text())
+        .trim()
+        .split('\n')
+        .map((line) => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]),
+    );
+  };
 
   afterEach(async () => {
     await $`rm -rf ${root}`;
@@ -97,12 +109,18 @@ describe.skipIf(process.platform === 'win32')('scripts/publish.sh', () => {
     );
     expect(await $`git -C ${remote} show main:README.md`.env(env).text()).toBe(PATCHED);
     expect((await $`ls -A ${tmp}`.text()).trim()).toBe('');
+    expect(await outputs()).toEqual({
+      result: 'published',
+      commit: (await $`git -C ${remote} rev-parse main`.env(env).text()).trim(),
+      message: expect.stringMatching(/^update\(weather\): refresh data for /),
+    });
   });
 
   test('does nothing when the README is unchanged', async () => {
     const result = await publish();
     expect(result.exitCode).toBe(0);
     expect(result.stdout.toString()).toContain('README unchanged');
+    expect(await outputs()).toEqual({ result: 'unchanged' });
     expect(await remoteLog()).toBe('init\n');
   });
 

@@ -16,12 +16,12 @@ run = ["bun install --frozen-lockfile", "hk install --mise"]
 
 [tasks.lint-actions]
 description = "Lint and audit GitHub Actions workflows and shell scripts"
-run = ["actionlint", "zizmor --offline .github/workflows", "shellcheck scripts/publish.sh"]
+run = ["actionlint", "zizmor --offline .github", "shellcheck scripts/publish.sh"]
 
 [tasks.lint-docs]
 shell = "bash -c"
 description = "Check every relative link and #anchor in the Markdown docs (offline, deterministic)"
-run = "lychee --offline --include-fragments --no-progress README.md AGENTS.md '.github/**/*.md'"
+run = "lychee --offline --include-fragments --no-progress README.md AGENTS.md src/README.md scripts/README.md '.github/**/*.md'"
 
 [tasks.review]
 description = "Structural (syntax-aware) diff of this branch against main, via difftastic"

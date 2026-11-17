@@ -9,13 +9,14 @@ coverage/
 .env
 .env.*
 
-# Agent & editor state: only the shared project config is tracked
+# Agent state: only the shared Claude Code project config is tracked
 .claude/*
 !.claude/settings.json
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
+
+# Editor state is personal
+.vscode/
 .idea/
+*.code-workspace
 
 # OS
 .DS_Store

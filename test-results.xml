@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="bun test" tests="131" assertions="375" failures="0" skipped="0" time="2.2094185">
+  <testsuite name="src\tests\unit\utils\preload.test.ts" file="src\tests\unit\utils\preload.test.ts" tests="12" assertions="31" failures="0" skipped="0" time="0.0928243" hostname="">
+    <testsuite name="checkAndUpdateApiLimit" file="src\tests\unit\utils\preload.test.ts" line="158" tests="7" assertions="21" failures="0" skipped="0" time="0.008" hostname="">
+      <testcase name="should allow API call when under limit" classname="checkAndUpdateApiLimit" time="0.008305" file="src\tests\unit\utils\preload.test.ts" line="159" assertions="3" />
+      <testcase name="should reset counter when date changes" classname="checkAndUpdateApiLimit" time="0.000391" file="src\tests\unit\utils\preload.test.ts" line="256" assertions="3" />
+      <testcase name="should start fresh when tracking file is invalid" classname="checkAndUpdateApiLimit" time="0.000252" file="src\tests\unit\utils\preload.test.ts" line="233" assertions="3" />
+      <testcase name="should handle file read error gracefully" classname="checkAndUpdateApiLimit" time="0.000337" file="src\tests\unit\utils\preload.test.ts" line="282" assertions="3" />
+      <testcase name="should handle file write error gracefully" classname="checkAndUpdateApiLimit" time="0.000298" file="src\tests\unit\utils\preload.test.ts" line="308" assertions="2" />
+      <testcase name="should start fresh when tracking file doesn&apos;t exist" classname="checkAndUpdateApiLimit" time="0.000187" file="src\tests\unit\utils\preload.test.ts" line="210" assertions="3" />
+      <testcase name="should reject API call when limit exceeded" classname="checkAndUpdateApiLimit" time="0.000172" file="src\tests\unit\utils\preload.test.ts" line="185" assertions="4" />
+    </testsuite>
+    <testsuite name="ensureEnvironmentVariables" file="src\tests\unit\utils\preload.test.ts" line="376" tests="2" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should succeed when API limit allows" classname="ensureEnvironmentVariables" time="0.000393" file="src\tests\unit\utils\preload.test.ts" line="377" assertions="2" />
+      <testcase name="should throw error when API limit is exceeded" classname="ensureEnvironmentVariables" time="0.000224" file="src\tests\unit\utils\preload.test.ts" line="398" assertions="1" />
+    </testsuite>
+    <testsuite name="validateEnvironmentVariables" file="src\tests\unit\utils\preload.test.ts" line="335" tests="3" assertions="7" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should validate successfully and log debug info" classname="validateEnvironmentVariables" time="0.000053" file="src\tests\unit\utils\preload.test.ts" line="336" assertions="3" />
+      <testcase name="should handle missing FORCE_UPDATE gracefully" classname="validateEnvironmentVariables" time="0.000022" file="src\tests\unit\utils\preload.test.ts" line="352" assertions="2" />
+      <testcase name="should detect GitHub Actions environment" classname="validateEnvironmentVariables" time="0.000025" file="src\tests\unit\utils\preload.test.ts" line="362" assertions="2" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\basic.test.ts" file="src\tests\unit\basic.test.ts" tests="25" assertions="109" failures="0" skipped="0" time="2.0716507" hostname="">
+    <testsuite name="Test Setup - Global Hooks Coverage" file="src\tests\unit\basic.test.ts" line="263" tests="8" assertions="46" failures="0" skipped="0" time="2.051" hostname="">
+      <testcase name="should handle invalid JSON error scenario" classname="Test Setup - Global Hooks Coverage" time="0.00009" file="src\tests\unit\basic.test.ts" line="316" assertions="4" />
+      <testcase name="should test performance threshold edge cases" classname="Test Setup - Global Hooks Coverage" time="2.0517" file="src\tests\unit\basic.test.ts" line="403" assertions="2" />
+      <testcase name="should test performance utilities createBenchmark" classname="Test Setup - Global Hooks Coverage" time="0.000267" file="src\tests\unit\basic.test.ts" line="366" assertions="12" />
+      <testcase name="should have performance utilities working correctly" classname="Test Setup - Global Hooks Coverage" time="0.000136" file="src\tests\unit\basic.test.ts" line="298" assertions="3" />
+      <testcase name="should have test configuration with all expected properties" classname="Test Setup - Global Hooks Coverage" time="0.000029" file="src\tests\unit\basic.test.ts" line="276" assertions="10" />
+      <testcase name="should have resetMocks function available" classname="Test Setup - Global Hooks Coverage" time="0.000011" file="src\tests\unit\basic.test.ts" line="307" assertions="2" />
+      <testcase name="should test createMockFetch with undefined responses" classname="Test Setup - Global Hooks Coverage" time="0.000284" file="src\tests\unit\basic.test.ts" line="334" assertions="4" />
+      <testcase name="should have test utilities with all expected methods" classname="Test Setup - Global Hooks Coverage" time="0.000027" file="src\tests\unit\basic.test.ts" line="264" assertions="9" />
+    </testsuite>
+    <testsuite name="File System Utilities" file="src\tests\unit\basic.test.ts" line="112" tests="3" assertions="9" failures="0" skipped="0" time="0.003" hostname="">
+      <testcase name="should cleanup temp files" classname="File System Utilities" time="0.002112" file="src\tests\unit\basic.test.ts" line="149" assertions="1" />
+      <testcase name="should create temp file with default filename" classname="File System Utilities" time="0.001061" file="src\tests\unit\basic.test.ts" line="132" assertions="4" />
+      <testcase name="should create temp file" classname="File System Utilities" time="0.000877" file="src\tests\unit\basic.test.ts" line="113" assertions="4" />
+    </testsuite>
+    <testsuite name="Bun Test Infrastructure" file="src\tests\unit\basic.test.ts" line="25" tests="1" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should have proper test environment" classname="Bun Test Infrastructure" time="0.000051" file="src\tests\unit\basic.test.ts" line="26" assertions="3" />
+    </testsuite>
+    <testsuite name="Weather Test Helpers" file="src\tests\unit\basic.test.ts" line="34" tests="3" assertions="20" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should create valid weather payload" classname="Weather Test Helpers" time="0.00005" file="src\tests\unit\basic.test.ts" line="35" assertions="7" />
+      <testcase name="should create valid API response" classname="Weather Test Helpers" time="0.000112" file="src\tests\unit\basic.test.ts" line="47" assertions="10" />
+      <testcase name="should allow payload overrides" classname="Weather Test Helpers" time="0.000022" file="src\tests\unit\basic.test.ts" line="64" assertions="3" />
+    </testsuite>
+    <testsuite name="Performance Utilities" file="src\tests\unit\basic.test.ts" line="83" tests="2" assertions="6" failures="0" skipped="0" time="0.011" hostname="">
+      <testcase name="should measure execution time" classname="Performance Utilities" time="0.011072" file="src\tests\unit\basic.test.ts" line="89" assertions="3" />
+      <testcase name="should create threshold checker" classname="Performance Utilities" time="0.000116" file="src\tests\unit\basic.test.ts" line="101" assertions="3" />
+    </testsuite>
+    <testsuite name="Weather Test Helpers - Comprehensive Coverage" file="src\tests\unit\basic.test.ts" line="157" tests="8" assertions="25" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should validate README weather section" classname="Weather Test Helpers - Comprehensive Coverage" time="0.00003" file="src\tests\unit\basic.test.ts" line="185" assertions="2" />
+      <testcase name="should create mock fetch with multiple responses" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000091" file="src\tests\unit\basic.test.ts" line="214" assertions="3" />
+      <testcase name="should create mock fetch response with error status" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000089" file="src\tests\unit\basic.test.ts" line="205" assertions="3" />
+      <testcase name="should create mock fetch with no responses" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000064" file="src\tests\unit\basic.test.ts" line="240" assertions="2" />
+      <testcase name="should create test README content with custom weather data" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000047" file="src\tests\unit\basic.test.ts" line="158" assertions="6" />
+      <testcase name="should handle async JSON parsing in mock responses" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000064" file="src\tests\unit\basic.test.ts" line="250" assertions="2" />
+      <testcase name="should create test README content with default weather data" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000017" file="src\tests\unit\basic.test.ts" line="176" assertions="4" />
+      <testcase name="should create mock fetch response with custom status and data" classname="Weather Test Helpers - Comprehensive Coverage" time="0.000012" file="src\tests\unit\basic.test.ts" line="194" assertions="3" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\config.test.ts" file="src\tests\unit\config.test.ts" tests="2" assertions="3" failures="0" skipped="0" time="0.0004464" hostname="">
+    <testsuite name="config" file="src\tests\unit\config.test.ts" line="8" tests="2" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should export DISPLAY_TIMEZONE as a readonly string" classname="config" time="0.000017" file="src\tests\unit\config.test.ts" line="13" assertions="2" />
+      <testcase name="should export DISPLAY_TIMEZONE as Asia/Dhaka" classname="config" time="0.000005" file="src\tests\unit\config.test.ts" line="9" assertions="1" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\services\update-readme.test.ts" file="src\tests\unit\services\update-readme.test.ts" tests="40" assertions="90" failures="0" skipped="0" time="0.0111174" hostname="">
+    <testsuite name="shouldProceedWithUpdate" file="src\tests\unit\services\update-readme.test.ts" line="685" tests="6" assertions="6" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should return true when content has changed" classname="shouldProceedWithUpdate" time="0.000105" file="src\tests\unit\services\update-readme.test.ts" line="686" assertions="1" />
+      <testcase name="should return false when content is unchanged and FORCE_UPDATE is false" classname="shouldProceedWithUpdate" time="0.000026" file="src\tests\unit\services\update-readme.test.ts" line="698" assertions="1" />
+      <testcase name="should handle environment variable parsing with both set" classname="shouldProceedWithUpdate" time="0.000027" file="src\tests\unit\services\update-readme.test.ts" line="746" assertions="1" />
+      <testcase name="should return true when content is unchanged but FORCE_UPDATE is true" classname="shouldProceedWithUpdate" time="0.000018" file="src\tests\unit\services\update-readme.test.ts" line="710" assertions="1" />
+      <testcase name="should handle invalid FORCE_UPDATE value" classname="shouldProceedWithUpdate" time="0.000021" file="src\tests\unit\services\update-readme.test.ts" line="734" assertions="1" />
+      <testcase name="should handle missing FORCE_UPDATE environment variable" classname="shouldProceedWithUpdate" time="0.000027" file="src\tests\unit\services\update-readme.test.ts" line="722" assertions="1" />
+    </testsuite>
+    <testsuite name="getSectionContent" file="src\tests\unit\services\update-readme.test.ts" line="658" tests="2" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should return empty string when no match" classname="getSectionContent" time="0.000079" file="src\tests\unit\services\update-readme.test.ts" line="672" assertions="1" />
+      <testcase name="should extract content from regex match" classname="getSectionContent" time="0.000022" file="src\tests\unit\services\update-readme.test.ts" line="659" assertions="2" />
+    </testsuite>
+    <testsuite name="updateReadme" file="src\tests\unit\services\update-readme.test.ts" line="209" tests="8" assertions="15" failures="0" skipped="0" time="0.002" hostname="">
+      <testcase name="should return false when weather section is missing" classname="updateReadme" time="0.000254" file="src\tests\unit\services\update-readme.test.ts" line="257" assertions="2" />
+      <testcase name="should handle file write error" classname="updateReadme" time="0.002222" file="src\tests\unit\services\update-readme.test.ts" line="349" assertions="1" />
+      <testcase name="should update README with custom path" classname="updateReadme" time="0.000503" file="src\tests\unit\services\update-readme.test.ts" line="227" assertions="2" />
+      <testcase name="should update README successfully with valid data" classname="updateReadme" time="0.000327" file="src\tests\unit\services\update-readme.test.ts" line="210" assertions="3" />
+      <testcase name="should return false when no changes are needed and FORCE_UPDATE is false" classname="updateReadme" time="0.000544" file="src\tests\unit\services\update-readme.test.ts" line="292" assertions="2" />
+      <testcase name="should proceed with update when FORCE_UPDATE is true" classname="updateReadme" time="0.000313" file="src\tests\unit\services\update-readme.test.ts" line="334" assertions="2" />
+      <testcase name="should return false when file does not exist" classname="updateReadme" time="0.000076" file="src\tests\unit\services\update-readme.test.ts" line="244" assertions="2" />
+      <testcase name="should handle empty description in weather data gracefully" classname="updateReadme" time="0.000248" file="src\tests\unit\services\update-readme.test.ts" line="271" assertions="1" />
+    </testsuite>
+    <testsuite name="updateReadmeContent" file="src\tests\unit\services\update-readme.test.ts" line="362" tests="3" assertions="7" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should update weather section and refresh time" classname="updateReadmeContent" time="0.000035" file="src\tests\unit\services\update-readme.test.ts" line="363" assertions="2" />
+      <testcase name="should handle content without refresh time regex match" classname="updateReadmeContent" time="0.000021" file="src\tests\unit\services\update-readme.test.ts" line="398" assertions="3" />
+      <testcase name="should handle missing refresh time" classname="updateReadmeContent" time="0.000013" file="src\tests\unit\services\update-readme.test.ts" line="380" assertions="2" />
+    </testsuite>
+    <testsuite name="createWeatherData - HTML Table Format" file="src\tests\unit\services\update-readme.test.ts" line="517" tests="7" assertions="30" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should include Meteocons icon in HTML format" classname="createWeatherData - HTML Table Format" time="0.000231" file="src\tests\unit\services\update-readme.test.ts" line="556" assertions="3" />
+      <testcase name="should preserve extra cells beyond the first 5 in HTML table" classname="createWeatherData - HTML Table Format" time="0.000034" file="src\tests\unit\services\update-readme.test.ts" line="605" assertions="7" />
+      <testcase name="should update all five cells correctly" classname="createWeatherData - HTML Table Format" time="0.000033" file="src\tests\unit\services\update-readme.test.ts" line="569" assertions="6" />
+      <testcase name="should detect and update HTML table format" classname="createWeatherData - HTML Table Format" time="0.000026" file="src\tests\unit\services\update-readme.test.ts" line="527" assertions="5" />
+      <testcase name="should preserve HTML table structure with align attributes" classname="createWeatherData - HTML Table Format" time="0.000022" file="src\tests\unit\services\update-readme.test.ts" line="542" assertions="4" />
+      <testcase name="should handle HTML table with minimal whitespace" classname="createWeatherData - HTML Table Format" time="0.000016" file="src\tests\unit\services\update-readme.test.ts" line="592" assertions="2" />
+      <testcase name="should not modify HTML table with fewer than 5 cells" classname="createWeatherData - HTML Table Format" time="0.000015" file="src\tests\unit\services\update-readme.test.ts" line="631" assertions="3" />
+    </testsuite>
+    <testsuite name="validateAndExtractWeatherData" file="src\tests\unit\services\update-readme.test.ts" line="876" tests="1" assertions="2" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should handle validation success path with branded type assertions" classname="validateAndExtractWeatherData" time="0.000267" file="src\tests\unit\services\update-readme.test.ts" line="877" assertions="2" />
+    </testsuite>
+    <testsuite name="Type Safety and Validation" file="src\tests\unit\services\update-readme.test.ts" line="810" tests="3" assertions="7" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should handle maximum humidity value" classname="Type Safety and Validation" time="0.000039" file="src\tests\unit\services\update-readme.test.ts" line="844" assertions="1" />
+      <testcase name="should handle validation limits" classname="Type Safety and Validation" time="0.000022" file="src\tests\unit\services\update-readme.test.ts" line="822" assertions="2" />
+      <testcase name="should validate branded types correctly" classname="Type Safety and Validation" time="0.000025" file="src\tests\unit\services\update-readme.test.ts" line="811" assertions="4" />
+    </testsuite>
+    <testsuite name="createRefreshTime" file="src\tests\unit\services\update-readme.test.ts" line="646" tests="1" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should create formatted refresh time" classname="createRefreshTime" time="0.000183" file="src\tests\unit\services\update-readme.test.ts" line="647" assertions="3" />
+    </testsuite>
+    <testsuite name="Edge Cases and Error Scenarios" file="src\tests\unit\services\update-readme.test.ts" line="760" tests="3" assertions="5" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should handle malformed weather section" classname="Edge Cases and Error Scenarios" time="0.000025" file="src\tests\unit\services\update-readme.test.ts" line="782" assertions="1" />
+      <testcase name="should handle special characters in weather description" classname="Edge Cases and Error Scenarios" time="0.000017" file="src\tests\unit\services\update-readme.test.ts" line="794" assertions="1" />
+      <testcase name="should handle weather data with extreme values" classname="Edge Cases and Error Scenarios" time="0.00004" file="src\tests\unit\services\update-readme.test.ts" line="761" assertions="3" />
+    </testsuite>
+    <testsuite name="createWeatherData" file="src\tests\unit\services\update-readme.test.ts" line="433" tests="5" assertions="11" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should handle empty current section" classname="createWeatherData" time="0.000017" file="src\tests\unit\services\update-readme.test.ts" line="487" assertions="1" />
+      <testcase name="should handle missing icon with default URL generation" classname="createWeatherData" time="0.000036" file="src\tests\unit\services\update-readme.test.ts" line="447" assertions="2" />
+      <testcase name="should create weather data with all fields correctly formatted in table row" classname="createWeatherData" time="0.000073" file="src\tests\unit\services\update-readme.test.ts" line="434" assertions="1" />
+      <testcase name="should replace entire row regardless of previous content (robustness)" classname="createWeatherData" time="0.000024" file="src\tests\unit\services\update-readme.test.ts" line="463" assertions="3" />
+      <testcase name="should preserve table headers and structure" classname="createWeatherData" time="0.000017" file="src\tests\unit\services\update-readme.test.ts" line="498" assertions="4" />
+    </testsuite>
+    <testsuite name="performFileUpdate" file="src\tests\unit\services\update-readme.test.ts" line="862" tests="1" assertions="1" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should successfully write file" classname="performFileUpdate" time="0.000045" file="src\tests\unit\services\update-readme.test.ts" line="863" assertions="1" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\services\fetch-weather.test.ts" file="src\tests\unit\services\fetch-weather.test.ts" tests="16" assertions="24" failures="0" skipped="0" time="0.0099981" hostname="">
+    <testsuite name="getFirstElement" file="src\tests\unit\services\fetch-weather.test.ts" line="214" tests="3" assertions="4" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should return first element from non-empty array" classname="getFirstElement" time="0.000034" file="src\tests\unit\services\fetch-weather.test.ts" line="215" assertions="2" />
+      <testcase name="should throw error for empty array" classname="getFirstElement" time="0.000024" file="src\tests\unit\services\fetch-weather.test.ts" line="220" assertions="1" />
+      <testcase name="should include field name in error message" classname="getFirstElement" time="0.00001" file="src\tests\unit\services\fetch-weather.test.ts" line="226" assertions="1" />
+    </testsuite>
+    <testsuite name="fetchWeatherData" file="src\tests\unit\services\fetch-weather.test.ts" line="22" tests="13" assertions="20" failures="0" skipped="0" time="0.002" hostname="">
+      <testcase name="should handle non-Error objects thrown during fetch" classname="fetchWeatherData" time="0.000489" file="src\tests\unit\services\fetch-weather.test.ts" line="111" assertions="1" />
+      <testcase name="should handle empty daily arrays in response" classname="fetchWeatherData" time="0.001752" file="src\tests\unit\services\fetch-weather.test.ts" line="119" assertions="1" />
+      <testcase name="should round temperature down when below .5" classname="fetchWeatherData" time="0.001045" file="src\tests\unit\services\fetch-weather.test.ts" line="163" assertions="1" />
+      <testcase name="should handle network errors" classname="fetchWeatherData" time="0.000097" file="src\tests\unit\services\fetch-weather.test.ts" line="90" assertions="1" />
+      <testcase name="should handle multiple validation errors with paths" classname="fetchWeatherData" time="0.000215" file="src\tests\unit\services\fetch-weather.test.ts" line="189" assertions="1" />
+      <testcase name="should return night icon when is_day is 0" classname="fetchWeatherData" time="0.000459" file="src\tests\unit\services\fetch-weather.test.ts" line="141" assertions="1" />
+      <testcase name="should handle server error (500 status)" classname="fetchWeatherData" time="0.000092" file="src\tests\unit\services\fetch-weather.test.ts" line="174" assertions="1" />
+      <testcase name="should round temperature correctly" classname="fetchWeatherData" time="0.000381" file="src\tests\unit\services\fetch-weather.test.ts" line="152" assertions="1" />
+      <testcase name="should throw validation error when data values are invalid" classname="fetchWeatherData" time="0.000204" file="src\tests\unit\services\fetch-weather.test.ts" line="98" assertions="1" />
+      <testcase name="should fetch and transform weather data successfully" classname="fetchWeatherData" time="0.000385" file="src\tests\unit\services\fetch-weather.test.ts" line="48" assertions="8" />
+      <testcase name="should handle missing required fields in JSON" classname="fetchWeatherData" time="0.000187" file="src\tests\unit\services\fetch-weather.test.ts" line="81" assertions="1" />
+      <testcase name="should handle API failure (non-200 status)" classname="fetchWeatherData" time="0.000055" file="src\tests\unit\services\fetch-weather.test.ts" line="63" assertions="1" />
+      <testcase name="should handle malformed JSON response" classname="fetchWeatherData" time="0.000057" file="src\tests\unit\services\fetch-weather.test.ts" line="75" assertions="1" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\services\wmo-mapper.test.ts" file="src\tests\unit\services\wmo-mapper.test.ts" tests="13" assertions="76" failures="0" skipped="0" time="0.0011077" hostname="">
+    <testsuite name="getMeteoconUrl" file="src\tests\unit\services\wmo-mapper.test.ts" line="82" tests="2" assertions="2" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should generate line style URL when requested" classname="getMeteoconUrl" time="0.000015" file="src\tests\unit\services\wmo-mapper.test.ts" line="90" assertions="1" />
+      <testcase name="should generate fill style URL by default" classname="getMeteoconUrl" time="0.000015" file="src\tests\unit\services\wmo-mapper.test.ts" line="83" assertions="1" />
+    </testsuite>
+    <testsuite name="getWmoDescription" file="src\tests\unit\services\wmo-mapper.test.ts" line="98" tests="2" assertions="3" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should return &apos;Unknown&apos; for invalid code" classname="getWmoDescription" time="0.000016" file="src\tests\unit\services\wmo-mapper.test.ts" line="104" assertions="1" />
+      <testcase name="should return description for known code" classname="getWmoDescription" time="0.000007" file="src\tests\unit\services\wmo-mapper.test.ts" line="99" assertions="2" />
+    </testsuite>
+    <testsuite name="formatWeatherDescription" file="src\tests\unit\services\wmo-mapper.test.ts" line="109" tests="3" assertions="4" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should handle empty string" classname="formatWeatherDescription" time="0.000015" file="src\tests\unit\services\wmo-mapper.test.ts" line="119" assertions="1" />
+      <testcase name="should title-case normal description" classname="formatWeatherDescription" time="0.000038" file="src\tests\unit\services\wmo-mapper.test.ts" line="110" assertions="2" />
+      <testcase name="should handle single word" classname="formatWeatherDescription" time="0.000006" file="src\tests\unit\services\wmo-mapper.test.ts" line="115" assertions="1" />
+    </testsuite>
+    <testsuite name="wmoToMeteocons" file="src\tests\unit\services\wmo-mapper.test.ts" line="15" tests="6" assertions="67" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should map nighttime codes correctly" classname="wmoToMeteocons" time="0.000027" file="src\tests\unit\services\wmo-mapper.test.ts" line="30" assertions="2" />
+      <testcase name="should map daytime codes correctly" classname="wmoToMeteocons" time="0.000008" file="src\tests\unit\services\wmo-mapper.test.ts" line="16" assertions="2" />
+      <testcase name="should replace -day with -night for night variants that contain -day" classname="wmoToMeteocons" time="0.00001" file="src\tests\unit\services\wmo-mapper.test.ts" line="56" assertions="2" />
+      <testcase name="should map all defined WMO codes without returning unknown" classname="wmoToMeteocons" time="0.000052" file="src\tests\unit\services\wmo-mapper.test.ts" line="45" assertions="56" />
+      <testcase name="should keep icon name unchanged for night when no -day suffix" classname="wmoToMeteocons" time="0.000017" file="src\tests\unit\services\wmo-mapper.test.ts" line="63" assertions="4" />
+      <testcase name="should return unknown icon for invalid code" classname="wmoToMeteocons" time="0.00001" file="src\tests\unit\services\wmo-mapper.test.ts" line="74" assertions="1" />
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\index.test.ts" file="src\tests\unit\index.test.ts" tests="13" assertions="17" failures="0" skipped="0" time="0.0156378" hostname="">
+    <testsuite name="index.ts orchestrator" file="src\tests\unit\index.test.ts" line="19" tests="13" assertions="17" failures="0" skipped="0" time="0" hostname="">
+      <testsuite name="custom README path handling" file="src\tests\unit\index.test.ts" line="456" tests="1" assertions="1" failures="0" skipped="0" time="0.003" hostname="">
+        <testcase name="should accept valid .md custom path" classname="custom README path handling &gt; index.ts orchestrator" time="0.003329" file="src\tests\unit\index.test.ts" line="457" assertions="1" />
+      </testsuite>
+      <testsuite name="main()" file="src\tests\unit\index.test.ts" line="48" tests="5" assertions="6" failures="0" skipped="0" time="0.003" hostname="">
+        <testcase name="should throw when fetchWeatherData fails" classname="main() &gt; index.ts orchestrator" time="0.000718" file="src\tests\unit\index.test.ts" line="138" assertions="1" />
+        <testcase name="should complete successfully with valid weather data" classname="main() &gt; index.ts orchestrator" time="0.001147" file="src\tests\unit\index.test.ts" line="49" assertions="2" />
+        <testcase name="should throw when ensureEnvironmentVariables fails" classname="main() &gt; index.ts orchestrator" time="0.000715" file="src\tests\unit\index.test.ts" line="112" assertions="1" />
+        <testcase name="should log GitHub Actions context when GITHUB_ACTIONS is set" classname="main() &gt; index.ts orchestrator" time="0.001512" file="src\tests\unit\index.test.ts" line="171" assertions="1" />
+        <testcase name="should validate PROFILE_README_PATH rejects non-.md paths" classname="main() &gt; index.ts orchestrator" time="0.00114" file="src\tests\unit\index.test.ts" line="232" assertions="1" />
+      </testsuite>
+      <testsuite name="reportUpdateStatus (via main output)" file="src\tests\unit\index.test.ts" line="273" tests="3" assertions="3" failures="0" skipped="0" time="0.003" hostname="">
+        <testcase name="should not emit CHANGES_DETECTED when not in CI" classname="reportUpdateStatus (via main output) &gt; index.ts orchestrator" time="0.001575" file="src\tests\unit\index.test.ts" line="335" assertions="1" />
+        <testcase name="should emit CHANGES_DETECTED=false when no changes detected in CI" classname="reportUpdateStatus (via main output) &gt; index.ts orchestrator" time="0.001181" file="src\tests\unit\index.test.ts" line="396" assertions="1" />
+        <testcase name="should emit CHANGES_DETECTED=true on successful update in CI" classname="reportUpdateStatus (via main output) &gt; index.ts orchestrator" time="0.001022" file="src\tests\unit\index.test.ts" line="274" assertions="1" />
+      </testsuite>
+      <testsuite name="handleFatalError" file="src\tests\unit\index.test.ts" line="571" tests="2" assertions="4" failures="0" skipped="0" time="0" hostname="">
+        <testcase name="should handle non-Error values" classname="handleFatalError &gt; index.ts orchestrator" time="0.000224" file="src\tests\unit\index.test.ts" line="589" assertions="2" />
+        <testcase name="should log fatal message and call process.exit" classname="handleFatalError &gt; index.ts orchestrator" time="0.000147" file="src\tests\unit\index.test.ts" line="572" assertions="2" />
+      </testsuite>
+      <testsuite name="createErrorInfo (via error handling)" file="src\tests\unit\index.test.ts" line="516" tests="2" assertions="3" failures="0" skipped="0" time="0" hostname="">
+        <testcase name="should handle non-Error thrown values" classname="createErrorInfo (via error handling) &gt; index.ts orchestrator" time="0.000639" file="src\tests\unit\index.test.ts" line="545" assertions="1" />
+        <testcase name="should include stack trace when Error is thrown" classname="createErrorInfo (via error handling) &gt; index.ts orchestrator" time="0.000497" file="src\tests\unit\index.test.ts" line="517" assertions="2" />
+      </testsuite>
+    </testsuite>
+  </testsuite>
+  <testsuite name="src\tests\unit\utils\logger.test.ts" file="src\tests\unit\utils\logger.test.ts" tests="10" assertions="25" failures="0" skipped="0" time="0.0006836" hostname="">
+    <testsuite name="logger" file="src\tests\unit\utils\logger.test.ts" line="11" tests="10" assertions="25" failures="0" skipped="0" time="0" hostname="">
+      <testcase name="should write error messages to stderr" classname="logger" time="0.000049" file="src\tests\unit\utils\logger.test.ts" line="56" assertions="3" />
+      <testcase name="should end each log entry with a newline" classname="logger" time="0.000023" file="src\tests\unit\utils\logger.test.ts" line="97" assertions="1" />
+      <testcase name="should write info messages to stdout" classname="logger" time="0.000013" file="src\tests\unit\utils\logger.test.ts" line="35" assertions="3" />
+      <testcase name="should include badge for each level" classname="logger" time="0.000066" file="src\tests\unit\utils\logger.test.ts" line="81" assertions="4" />
+      <testcase name="should format the entry with time, badge, and message" classname="logger" time="0.000034" file="src\tests\unit\utils\logger.test.ts" line="103" assertions="4" />
+      <testcase name="should write success messages to stdout" classname="logger" time="0.000012" file="src\tests\unit\utils\logger.test.ts" line="42" assertions="3" />
+      <testcase name="should include HH:MM:SS timestamp in output" classname="logger" time="0.000008" file="src\tests\unit\utils\logger.test.ts" line="69" assertions="1" />
+      <testcase name="should write warning messages to stderr" classname="logger" time="0.000012" file="src\tests\unit\utils\logger.test.ts" line="49" assertions="3" />
+      <testcase name="should default to info level when no level specified" classname="logger" time="0.000008" file="src\tests\unit\utils\logger.test.ts" line="63" assertions="2" />
+      <testcase name="should include the message text in output" classname="logger" time="0.000008" file="src\tests\unit\utils\logger.test.ts" line="75" assertions="1" />
+    </testsuite>
+  </testsuite>
+</testsuites>
