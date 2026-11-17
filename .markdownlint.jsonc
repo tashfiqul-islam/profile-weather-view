@@ -1,0 +1,7 @@
+// Read by the markdownlint editor extension; keeps it in agreement with oxfmt.
+{
+  "MD013": false, // oxfmt owns line wrapping (printWidth 100)
+  "MD041": false, // GitHub templates (PR, issue) start below the title
+  "MD033": true, // no inline HTML: Markdown images and GitHub alerts only
+  "MD024": { "siblings_only": true }, // changelogs repeat "Bug Fixes" under each version
+}

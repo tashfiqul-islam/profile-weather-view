@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(bun run check)",
+      "Bash(bun run typecheck)",
+      "Bash(bun run lint)",
+      "Bash(bun run format)",
+      "Bash(bun run format:check)",
+      "Bash(bun test:*)",
+      "Bash(bun install --frozen-lockfile)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(mise run setup)",
+      "Bash(hk check:*)"
+    ],
+    "deny": ["Bash(git push:*)", "Read(./.env)", "Read(./.env.*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "bunx oxfmt", "timeout": 30 }]
+      }
+    ]
+  }
+}

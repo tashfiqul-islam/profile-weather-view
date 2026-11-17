@@ -1,103 +1,16 @@
-# Bun Configuration File
-# https://bun.sh/docs/runtime/bunfig
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Runtime Configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Log level: "debug" | "warn" | "error"
-logLevel = "warn"
-
-# Disable telemetry (optional - respects DO_NOT_TRACK env var)
 telemetry = false
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Console Configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-[console]
-# Object inspection depth for console.log()
-depth = 4
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Test Configuration
-# ═══════════════════════════════════════════════════════════════════════════════
+[install]
+exact = true
+linker = "isolated" # phantom deps fail loudly
+minimumReleaseAge = 259200 # 3 days: supply-chain buffer
+minimumReleaseAgeExcludes = ["@types/bun", "typescript"]
 
 [test]
-# Root directory for test discovery
-root = "src/tests"
-
-# Preload scripts for test setup
-preload = ["./src/tests/setup.ts"]
-
-# Skip irrelevant directories during test discovery
-pathIgnorePatterns = ["node_modules", "dist", "coverage", "src/docs"]
-
-# Coverage settings
+pathIgnorePatterns = ["node_modules/**", "CHANGELOG.md"]
+randomize = true
 coverage = true
 coverageSkipTestFiles = true
-coverageThreshold = { line = 0.99, function = 1.0, statement = 0.99 }
-coverageReporter = ["text", "lcov"]
-coverageDir = "coverage"
-coverageIgnoreSourcemaps = false
-
-# Exclude patterns from coverage
-coveragePathIgnorePatterns = [
-  "**/*.test.ts",
-  "**/*.spec.ts",
-  "**/tests/**",
-  "**/node_modules/**",
-  "**/dist/**",
-  "**/coverage/**",
-]
-
-# Test execution
-randomize = true
-seed = 42 # Reproducible random order for debugging flaky tests
-rerunEach = 0 # Set > 0 to catch flaky tests
-retry = 0 # Set > 0 to retry failed tests
-
-# Run integration tests concurrently
-concurrentTestGlob = "**/integration/**/*.test.ts"
-
-# Reporter configuration (Bun 1.3+)
-[test.reporter]
-dots = false # Compact dot output (set true for CI)
-junit = "test-results.xml" # JUnit XML for CI integration
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Package Manager Configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-[install]
-# Lock exact versions for reproducible builds
-exact = true
-
-# Text-based lockfile (bun.lock) - easier to review in PRs
-saveTextLockfile = true
-
-# Linker strategy: "hoisted" | "isolated"
-# "isolated" prevents phantom dependencies by ensuring every import is in package.json
-linker = "isolated"
-
-# Supply chain security: minimum age for package releases before accepting
-minimumReleaseAge = 259200 # 3 days in seconds
-minimumReleaseAgeExcludes = ["@types/node", "typescript", "bun-types"]
-
-[install.cache]
-# When true, always resolve the latest versions from the registry
-disableManifest = false
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Run Configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-[run]
-# Use Bun's shell for cross-platform consistency
-shell = "bun"
-
-# Auto-alias `node` to `bun` in scripts
-bun = true
-
-# Show "Running..." output
-silent = false
+coverageThreshold = { line = 1.0, function = 1.0, statement = 1.0 }
+coveragePathIgnorePatterns = ["src/test-utils.ts"]
+coverageReporter = ["text"]

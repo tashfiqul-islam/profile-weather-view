@@ -1,36 +1,34 @@
-import type { UserConfig } from '@commitlint/types';
+import { RuleConfigSeverity, type UserConfig } from '@commitlint/types';
 
-const Configuration: UserConfig = {
+const ERROR = RuleConfigSeverity.Error;
+
+export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'type-enum': [
-      2,
+      ERROR,
       'always',
       [
         'feat',
         'fix',
+        'perf',
+        'refactor',
+        'test',
         'docs',
         'style',
-        'refactor',
-        'perf',
-        'test',
         'build',
         'ci',
         'chore',
         'revert',
-        'types',
         'security',
       ],
     ],
     'scope-enum': [
-      2,
+      ERROR,
       'always',
-      ['weather', 'deps', 'ci', 'release', 'config', 'docs', 'test', 'build', 'actions', 'bun'],
+      ['weather', 'deps', 'actions', 'bun', 'ci', 'config', 'docs', 'release', 'test', 'tooling'],
     ],
-    'header-max-length': [2, 'always', 100],
-    'subject-max-length': [2, 'always', 72],
-    'body-max-length': [2, 'always', 500],
+    'header-max-length': [ERROR, 'always', 100],
+    'body-max-line-length': [ERROR, 'always', 100],
   },
-};
-
-export default Configuration;
+} satisfies UserConfig;
