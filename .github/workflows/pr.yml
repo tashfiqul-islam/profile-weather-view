@@ -15,8 +15,9 @@ defaults:
 
 jobs:
   # The squash commit takes the PR title, so the title is what semantic-release reads.
-  # Required checks attach to the head commit, so this re-runs on every push; on edits it runs
-  # only when the title itself changed.
+  # Required checks are recorded per commit and never carried forward, so every push needs a fresh
+  # result here or the PR blocks on "Expected"; on edits it runs only when the title changed.
+  # Kept lean: only the files commitlint and the install need are checked out.
   title:
     name: Conventional title
     if: github.event.action != 'edited' || github.event.changes.title != null
@@ -28,10 +29,17 @@ jobs:
     permissions:
       contents: read # check out the commitlint config
     steps:
-      - name: Check out repository
+      - name: Check out commitlint config and lockfile
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout: |
+            /commitlint.config.ts
+            /package.json
+            /bun.lock
+            /bunfig.toml
+            /mise.toml
+          sparse-checkout-cone-mode: false
 
       - name: Set up Bun and dependencies
         uses: $/.github/actions/setup
