@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Quality gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # check out this repo
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install toolchain (Bun, actionlint, zizmor, shellcheck, lychee via mise)
+        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+        with:
+          install_args: bun actionlint zizmor shellcheck lychee
+
+      - name: Restore Bun package cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies (frozen lockfile)
+        id: install
+        run: bun install --frozen-lockfile
+
+      # The gate (`bun run check` locally), one step per tool so a failure names itself. Where a tool
+      # can speak GitHub's annotation format, errors land inline on the PR diff; `if: !cancelled()`
+      # keeps every check reporting even when an earlier one fails (once install succeeded).
+      - name: Typecheck (tsc)
+        run: |
+          echo "::add-matcher::.github/matchers/tsc.json"
+          bun run typecheck --pretty false
+
+      - name: Lint, type-aware (oxlint)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bunx oxlint --deny-warnings --format github
+
+      - name: Format check (oxfmt)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run format:check
+
+      - name: Test with 100 % coverage (bun test)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run test
+
+      - name: Lint workflows (actionlint)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          # shellcheck disable=SC2016 # `$err` is a Go template variable, not a shell one
+          actionlint -format '{{range $err := .}}::error file={{$err.Filepath}},line={{$err.Line}},col={{$err.Column}},title=actionlint {{$err.Kind}}::{{$err.Message}}
+          {{end}}'
+
+      - name: Audit workflows (zizmor)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: zizmor --offline --format github .github/workflows
+
+      - name: Lint shell scripts (shellcheck)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: shellcheck scripts/publish.sh
+
+      - name: Check docs links and anchors (lychee, offline)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: mise run lint-docs
+
+  dependencies:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read # read the dependency diff
+    steps:
+      - name: Review dependency changes for vulnerabilities
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  release:
+    name: Release
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write # create the tag and the GitHub release (no commits to main)
+      issues: write # comment on issues fixed by the release
+      pull-requests: write # comment on PRs included in the release
+    steps:
+      - name: Check out repository (full history for versioning)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install toolchain (Bun, Node via mise)
+        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+        with:
+          install_args: bun node
+
+      - name: Restore Bun package cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      # Tag + GitHub release with notes; nothing is committed back, so `main` stays fully protected.
+      - name: Tag and publish GitHub release (semantic-release)
+        run: bunx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
