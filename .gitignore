@@ -4,6 +4,7 @@ node_modules/
 
 # Test output
 coverage/
+test-results.xml
 
 # Environment
 .env
