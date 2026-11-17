@@ -1,93 +1,52 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "profile-weather-view",
-  "version": "3.2.7",
-  "description": "TypeScript utility that fetches real-time weather data and updates GitHub profile READMEs automatically",
+  "private": true,
+  "description": "Live Open-Meteo weather, patched into a GitHub profile README three times a day",
   "keywords": [
-    "automation",
     "bun",
-    "github",
     "github-actions",
-    "profile",
+    "github-profile",
+    "open-meteo",
+    "readme",
     "typescript",
-    "weather",
-    "zod"
+    "weather"
   ],
   "homepage": "https://github.com/tashfiqul-islam/profile-weather-view#readme",
-  "bugs": {
-    "url": "https://github.com/tashfiqul-islam/profile-weather-view/issues"
-  },
+  "bugs": "https://github.com/tashfiqul-islam/profile-weather-view/issues",
   "license": "MIT",
-  "author": {
-    "name": "Tashfiqul Islam",
-    "url": "https://github.com/tashfiqul-islam"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tashfiqul-islam/profile-weather-view.git"
-  },
+  "author": "Tashfiqul Islam (https://github.com/tashfiqul-islam)",
+  "repository": "github:tashfiqul-islam/profile-weather-view",
   "type": "module",
-  "sideEffects": false,
-  "main": "./src/weather-update/index.ts",
-  "exports": {
-    ".": {
-      "types": "./src/weather-update/index.ts",
-      "bun": "./src/weather-update/index.ts",
-      "default": "./src/weather-update/index.ts"
-    }
-  },
   "scripts": {
-    "dev": "bun --preload ./src/weather-update/utils/preload.ts --watch src/weather-update/index.ts",
-    "start": "bun --preload ./src/weather-update/utils/preload.ts src/weather-update/index.ts",
-    "build": "bun build src/weather-update/index.ts --outdir dist --target bun",
-    "build:prod": "bun build src/weather-update/index.ts --outdir dist --target bun --minify",
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "typecheck": "tsc --noEmit",
-    "lint": "oxlint src/",
-    "lint:fix": "oxlint src/ --fix",
-    "format": "oxfmt src/",
-    "format:check": "oxfmt src/ --check",
-    "check": "bun run typecheck && bun run lint && bun run test",
-    "prepare": "lefthook install",
-    "commit": "bunx czg",
-    "release": "bunx semantic-release",
-    "sync-readme-tech-stack": "bun src/scripts/sync-readme-tech-stack.ts"
+    "start": "bun src/index.ts",
+    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test",
+    "typecheck": "tsc",
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "test": "bun test"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "0.5.1",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.1",
-    "@commitlint/config-conventional": "21.2.0",
-    "@commitlint/types": "21.2.0",
-    "@semantic-release/changelog": "7.0.0",
-    "@semantic-release/git": "11.0.1",
-    "@semantic-release/github": "12.0.9",
-    "bun-types": "1.3.14",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@commitlint/types": "21.2.3",
+    "@semantic-release/github": "12.0.11",
+    "@types/bun": "1.4.4",
     "conventional-changelog-conventionalcommits": "8.0.0",
-    "czg": "1.13.1",
-    "lefthook": "2.1.10",
-    "markdownlint-cli2": "0.23.2",
-    "oxfmt": "0.62.0",
-    "oxlint": "1.77.0",
-    "semantic-release": "25.0.8",
+    "eslint-plugin-jsdoc": "65.4.7",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
+    "oxlint-tsgolint": "7.0.2007",
+    "semantic-release": "25.0.9",
     "typescript": "7.0.2"
   },
-  "config": {
-    "commitizen": {
-      "path": "node_modules/czg"
-    }
-  },
-  "engines": {
-    "bun": ">=1.3.14"
-  },
-  "packageManager": "bun@1.3.14",
   "trustedDependencies": [
-    "lefthook",
+    "oxfmt",
     "oxlint",
-    "oxfmt"
+    "oxlint-tsgolint"
   ]
 }
