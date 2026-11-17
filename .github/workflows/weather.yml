@@ -67,18 +67,29 @@ jobs:
         run: bun install --frozen-lockfile --production
 
       # Times out and retries transient Open-Meteo failures internally; non-zero exit = real failure.
+      # Writes the weather card (src/summary.ts) to the job summary.
       - name: Fetch weather and patch README
         run: bun start
         env:
           PROFILE_README_PATH: profile/README.md
 
-      - name: Summarise the README change
+      - name: Attach the README diff to the summary
+        env:
+          DRY_RUN: ${{ github.event_name == 'pull_request' }}
         run: |
           {
-            echo '### Rendered weather section'
+            if [[ "$DRY_RUN" == true ]]; then
+              echo '> [!NOTE]'
+              echo '> Dry run: pull requests render against the live API but never publish.'
+              echo
+            fi
+            echo '<details><summary>README diff</summary>'
+            echo
             echo '```diff'
             git -C profile diff --unified=0 -- README.md
             echo '```'
+            echo
+            echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Hand the README to publish
@@ -125,6 +136,7 @@ jobs:
       # scripts/publish.sh: guard (README.md only, weather section only) → SSH-sign → rebase →
       # verify-commit → push. Tested end to end in scripts/publish.test.ts.
       - name: Guard, sign, verify, and push the commit
+        id: publish
         working-directory: profile
         env:
           PAT: ${{ secrets.PAT }}
@@ -132,7 +144,36 @@ jobs:
           NAME: ${{ vars.GIT_COMMITTER_NAME }}
           EMAIL: ${{ vars.GIT_COMMITTER_EMAIL }}
         run: |
-          set -o pipefail
           [[ -n "$PAT" ]] || { echo "::error::PAT is not set in the profile environment"; exit 1; }
           bash "$GITHUB_WORKSPACE/scripts/publish.sh" \
-            "https://x-access-token:${PAT}@github.com/${PROFILE_REPO}.git" | tee -a "$GITHUB_STEP_SUMMARY"
+            "https://x-access-token:${PAT}@github.com/${PROFILE_REPO}.git"
+
+      # No secrets here: renders publish.sh's step outputs (result, commit, message) as a table.
+      - name: Summarise the publish
+        if: ${{ !cancelled() }}
+        env:
+          OUTCOME: ${{ steps.publish.outcome }}
+          RESULT: ${{ steps.publish.outputs.result }}
+          COMMIT: ${{ steps.publish.outputs.commit }}
+          MESSAGE: ${{ steps.publish.outputs.message }}
+        run: |
+          # shellcheck disable=SC2016 # backticks inside single quotes are Markdown code spans
+          {
+            echo '### Publish'
+            echo
+            echo '| Check | Result |'
+            echo '| :---- | :----- |'
+            case "$OUTCOME/$RESULT" in
+              success/published)
+                echo '| Guard | ✅ `README.md` only, weather section and stamp only |'
+                echo '| Signature | ✅ SSH-signed, `git verify-commit` passed before push |'
+                echo "| Commit | ✅ [\`${COMMIT:0:7}\`](https://github.com/${PROFILE_REPO}/commit/${COMMIT}) ${MESSAGE} |"
+                ;;
+              success/unchanged)
+                echo '| Commit | ➖ README unchanged, nothing to publish |'
+                ;;
+              *)
+                echo "| Publish | ❌ ${OUTCOME:-skipped}: see the **Guard, sign, verify, and push the commit** log |"
+                ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"

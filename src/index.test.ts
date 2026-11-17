@@ -9,10 +9,17 @@ const README = `<!-- Hourly Weather Update -->
 <!-- End of Hourly Weather Update -->`;
 
 let output: () => string;
+// GitHub sets GITHUB_STEP_SUMMARY in CI; tests must never write into the real job summary.
+const ciSummary = Bun.env.GITHUB_STEP_SUMMARY;
 beforeEach(() => {
   output = silence();
+  delete Bun.env.GITHUB_STEP_SUMMARY;
 });
-afterEach(() => mock.restore());
+afterEach(() => {
+  mock.restore();
+  if (ciSummary === undefined) delete Bun.env.GITHUB_STEP_SUMMARY;
+  else Bun.env.GITHUB_STEP_SUMMARY = ciSummary;
+});
 
 /** Runs `fn` with PROFILE_README_PATH set, then restores the previous value (or its absence). */
 async function withReadmePath(path: string, fn: () => Promise<void>): Promise<void> {
@@ -35,6 +42,19 @@ test('main() fetches weather and patches the README end to end', async () => {
 
   expect(await Bun.file(readme.path).text()).toContain('Clear Sky | 25°C | 06:14 | 17:12 | 60% |');
   expect(output()).toContain('Done in');
+});
+
+test('main() writes the job summary when GitHub Actions provides a summary file', async () => {
+  mockFetch(Response.json(openMeteoBody()));
+  await using readme = await tempReadme(README);
+  await using summary = await tempReadme('');
+  Bun.env.GITHUB_STEP_SUMMARY = summary.path;
+
+  await main(readme.path);
+
+  const md = await Bun.file(summary.path).text();
+  expect(md).toContain('Clear Sky · 25 °C');
+  expect(md).toContain(`patched \`${readme.path}\``);
 });
 
 test.each([

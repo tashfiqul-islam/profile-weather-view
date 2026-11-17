@@ -19,6 +19,9 @@ fail() {
   exit 1
 }
 
+# Step outputs for the job summary (GitHub Actions only; a no-op elsewhere).
+output() { [[ -z "${GITHUB_OUTPUT:-}" ]] || printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
+
 for var in SIGNING_KEY NAME EMAIL; do
   [[ -n "${!var:-}" ]] || fail "$var is not set in the profile environment"
 done
@@ -26,6 +29,7 @@ done
 changes="$(git status --porcelain)"
 if [[ -z "$changes" ]]; then
   echo "::notice::README unchanged"
+  output result unchanged
   exit 0
 fi
 [[ "$changes" == " M README.md" ]] || fail "unexpected changes from render: ${changes//$'\n'/, }"
@@ -53,3 +57,6 @@ git pull --quiet --rebase "$remote" main # survive a concurrent edit; the rebase
 git verify-commit HEAD
 git push --quiet "$remote" HEAD:main
 git log -1 --format='Pushed %h: %s'
+output result published
+output commit "$(git rev-parse HEAD)"
+output message "$(git log -1 --format=%s)"
