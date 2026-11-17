@@ -21,21 +21,14 @@ Read those instead of trusting any copy of them.
 
 ## Map
 
-```text
-src/index.ts      CLI: main(path) orchestrates, run() maps failure → exit code 1
-src/weather.ts    fetchWeather(): Open-Meteo → Zod schema → transform → Weather
-src/http.ts       fetchWithRetry(): per-attempt timeout + jittered retries (the network seam)
-src/meteocons.ts  WMO code → icon; icon names are a derived literal union
-src/readme.ts     renderReadme() pure core  ·  updateReadme() I/O shell
-src/time.ts       Temporal formatting helpers (clock, offset, timestamp)
-src/log.ts        the only logger: `HH:MM:SS [badge] msg`, warn/error → stderr
-scripts/publish.sh  publish job: guard → SSH-sign → rebase → verify-commit → push (bash, no deps)
-```
+Read [`src/README.md`](src/README.md) before changing code: run flow, every module's role and
+public surface, invariants, and recipes for common changes. [`scripts/README.md`](scripts/README.md)
+holds the `publish.sh` contract. Keep both current when modules or contracts change.
 
-Logic lives in **pure cores** (`renderReadme`, the Zod transform, `meteocons`, `time`) that take
-every input, including `now`, as a parameter. **I/O shells** (`updateReadme`, `run`,
-`fetchWithRetry`, `log`) only read, write, and call cores. Tests sit next to their module as
-`*.test.ts`; shared fakes live in `src/test-utils.ts`.
+Logic lives in **pure cores** (`renderReadme`, `renderSummary`, the Zod transform, `meteocons`,
+`time`) that take every input, including `now`, as a parameter. **I/O shells** (`updateReadme`,
+`writeSummary`, `run`, `fetchWithRetry`, `log`) only read, write, and call cores. Tests sit next to
+their module as `*.test.ts`; shared fakes live in `src/test-utils.ts`.
 
 ## Working agreement
 

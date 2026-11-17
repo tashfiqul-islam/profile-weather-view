@@ -9,5 +9,5 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
   },
-  "cSpell.words": ["authorised", "materialises", "Meteo", "meteocon", "meteocons"]
+  "cSpell.words": ["authorised", "esac", "materialises", "Meteo", "meteocon", "meteocons"]
 }
