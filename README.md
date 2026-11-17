@@ -1,290 +1,145 @@
-<div align="center">
-  <img src="./image/cover.png" alt="Profile Weather View - Automated weather updates for GitHub profile README" width="900">
-</div>
+![Profile Weather View: live weather, patched into your profile README](.github/assets/cover.svg)
 
-# Profile Weather View
+[![CI](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/ci.yml)
+[![Weather](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/weather.yml?style=flat-square&label=weather)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/weather.yml)
+[![Release](https://img.shields.io/github/v/release/tashfiqul-islam/profile-weather-view?style=flat-square&color=bf4520)](https://github.com/tashfiqul-islam/profile-weather-view/releases)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-2d3142?style=flat-square)](#development)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-2d3142?style=flat-square&logo=renovatebot)](renovate.json)
+[![License](https://img.shields.io/badge/license-MIT-2d3142?style=flat-square)](LICENSE)
 
-Automated weather updates for your GitHub profile README using TypeScript, Bun, and Open-Meteo.
+[![TypeScript](https://img.shields.io/github/package-json/dependency-version/tashfiqul-islam/profile-weather-view/dev/typescript?style=flat-square&label=TypeScript&logo=typescript&logoColor=white&color=3178C6)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftashfiqul-islam%2Fprofile-weather-view%2Fmain%2Fmise.toml&query=%24.tools.bun&prefix=v&style=flat-square&label=Bun&logo=bun&logoColor=white&color=000000)](https://bun.sh)
+[![Zod](https://img.shields.io/github/package-json/dependency-version/tashfiqul-islam/profile-weather-view/zod?style=flat-square&label=Zod&logo=zod&logoColor=white&color=3E67B1)](https://zod.dev)
+[![Temporal](https://img.shields.io/badge/Temporal-native-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/docs/)
+[![oxlint](https://img.shields.io/github/package-json/dependency-version/tashfiqul-islam/profile-weather-view/dev/oxlint?style=flat-square&label=oxlint&color=4E4E4E)](https://oxc.rs/docs/guide/usage/linter)
+[![oxfmt](https://img.shields.io/github/package-json/dependency-version/tashfiqul-islam/profile-weather-view/dev/oxfmt?style=flat-square&label=oxfmt&color=4E4E4E)](https://oxc.rs/docs/guide/usage/formatter)
+[![semantic-release](https://img.shields.io/github/package-json/dependency-version/tashfiqul-islam/profile-weather-view/dev/semantic-release?style=flat-square&label=semantic-release&logo=semantic-release&color=e10079)](https://semantic-release.gitbook.io/)
 
-[![Weather Update](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/profile-weather-update.yml?style=flat-square&logo=github&label=weather%20update)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/profile-weather-update.yml) [![Release](https://img.shields.io/github/actions/workflow/status/tashfiqul-islam/profile-weather-view/semantic-release.yml?style=flat-square&logo=githubactions&label=release)](https://github.com/tashfiqul-islam/profile-weather-view/actions/workflows/semantic-release.yml) [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=flat-square)](https://github.com/tashfiqul-islam/profile-weather-view) [![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/powered%20by-bun-000?style=flat-square&logo=bun)](https://bun.sh) [![semantic-release](https://img.shields.io/badge/semantic--release-conventionalcommits-e10079?style=flat-square&logo=semantic-release)](https://github.com/semantic-release/semantic-release) [![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen?style=flat-square&logo=renovatebot)](https://renovatebot.com) [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+Badges read `package.json` and `mise.toml` on `main` live, so they never drift.
 
----
-
-## Features
-
-- **No API key required** — Uses Open-Meteo free weather API
-- **Animated icons** — Meteocons weather icons via WMO codes
-- **Dual format support** — Works with both Markdown and HTML tables
-- **100% test coverage** — Bun test runner with full coverage
-- **Automated releases** — Semantic versioning from commits
-- **Type-safe** — TypeScript strict mode with Zod validation
-- **Fast** — Bun runtime for optimal performance
-
----
-
-## Tech Stack
-
-### Core
-
-[![TypeScript](https://img.shields.io/badge/TypeScript-v7.0.2-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Bun](https://img.shields.io/badge/Bun-v1.3.14-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh) [![Zod](https://img.shields.io/badge/Zod-v4.4.3-3E67B1?style=flat-square)](https://zod.dev) [![Temporal](https://img.shields.io/badge/Temporal-v0.5.1-1F2A44?style=flat-square)](https://tc39.es/proposal-temporal/)
-
-### Weather
-
-[![Open-Meteo](https://img.shields.io/badge/Open--Meteo-API-FF6B00?style=flat-square)](https://open-meteo.com/) [![Meteocons](https://img.shields.io/badge/Meteocons-Icons-00A7E1?style=flat-square)](https://bas.dev/work/meteocons)
-
-### Quality
-
-[![Oxlint](https://img.shields.io/badge/oxlint-v1.75.0-4E4E4E?style=flat-square)](https://oxc.rs/) [![Oxfmt](https://img.shields.io/badge/oxfmt-v0.60.0-4E4E4E?style=flat-square)](https://oxc.rs/docs/guide/usage/formatter) [![Bun Test](https://img.shields.io/badge/Bun%20Test-v1.3.14-000000?style=flat-square&logo=bun&logoColor=white)](https://bun.sh/docs/cli/test)
-
-### Automation
-
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/features/actions) [![semantic-release](https://img.shields.io/badge/semantic--release-v25.0.8-e10079?style=flat-square&logo=semantic-release)](https://semantic-release.gitbook.io/) [![Renovate](https://img.shields.io/badge/Renovate-Enabled-1A1F6C?style=flat-square&logo=renovatebot&logoColor=white)](https://renovatebot.com) [![Lefthook](https://img.shields.io/badge/Lefthook-v2.1.10-FF4088?style=flat-square&logo=git&logoColor=white)](https://github.com/evilmartians/lefthook)
+**[How it works](#how-it-works) · [Use it on your profile](#use-it-on-your-profile) · [Configuration](#configuration) · [Development](#development) · [Security](.github/SECURITY.md) · [Releases](https://github.com/tashfiqul-islam/profile-weather-view/releases)**
 
 ---
 
-## Live Weather
+Three times a day a GitHub Actions cron fetches the current weather for Dhaka from
+[Open-Meteo](https://open-meteo.com/) (free, no API key), renders it into a marked section of
+[my profile README](https://github.com/tashfiqul-islam/tashfiqul-islam), and pushes an SSH-signed
+commit. One run takes about a second; any failure exits non-zero and shows up red.
 
+- **Resilient.** Up to three attempts, 10 s each (body included), with jittered backoff on
+  dropped sockets, timeouts, 408, 429 and 5xx, honouring `Retry-After`.
+- **Validated.** One Zod schema checks the response and transforms it into exactly what the
+  README shows.
+- **Layout-aware.** Patches either an HTML `<table>` or a Markdown pipe table, in place.
+- **Tight.** One runtime dependency (`zod`); native `Temporal`; 100 % test coverage on a
+  ~200-line core.
+
+## How it works
+
+![Architecture: GitHub cron → weather.yml → fetchWithRetry → Open-Meteo → Zod transform → renderReadme → updateReadme → profile README](.github/assets/architecture.svg)
+
+Each module is a **pure core** behind a thin **I/O shell**: `renderReadme()` takes the README
+text, the weather and the clock, and returns the new text; `updateReadme()` only reads and writes
+the file. The network sits behind one seam, `fetchWithRetry()`.
+
+| Module             | Role                                                                |
+| ------------------ | ------------------------------------------------------------------- |
+| `src/index.ts`     | Entry point: validates the path, orchestrates, sets exit code       |
+| `src/weather.ts`   | Open-Meteo request + Zod schema → `Weather`                         |
+| `src/http.ts`      | Timeout, retry and backoff policy                                   |
+| `src/meteocons.ts` | WMO weather code → [Meteocons](https://bas.dev/work/meteocons) icon |
+| `src/readme.ts`    | Section detection and rendering (HTML or Markdown)                  |
+| `src/time.ts`      | `Temporal` clock, offset and timestamp formatting                   |
+
+## Use it on your profile
+
+Three steps from fork to a live table:
+
+```text
++------------------- [ SETUP ] --------------------+
+|                                                  |
+| 1  Mark the section                              |
+|    Add the markers to your profile README.       |
+| │                                                |
+| 2  Fork and point it at you                      |
+|    Coordinates in src/config.ts, repo in         |
+|    .github/workflows/weather.yml.                |
+| │                                                |
+| 3  Add secrets, run once                         |
+|    Trigger Weather from the Actions tab.         |
+|                                                  |
++--------------------------------------------------+
+```
+
+The markers, with either layout inside. HTML cells are rewritten in place with their attributes
+kept; a Markdown pipe table works too (every row after the header and separator is refilled):
+
+```html
 <!-- Hourly Weather Update -->
 <table>
-  <thead>
-    <tr>
-      <th align="center">Condition</th>
-      <th align="center">Temp</th>
-      <th align="center">Sunrise</th>
-      <th align="center">Sunset</th>
-      <th align="center">Humidity</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center">Clear Sky <img width="15" src="https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/clear-night.svg" alt="Clear Sky icon"></td>
-      <td align="center">26°C</td>
-      <td align="center">05:25</td>
-      <td align="center">18:44</td>
-      <td align="center">92%</td>
-    </tr>
-  </tbody>
+  <tr>
+    <th>Weather</th>
+    <th>Temperature</th>
+    <th>Sunrise</th>
+    <th>Sunset</th>
+    <th>Humidity</th>
+  </tr>
+  <tr>
+    <td align="center"></td>
+    <td align="center"></td>
+    <td align="center"></td>
+    <td align="center"></td>
+    <td align="center"></td>
+  </tr>
 </table>
 <!-- End of Hourly Weather Update -->
-
-<em>Last refresh: Sunday, July 26, 2026 at 04:02:21 (UTC+6)</em>
-
-> This section updates automatically 3x daily via GitHub Actions. The same updater patches both this README and the [profile README](https://github.com/tashfiqul-islam/tashfiqul-islam).
-
----
-
-## Quick Start
-
-```bash
-# Clone and install
-git clone https://github.com/tashfiqul-islam/profile-weather-view.git
-cd profile-weather-view
-bun install
-
-# Run locally
-bun run dev
-
-# Run tests
-bun test --coverage
+<em>Last refresh: never</em>
 ```
-
-No API key needed — Open-Meteo provides free weather data.
-
----
-
-## Architecture
-
-```mermaid
-flowchart TD
-    A[GitHub Actions<br/>Scheduled 3×/day] --> B[Orchestrator<br/>index.ts]
-    B --> C[Validate Environment<br/>preload.ts]
-    C --> D[Fetch Weather Data<br/>fetch-weather.ts]
-    D --> E[Open-Meteo API]
-    E --> F[Map WMO Codes<br/>wmo-mapper.ts]
-    F --> G[Update README<br/>update-readme.ts]
-    G --> H[Profile README<br/>Updated]
-
-    style A fill:#2088FF,stroke:#fff,color:#fff
-    style B fill:#3178C6,stroke:#fff,color:#fff
-    style E fill:#FF6B00,stroke:#fff,color:#fff
-    style H fill:#00A7E1,stroke:#fff,color:#fff
-```
-
----
 
 ## Configuration
 
-### Location
+The **Weather** workflow's `publish` job reads these from the `profile` environment
+(Settings → Environments → `profile`):
 
-Edit coordinates in `src/weather-update/services/fetch-weather.ts`:
+| Name                  | Kind     | Purpose                                                                   |
+| --------------------- | -------- | ------------------------------------------------------------------------- |
+| `PAT`                 | secret   | Fine-grained token: profile repo only, _Contents: read and write_, expiry |
+| `SIGNING_KEY`         | secret   | Private ed25519 SSH key; its public half is a GitHub **signing** key      |
+| `GIT_COMMITTER_NAME`  | variable | Commit author name                                                        |
+| `GIT_COMMITTER_EMAIL` | variable | A verified email on your GitHub account, so commits show **Verified**     |
 
-```typescript
-const LOCATION = {
-  lat: 23.8759,
-  lon: 90.3795,
-  timezone: 'Asia/Dhaka',
-} as const satisfies LocationConfig;
-```
-
-### Environment Variables
-
-| Variable              | Required | Description                      |
-| --------------------- | -------- | -------------------------------- |
-| `FORCE_UPDATE`        | No       | Force commit even when unchanged |
-| `PROFILE_README_PATH` | No       | Custom README path               |
-
-### GitHub Secrets
-
-| Secret            | Required | Description                             |
-| ----------------- | -------- | --------------------------------------- |
-| `PAT`             | Yes      | Personal Access Token with `repo` scope |
-| `GPG_PRIVATE_KEY` | No       | For signed commits                      |
-| `GPG_PASSPHRASE`  | No       | GPG key passphrase                      |
-
----
-
-## Workflows
-
-| Workflow                   | Trigger                 | Purpose                                |
-| -------------------------- | ----------------------- | -------------------------------------- |
-| **Profile Weather Update** | 3× daily + manual       | Fetch weather, update README           |
-| **Semantic Release**       | Push to main            | Automated versioning + SLSA provenance |
-| **Tech Stack Sync**        | `package.json` changes  | Update README badges                   |
-| **Renovate Validation**    | `renovate.json` changes | Validate dependency update config      |
-
-### Release Rules
-
-| Commit Type        | Version Bump |
-| ------------------ | ------------ |
-| `feat:`            | Minor        |
-| `fix:`             | Patch        |
-| `chore(deps):`     | Patch        |
-| `BREAKING CHANGE:` | Major        |
-
----
-
-## Scripts
-
-```bash
-# Development
-bun run dev              # Watch mode
-bun run start            # Single run
-
-# Quality
-bun run check            # typecheck + lint + test
-bun run typecheck        # TypeScript check
-bun run lint             # oxlint check
-bun run format           # oxfmt fix
-
-# Testing
-bun test                 # Run tests
-bun test --coverage      # With coverage
-
-# Release
-bun run release          # Semantic release
-bun run commit           # Guided commit prompt
-```
-
----
-
-## Project Structure
+Runtime environment, set by the workflow or by you for a local run:
 
 ```text
-profile-weather-view/
-├── 📁 .github/
-│   ├── 📁 workflows/
-│   │   ├── 📄 profile-weather-update.yml
-│   │   ├── 📄 semantic-release.yml
-│   │   ├── 📄 sync-readme-tech-stack.yml
-│   │   └── 📄 renovate-validation.yml
-│   └── 📄 copilot-instructions.md
-├── 📁 src/
-│   ├── 📁 weather-update/
-│   │   ├── 📄 config.ts
-│   │   ├── 📄 index.ts
-│   │   ├── 📁 services/
-│   │   │   ├── 📄 fetch-weather.ts
-│   │   │   ├── 📄 wmo-mapper.ts
-│   │   │   └── 📄 update-readme.ts
-│   │   └── 📁 utils/
-│   │       ├── 📄 logger.ts
-│   │       └── 📄 preload.ts
-│   ├── 📁 scripts/
-│   ├── 📁 tests/
-│   └── 📁 docs/
-├── 📄 oxlint.config.ts
-├── 📄 .oxfmtrc.json
-├── 📄 bunfig.toml
-├── 📄 commitlint.config.ts
-├── 📄 lefthook.yml
-├── 📄 renovate.json
-├── 📄 tsconfig.json
-└── 📄 package.json
++-------------------- [ .ENV ] --------------------+
+|                                                  |
+| *  PROFILE_README_PATH  profile/README.md        |
+|    README to patch; must end in .md.             |
+|                                                  |
+|    NO_COLOR  —                                   |
+|    Any value turns off coloured logs.            |
+|                                                  |
+| * required                                       |
+|                                                  |
++--------------------------------------------------+
 ```
 
----
+## Development
 
-## Coverage
+Tool versions are pinned in [`mise.toml`](mise.toml); git hooks run through [hk](https://hk.jdx.dev).
 
-```text
-File                      | % Funcs | % Lines
---------------------------|---------|--------
-config.ts                 |  100.00 | 100.00
-index.ts                  |  100.00 |  98.51
-fetch-weather.ts          |  100.00 | 100.00
-update-readme.ts          |  100.00 | 100.00
-wmo-mapper.ts             |  100.00 | 100.00
-logger.ts                 |  100.00 | 100.00
-preload.ts                |  100.00 | 100.00
---------------------------|---------|--------
-All files                 |  100.00 |  99.79
+```sh
+mise install && mise run setup                          # bun, hk, pkl + deps + hooks
+bun run check                                           # the gate: types · lint · format · tests
+PROFILE_README_PATH=/tmp/readme-copy.md bun start       # one real run against a copy
 ```
 
-131 tests, 375 assertions, seed=42.
-
----
-
-## Documentation
-
-| Document                                      | Description                                                |
-| --------------------------------------------- | ---------------------------------------------------------- |
-| [CLAUDE.md](./CLAUDE.md)                      | Claude Code project instructions                           |
-| [AGENTS.md](./AGENTS.md)                      | Universal AI agent context (Copilot, Cursor, Codex, Aider) |
-| [ARCHITECTURE.md](./src/docs/ARCHITECTURE.md) | System design                                              |
-| [CONTRIBUTING.md](./src/docs/CONTRIBUTING.md) | Contribution guide                                         |
-| [DEVELOPMENT.md](./src/docs/DEVELOPMENT.md)   | Development setup                                          |
-| [WORKFLOWS.md](./src/docs/WORKFLOWS.md)       | CI/CD details                                              |
-| [UNIT_TESTS.md](./src/docs/UNIT_TESTS.md)     | Testing guide                                              |
-| [SCRIPTS.md](./src/docs/SCRIPTS.md)           | Scripts reference                                          |
-
----
-
-## Contributing
-
-```bash
-# Fork, clone, and install
-git clone https://github.com/YOUR_USERNAME/profile-weather-view.git
-cd profile-weather-view
-bun install
-
-# Create branch
-git checkout -b feat/your-feature
-
-# Make changes, then validate
-bun run check
-
-# Commit with conventional format
-git commit -m "feat(scope): description"
-```
-
-See [CONTRIBUTING.md](./src/docs/CONTRIBUTING.md) for details.
-
----
+`bun run check` is the only definition of done: TypeScript 7 (native `tsgo`), type-aware oxlint
+with zero warnings, oxfmt, and `bun test` at **100 % line, function and statement coverage**.
+Pushes to `main` release automatically with semantic-release. See
+[CONTRIBUTING](.github/CONTRIBUTING.md) for the full loop and [AGENTS.md](AGENTS.md) for the
+conventions coding agents follow (`CLAUDE.md` links to it).
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-[![Report Bug](https://img.shields.io/badge/Report-Bug-red?style=for-the-badge)](https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=bug) [![Request Feature](https://img.shields.io/badge/Request-Feature-blue?style=for-the-badge)](https://github.com/tashfiqul-islam/profile-weather-view/issues/new?labels=enhancement)
+[MIT](LICENSE) © Tashfiqul Islam

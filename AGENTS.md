@@ -1,185 +1,131 @@
-# AGENTS.md — AI Agent Context for profile-weather-view
+# AGENTS.md
 
-Universal agent context. Compatible with Claude Code, OpenAI Codex, GitHub Copilot, Cursor, Gemini CLI, and other AI coding tools.
+Bun + TypeScript 7 job that fetches current weather from Open-Meteo (no API key) and patches the
+weather table in a **different** repository's README, `tashfiqul-islam/tashfiqul-islam`, three
+times a day. This repo holds the code; the profile repo only receives signed commits.
 
-> **Versions live in `package.json`** — never hardcode them in agent context files.
+## Loop
 
----
+| Step  | Command                                   | Done when                         |
+| ----- | ----------------------------------------- | --------------------------------- |
+| Setup | `mise install && mise run setup`          | `hk` hooks installed              |
+| Gate  | `bun run check`                           | green: types, lint, format, tests |
+| Try   | `PROFILE_README_PATH=<copy>.md bun start` | README section rewritten, exit 0  |
 
-## Project Overview
+The **gate** is the definition of done for every change: typecheck → type-aware lint (zero
+warnings) → format check → tests at **100 % line, function and statement coverage**. A change that
+drops coverage is unfinished; add the test through the module's interface.
 
-**What it is**: TypeScript/Bun automation that fetches real-time weather from the Open-Meteo API (no API key) and patches a GitHub profile README 3× daily.
+Tool versions live in `mise.toml`, deps in `package.json`, scripts in `package.json#scripts`.
+Read those instead of trusting any copy of them.
 
-**Key constraint**: This project writes to a _different_ repository (`tashfiqul-islam/tashfiqul-islam`) from where it lives (`tashfiqul-islam/profile-weather-view`). Cross-repo push uses a PAT secret.
+## Map
 
----
-
-## Tech Stack
-
-| Tool                      | Purpose                                  | Why                                           |
-| ------------------------- | ---------------------------------------- | --------------------------------------------- |
-| **Bun**                   | Runtime + test runner + package manager  | Fast, native TS support, built-in test runner |
-| **TypeScript**            | Language (strict + `erasableSyntaxOnly`) | TS 7.0 stable (native Go port, 10× faster)    |
-| **Zod**                   | Schema validation + branded types        | v4 with `.meta()` API, runtime validation     |
-| **@js-temporal/polyfill** | Date/time                                | Bun lacks native Temporal (issue #15853)      |
-| **oxlint / oxfmt**        | Linting + formatting                     | Rust-based, replaces Biome/Ultracite          |
-| **semantic-release**      | Automated versioning                     | Drives releases from conventional commits     |
-| **Lefthook**              | Git hooks                                | Pre-commit: format + typecheck                |
-
----
-
-## Commands
-
-```bash
-bun install                # install dependencies
-bun run start              # single weather update run
-bun run dev                # watch mode
-bun run typecheck          # tsc --noEmit (must be clean)
-bun run lint               # oxlint check
-bun run format             # oxfmt fix
-bun test                   # all tests (randomized, seed=42)
-bun test --coverage        # with coverage report
-bun run check              # typecheck + lint + test (full gate)
-bun run build              # bundle to dist/ (target: bun)
+```text
+src/index.ts      CLI: main(path) orchestrates, run() maps failure → exit code 1
+src/weather.ts    fetchWeather(): Open-Meteo → Zod schema → transform → Weather
+src/http.ts       fetchWithRetry(): per-attempt timeout + jittered retries (the network seam)
+src/meteocons.ts  WMO code → icon; icon names are a derived literal union
+src/readme.ts     renderReadme() pure core  ·  updateReadme() I/O shell
+src/time.ts       Temporal formatting helpers (clock, offset, timestamp)
+src/log.ts        the only logger: `HH:MM:SS [badge] msg`, warn/error → stderr
+scripts/publish.sh  publish job: guard → SSH-sign → rebase → verify-commit → push (bash, no deps)
 ```
 
-All quality gates must pass before any commit (enforced by lefthook pre-commit hook).
+Logic lives in **pure cores** (`renderReadme`, the Zod transform, `meteocons`, `time`) that take
+every input, including `now`, as a parameter. **I/O shells** (`updateReadme`, `run`,
+`fetchWithRetry`, `log`) only read, write, and call cores. Tests sit next to their module as
+`*.test.ts`; shared fakes live in `src/test-utils.ts`.
 
----
+## Working agreement
 
-## Repository Structure
+- Run the gate after every source edit; report it red or green, never "should pass".
+- Plan first, then ask, before changing workflows, CI, or root config.
+- Ask before every commit and every push.
 
-```
-profile-weather-view/
-├── src/
-│   ├── weather-update/
-│   │   ├── config.ts                   # Shared constants (DISPLAY_TIMEZONE)
-│   │   ├── index.ts                    # Orchestrator — run this
-│   │   ├── services/
-│   │   │   ├── fetch-weather.ts        # Open-Meteo API + Zod parsing
-│   │   │   ├── wmo-mapper.ts           # WMO code → Meteocon SVG icon
-│   │   │   └── update-readme.ts        # Regex-patches README weather section
-│   │   └── utils/
-│   │       ├── logger.ts               # log(message, level) → ANSI-colored stdout/stderr
-│   │       └── preload.ts              # Rate limit check + env validation
-│   ├── scripts/
-│   │   └── sync-readme-tech-stack.ts   # Syncs badge versions from package.json
-│   └── tests/
-│       ├── setup.ts                    # testUtils, testConfig
-│       ├── utils/
-│       │   └── weather-test-helpers.ts # Mock builders for weather data
-│       └── unit/                       # Unit tests mirror src/ structure
-├── .github/
-│   ├── workflows/                      # 4 GitHub Actions workflows
-│   ├── instructions/                   # Path-specific Copilot rules
-│   ├── prompts/                        # Reusable slash commands
-│   ├── CODEOWNERS                      # Review assignments
-│   └── copilot-instructions.md         # Copilot repo-wide rules
-├── .claude/                            # Claude Code rules (future)
-├── CLAUDE.md                           # Claude Code instructions (imports this file)
-├── AGENTS.md                           # This file
-├── .releaserc.json                     # semantic-release config
-├── commitlint.config.ts                # Conventional commit enforcement
-├── bunfig.toml                         # Bun runtime + test + install config
-├── tsconfig.json                       # TypeScript strict config
-├── oxlint.config.ts                    # oxlint configuration
-├── .oxfmtrc.json                       # oxfmt configuration
-├── lefthook.yml                        # Git hook definitions
-├── renovate.json                       # Dependency update automation
-├── markdownlint-cli2                   # Markdown linting (devDep)
-└── .markdownlint.json                  # Markdown lint rules
-```
+## Conventions
 
-### Data Flow
+- Route every outbound HTTP call through `fetchWithRetry()`. A bare `fetch()` once hung on a dead
+  socket for 222 s and failed the scheduled run.
+- Validate external data with one Zod schema that `.transform()`s straight into the domain type.
+- Derive types from data: `as const satisfies T` on tables, `typeof`/template-literal types on top.
+- Use the native global `Temporal` (Bun ≥ 1.4). Pass `Temporal.ZonedDateTime` into pure functions
+  so tests pin the clock.
+- Use `Bun.file()` / `Bun.write()` / `Bun.env` for I/O and environment. Declare new env vars in
+  `src/env.d.ts`.
+- Log through `log()` from `src/log.ts`; stdout and stderr stay machine-readable for CI.
+- Mock at the seam: `mockFetch()` / `silence()` / `tempReadme()` from `src/test-utils.ts`, then
+  `mock.restore()` in `afterEach`.
+- Document in TSDoc, enforced by oxlint: every file opens with a `@module` overview (what it is,
+  pure core or I/O shell, why it exists); every export gets a one-line summary, then
+  `@param name - …`, `@returns`, `@throws` and an `@example` for public entry points. Explain _why_
+  on internals only when the code can't. Types live in TypeScript, never in JSDoc braces.
+- Disable a lint rule only inline, with a `-- reason`.
 
-```
-index.ts → preload.ts → fetch-weather.ts → wmo-mapper.ts → update-readme.ts
-```
+## Gotchas
 
----
+- **Two layouts.** `renderReadme()` auto-detects an HTML `<td>` table (first five cells) or a
+  Markdown pipe table (every row after header + separator) inside the
+  `<!-- Hourly Weather Update -->` markers. Missing markers or nothing to fill throw, so stale
+  weather never gets a fresh stamp.
+- **`PROFILE_README_PATH` is required.** This repo's own README has no markers; point it at a copy.
+- **The refresh stamp always changes**, so every successful run commits. `git diff` in the workflow
+  is the only change gate.
+- **`bun:test` types `expect(p).rejects.*` as `void`** although it returns a promise; keep the
+  `await`. The lint override in `oxlint.config.ts` exists for this.
+- **`conventional-changelog-conventionalcommits` stays on v8.** v9+ templates break the writer
+  bundled with semantic-release (empty release notes). Renovate holds it via `allowedVersions`.
+- **`main` is ruleset-protected.** Changes land only through squash-merged PRs with a passing
+  **CI / Quality gate** and signed commits; nothing (not even CI) commits to `main` directly.
+- **`linker = "isolated"`**: an import missing from `package.json` fails immediately.
+- **`bunfig.toml` enforces a 3-day `minimumReleaseAge`**; pick tool and action versions at least
+  that old as well.
+- **`CLAUDE.md` is a symlink to this file.** Edit `AGENTS.md`; on Windows clone with
+  `git config core.symlinks true` (Developer Mode) so the link materialises.
 
-## Counterintuitive Patterns
+## Commits & releases
 
-1. **No native Temporal** — Bun issue #15853; always `import { Temporal } from "@js-temporal/polyfill"` never from globals
-2. **Logger uses `Date.toISOString()`** — Not Temporal. Logger only needs UTC timestamps; polyfill overhead unnecessary
-3. **TS 7.0: `erasableSyntaxOnly: true`** — No enums, no parameter properties, no value namespaces. Bun strips types
-4. **TS 7.0: `baseUrl` removed** — Hard error in TS 7.0; `paths` entries use `./` prefix instead
-5. **TS 7.0: `isolatedModules` removed** — Superseded by `verbatimModuleSyntax: true`
-6. **TS 7.0: `rootDir` defaults to `./`** — Must set `"rootDir": "./src"` explicitly when tsconfig sits above source dirs
-7. **TS 7.0: native Go port** — Released July 8, 2026; 8-12× faster; no programmatic API yet (coming in 7.1)
-8. **`linker = "isolated"`** — Phantom dependencies cause immediate crashes, not silent failures
-9. **Preload scope split** — `--preload` flag only on `start`/`dev` scripts; test preload at `[test].preload` is separate
-10. **UTC offset is dynamic** — `update-readme.ts` derives it from `now.offset` (Temporal property)
-11. **Zod `.describe()` removed** — Zod v4 uses `.meta({ description: "..." })`
-12. **czg is interactive** — never use `bunx czg` in scripts/CI; always `git commit -m "type(scope): description"`
-13. **oxlint replaces Biome** — `oxlint src/` for lint, `oxfmt src/` for format
+Conventional commits, enforced by commitlint in the `commit-msg` hook:
+`type(scope): subject`, with types and scopes in `commitlint.config.ts`. Use `git commit -m`.
 
----
+PRs are **squash-merged**, so the PR title becomes the commit semantic-release reads: give it the
+`type(scope): subject` that should drive the version.
 
-## Testing Rules
+Releases are automatic and tag-only: each push to `main` runs **CI → Release**, where
+`semantic-release` derives the next version from commits since the last tag, creates the `vX.Y.Z`
+tag and a GitHub Release with generated notes, and comments on the included PRs. There is no
+version field and no changelog commit; `CHANGELOG.md` is the archive up to v3.2.7. README badges
+read `package.json` / `mise.toml` live.
 
-- **Framework**: `bun test` only — never Jest, Vitest, or other runners
-- **Coverage**: `function=1.0, line=0.99, statement=0.99` enforced via `coverageThreshold` in `bunfig.toml`
-- **Randomization**: `randomize = true, seed = 42` — no `test.only()`
+## CI
 
-### Key Testing Patterns
+| Workflow       | Trigger                             | Jobs                                                                                                 |
+| -------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `ci.yml`       | PR, push to `main`                  | **Quality gate** (gate + `mise run lint-actions`), **Dependency review** (PRs), **Release** (`main`) |
+| `weather.yml`  | cron `23 5,13,21 * * *`, manual, PR | **render** (no secrets; PR = dry run), **publish** (`profile` environment, signed push)              |
+| `renovate.yml` | `renovate.json` changes             | strict config validation                                                                             |
 
-| Pattern          | Implementation                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| Log capture      | Intercept `process.stdout.write` / `process.stderr.write` (not `console.log`)               |
-| Temporal mocking | `(Temporal.Now as Record<string, unknown>)["zonedDateTimeISO"]` — bracket notation required |
-| Temp files       | `await using file = await testUtils.fs.createDisposableTempFile("content", "test.md")`      |
-| Weather mocks    | Open-Meteo shape: `{ current: {...}, daily: {...}, utc_offset_seconds }`                    |
-| Fetch mocking    | `mockGlobalFetch()` helper in `fetch-weather.test.ts`                                       |
-
----
-
-## Boundaries
-
-### Always Do
-
-- Use `import type` for type-only imports (enforced by `verbatimModuleSyntax`)
-- Route all logging through `utils/logger.ts` — no raw `console.*`
-- Use `Bun.file()` / `Bun.write()` for I/O — not `node:fs`
-- Use `as const satisfies T` for config objects
-- Validate external data with Zod schemas
-- Use conventional commit format: `type(scope): description`
-
-### Never Do
-
-- Bump versions manually — semantic-release handles this
-- Use `require()` or CommonJS patterns
-- Use native `Temporal` from globals — always import the polyfill
-- Add `test.only()` — randomization is enforced
-- Put `bun.lock` in `actions/cache path:` blocks — only in `hashFiles()`
-
----
-
-## Commit Guidelines
-
-**CRITICAL**: Always use `git commit -m "message"`. The `czg` tool is interactive and blocks in non-TTY environments.
-
-Format: `type(scope): description`
-
-Valid types: `feat` `fix` `docs` `style` `refactor` `perf` `test` `build` `ci` `chore` `revert` `security`
-
-Valid scopes: `weather` `deps` `ci` `release` `config` `docs` `test` `build` `actions` `bun`
-
----
-
-## GitHub Actions
-
-- All actions pinned to full commit SHAs — see `.github/instructions/workflows.instructions.md` for the current table
-- All runners use `ubuntu-24.04` (explicit, not `ubuntu-latest`)
-- Bun version pinned in workflows (not `latest`) — see `package.json` `engines.bun`
-- Default branch is `main` (renovated from `master`)
-
----
-
-## Environment
-
-| Variable              | Purpose                                                 |
-| --------------------- | ------------------------------------------------------- |
-| `PROFILE_README_PATH` | Path to the profile README to patch (must end in `.md`) |
-| `FORCE_UPDATE`        | Bypass change detection, always commit                  |
-| `GITHUB_ACTIONS`      | Set by GHA; changes log output format                   |
+- **Secrets stay behind a seam.** Only `weather.yml`'s **publish** job touches secrets, inside the
+  `profile` environment. It runs `scripts/publish.sh` (bash, git, ssh-keygen; no toolchain, no
+  dependencies) and nothing else. **render** does all the work with read-only access and hands the
+  README over as an artifact; `publish.sh` refuses anything but a README change confined to the
+  weather section and stamp. Keep new secret use in that shape.
+- **`scripts/publish.sh` is tested end to end** in `scripts/publish.test.ts` against a local bare
+  repo with a throwaway key. Those tests skip on Windows (OpenSSH there ignores `umask`); CI's
+  Ubuntu runner and WSL run them.
+- **Workflows and scripts are linted like code.** `actionlint`, `zizmor` (strictest persona clean)
+  and `shellcheck` run via `mise run lint-actions`; `lychee` checks every docs link and anchor via
+  `mise run lint-docs`. Both run in the hk pre-commit hook and in CI. Every `permissions:` grant
+  carries a `# why` comment; workflows start from `permissions: {}`.
+- **PR feedback is native annotations, not a review bot.** The Quality gate runs one step per tool;
+  tsc (via `.github/matchers/tsc.json`), oxlint (`--format github`), actionlint (Go template) and
+  zizmor (`--format github`) annotate the PR diff with no extra action and no write token. Keep new
+  checks in that shape rather than adding reviewdog-style bots. `bun run check` is the same gate
+  locally; keep the two in sync.
+- Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment; tools come from `mise.toml` via
+  `jdx/mise-action`. Renovate automerges non-major updates through PRs once CI is green; the hk
+  version in `hk.pkl` and the Renovate CLI pin follow via regex managers.
+- `profile` environment (deploys from `main` only): secrets `PAT`, `SIGNING_KEY` (ed25519, SSH
+  commit signing via plain `git config`, verified with `git verify-commit` before push); variables
+  `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`. Never add repo-level copies, and keep third-party
+  actions out of the publish job.

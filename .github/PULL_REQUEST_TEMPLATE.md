@@ -1,34 +1,14 @@
-## Summary
+## What and why
 
-Describe the change and the problem it solves. Include before/after if relevant.
-
-## Type of change
-
-- [ ] feat (new feature)
-- [ ] fix (bug fix)
-- [ ] docs (documentation only)
-- [ ] chore (build, CI, toolchain)
-- [ ] refactor/perf (no behavior change)
+<!-- One or two sentences: the problem and how this change solves it. -->
 
 ## Checklist
 
-- [ ] Conventional Commit message (e.g., feat(scope): …)
-- [ ] Tests added/updated and coverage remains 100% for changed files
-- [ ] Lint, format, type-check pass locally
-- [ ] No breaking changes, or noted below
+- [ ] `bun run check` is green locally (types, lint, format, 100 % coverage)
+- [ ] Tests cover the new behaviour through the module's interface
+- [ ] Commit messages follow `type(scope): subject`
+- [ ] Breaking change? Described below and marked with `!`
 
-## Screenshots / Demo (optional)
+## Notes for review
 
-If UI or output changed, add a short demo.
-
-## Breaking changes (if any)
-
-Document breaking changes here.
-
-## Notes for reviewers
-
-Anything specific you want reviewers to focus on.
-
-<!--
-Thank you for contributing to Profile Weather View!
--->
+<!-- Anything you want a reviewer to look at first. -->
