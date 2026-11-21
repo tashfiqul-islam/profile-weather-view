@@ -2,7 +2,8 @@
 
 Thanks for helping out. This repo is small on purpose; changes should keep it that way.
 
-![Delivery pipeline: git commit → hk pre-commit → CI gate (bun run check) → Release → tagged version. Renovate PRs enter at the same gate.](assets/pipeline.svg)
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-dark-mode-only"><img src="assets/pipeline-dark.svg" alt="Delivery pipeline: git commit with hk hooks, pull request, the bun run check gate at 100 % coverage, squash merge to main, then a tag and GitHub Release. Renovate pull requests enter at the same gate." width="100%" /></a>
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-light-mode-only"><img src="assets/pipeline-light.svg" alt="Delivery pipeline: git commit with hk hooks, pull request, the bun run check gate at 100 % coverage, squash merge to main, then a tag and GitHub Release. Renovate pull requests enter at the same gate." width="100%" /></a>
 
 ## Setup
 

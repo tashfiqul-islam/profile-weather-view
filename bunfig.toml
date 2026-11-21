@@ -11,6 +11,6 @@ pathIgnorePatterns = ["node_modules/**", "CHANGELOG.md"]
 randomize = true
 coverage = true
 coverageSkipTestFiles = true
-coverageThreshold = { line = 1.0, function = 1.0, statement = 1.0 }
+coverageThreshold = { lines = 1.0, functions = 1.0, statements = 1.0 } # plural: Bun ignores singular keys
 coveragePathIgnorePatterns = ["src/test-utils.ts"]
 coverageReporter = ["text"]
