@@ -1,6 +1,7 @@
 <div align="center">
 
-<img src=".github/assets/cover.svg" alt="Profile Weather View: live weather, patched into your profile README" width="100%" />
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-dark-mode-only"><img src=".github/assets/cover-dark.svg" alt="Profile Weather View: live weather from Open-Meteo, patched into your profile README and pushed as a signed commit three times a day" width="100%" /></a>
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-light-mode-only"><img src=".github/assets/cover-light.svg" alt="Profile Weather View: live weather from Open-Meteo, patched into your profile README and pushed as a signed commit three times a day" width="100%" /></a>
 
 ### Live weather on your GitHub profile, refreshed three times a day and signed every time
 
@@ -177,7 +178,8 @@ HTML cells are rewritten in place with their attributes kept; a Markdown pipe ta
 
 ## How it works
 
-<img src=".github/assets/architecture.svg" alt="Architecture: GitHub cron → weather.yml → fetchWithRetry → Open-Meteo → Zod transform → renderReadme → updateReadme → profile README" width="100%" />
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-dark-mode-only"><img src=".github/assets/architecture-dark.svg" alt="One scheduled run: the render job (no secrets) fetches Open-Meteo, validates with Zod and rewrites the README section; the publish job in the profile environment guards, signs, verifies and pushes the commit" width="100%" /></a>
+<a href="https://github.com/tashfiqul-islam/profile-weather-view#gh-light-mode-only"><img src=".github/assets/architecture-light.svg" alt="One scheduled run: the render job (no secrets) fetches Open-Meteo, validates with Zod and rewrites the README section; the publish job in the profile environment guards, signs, verifies and pushes the commit" width="100%" /></a>
 
 Each module is a **pure core** behind a thin **I/O shell**: `renderReadme()` takes the README text,
 the weather and the clock, and returns the new text; `updateReadme()` only reads and writes the

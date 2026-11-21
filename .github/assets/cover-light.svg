@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="600" viewBox="0 0 1280 600" role="img" aria-labelledby="title desc">
+<title id="title">Profile Weather View: live weather in your README</title>
+<desc id="desc">Live weather from Open-Meteo, patched into a marked table in your profile README and pushed as a signed, Verified commit three times a day. Example: Clear sky, 29°C, sunrise 05:41, sunset 18:02, humidity 74%.</desc>
+<defs>
+<pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#dfe4ea"/></pattern>
+<radialGradient id="glow"><stop offset="0" stop-color="#bc4c00" stop-opacity="0.09"/><stop offset="1" stop-color="#bc4c00" stop-opacity="0"/></radialGradient>
+<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker>
+<marker id="hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#bc4c00"/></marker>
+</defs>
+<rect width="1280" height="600" fill="#ffffff"/>
+<rect width="1280" height="600" fill="url(#dots)"/>
+<circle cx="948" cy="290" r="430" fill="url(#glow)"/>
+<path d="M40 40H76M315.2 40H936.9M1204 40H1240V560H40V40" fill="none" stroke="#d0d7de" stroke-dasharray="6 6"/><path d="M34 40h12M40 34v12" stroke="#8c959f" stroke-width="1.5"/><path d="M1234 40h12M1240 34v12" stroke="#8c959f" stroke-width="1.5"/><path d="M34 560h12M40 554v12" stroke="#8c959f" stroke-width="1.5"/><path d="M1234 560h12M1240 554v12" stroke="#8c959f" stroke-width="1.5"/><text x="84" y="45" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" letter-spacing="1.5" fill="#59636e">[ PROFILE WEATHER VIEW ]</text><text x="1196" y="45" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" text-anchor="end" letter-spacing="1.5" fill="#8c959f">[ OPEN-METEO · NO API KEY ]</text>
+<circle cx="100" cy="141" r="4" fill="#bc4c00"/><text x="114" y="146" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" letter-spacing="2" fill="#bc4c00">LIVE ON YOUR GITHUB PROFILE</text>
+<text x="92" y="226" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-2" fill="#1f2328">Live weather,</text>
+<text x="92" y="300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-2" fill="#bc4c00">in your README.</text>
+<text x="96" y="356" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" fill="#59636e">Fetched from Open-Meteo, patched into a marked table</text>
+<text x="96" y="384" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" fill="#59636e">and pushed as a signed commit, three times a day.</text>
+<path d="M96 420h528" stroke="#d0d7de"/>
+<text x="96" y="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5" fill="#1f2328">3×</text>
+<text x="96" y="494" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" letter-spacing="0.5" fill="#59636e">runs a day</text>
+<text x="272" y="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5" fill="#1f2328">0</text>
+<text x="272" y="494" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" letter-spacing="0.5" fill="#59636e">api keys</text>
+<text x="448" y="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5" fill="#1f2328">100 %</text>
+<text x="448" y="494" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" letter-spacing="0.5" fill="#59636e">test coverage</text>
+<path d="M704 96H740M876.9 96H1192V504H704V96" fill="none" stroke="#d0d7de" stroke-dasharray="6 6"/><path d="M698 96h12M704 90v12" stroke="#8c959f" stroke-width="1.5"/><path d="M1186 96h12M1192 90v12" stroke="#8c959f" stroke-width="1.5"/><path d="M698 504h12M704 498v12" stroke="#8c959f" stroke-width="1.5"/><path d="M1186 504h12M1192 498v12" stroke="#8c959f" stroke-width="1.5"/><text x="748" y="101" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13" letter-spacing="1.5" fill="#59636e">[ README.md ]</text>
+<text x="736" y="156" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" fill="#8c959f">&lt;!-- Hourly Weather Update --&gt;</text>
+<text x="736" y="196" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" letter-spacing="1" fill="#59636e">WEATHER</text>
+<text x="884" y="196" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" letter-spacing="1" fill="#59636e">TEMP</text>
+<text x="950" y="196" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" letter-spacing="1" fill="#59636e">SUNRISE</text>
+<text x="1024" y="196" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" letter-spacing="1" fill="#59636e">SUNSET</text>
+<text x="1160" y="196" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" text-anchor="end" letter-spacing="1" fill="#59636e">HUMIDITY</text>
+<path d="M736 210h424" stroke="#d0d7de"/>
+<circle cx="750" cy="240" r="7" fill="none" stroke="#bc4c00" stroke-width="2"/><path d="M761 240L765 240M757.8 247.8L760.6 250.6M750 251L750 255M742.2 247.8L739.4 250.6M739 240L735 240M742.2 232.2L739.4 229.4M750 229L750 225M757.8 232.2L760.6 229.4" stroke="#bc4c00" stroke-width="2" stroke-linecap="round"/>
+<text x="776" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#1f2328">Clear sky</text>
+<text x="884" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#1f2328">29°C</text>
+<text x="950" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#1f2328">05:41</text>
+<text x="1024" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#1f2328">18:02</text>
+<text x="1160" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="600" text-anchor="end" fill="#1f2328">74%</text>
+<path d="M736 272h424" stroke="#d0d7de"/>
+<text x="736" y="302" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="13" font-style="italic" fill="#59636e">Last refresh: Friday, November 21, 2026 at 11:23:05 (UTC+6)</text>
+<text x="736" y="334" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" fill="#8c959f">&lt;!-- End of Hourly Weather Update --&gt;</text>
+<rect x="736" y="372" width="424" height="52" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+<path d="M754 398l5 5 10-11" fill="none" stroke="#1a7f37" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="780" y="403" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" font-weight="700" fill="#1a7f37">Verified</text>
+<text x="862" y="403" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" fill="#1f2328">update(weather): refresh data</text>
+<text x="1160" y="468" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="12" text-anchor="end" letter-spacing="1" fill="#8c959f">DHAKA · 23.88°N 90.38°E</text>
+</svg>

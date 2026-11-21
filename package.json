@@ -25,7 +25,8 @@
     "lint": "oxlint --deny-warnings",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "test": "bun test"
+    "test": "bun test",
+    "readme:art": "bun scripts/readme-art.ts"
   },
   "dependencies": {
     "zod": "4.6.7"

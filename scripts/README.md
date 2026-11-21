@@ -2,10 +2,20 @@
 
 Repository tooling that runs outside the app.
 
-| Script                         | Runs in                         | Tested by                                |
-| ------------------------------ | ------------------------------- | ---------------------------------------- |
-| [`publish.sh`](publish.sh)     | `weather.yml` → **publish** job | [`publish.test.ts`](publish.test.ts)     |
-| [`pr-labels.ts`](pr-labels.ts) | `pr.yml` → **labels** job       | [`pr-labels.test.ts`](pr-labels.test.ts) |
+| Script                           | Runs in                         | Tested by                                  |
+| -------------------------------- | ------------------------------- | ------------------------------------------ |
+| [`publish.sh`](publish.sh)       | `weather.yml` → **publish** job | [`publish.test.ts`](publish.test.ts)       |
+| [`pr-labels.ts`](pr-labels.ts)   | `pr.yml` → **labels** job       | [`pr-labels.test.ts`](pr-labels.test.ts)   |
+| [`readme-art.ts`](readme-art.ts) | `bun run readme:art`, by hand   | [`readme-art.test.ts`](readme-art.test.ts) |
+
+## `readme-art.ts`
+
+Draws the README cover, the diagram of one run and the CONTRIBUTING delivery pipeline as light and
+dark SVG pairs under `.github/assets/`, in the mdxcn figure style: dashed frames with `+` corners,
+`[ TITLE ]` labels, monospace text and one accent per mode. Each pair is shown as two links ending
+`#gh-dark-mode-only` and `#gh-light-mode-only`, which GitHub hides by the viewer's GitHub theme (a
+`<picture>` with `prefers-color-scheme` would follow the OS). The test fails when a committed SVG
+drifts from the script or a document loses a pair, so run `bun run readme:art` after any change.
 
 ## `pr-labels.ts`
 
