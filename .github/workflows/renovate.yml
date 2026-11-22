@@ -37,4 +37,4 @@ jobs:
           install: none
 
       - name: Validate config (strict)
-        run: bunx --package renovate@44.239.1 renovate-config-validator --strict
+        run: bunx --package renovate@44.255.1 renovate-config-validator --strict
